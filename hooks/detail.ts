@@ -1,4 +1,5 @@
 import type { Env, Recent } from '../types'
+import { ciCard, ciLines } from './ci'
 import { age, ago, baseName, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, warnLevel } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { t } from './i18n'
@@ -21,7 +22,7 @@ const PAD = 14
 const IN = 16
 
 /** A card: its body is drawn from (x, y) and `content` tall; the card adds its heading and padding around it. */
-type Card = { title: string; right?: string; content: number; body: (x: number, y: number, w: number) => string }
+export type Card = { title: string; right?: string; content: number; body: (x: number, y: number, w: number) => string }
 
 const thousands = (v: number) => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, t().thousands)
 
@@ -121,6 +122,8 @@ export function detailSvg(env: Env, now: number, width: number): string {
   // ---- what changed in the files ----
   const changes = changesCard(env, now, innerW)
   if (changes) cards.push(changes)
+  const ci = ciCard(env, now)
+  if (ci) cards.push(ci)
 
   // ---- context, as /context draws it ----
   const all = env.allSlices.length > 0 ? env.allSlices : env.slices.map(s => ({ ...s, kind: 'used' }))
@@ -532,5 +535,6 @@ export function detailLines(env: Env, now: number): string[] {
     for (const line of h.old) out.push(`  − ${line}`)
     for (const line of h.new) out.push(`  + ${line}`)
   }
+  out.push(...ciLines(env, now))
   return out
 }

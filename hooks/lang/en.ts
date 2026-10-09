@@ -110,6 +110,26 @@ export const en = {
     contextUnknown: 'unknown',
   },
 
+  /** CI after a push, as the person's own gh reports it. */
+  ci: {
+    title: 'CI',
+    waiting: 'ci waiting for runs',
+    running: (done: number, total: number) => `ci running · ${done}/${total}`,
+    passed: (n: number, span: string) => `ci passed · ${plural(n, 'check', 'checks')} · ${span}`,
+    failed: (name: string) => `ci failed · ${name}`,
+    cancelled: 'ci cancelled',
+    pr: (n: number, title: string) => `PR #${n} · ${title}`,
+    review: { approved: 'approved', changes: 'changes requested', required: 'review required' },
+    checks: (passed: number, total: number) => `checks ${passed}/${total}`,
+    failing: (n: number) => `${n} failing`,
+    status: (isOn: boolean, why: string) => `CI: ${isOn ? 'on' : 'off'}${why === '' ? '' : ` · ${why}`}`,
+    missing: 'gh is not installed',
+    auth: 'gh is not signed in (gh auth login)',
+    notGithub: 'this folder is not a GitHub repository',
+    on: 'CI watch on: after a push, Mochi follows its GitHub Actions runs through gh.',
+    off: 'CI watch off.',
+  },
+
   /** The other chats. */
   peer: {
     state: { busy: 'working', asking: 'waiting for you', idle: 'idle', error: 'error' },

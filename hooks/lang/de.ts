@@ -100,6 +100,25 @@ export const de: typeof en = {
     contextUnknown: 'unbekannt',
   },
 
+  ci: {
+    title: 'CI',
+    waiting: 'CI wartet auf Läufe',
+    running: (done, total) => `CI läuft · ${done}/${total}`,
+    passed: (n, span) => `CI bestanden · ${pl(n, 'Check', 'Checks')} · ${span}`,
+    failed: name => `CI fehlgeschlagen · ${name}`,
+    cancelled: 'CI abgebrochen',
+    pr: (n, title) => `PR #${n} · ${title}`,
+    review: { approved: 'genehmigt', changes: 'Änderungen angefordert', required: 'Review ausstehend' },
+    checks: (passed, total) => `Checks ${passed}/${total}`,
+    failing: n => `${n} fehlgeschlagen`,
+    status: (isOn, why) => `CI: ${isOn ? 'an' : 'aus'}${why === '' ? '' : ` · ${why}`}`,
+    missing: 'gh ist nicht installiert',
+    auth: 'gh ist nicht angemeldet (gh auth login)',
+    notGithub: 'dieser Ordner ist kein GitHub-Repository',
+    on: 'CI-Beobachtung an: Nach einem Push verfolgt Mochi die GitHub-Actions-Läufe über gh.',
+    off: 'CI-Beobachtung aus.',
+  },
+
   peer: {
     state: { busy: 'arbeitet', asking: 'wartet auf dich', idle: 'inaktiv', error: 'Fehler' },
     waiting: label => `„${label}“ wartet auf dich`,

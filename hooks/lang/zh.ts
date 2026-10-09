@@ -99,6 +99,25 @@ export const zh: typeof en = {
     contextUnknown: '未知',
   },
 
+  ci: {
+    title: 'CI',
+    waiting: 'CI 等待运行',
+    running: (done, total) => `CI 运行中 · ${done}/${total}`,
+    passed: (n, span) => `CI 通过 · ${n} 项检查 · ${span}`,
+    failed: name => `CI 失败 · ${name}`,
+    cancelled: 'CI 已取消',
+    pr: (n, title) => `PR #${n} · ${title}`,
+    review: { approved: '已批准', changes: '需要修改', required: '待审查' },
+    checks: (passed, total) => `检查 ${passed}/${total}`,
+    failing: n => `${n} 项失败`,
+    status: (isOn, why) => `CI：${isOn ? '开' : '关'}${why === '' ? '' : ` · ${why}`}`,
+    missing: '未安装 gh',
+    auth: 'gh 未登录（gh auth login）',
+    notGithub: '此文件夹不是 GitHub 仓库',
+    on: 'CI 跟踪已开启：push 之后，Mochi 会通过 gh 跟踪 GitHub Actions 的运行。',
+    off: 'CI 跟踪已关闭。',
+  },
+
   peer: {
     state: { busy: '工作中', asking: '在等你', idle: '空闲', error: '出错' },
     waiting: label => `“${label}”在等你`,

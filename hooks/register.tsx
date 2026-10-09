@@ -1,7 +1,8 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
+import type { Ci, DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
+import { PR_FIELDS, RUN_FIELDS, ciLine, ciOf, ghTrouble, isPushing, prOf } from './ci'
 import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
@@ -134,6 +135,7 @@ async function infoNow($: Dollar): Promise<Info> {
     forecast: forecasts(v, await $.clock.now()),
     tz: v.tz,
     peers: v.peers,
+    ci: v.ci ?? null,
   }
 }
 
@@ -568,6 +570,7 @@ async function removeLive($: Dollar, names: string[]) {
 async function openDetail($: Dollar) {
   await update($, detail, () => ({ ...NO_ENV, ...(chat.lastEnv ?? NO_ENV) }))
   chat.detailAt = await $.clock.now()
+  void refreshPr($).catch(() => undefined)
   const opened = await $.ui.open({ id: DETAIL, title: t().detail.title })
   if (!opened.isPlaced) $.ui.toast(t().note.detailFailed(opened.reason))
 }
@@ -608,6 +611,7 @@ async function tick($: Dollar) {
   if (now - chat.peersAt > PEERS_EVERY_MS) void readPeers($).catch(() => undefined)
   if (now - chat.historyAt > HISTORY_EVERY_MS) void refreshHistory($).catch(() => undefined)
   if (now - chat.samplesAt > SAMPLES_EVERY_MS) void saveSamples($).catch(() => undefined)
+  if (chat.ciSha !== '' && !chat.isCiAsking && now - chat.ciAt > CI_EVERY_MS) void pollCi($).catch(() => undefined)
   if (now - chat.detailAt > 3000) {
     chat.detailAt = now
     const d = await read($, detail)
@@ -681,12 +685,14 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
 // ---------- /mochi ----------
 
 type Word = keyof Dict['cmd']['words']
+/** A subcommand's name: the key of its words in each language, or a name the same in every language. */
+type Name = Word | 'ci'
 
 /** Whether `value` names the command: its English words, or the words of the language in use. */
-const names = (value: string, key: Word, ...english: string[]) => english.includes(value) || t().cmd.words[key].some(w => plain(w) === value)
+const names = (value: string, key: Name, ...english: string[]) => english.includes(value) || (t().cmd.words[key as Word] ?? []).some(w => plain(w) === value)
 
-/** A subcommand: the key of its words in each language, the English words it answers to, and what it does with the rest of the line. */
-type Command = { name: Word; english: string[]; run: (arg: string) => Promise<string> }
+/** A subcommand: its name, the English words it answers to, and what it does with the rest of the line. */
+type Command = { name: Name; english: string[]; run: (arg: string) => Promise<string> }
 
 /** The subcommands of /mochi, tried in this order. */
 function commands($: Dollar, p: Prefs): Command[] {
@@ -696,6 +702,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'details', english: ['details', 'detail'], run: () => details($) },
     { name: 'shield', english: ['shield'], run: () => toggleShield($) },
     { name: 'alerts', english: ['alerts', 'alert', 'notifications'], run: () => toggleAlerts($) },
+    { name: 'ci', english: ['ci'], run: () => toggleCi($) },
     { name: 'lang', english: ['lang', 'language'], run: arg => language($, arg) },
     { name: 'level', english: ['level', 'xp'], run: () => levelNow($) },
     { name: 'wear', english: ['wear', 'outfit', 'accessory', 'accessories'], run: arg => wear($, arg, p) },
@@ -813,8 +820,113 @@ async function statusLines($: Dollar, p: Prefs): Promise<string> {
     d.contextLine(v.context >= 0 ? `${v.context}%` : t().panel.contextUnknown, v.agents, v.turnTools),
     d.prefsLine(p.hasSound, p.hasShield, p.hasAlert, p.isCompact),
     d.peersLine(levelOf(xpOf(v.history)).level, v.peers.length === 0 ? d.none : v.peers.map(x => x.label).join(', ')),
+    t().ci.status(p.hasCi, p.hasCi && chat.ghTrouble !== null ? t().ci[chat.ghTrouble] : ''),
     d.commands,
   ].join('\n')
+}
+
+// ---------- CI ----------
+
+/** gh is asked about a push's runs this often, for half an hour at most; a push with no run two minutes on starts none. */
+const CI_EVERY_MS = 30_000
+const CI_FOR_MS = 30 * 60_000
+const CI_NONE_MS = 2 * 60_000
+/** GitHub takes a few seconds to start the runs: the first look comes this long after the push. */
+const CI_FIRST_MS = 8000
+/** gh with no prompt and no update check of its own. */
+const GH_ENV = { GH_PROMPT_DISABLED: '1', GH_NO_UPDATE_NOTIFIER: '1' }
+
+/** The person's own gh, in the session's folder; null when it cannot start or does not answer in time. */
+async function gh($: Dollar, args: string[]) {
+  return $.process.run(['gh', ...args], { env: GH_ENV, timeoutMs: 20_000 }).catch(() => null)
+}
+
+/** The branch's open pull request and its checks; on the way, whether gh answers here at all. */
+async function refreshPr($: Dollar) {
+  if (chat.isPrAsking) return
+  chat.isPrAsking = true
+  try {
+    if (!(await read($, prefs)).hasCi) return
+    const out = await gh($, ['pr', 'view', '--json', PR_FIELDS])
+    chat.ghTrouble = out === null ? 'missing' : out.exitCode === 0 ? null : ghTrouble(out.exitCode, out.stderr)
+    // Offline or a hiccup: what was known stays; turned off meanwhile, nothing is shown.
+    if (out !== null && out.exitCode !== 0 && chat.ghTrouble === null && !/no pull requests found/i.test(out.stderr)) return
+    if (!(await read($, prefs)).hasCi) return
+    const pr = out?.exitCode === 0 ? prOf(out.stdout) : null
+    await setEnv($, v => (JSON.stringify(v.pr ?? null) === JSON.stringify(pr) ? v : { ...v, pr }))
+  } finally {
+    chat.isPrAsking = false
+  }
+}
+
+/** At the start: the branch's pull request, and the CI of a push a reload left half followed. */
+async function resumeCi($: Dollar) {
+  const ci = (await read($, env)).ci
+  if (ci && (ci.state === 'waiting' || ci.state === 'running') && (await read($, prefs)).hasCi) {
+    chat.ciSha = ci.sha
+    chat.ciSince = ci.pushedAt
+  }
+  await refreshPr($)
+}
+
+/** After a push in this chat: when gh answers for this repository, the pushed commit's runs are followed. */
+async function startCi($: Dollar) {
+  if (!(await read($, prefs)).hasCi) return
+  const head = await $.process.run(['git', 'rev-parse', 'HEAD'], { timeoutMs: 5000 }).catch(() => undefined)
+  const sha = head?.exitCode === 0 ? head.stdout.trim() : ''
+  await refreshPr($)
+  if (!/^[0-9a-f]{40,64}$/.test(sha) || chat.ghTrouble !== null) return
+  const now = await $.clock.now()
+  chat.ciSha = sha
+  chat.ciSince = now
+  chat.ciAt = now - CI_EVERY_MS + CI_FIRST_MS
+  await setEnv($, v => ({ ...v, ci: ciOf('[]', sha, now) }))
+}
+
+/** Asks gh how the pushed commit's runs stand, from the timer, one call at a time; once all have ended, says how. */
+async function pollCi($: Dollar) {
+  chat.isCiAsking = true
+  try {
+    const sha = chat.ciSha
+    chat.ciAt = await $.clock.now()
+    const out = await gh($, ['run', 'list', '--commit', sha, '--json', RUN_FIELDS])
+    const ci = out?.exitCode === 0 ? ciOf(out.stdout, sha, chat.ciSince) : null
+    // A newer push, or /mochi ci, took over meanwhile.
+    if (sha !== chat.ciSha) return
+    if (ci !== null && ci.state !== 'waiting' && ci.state !== 'running') {
+      chat.ciSha = ''
+      await setEnv($, v => ({ ...v, ci }))
+      await ciDone($, ci)
+      return
+    }
+    const now = await $.clock.now()
+    const isRunning = (ci ?? (await read($, env)).ci)?.state === 'running'
+    const isOver = now - chat.ciSince > (isRunning ? CI_FOR_MS : CI_NONE_MS)
+    if (isOver) chat.ciSha = ''
+    if (isOver || ci !== null) await setEnv($, v => ({ ...v, ci: isOver ? null : ci }))
+  } finally {
+    chat.isCiAsking = false
+  }
+}
+
+/** How the pushed commit's CI ended: a party, the failed workflow, or a plain line. */
+async function ciDone($: Dollar, ci: Ci) {
+  const line = ciLine(ci)
+  if (ci.state === 'passed') await show($, { mood: 'party', line, holdMs: 8000, sound: 'party' })
+  else if (ci.state === 'failed') await show($, { mood: 'error', line, holdMs: 10_000, sound: 'oops' })
+  else await show($, { mood: 'idle', line, holdMs: 6000 })
+  // Mid-turn the face moves on with the work, so a toast keeps the news; a failure reaches someone away as a notification.
+  if (ci.state === 'failed' && !chat.isBusy) await notify($, line)
+  else if (chat.isBusy) $.ui.toast(`Mochi: ${line}`, { timeoutMs: 8000 })
+  void refreshPr($).catch(() => undefined)
+}
+
+async function toggleCi($: Dollar): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasCi: !v.hasCi }))
+  chat.ciSha = ''
+  if (next.hasCi) void refreshPr($).catch(() => undefined)
+  else await setEnv($, v => ({ ...v, ci: null, pr: null }))
+  return next.hasCi ? t().ci.on : t().ci.off
 }
 
 export const register: Register = on => {
@@ -837,6 +949,7 @@ export const register: Register = on => {
     await measure($)
     chat.lastNudge = await $.clock.now()
     void refreshGit($).catch(() => undefined)
+    void resumeCi($).catch(() => undefined)
     await show($, { mood: 'wave', line: t().st.ready, holdMs: 3000 })
     if (p.isHidden) await refreshStatus($)
     $.clock.every(TICK_MS, () => void tick($).catch(() => undefined))
@@ -956,6 +1069,7 @@ export const register: Register = on => {
     }
     if (isSub) return ran
     if (cmd !== '' && isCommit(cmd) && !isError && !isDenied) await addToday($, { commits: 1 })
+    if (cmd !== '' && isPushing(cmd) && !isError && !isDenied) void startCi($).catch(() => undefined)
     if (delta !== null && !isError && !isDenied) {
       const at = await $.clock.now()
       await setEnv($, v => ({

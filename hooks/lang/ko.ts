@@ -99,6 +99,25 @@ export const ko: typeof en = {
     contextUnknown: '알 수 없음',
   },
 
+  ci: {
+    title: 'CI',
+    waiting: 'CI 실행 대기',
+    running: (done, total) => `CI 실행 중 · ${done}/${total}`,
+    passed: (n, span) => `CI 통과 · 검사 ${n}개 · ${span}`,
+    failed: name => `CI 실패 · ${name}`,
+    cancelled: 'CI 취소됨',
+    pr: (n, title) => `PR #${n} · ${title}`,
+    review: { approved: '승인됨', changes: '변경 요청됨', required: '리뷰 필요' },
+    checks: (passed, total) => `검사 ${passed}/${total}`,
+    failing: n => `${n}개 실패`,
+    status: (isOn, why) => `CI: ${isOn ? '켜짐' : '꺼짐'}${why === '' ? '' : ` · ${why}`}`,
+    missing: 'gh 미설치',
+    auth: 'gh 로그인 안 됨 (gh auth login)',
+    notGithub: '이 폴더는 GitHub 저장소가 아님',
+    on: 'CI 추적 켜짐: 푸시 후 gh로 GitHub Actions 실행을 따라갑니다.',
+    off: 'CI 추적 꺼짐.',
+  },
+
   peer: {
     state: { busy: '작업 중', asking: '응답 대기', idle: '쉬는 중', error: '오류' },
     waiting: label => `‘${label}’ 응답 대기 중`,

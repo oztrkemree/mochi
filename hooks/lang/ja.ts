@@ -99,6 +99,25 @@ export const ja: typeof en = {
     contextUnknown: '不明',
   },
 
+  ci: {
+    title: 'CI',
+    waiting: 'CI 実行待ち',
+    running: (done, total) => `CI 実行中 · ${done}/${total}`,
+    passed: (n, span) => `CI 成功 · チェック${n}件 · ${span}`,
+    failed: name => `CI 失敗 · ${name}`,
+    cancelled: 'CI キャンセル',
+    pr: (n, title) => `PR #${n} · ${title}`,
+    review: { approved: '承認済み', changes: '変更依頼あり', required: 'レビュー待ち' },
+    checks: (passed, total) => `チェック ${passed}/${total}`,
+    failing: n => `${n}件失敗`,
+    status: (isOn, why) => `CI: ${isOn ? 'ON' : 'OFF'}${why === '' ? '' : ` · ${why}`}`,
+    missing: 'gh 未インストール',
+    auth: 'gh 未ログイン (gh auth login)',
+    notGithub: 'このフォルダは GitHub リポジトリではない',
+    on: 'CI 監視ON: push 後、gh で GitHub Actions の実行を追う。',
+    off: 'CI 監視OFF。',
+  },
+
   peer: {
     state: { busy: '作業中', asking: '返事待ち', idle: '待機中', error: 'エラー' },
     waiting: label => `「${label}」が返事待ち`,

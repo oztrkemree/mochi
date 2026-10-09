@@ -2,6 +2,7 @@ import { atom, read } from 'claude-code'
 import type { MatchedHook } from 'claude-code'
 
 import type { Item } from '../types'
+import { ciLine } from './ci'
 import { detailHeight, detailLines, detailSvg, levelSummary, levelSvg } from './detail'
 import { clockAt, forecasts } from './facts'
 import { t } from './i18n'
@@ -217,6 +218,7 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     ...(v.context >= 0 ? [t().ctx.percent(v.context)] : []),
     ...(v.agents > 0 ? [t().st.agents(v.agents)] : []),
     ...(chat.isBusy && v.turnTools > 0 ? [t().st.tools(v.turnTools)] : []),
+    ...(v.ci?.state === 'running' ? [ciLine(v.ci)] : []),
     ...(full !== undefined ? [`${limitName('five_hour')} ${t().panel.fullAt(clockAt(full, now, v.tz))}`] : []),
     ...(others !== null ? [others] : []),
   ].join(' · ')
