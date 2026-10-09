@@ -73,7 +73,7 @@ Derselbe Befehl schlägt dreimal fehl, derselbe Fehler taucht immer wieder auf, 
 <td valign="top">
 
 **🔔 Hinweise bei langen Jobs**<br>
-Eine macOS-Benachrichtigung, sobald eine Runde von über zwei Minuten fertig ist oder ein langer Job auf deine Freigabe wartet. Hol dir ruhig einen Kaffee.
+Eine Systembenachrichtigung (macOS, Windows oder Linux), sobald eine Runde von über zwei Minuten fertig ist oder ein langer Job auf deine Freigabe wartet. Hol dir ruhig einen Kaffee.
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ Mochi spricht die Sprache aus der `language`-Einstellung von Claude Code, wenn s
 Alles bleibt auf deinem Rechner. Mochi stellt **keinerlei Netzwerkanfragen**.
 
 - Mochi liest `git status`, `git log` und `git diff --numstat` im Ordner des Chats.
-- Unter macOS führt Mochi `osascript` für Benachrichtigungen und `defaults read -g AppleLanguages` für die Sprache aus; überall außerdem `date +%z` für die Ortszeit.
+- Für Benachrichtigungen nutzt Mochi das Werkzeug des Systems: `osascript` unter macOS, PowerShell unter Windows, `notify-send` unter Linux. Für die Sprache `defaults read -g AppleLanguages` unter macOS und PowerShell unter Windows; `uname` unterscheidet macOS von Linux.
 - Mochi schreibt kleine JSON-Dateien nach `~/.claude/mochi/`: den Stand jedes offenen Chats, Tageszählungen, dein Level und Verbrauchswerte für die Prognose.
 
 ## 🤝 Mitmachen

@@ -73,7 +73,7 @@
 <td valign="top">
 
 **🔔 长任务提醒**<br>
-超过两分钟的一轮结束时，或者长任务停下来等你批准时，都会弹出 macOS 通知。放心去泡杯茶吧。
+超过两分钟的一轮结束时，或者长任务停下来等你批准时，都会弹出系统通知（macOS、Windows 或 Linux）。放心去泡杯茶吧。
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ English · Türkçe · Español · Deutsch · Français · Português · Рус�
 一切都留在你的电脑上。Mochi **不发起任何网络请求**。
 
 - 在对话所在的文件夹中读取 `git status`、`git log` 和 `git diff --numstat`。
-- 在 macOS 上运行 `osascript` 发送通知，运行 `defaults read -g AppleLanguages` 获取语言；在所有平台上运行 `date +%z` 获取本地时间。
+- 通知使用系统自带的工具：macOS 上运行 `osascript`，Windows 上运行 PowerShell，Linux 上运行 `notify-send`。获取语言时，macOS 上运行 `defaults read -g AppleLanguages`，Windows 上运行 PowerShell；用 `uname` 区分 macOS 和 Linux。
 - 在 `~/.claude/mochi/` 下写入几个小小的 JSON 文件：每个打开的对话的状态、每日计数、你的等级，以及用于预测的用量读数。
 
 ## 🤝 参与贡献

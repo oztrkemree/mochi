@@ -4,6 +4,7 @@ import type { Watch } from './guard'
 import { pickLang, t } from './i18n'
 import type { Lang } from './i18n'
 import { SLOT, SLOTS, SLOT_ITEMS, itemOf } from './level'
+import type { Platform } from './system'
 
 // What register.tsx and render.tsx share: the defaults of the values kept in
 // $.state, and this load's own bookkeeping.
@@ -54,6 +55,10 @@ export const NO_PANEL: Panel = { shot: FIRST_SHOT, info: NO_INFO, infoFrom: null
  * in $.state. One object, so that every module can change it.
  */
 export const chat = {
+  /** The system Mochi runs on, found once per load. */
+  platform: 'linux' as Platform,
+  /** The timer's beats since the load. */
+  beat: 0,
   isBusy: false,
   lastActivity: 0,
   lastTypedAt: 0,

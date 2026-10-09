@@ -103,7 +103,7 @@ export type Env = {
   cost: number
   /** The last tool calls of the main loop, oldest first. */
   recent: Recent[]
-  /** The last finished turn, in a few words: "1m 12s · 8 araç". */
+  /** The last finished turn, in a few words: "1m 12s · 8 tools". */
   last: string
   /** The token count where auto-compaction runs; 0 when it is off or unknown. */
   compactAt: number

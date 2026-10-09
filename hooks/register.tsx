@@ -5,7 +5,7 @@ import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, R
 import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
-import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineDelta, parseGit, parseNumstat, parseTz, parseWc, warnLevel, withLines } from './facts'
+import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
 import { NEW_WATCH, danger, dangerKey, watchCall } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
@@ -16,6 +16,8 @@ import { band, detailPane } from './render'
 import { paramsAt } from './rig'
 import { clip } from './sound'
 import { ALL_ITEMS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, chat, rest0, restorePrefs } from './state'
+import { alertCommand, langCommand, removeCommand } from './system'
+import type { Platform } from './system'
 
 // Everything that acts through `$` lives in this file: the engine follows `$`
 // only into functions declared beside the call, and reads the state a file
@@ -36,6 +38,8 @@ const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
 const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
 
 const TICK_MS = 450
+/** While Mochi dozes, the timer does its rounds on one beat in this many. */
+const DOZE_EVERY = 4
 const SLEEPY_AFTER = 3 * 60_000
 const SLEEP_AFTER = 8 * 60_000
 const LISTEN_FOR = 4000
@@ -246,7 +250,7 @@ async function noteTyping($: Dollar, isEmpty: boolean) {
   }
   if (f.mood !== 'listening' && f.until === 0) {
     chat.faceToken += 1
-    await putFace($, { mood: 'listening', line: 'dinliyor', until: 0, since: 0 })
+    await putFace($, { mood: 'listening', line: t().st.listening, until: 0, since: 0 })
   }
 }
 
@@ -294,11 +298,13 @@ async function refreshGit($: Dollar) {
   const root = top?.exitCode === 0 ? top.stdout.trim() : ''
   // Lines added and removed against the last commit, staged or not; before the first commit, what is staged.
   const diff = await run(['git', 'diff', ...(base.lastCommit > 0 ? ['HEAD'] : ['--cached']), '--numstat', '--no-renames'])
-  // A new file not yet added counts as all added: its lines, for the first twenty.
+  // A new file not yet added counts as all added: its lines, for the first twenty (none for one that cannot be read).
   const fresh = root === '' ? [] : base.files.filter(f => f.code === '??' && !f.path.endsWith('/')).slice(0, 20)
-  const wc = fresh.length > 0 ? await run(['wc', '-l', '--', ...fresh.map(f => `${root}/${f.path}`)]) : undefined
   const counts: Record<string, number> = {}
-  for (const [path, n] of Object.entries(parseWc(wc?.stdout ?? ''))) counts[path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path] = n
+  for (const f of fresh) {
+    const text = await $.fs.read(`${root}/${f.path}`).catch(() => null)
+    if (text !== null) counts[f.path] = lineCount(text)
+  }
   const git = withLines(base, parseNumstat(diff?.stdout ?? ''), counts, root)
   await setEnv($, v => (JSON.stringify(v.git) === JSON.stringify(git) ? v : { ...v, git }))
 }
@@ -319,17 +325,15 @@ async function editDelta($: Dollar, tool: string, args: Record<string, unknown>,
 
 // ---------- what outlives the chat ----------
 
-const q = (s: string) => `"${s.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`
-
 /**
  * A system notification (and a toast) about this chat: a long turn ended, or it
- * waits on the person. macOS only; elsewhere the toast alone.
+ * waits on the person. macOS, Windows and Linux each show it their own way.
  */
 async function notify($: Dollar, text: string) {
   if (!(await read($, prefs)).hasAlert) return
   $.ui.toast(`Mochi: ${text}`, { timeoutMs: 8000 })
-  const script = `display notification ${q(text)} with title "Mochi" subtitle ${q(chat.label)} sound name "Glass"`
-  void $.process.run(['osascript', '-e', script], { timeoutMs: 5000 }).catch(() => undefined)
+  const alert = alertCommand(chat.platform, 'Mochi', chat.label, text)
+  void $.process.run(alert.argv, { env: alert.env, timeoutMs: 10_000 }).catch(() => undefined)
 }
 
 /** Where this chat stands, for the other chats: working, asking, idle or failed. */
@@ -379,24 +383,25 @@ async function readPeers($: Dollar) {
   if (JSON.stringify(before) === JSON.stringify(peers)) return
   await setEnv($, v => ({ ...v, peers }))
   const news = peerNews(before, peers, now)
-  if (news.length === 0) return
-  for (const line of news) $.ui.toast(`Mochi: ${line}`, { timeoutMs: 6000 })
+  const first = news[0]
+  if (first === undefined) return
+  for (const n of news) $.ui.toast(`Mochi: ${n.line}`, { timeoutMs: 6000 })
   const f = await read($, face)
   if (!chat.isBusy && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy' || f.mood === 'sleeping')) {
-    await show($, { mood: news[0]?.includes('onay') || news[0]?.includes('cevab') ? 'asking' : 'pleased', line: news[0] ?? '', holdMs: 5000 })
+    await show($, { mood: first.kind === 'asking' ? 'asking' : first.kind === 'failed' ? 'nervous' : 'pleased', line: first.line, holdMs: 5000 })
   }
 }
 
-/** Every chat's days, read in one go (each file is one line), with this chat's own from memory. */
+/** Every chat's days, read file by file, with this chat's own from memory. */
 async function refreshHistory($: Dollar) {
   if (chat.dataDir === '') return
   chat.historyAt = await $.clock.now()
-  const ran = await $.process.run(['sh', '-c', 'cat "$0"/*.json 2>/dev/null; exit 0', `${chat.dataDir}/days`], { timeoutMs: 8000 }).catch(() => undefined)
+  const dir = `${chat.dataDir}/days`
   const others: Record<string, DayRec>[] = []
-  for (const line of (ran?.stdout ?? '').split('\n')) {
-    if (line.trim() === '') continue
+  for (const entry of await $.fs.list(dir).catch(() => [])) {
+    if (!entry.name.endsWith('.json')) continue
     try {
-      const file = JSON.parse(line) as { id?: unknown; days?: unknown }
+      const file = JSON.parse(await $.fs.read(`${dir}/${entry.name}`)) as { id?: unknown; days?: unknown }
       if (typeof file.id !== 'string' || file.id === chat.sessionId || typeof file.days !== 'object' || file.days === null) continue
       others.push(file.days as Record<string, DayRec>)
     } catch {
@@ -477,16 +482,17 @@ async function saveSamples($: Dollar) {
 
 /**
  * The language to speak when none is chosen: Claude Code's own `language`
- * setting, then the system's preferred languages (macOS), then `LANG`; English
- * when none of them is one Mochi speaks.
+ * setting, then the system's (macOS's preferred languages, Windows's display
+ * language), then `LANG`; English when none of them is one Mochi speaks.
  */
 async function detectLang($: Dollar): Promise<Lang> {
   const settings = await $.settings.read().catch(() => undefined)
   const fromSettings = pickLang(typeof settings?.language === 'string' ? settings.language : undefined)
   if (fromSettings) return fromSettings
-  const mac = await $.process.run(['defaults', 'read', '-g', 'AppleLanguages'], { timeoutMs: 3000 }).catch(() => undefined)
-  if (mac?.exitCode === 0) {
-    for (const code of mac.stdout.match(/[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]+)*/g) ?? []) {
+  const ask = langCommand(chat.platform)
+  const sys = ask === null ? undefined : await $.process.run(ask, { timeoutMs: 5000 }).catch(() => undefined)
+  if (sys?.exitCode === 0) {
+    for (const code of sys.stdout.match(/[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]+)*/g) ?? []) {
       const found = pickLang(code)
       if (found) return found
     }
@@ -506,13 +512,21 @@ async function applyLang($: Dollar, p: Prefs): Promise<Lang> {
   return chat.autoLang
 }
 
+/** Which system this is: Windows says so in its environment, macOS through `uname`. */
+async function findPlatform($: Dollar): Promise<Platform> {
+  if ((await $.env.get('OS').catch(() => undefined)) === 'Windows_NT') return 'windows'
+  const uname = await $.process.run(['uname', '-s'], { timeoutMs: 3000 }).catch(() => undefined)
+  return uname?.stdout.trim() === 'Darwin' ? 'mac' : 'linux'
+}
+
 /** Finds the shared folder, the clock's zone and this chat's name, and picks up where a resumed chat left off. */
 async function startShared($: Dollar) {
-  const home = await $.env.get('HOME').catch(() => undefined)
+  // Windows has no HOME, only USERPROFILE.
+  const home = (await $.env.get('HOME').catch(() => undefined)) || (await $.env.get('USERPROFILE').catch(() => undefined))
   chat.sessionId = await $.session.id().catch(() => '')
   chat.dataDir = home ? `${home}/.claude/mochi` : ''
-  const zone = await $.process.run(['date', '+%z'], { timeoutMs: 3000 }).catch(() => undefined)
-  const tz = zone?.exitCode === 0 ? parseTz(zone.stdout) : 0
+  // The module's own Date keeps the machine's time zone.
+  const tz = -new Date(await $.clock.now()).getTimezoneOffset()
   await update($, env, v => ({ ...v, tz }))
   chat.label = peerLabel(await $.session.root().catch(() => ''), '')
   chat.isLabelFromPrompt = chat.label === ''
@@ -542,8 +556,13 @@ async function firstPromptLabel($: Dollar) {
 async function cleanLive($: Dollar) {
   const now = await $.clock.now()
   const list = await $.fs.list(`${chat.dataDir}/live`).catch(() => [])
-  const old = list.filter(f => f.name.endsWith('.json') && now - f.mtimeMs > 10 * 60_000).map(f => `${chat.dataDir}/live/${f.name}`)
-  if (old.length > 0) await $.process.run(['rm', '-f', ...old], { timeoutMs: 5000 }).catch(() => undefined)
+  await removeLive($, list.filter(f => f.name.endsWith('.json') && now - f.mtimeMs > 10 * 60_000).map(f => f.name))
+}
+
+/** Deletes chats' files from `live/` by name, with the system's own command ($.fs deletes nothing). */
+async function removeLive($: Dollar, names: string[]) {
+  const argv = removeCommand(chat.platform, names)
+  if (argv !== null) await $.process.run(argv, { cwd: `${chat.dataDir}/live`, timeoutMs: 5000 }).catch(() => undefined)
 }
 
 async function openDetail($: Dollar) {
@@ -557,19 +576,31 @@ async function setPrefs($: Dollar, change: (p: Prefs) => Prefs) {
   const next = await update($, prefs, change)
   await $.store.set('prefs', next)
   await refreshStatus($)
+  // Shown, the drawing catches up with what the timer left alone while hidden.
+  if (!next.isHidden) {
+    await sync($)
+    await drawPanel($)
+  }
   return next
 }
 
 async function tick($: Dollar) {
   const now = await $.clock.now()
   const p = await read($, prefs)
-  if (!p.isHidden) await update($, frame, n => (n + 1) % 840)
   const f = await read($, face)
+  chat.beat += 1
+  // Dozing, Mochi makes its rounds on fewer beats, its frame turning slower.
+  const isDozing = !chat.isBusy && f.until === 0 && (f.mood === 'sleepy' || f.mood === 'sleeping')
+  if (isDozing && chat.beat % DOZE_EVERY !== 0) return
   const s = Math.floor(now / 1000)
   if (f.since > 0 && (await read($, sec)) !== s) await update($, sec, () => s)
-  await sync($)
+  // Hidden, the drawing waits until shown again; the face's timing runs on, for the status line.
+  if (!p.isHidden) {
+    await update($, frame, n => (n + 1) % 840)
+    await sync($)
+    await drawPanel($)
+  }
   await refreshStatus($)
-  await drawPanel($)
   const v = await read($, env)
   chat.lastEnv = v
   if ((chat.isGitWanted && now - chat.gitAt > 4000) || now - chat.gitAt > GIT_EVERY_MS) void refreshGit($).catch(() => undefined)
@@ -631,8 +662,9 @@ async function wake($: Dollar): Promise<boolean> {
  */
 async function shield($: Dollar, args: Record<string, unknown> & { tool: string }, cmd: string, what: string, startedAt: number): Promise<{ deny: string } | null> {
   if (!(await read($, prefs)).hasShield || (await $.session.surfaces()).length === 0) return null
-  await show($, { mood: 'scared', line: `${t().st.awaitingApproval} · ${what}`, holdMs: 0, sound: 'alarm' })
-  if (chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, `onay bekliyor · ${what}`)
+  const line = `${t().st.awaitingApproval} · ${what}`
+  await show($, { mood: 'scared', line, holdMs: 0, sound: 'alarm' })
+  if (chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
   const shown = cmd.length > 300 ? `${cmd.slice(0, 299)}…` : cmd
   const d = t().shield
   const answer = await $.ui.ask(d.question(what, shown), { header: 'Mochi', options: [d.run, d.stop] }).catch(() => d.stop)
@@ -787,7 +819,8 @@ async function statusLines($: Dollar, p: Prefs): Promise<string> {
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
-    // The language first: everything after it speaks it.
+    // The system, then the language: everything after speaks it.
+    chat.platform = await findPlatform($)
     const saved = (await $.store.get('prefs')) as (Partial<Prefs> & { wear?: unknown }) | undefined
     const p = await update($, prefs, () => restorePrefs(saved))
     if (saved !== undefined) await $.store.set('prefs', p)
@@ -873,7 +906,7 @@ export const register: Register = on => {
     let token = -1
     if (isSub) {
       const f = await read($, face)
-      if (f.mood === 'agent') await update($, face, v => ({ ...v, line: `ajan · ${beforeTool(args).line}` }))
+      if (f.mood === 'agent') await update($, face, v => ({ ...v, line: `${t().st.agent} · ${beforeTool(args).line}` }))
     } else if (what === null || !(await read($, prefs)).hasShield) {
       chat.stream = null
       token = await show($, beforeTool(args), waitsOnPerson(e.tool) ? 0 : startedAt)
@@ -983,7 +1016,10 @@ export const register: Register = on => {
     })
     const spent = Math.max(0, (await read($, env)).cost - chat.costAtStart)
     const rec = { at: now, seconds: Math.round((now - chat.turn.startedAt) / 1000), tools: chat.turn.tools, edits: chat.turn.edits, errors: chat.turn.errors, cost: spent }
-    const after = await update($, env, v => ({ ...v, last: ended.line.replace(/^bitti · /, ''), turns: [...v.turns, rec].slice(-40) }))
+    // The panel's last turn is the line without its "done".
+    const head = `${t().st.done} · `
+    const last = ended.line.startsWith(head) ? ended.line.slice(head.length) : ended.line
+    const after = await update($, env, v => ({ ...v, last, turns: [...v.turns, rec].slice(-40) }))
     chat.isGitWanted = true
     chat.lastTurnFailed = e.reason === 'error'
     if (chat.pendingWarn > 0) {
@@ -1025,7 +1061,7 @@ export const register: Register = on => {
   on('session.end', async ($, e, next) => {
     if (chat.dataDir !== '' && chat.sessionId !== '') {
       await saveDays($)
-      await $.process.run(['rm', '-f', `${chat.dataDir}/live/${chat.sessionId}.json`], { timeoutMs: 3000 }).catch(() => undefined)
+      await removeLive($, [`${chat.sessionId}.json`])
     }
     return next(e)
   }).catch(($, e, next) => next(e))

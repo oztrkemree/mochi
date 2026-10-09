@@ -73,7 +73,7 @@
 <td valign="top">
 
 **🔔 長い作業の通知**<br>
-2分以上かかったターンが終わったとき、または長い作業があなたの承認待ちで止まったときに、macOSの通知でお知らせします。その間に、お茶でも淹れてきてください。
+2分以上かかったターンが終わったとき、または長い作業があなたの承認待ちで止まったときに、システムの通知（macOS・Windows・Linux）でお知らせします。その間に、お茶でも淹れてきてください。
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ Claude Codeの`language`設定がこのどれかなら、Mochiはその言語で
 すべてはあなたのマシンの中で完結します。Mochiは**ネットワーク通信を一切行いません**。
 
 - チャットのフォルダで`git status`、`git log`、`git diff --numstat`を読み取ります。
-- macOSでは、通知のために`osascript`を、言語の判定のために`defaults read -g AppleLanguages`を実行します。どの環境でも、現地時刻を知るために`date +%z`を実行します。
+- 通知にはシステムの仕組みを使います。macOSでは`osascript`、WindowsではPowerShell、Linuxでは`notify-send`を実行します。言語の判定には、macOSで`defaults read -g AppleLanguages`、WindowsでPowerShellを実行し、macOSとLinuxの区別には`uname`を使います。
 - `~/.claude/mochi/`の下に小さなJSONファイルを書き込みます。開いている各チャットの状況、日ごとの集計、あなたのレベル、そして予測に使う使用量の記録です。
 
 ## 🤝 コントリビュート

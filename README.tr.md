@@ -73,7 +73,7 @@ Aynı komutun üç kez hata vermesi, aynı hatanın geri gelmesi, aynı çağrı
 <td valign="top">
 
 **🔔 Uzun iş bildirimleri**<br>
-İki dakikadan uzun bir iş bitince ya da uzun bir iş onayını beklemeye başlayınca macOS bildirimi gelir. Git bir çay koy.
+İki dakikadan uzun bir iş bitince ya da uzun bir iş onayını beklemeye başlayınca sistem bildirimi gelir (macOS, Windows ya da Linux). Git bir çay koy.
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ Claude Code'un `language` ayarı bunlardan biriyse Mochi o dili konuşur; değil
 Her şey bilgisayarında kalır. Mochi **hiçbir ağ isteği yapmaz**.
 
 - Sohbetin klasöründe `git status`, `git log` ve `git diff --numstat` okur.
-- macOS'te bildirimler için `osascript`, dil için `defaults read -g AppleLanguages` çalıştırır; her yerde yerel saat için `date +%z`.
+- Bildirimler için sistemin kendi aracını çalıştırır: macOS'te `osascript`, Windows'ta PowerShell, Linux'ta `notify-send`. Dil için macOS'te `defaults read -g AppleLanguages`, Windows'ta PowerShell; macOS ile Linux'u `uname` ayırır.
 - `~/.claude/mochi/` altına küçük JSON dosyaları yazar: açık sohbetlerin durumu, günlük sayılar, seviyen ve tahmin için kullanım ölçümleri.
 
 ## 🤝 Katkı

@@ -73,7 +73,7 @@ La même commande qui échoue trois fois, la même erreur qui revient, le même 
 <td valign="top">
 
 **🔔 Des alertes pour les longues tâches**<br>
-Une notification macOS quand un tour de plus de deux minutes se termine, ou quand une longue tâche s’arrête pour attendre votre approbation. Allez donc vous servir un café.
+Une notification système (macOS, Windows ou Linux) quand un tour de plus de deux minutes se termine, ou quand une longue tâche s’arrête pour attendre votre approbation. Allez donc vous servir un café.
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ Mochi parle la langue définie par le réglage `language` de Claude Code quand c
 Tout reste sur votre machine. Mochi n’effectue **aucune requête réseau**.
 
 - Il lit `git status`, `git log` et `git diff --numstat` dans le dossier de la conversation.
-- Sur macOS, il lance `osascript` pour les notifications et `defaults read -g AppleLanguages` pour la langue ; partout, `date +%z` pour l’heure locale.
+- Pour les notifications, il lance l’outil du système : `osascript` sur macOS, PowerShell sur Windows, `notify-send` sur Linux. Pour la langue, `defaults read -g AppleLanguages` sur macOS et PowerShell sur Windows ; `uname` distingue macOS de Linux.
 - Il écrit de petits fichiers JSON dans `~/.claude/mochi/` : l’état de chaque conversation ouverte, les compteurs du jour, votre niveau et les relevés d’utilisation qui nourrissent la prévision.
 
 ## 🤝 Contribuer

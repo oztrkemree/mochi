@@ -1,5 +1,5 @@
 import type { Env, Recent } from '../types'
-import { age, ago, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, warnLevel } from './facts'
+import { age, ago, baseName, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, warnLevel } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { t } from './i18n'
 import { UNLOCKS, hintFor, itemName, levelOf, unlocked, xpOf } from './level'
@@ -14,7 +14,6 @@ import { WEAR } from './wear'
 
 const n = (v: number) => String(Math.round(v * 100) / 100)
 const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-const base = (p: string) => p.split('/').filter(Boolean).pop() ?? p
 
 const GIT_INK: Record<string, string> = { M: '#F2B84B', A: '#4CC38A', D: '#F0645A', R: '#7AA2F7', '?': '#A59D96', U: '#F0645A' }
 
@@ -359,7 +358,11 @@ function blocks(x: number, cy: number, add: number | null, del: number | null, m
 function changesCard(env: Env, now: number, innerW: number): Card | null {
   const git = env.git
   const root = git?.root ?? ''
-  const rel = (abs: string) => (root !== '' && abs.startsWith(`${root}/`) ? abs.slice(root.length + 1) : abs)
+  // git writes `/`; Claude's own paths on Windows `\`.
+  const rel = (abs: string) => {
+    const path = abs.replaceAll('\\', '/')
+    return root !== '' && path.startsWith(`${root}/`) ? path.slice(root.length + 1) : abs
+  }
   const edited = env.files.filter(f => f.edits > 0)
   const mine = new Map(edited.map(f => [rel(f.path), f]))
   type Row = { path: string; code: string; add: number | null; del: number | null; at: number }
@@ -399,7 +402,7 @@ function changesCard(env: Env, now: number, innerW: number): Card | null {
       const blockX = numX - 74 - 50
       for (const r of rows) {
         const k = changeKind(r.code)
-        const name = base(r.path)
+        const name = baseName(r.path)
         const room = Math.max(8, Math.floor((blockX - (x + 34) - 10) / 6.7))
         const dir = dirOf(r.path, Math.max(4, room - cols(name) - 2))
         out += `<rect x="${x}" y="${cy - 8}" width="18" height="16" rx="5" fill="${k.ink}" fill-opacity="0.16"/>` +
@@ -427,7 +430,7 @@ function changesCard(env: Env, now: number, innerW: number): Card | null {
         const top = cy - 12 + 14
         out += `<path class="rule" d="M${x} ${top - 8}H${x + w}"/>` +
           `<text class="t" x="${x}" y="${top + 8}" font-size="10" font-weight="650" letter-spacing="1"><tspan class="faint">${esc(t().detail.lastEdit)}</tspan>` +
-          `<tspan class="fg" dx="10" font-size="12" letter-spacing="0">${esc(clip(base(hunk.path), 40))}</tspan>` +
+          `<tspan class="fg" dx="10" font-size="12" letter-spacing="0">${esc(clip(baseName(hunk.path), 40))}</tspan>` +
           `<tspan class="faint" dx="8" font-size="11" letter-spacing="0">${esc(`${ago(now - hunk.at)} · `)}</tspan><tspan fill="${ADD_INK}" font-size="11" letter-spacing="0">+${hunk.add}</tspan><tspan fill="${DEL_INK}" font-size="11" dx="5" letter-spacing="0">−${hunk.del}</tspan></text>`
         const boxY = top + 20
         const boxH = shown.length * 16 + 8 + (longer > 0 ? 16 : 0)
@@ -525,7 +528,7 @@ export function detailLines(env: Env, now: number): string[] {
   }
   if (env.lastEdit) {
     const h = env.lastEdit
-    out.push(`${d.lineLastEdit(base(h.path), ago(now - h.at))} · +${h.add} −${h.del}`)
+    out.push(`${d.lineLastEdit(baseName(h.path), ago(now - h.at))} · +${h.add} −${h.del}`)
     for (const line of h.old) out.push(`  − ${line}`)
     for (const line of h.new) out.push(`  + ${line}`)
   }

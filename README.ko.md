@@ -73,7 +73,7 @@
 <td valign="top">
 
 **🔔 긴 작업 알림**<br>
-2분 넘게 걸린 턴이 끝나거나, 긴 작업이 승인을 기다리며 멈추면 macOS 알림을 보내요. 그동안 커피 한 잔 하고 오세요.
+2분 넘게 걸린 턴이 끝나거나, 긴 작업이 승인을 기다리며 멈추면 시스템 알림(macOS, Windows, Linux)을 보내요. 그동안 커피 한 잔 하고 오세요.
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ Claude Code의 `language` 설정이 이 중 하나라면 Mochi는 그 언어로 
 모든 건 내 컴퓨터 안에만 머물러요. Mochi는 **네트워크 요청을 전혀 보내지 않아요**.
 
 - 채팅 폴더에서 `git status`, `git log`, `git diff --numstat`을 읽어요.
-- macOS에서는 알림을 위해 `osascript`를, 언어 확인을 위해 `defaults read -g AppleLanguages`를 실행해요. 어느 OS에서든 현지 시간을 알기 위해 `date +%z`도 실행하고요.
+- 알림은 시스템 도구로 보내요. macOS에서는 `osascript`, Windows에서는 PowerShell, Linux에서는 `notify-send`를 실행해요. 언어 확인에는 macOS에서 `defaults read -g AppleLanguages`, Windows에서 PowerShell을 쓰고, macOS와 Linux는 `uname`으로 구분해요.
 - `~/.claude/mochi/` 아래에 작은 JSON 파일을 써요: 열려 있는 채팅별 상태, 일별 카운트, 내 레벨, 그리고 소진 예측에 쓰는 사용량 기록.
 
 ## 🤝 기여하기

@@ -46,6 +46,7 @@ Open an issue with the **Feature request** form, saying what you would like Moch
 | `hooks/react.ts` | What Mochi says about each tool call, prompt and turn |
 | `hooks/guard.ts` | The shield's dangerous-command rules and the loop watch |
 | `hooks/level.ts` | Experience, levels, unlocks and outfits |
+| `hooks/system.ts` | The commands that differ by system: notifications, deleting files, the system's language |
 | `hooks/lang/*.ts` | Every text, one file per language |
 | `tests/mochi.test.ts` | The tests |
 

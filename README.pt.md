@@ -73,7 +73,7 @@ O mesmo comando falhando três vezes, o mesmo erro voltando, a mesma chamada dev
 <td valign="top">
 
 **🔔 Alertas de tarefas longas**<br>
-Uma notificação do macOS quando termina um turno de mais de dois minutos, ou quando uma tarefa longa para e fica esperando sua aprovação. Vai passar um café.
+Uma notificação do sistema (macOS, Windows ou Linux) quando termina um turno de mais de dois minutos, ou quando uma tarefa longa para e fica esperando sua aprovação. Vai passar um café.
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ O Mochi fala o idioma da configuração `language` do Claude Code quando ela é 
 Tudo fica na sua máquina. O Mochi **não faz nenhuma requisição de rede**.
 
 - Ele lê `git status`, `git log` e `git diff --numstat` na pasta do chat.
-- No macOS, roda `osascript` para as notificações e `defaults read -g AppleLanguages` para o idioma; em qualquer sistema, `date +%z` para o horário local.
+- Para as notificações, roda a ferramenta do sistema: `osascript` no macOS, PowerShell no Windows, `notify-send` no Linux. Para o idioma, `defaults read -g AppleLanguages` no macOS e PowerShell no Windows; `uname` distingue o macOS do Linux.
 - Ele grava pequenos arquivos JSON em `~/.claude/mochi/`: em que pé está cada chat aberto, contagens diárias, seu nível e as leituras de uso para a previsão.
 
 ## 🤝 Como contribuir

@@ -73,7 +73,7 @@ El mismo comando fallando tres veces, el mismo error que vuelve, la misma llamad
 <td valign="top">
 
 **🔔 Alertas de trabajos largos**<br>
-Una notificación de macOS cuando termina un turno de más de dos minutos, o cuando un trabajo largo se para a esperar tu aprobación. Aprovecha para prepararte un café.
+Una notificación del sistema (macOS, Windows o Linux) cuando termina un turno de más de dos minutos, o cuando un trabajo largo se para a esperar tu aprobación. Aprovecha para prepararte un café.
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ Mochi habla el idioma del ajuste `language` de Claude Code si es uno de estos; s
 Todo se queda en tu equipo. Mochi **no hace ninguna petición de red**.
 
 - Lee `git status`, `git log` y `git diff --numstat` en la carpeta del chat.
-- En macOS ejecuta `osascript` para las notificaciones y `defaults read -g AppleLanguages` para el idioma; en todas partes, `date +%z` para la hora local.
+- Para las notificaciones usa la herramienta del sistema: `osascript` en macOS, PowerShell en Windows, `notify-send` en Linux. Para el idioma, `defaults read -g AppleLanguages` en macOS y PowerShell en Windows; `uname` distingue macOS de Linux.
 - Escribe pequeños archivos JSON en `~/.claude/mochi/`: cómo va cada chat abierto, recuentos diarios, tu nivel y lecturas de uso para el pronóstico.
 
 ## 🤝 Contribuir

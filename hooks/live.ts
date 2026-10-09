@@ -9,10 +9,13 @@ import { clip, cols } from './text'
 /** A chat older than this is gone. */
 export const ALIVE_MS = 45_000
 
-/** A short name for a chat: its folder, or its first words when the folder says nothing. */
+/**
+ * A short name for a chat: its folder, or its first words when the folder says
+ * nothing (a home folder, a drive, a scratch or temporary one).
+ */
 export function peerLabel(root: string, firstPrompt: string): string {
-  const folder = root.split('/').filter(Boolean).pop() ?? ''
-  const isBlank = folder === '' || /^scratch-|^tmp$|^private$/.test(folder) || /^\/Users\/[^/]+\/?$|^\/home\/[^/]+\/?$/.test(root)
+  const folder = root.split(/[\\/]/).filter(Boolean).pop() ?? ''
+  const isBlank = folder === '' || /^scratch-|^tmp$|^Temp$|^private$/.test(folder) || /^(\/Users|\/home|[A-Za-z]:[\\/]Users)[\\/][^\\/]+[\\/]?$|^[A-Za-z]:[\\/]?$/i.test(root)
   if (!isBlank) return clip(folder, 22)
   // Whole words, as many of the first four as fit.
   let words = ''
@@ -34,15 +37,18 @@ export function peerOf(value: unknown, now: number): Peer | null {
   return { id: v.id, label: typeof v.label === 'string' && v.label !== '' ? v.label : t().word.chat, state, line: typeof v.line === 'string' ? v.line : '', since: typeof v.since === 'number' ? v.since : 0, at: v.at }
 }
 
+/** A change among the other chats worth saying: one waits on the person, finished a long turn, or failed. */
+export type PeerNews = { kind: 'asking' | 'done' | 'failed'; line: string }
+
 /** What changed among the other chats that is worth saying. */
-export function peerNews(before: readonly Peer[], after: readonly Peer[], now: number): string[] {
-  const out: string[] = []
+export function peerNews(before: readonly Peer[], after: readonly Peer[], now: number): PeerNews[] {
+  const out: PeerNews[] = []
   for (const p of after) {
     const was = before.find(b => b.id === p.id)
     if (was === undefined) continue
-    if (p.state === 'asking' && was.state !== 'asking') out.push(t().peer.waiting(p.label))
-    if (was.state === 'busy' && p.state === 'idle' && was.since > 0 && now - was.since >= 60_000) out.push(t().peer.done(p.label, duration((now - was.since) / 1000)))
-    if (p.state === 'error' && was.state !== 'error') out.push(t().peer.failed(p.label))
+    if (p.state === 'asking' && was.state !== 'asking') out.push({ kind: 'asking', line: t().peer.waiting(p.label) })
+    if (was.state === 'busy' && p.state === 'idle' && was.since > 0 && now - was.since >= 60_000) out.push({ kind: 'done', line: t().peer.done(p.label, duration((now - was.since) / 1000)) })
+    if (p.state === 'error' && was.state !== 'error') out.push({ kind: 'failed', line: t().peer.failed(p.label) })
   }
   return out
 }

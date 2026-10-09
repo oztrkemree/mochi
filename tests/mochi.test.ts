@@ -3,12 +3,13 @@ import { expect, mock, test } from 'claude-code/testing'
 
 import { asciiRows, kaomoji, LOOKS } from '../hooks/looks'
 import { detailSvg, levelSummary, levelSvg } from '../hooks/detail'
-import { addSample, clockAt, contextWarning, dayKey, forecastFull, lineDelta, parseGit, parseNumstat, parseTz, parseWc, shiftDay, warnLevel, withLines } from '../hooks/facts'
+import { addSample, clockAt, contextWarning, dayKey, dirOf, forecastFull, lineCount, lineDelta, parseGit, parseNumstat, shiftDay, warnLevel, withLines } from '../hooks/facts'
 import { NEW_WATCH, danger, watchCall } from '../hooks/guard'
 import { itemOf, levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
 import { peerLabel, peerNews, peersLine } from '../hooks/live'
 import { DICTS, LANGS, pickLang, setLang } from '../hooks/i18n'
 import { restorePrefs } from '../hooks/state'
+import { alertCommand, langCommand, removeCommand } from '../hooks/system'
 import { clip, cols } from '../hooks/text'
 
 // Most of these read the Turkish lines; one test below speaks English.
@@ -69,6 +70,9 @@ function engine(on: On, store: Record<string, unknown> = { prefs: { lang: 'tr' }
 
 const START = { cwd: '/tmp', surface: 'terminal', isInteractive: true } as never
 
+/** Noon on 1 July 2026 by this machine's clock, whose time zone Mochi reads. */
+const NOON = Date.UTC(2026, 6, 1, 12, 0) + new Date(Date.UTC(2026, 6, 1, 12, 0)).getTimezoneOffset() * 60_000
+
 test('every mood draws five rows of nine cells and a bounded svg', async () => {
   for (const mood of Object.keys(LOOKS) as (keyof typeof LOOKS)[]) {
     for (const frame of [0, 1, 2, 3]) {
@@ -109,6 +113,9 @@ test('the panel draws even from state an older version stored', async () => {
 
 test('tool calls name what they touch', async () => {
   expect(beforeTool({ tool: 'Read', file_path: '/a/b/app.ts' })).toEqual({ mood: 'reading', line: 'okuyor · app.ts', holdMs: 0 })
+  expect(beforeTool({ tool: 'Write', file_path: 'C:\\Users\\me\\mochi\\hooks\\a.ts' }).line).toBe('oluşturuyor · a.ts')
+  expect(dirOf('C:\\Users\\me\\mochi\\hooks\\a.ts')).toBe('C:\\Users\\me\\mochi\\hooks')
+  expect(dirOf('/p/hooks/rig.ts')).toBe('p/hooks')
   expect(beforeTool({ tool: 'Bash', command: 'rm -rf build' }).mood).toBe('scared')
   expect(beforeTool({ tool: 'Bash', command: 'npm test' }).line).toBe('test · npm test')
   expect(beforeTool({ tool: 'Edit', file_path: 'x.ts' }).line).toBe('düzenliyor · x.ts')
@@ -370,8 +377,6 @@ test('the forecast reads the pace and says when a window runs out', async () => 
   expect(forecastFull(addSample([], 'five_hour', 69, now - 2 * 60_000), limit, now)).toBe(null)
   const reset = addSample(addSample(samples, 'five_hour', 3, now - 5 * 60_000), 'five_hour', 4, now - 4 * 60_000)
   expect(forecastFull(reset, { ...limit, percent: 4 }, now)).toBe(null)
-  expect(parseTz('+0300\n')).toBe(180)
-  expect(parseTz('-0530')).toBe(-330)
   expect(clockAt(Date.UTC(2026, 9, 9, 12, 40), Date.UTC(2026, 9, 9, 10, 0), 180)).toBe('15:40')
   expect(clockAt(Date.UTC(2026, 9, 9, 11, 0), Date.UTC(2026, 9, 7, 10, 0), 180)).toBe('Cum 14:00')
   expect(dayKey(Date.UTC(2026, 9, 9, 22, 30), 180)).toBe('2026-10-10')
@@ -404,7 +409,7 @@ test('days add up into a history, a level and things to wear', async () => {
 
 test('the wardrobe puts on, takes off and goes back to automatic', async ($, on) => {
   const clock = engine(on)
-  await clock.set(Date.UTC(2026, 6, 1, 9, 0))
+  await clock.set(NOON)
   await $.session.start(START)
   const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   expect(await pane.find({ key: 'wear:glasses' })).toBeUndefined()
@@ -432,7 +437,7 @@ test('what an older version saved under the Turkish item ids carries over', asyn
   expect(restorePrefs({ pick: { head: 'tac', face: 'gozluk', neck: 'baret', held: null } } as never).pick).toEqual({ head: 'crown', face: 'glasses', held: null })
   expect(restorePrefs({ wear: 'kedi' } as never).pick).toEqual({ ground: 'cat' })
   const clock = engine(on, { prefs: { lang: 'en', pick: { face: 'gozluk' } } })
-  await clock.set(Date.UTC(2026, 6, 1, 9, 0))
+  await clock.set(NOON)
   await $.session.start(START)
   expect((await $.command.run({ command: 'mochi', args: 'wear' } as never)).text).toContain('Face: glasses\n')
   expect((await $.command.run({ command: 'mochi', args: 'wear bere' } as never)).text).toBe('beanie put on.')
@@ -442,10 +447,15 @@ test('what an older version saved under the Turkish item ids carries over', asyn
 test('the other chats are named and their news is told once', async () => {
   expect(peerLabel('/home/dev/projects/web-app', '')).toBe('web-app')
   expect(peerLabel('/home/dev/x/scratch-2026-10-09-a9bcb5', 'show me every animation on one page')).toBe('show me every')
+  expect(peerLabel('C:\\Users\\dev\\Projects\\web-app', '')).toBe('web-app')
+  expect(peerLabel('C:\\Users\\dev', 'fix the build please now')).toBe('fix the build please')
+  expect(peerLabel('C:\\Users\\dev\\', 'fix it')).toBe('fix it')
+  expect(peerLabel('D:\\', 'fix it')).toBe('fix it')
   const now = 1_760_000_000_000
   const busy = { id: 'a', label: 'web', state: 'busy' as const, line: 'çalıştırıyor', since: now - 5 * 60_000, at: now }
-  expect(peerNews([busy], [{ ...busy, state: 'asking', line: 'onay bekliyor · rm -rf x' }], now)).toEqual(['‘web’ seni bekliyor'])
-  expect(peerNews([busy], [{ ...busy, state: 'idle', since: 0 }], now)).toEqual(['‘web’ bitti · 5dk'])
+  expect(peerNews([busy], [{ ...busy, state: 'asking', line: 'onay bekliyor · rm -rf x' }], now)).toEqual([{ kind: 'asking', line: '‘web’ seni bekliyor' }])
+  expect(peerNews([busy], [{ ...busy, state: 'idle', since: 0 }], now)).toEqual([{ kind: 'done', line: '‘web’ bitti · 5dk' }])
+  expect(peerNews([busy], [{ ...busy, state: 'error' }], now).map(n => n.kind)).toEqual(['failed'])
   expect(peerNews([], [busy], now)).toEqual([])
   expect(peersLine([busy, { ...busy, id: 'b', label: 'wiki', state: 'asking' }])).toBe('wiki seni bekliyor')
   expect(peersLine([{ ...busy, state: 'idle' }])).toBe(null)
@@ -482,7 +492,7 @@ test('an edit is told in lines: what went, what came, one line before', async ()
 
 test('git line counts reach the changes', async () => {
   expect(parseNumstat('12\t3\thooks/rig.ts\n-\t-\tart/a.png\n')).toEqual({ 'hooks/rig.ts': { add: 12, del: 3 }, 'art/a.png': null })
-  expect(parseWc('  10 /r/new.ts\n   4 /r/b.ts\n  14 total\n')).toEqual({ '/r/new.ts': 10, '/r/b.ts': 4 })
+  expect([lineCount(''), lineCount('a\n'), lineCount('a\r\nb'), lineCount('a\n\nb\n')]).toEqual([0, 1, 2, 3])
   const git = parseGit('## main\n M hooks/rig.ts\n?? new.ts\n', '1760000000')
   expect(git).not.toBe(null)
   const full = withLines(git!, parseNumstat('12\t3\thooks/rig.ts\n'), { 'new.ts': 10 }, '/r')
@@ -497,11 +507,16 @@ test('git line counts reach the changes', async () => {
     expect(svg).toContain(part)
   }
   expect(/<[^a-zA-Z/!?]/.test(svg)).toBe(false)
+  // On Windows git writes the root with `/`, Claude the files with `\`.
+  const windows = { ...env, git: { ...full, root: 'C:/r' }, files: [{ ...env.files[0]!, path: 'C:\\r\\hooks\\rig.ts' }], lastEdit: { ...env.lastEdit, path: 'C:\\r\\hooks\\rig.ts' } }
+  const drawn = detailSvg(windows, 5_000_000, 640)
+  expect(drawn).toContain('bu sohbette Claude değiştirdi')
+  expect(drawn).toContain('>rig.ts</tspan>')
 })
 
 test('the level folds open and shut, and stays as left', async ($, on) => {
   const clock = engine(on)
-  await clock.set(Date.UTC(2026, 6, 1, 9, 0))
+  await clock.set(NOON)
   await $.session.start(START)
   const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   expect((await pane.find({ key: 'fold:level' }))?.text).toBe('Aç')
@@ -533,7 +548,8 @@ test('every language has every word, and the language is picked from names and c
 
 test('a new install speaks the system’s language; /mochi lang changes it and English words always work', async ($, on) => {
   const clock = engine(on, {})
-  on('process.run', ($, e) => (e.argv[0] === 'defaults' ? { value: { exitCode: 0, stdout: '(\n    "de-DE",\n    "en-US"\n)', stderr: '' } } : { value: { exitCode: 1, stdout: '', stderr: '' } }) as never)
+  const prints = (stdout: string) => ({ value: { exitCode: 0, stdout, stderr: '' } })
+  on('process.run', ($, e) => (e.argv[0] === 'uname' ? prints('Darwin\n') : e.argv[0] === 'defaults' ? prints('(\n    "de-DE",\n    "en-US"\n)') : { value: { exitCode: 1, stdout: '', stderr: '' } }) as never)
   on('tool.call', { tool: 'Bash' }, () => new Promise(() => {}) as never)
   await clock.set(1_760_000_000_000)
   await $.session.start(START)
@@ -553,6 +569,72 @@ test('a new install speaks the system’s language; /mochi lang changes it and E
   expect(word.text).toBe('Bütün aksesuarlar çıkarıldı.')
   setLang('tr')
   await ui.unmount()
+})
+
+test('on Windows: the home is USERPROFILE, the language the display one, and old files go with del', async ($, on) => {
+  const clock = engine(on, {})
+  mock.env(on, { OS: 'Windows_NT', USERPROFILE: 'C:\\Users\\me' })
+  on('session.id', () => ({ value: 'abc-1' }) as never)
+  // The engine writes a path with the separators of the system the test runs on.
+  const slashed = (path = '') => path.replaceAll('\\', '/')
+  const ran: { argv: readonly string[]; cwd?: string }[] = []
+  on('process.run', ($, e) => {
+    ran.push({ argv: e.argv, cwd: slashed(e.init?.cwd) })
+    return { value: e.argv[0] === 'powershell' ? { exitCode: 0, stdout: 'ko-KR\r\n', stderr: '' } : { exitCode: 0, stdout: '', stderr: '' } } as never
+  })
+  const listed: string[] = []
+  on('fs.list', ($, e) => {
+    listed.push(slashed(e.path))
+    return { value: slashed(e.path).endsWith('/live') ? [{ name: 'old-2.json', kind: 'file' as const, size: 2, mtimeMs: NOON - 60 * 60_000, isLink: false }] : [] }
+  })
+  await clock.set(NOON)
+  await $.session.start(START)
+  expect((await $.command.run({ command: 'mochi', args: 'lang' } as never)).text).toContain('언어: 한국어.')
+  expect(listed).toContain('C:/Users/me/.claude/mochi/days')
+  expect(ran.some(r => r.argv[0] === 'uname')).toBe(false)
+  expect(ran).toContainEqual({ argv: ['cmd', '/c', 'del', '/f', '/q', 'old-2.json'], cwd: 'C:/Users/me/.claude/mochi/live' })
+  setLang('tr')
+})
+
+test('dozing, the timer turns the frame on every fourth beat; work wakes it at once', async ($, on) => {
+  const clock = engine(on)
+  let frames = 0
+  on('state.set', ($, e, next) => {
+    if (e.key === 'frame') frames += 1
+    return next(e)
+  })
+  on('tool.call', () => ({ result: 'ok', text: 'ok' }) as never)
+  await clock.set(NOON)
+  await $.session.start(START)
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  await clock.advance(4 * 60_000)
+  expect(await ui.find({ text: /^boşta · \ddk$/ })).toBeDefined()
+  frames = 0
+  for (let i = 0; i < 8; i++) await clock.advance(450)
+  expect(frames).toBe(2)
+  await $.tool.call({ tool: 'Read', file_path: 'C:\\r\\app.ts' } as never)
+  expect(await ui.find({ text: 'okuyor · app.ts' })).toBeDefined()
+  frames = 0
+  for (let i = 0; i < 4; i++) await clock.advance(450)
+  expect(frames).toBe(4)
+  await ui.unmount()
+})
+
+test('each system is asked its own way, and no word is spliced into a script', async () => {
+  const text = 'onay bekliyor · rm -rf "$HOME"; `x` $(y)'
+  for (const platform of ['mac', 'windows'] as const) {
+    const alert = alertCommand(platform, 'Mochi', 'web-app', text)
+    expect(alert.argv[0]).toBe(platform === 'mac' ? 'osascript' : 'powershell')
+    expect(alert.argv.some(a => a.includes('rm -rf') || a.includes('web-app'))).toBe(false)
+    expect(alert.env).toEqual({ MOCHI_TITLE: 'Mochi', MOCHI_SUBTITLE: 'web-app', MOCHI_TEXT: text })
+  }
+  expect(alertCommand('linux', 'Mochi', 'web-app', '-x').argv).toEqual(['notify-send', '--', 'Mochi · web-app', '-x'])
+  expect(removeCommand('windows', ['a-1.json', 'b&calc.json', '..\\c.json', 'd_2.json'])).toEqual(['cmd', '/c', 'del', '/f', '/q', 'a-1.json', 'd_2.json'])
+  expect(removeCommand('mac', ['a-1.json'])).toEqual(['rm', '-f', '--', 'a-1.json'])
+  expect(removeCommand('linux', ['x y.json'])).toBe(null)
+  expect(langCommand('mac')?.[0]).toBe('defaults')
+  expect(langCommand('windows')).toContain('(Get-UICulture).Name')
+  expect(langCommand('linux')).toBe(null)
 })
 
 test('wide characters clip by the room they take', async () => {

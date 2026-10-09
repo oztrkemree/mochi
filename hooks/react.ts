@@ -1,5 +1,5 @@
 import type { Mood } from '../types'
-import { age } from './facts'
+import { age, baseName } from './facts'
 import { danger } from './guard'
 import { t } from './i18n'
 import { clip } from './text'
@@ -11,8 +11,7 @@ export type SoundName = 'ding' | 'oops' | 'party' | 'alarm'
 
 const short = (text: string, max = 40): string => clip(text.replace(/\s+/g, ' ').trim(), max)
 
-const base = (path: unknown): string =>
-  typeof path === 'string' ? (path.split('/').filter(Boolean).pop() ?? path) : t().word.file
+const base = (path: unknown): string => (typeof path === 'string' ? baseName(path) : t().word.file)
 
 const host = (url: unknown): string => {
   if (typeof url !== 'string') return 'web'

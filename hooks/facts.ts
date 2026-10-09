@@ -57,22 +57,19 @@ export function ago(ms: number): string {
   return span === '' ? t().justNow : t().ago(span)
 }
 
-/** The folder part of a path, shortened from the left. */
+/** A path's parts, split on `/` and on Windows's `\`. */
+const partsOf = (path: string): string[] => path.split(/[\\/]/).filter(Boolean)
+
+/** The last part of a path: "app.ts" from "/a/b/app.ts" or "C:\a\app.ts". */
+export const baseName = (path: string): string => partsOf(path).pop() ?? path
+
+/** The folder part of a path, with the path's own separator, shortened from the left. */
 export function dirOf(path: string, max = 28): string {
-  const parts = path.split('/').filter(Boolean)
-  const dir = parts.slice(0, -1).join('/')
+  const dir = partsOf(path).slice(0, -1).join(path.includes('\\') ? '\\' : '/')
   return [...dir].length > max ? `…${[...dir].slice(-max + 1).join('')}` : dir
 }
 
 // ---------- local time ----------
-
-/** "+0300" (as `date +%z` prints it) → 180 minutes. */
-export function parseTz(text: string): number {
-  const m = /([+-])(\d{2}):?(\d{2})/.exec(text)
-  if (!m) return 0
-  const v = Number(m[2]) * 60 + Number(m[3])
-  return m[1] === '-' ? -v : v
-}
 
 /** The machine's local calendar and clock at `at`, from its UTC offset in minutes. */
 export function local(at: number, tz: number) {
@@ -184,15 +181,8 @@ export function parseNumstat(text: string): Record<string, { add: number; del: n
   return out
 }
 
-/** `wc -l` read into a line count per path. */
-export function parseWc(text: string): Record<string, number> {
-  const out: Record<string, number> = {}
-  for (const line of text.split('\n')) {
-    const m = /^\s*(\d+)\s+(.+)$/.exec(line)
-    if (m && m[2] !== 'total') out[m[2] ?? ''] = Number(m[1])
-  }
-  return out
-}
+/** How many lines a file's text has; a last line without its newline counts too. */
+export const lineCount = (text: string): number => lines(text).length
 
 /** The repository's changes with their line counts: tracked from the diff, a new untracked file all added. */
 export function withLines(git: Git, numstat: Record<string, { add: number; del: number } | null>, counts: Record<string, number>, root: string): Git {

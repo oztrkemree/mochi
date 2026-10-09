@@ -73,7 +73,7 @@ The same command failing three times, the same error coming back, the same call 
 <td valign="top">
 
 **🔔 Long-job alerts**<br>
-A macOS notification when a turn longer than two minutes ends, or when a long job stops to wait for your approval. Go make tea.
+A system notification (macOS, Windows or Linux) when a turn longer than two minutes ends, or when a long job stops to wait for your approval. Go make tea.
 
 </td>
 <td valign="top">
@@ -144,7 +144,7 @@ Mochi speaks Claude Code's `language` setting when it is one of these; otherwise
 Everything stays on your machine. Mochi makes **no network requests**.
 
 - It reads `git status`, `git log` and `git diff --numstat` in the chat's folder.
-- On macOS it runs `osascript` for notifications and `defaults read -g AppleLanguages` for the language; everywhere, `date +%z` for the local time.
+- For notifications it runs the system's own tool: `osascript` on macOS, PowerShell on Windows, `notify-send` on Linux. For the language, `defaults read -g AppleLanguages` on macOS and PowerShell on Windows; `uname` tells macOS from Linux.
 - It writes small JSON files under `~/.claude/mochi/`: where each open chat stands, daily counts, your level, and usage readings for the forecast.
 
 ## 🤝 Contributing
