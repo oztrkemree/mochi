@@ -1,0 +1,16 @@
+name: Feature request
+description: Something you would like Mochi to notice, show or do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What should Mochi do, and when?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What would it help you with?

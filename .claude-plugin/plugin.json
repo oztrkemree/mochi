@@ -5,5 +5,7 @@
   "author": {
     "name": "Emre Öztürk"
   },
+  "repository": "https://github.com/oztrkemree/mochi",
+  "license": "MIT",
   "types": "./types/index.d.ts"
 }

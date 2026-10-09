@@ -1,0 +1,33 @@
+name: Bug report
+description: Something Mochi does wrong, draws wrong or says wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where
+      options:
+        - Claude desktop app
+        - Terminal
+        - VS Code
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Output of `claude --version`, your OS, and Mochi's language (`/mochi status`).
+      placeholder: "2.1.293 · macOS 26 · English"
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or log
+      description: A screenshot of the band or the details pane, or any error line Mochi printed.

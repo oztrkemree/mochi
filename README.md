@@ -70,6 +70,14 @@ To run your copy in every session while you work on it, set `CLAUDE_CODE_PLUGIN_
 
 The texts live in `hooks/lang/`, one file per language, each shaped exactly like `en.ts`; a new language is a new file there and one line in `hooks/i18n.ts`. The art was made with image generation and cut into `hooks/assets.ts` and `hooks/wear.ts`; the sheets are in `art/`.
 
+## Contributing
+
+Bug reports, ideas, translations and pull requests are welcome. Open an [issue](https://github.com/oztrkemree/mochi/issues/new/choose) or read [CONTRIBUTING.md](CONTRIBUTING.md) to start working on the code.
+
+## License
+
+[MIT](LICENSE): use it, change it, share it.
+
 ---
 
 ## Türkçe
@@ -83,3 +91,5 @@ Kurmak için bir sohbete yaz:
 ```
 
 `y` ile marketplace'i ekle, **user** kapsamını seç. Dil otomatik seçilir; `/mochi dil tr` ile Türkçe'ye sabitleyebilirsin.
+
+Hata bildirmek, fikir önermek ya da katkı yapmak için [issue](https://github.com/oztrkemree/mochi/issues/new/choose) açabilir veya PR gönderebilirsin; ayrıntılar [CONTRIBUTING.md](CONTRIBUTING.md) içinde. Lisans: MIT.
