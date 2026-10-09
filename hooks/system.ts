@@ -42,11 +42,12 @@ export function alertCommand(platform: Platform, title: string, subtitle: string
 /**
  * The command that deletes files by name in the folder it runs in; only plain
  * names (a chat's id), so none reads as a switch, or to cmd as an operator.
+ * cmd skips its AutoRun, which could move it to another folder first.
  */
 export function removeCommand(platform: Platform, names: readonly string[]): string[] | null {
   const plain = names.filter(n => /^[\w-]+\.json$/.test(n))
   if (plain.length === 0) return null
-  return platform === 'windows' ? ['cmd', '/c', 'del', '/f', '/q', ...plain] : ['rm', '-f', '--', ...plain]
+  return platform === 'windows' ? ['cmd', '/d', '/c', 'del', '/f', '/q', ...plain] : ['rm', '-f', '--', ...plain]
 }
 
 /** The command that prints the system's languages: macOS's preferred list, Windows's display language. Linux has `LANG` alone. */

@@ -106,7 +106,9 @@ test('a new shot starts where the old one stands and eases into its own pose', a
 
 test('the panel draws even from state an older version stored', async () => {
   const old = { label: 'boşta', detail: 'hazır', context: { percent: 40 } } as never
-  const { svg } = panelSvg({ panel: { shot: { mood: 'idle', scene: { context: 40, agents: 0 }, at: 1, from: null }, info: old, infoFrom: old, infoAt: 1 }, now: 5000, width: 770 })
+  // Item ids from before they were English.
+  const worn = { context: 40, agents: 0, outfit: { head: 'tac', held: 'kupa', face: 'gozluk' } as never }
+  const { svg } = panelSvg({ panel: { shot: { mood: 'idle', scene: worn, at: 1, from: { params: target('wave'), mood: 'wave', scene: worn } }, info: old, infoFrom: old, infoAt: 1 }, now: 5000, width: 770 })
   expect(svg).toContain('hazır')
   expect(svg).toContain('context')
 })
@@ -313,6 +315,10 @@ test('a stopped dangerous command never runs; an approved one does', async ($, o
     ran.push(e.command)
     return { result: { stdout: '', stderr: '', interrupted: false }, text: '' } as never
   })
+  on('tool.call', { tool: 'PowerShell' }, ($, e) => {
+    ran.push(e.command)
+    return { result: '', text: '' } as never
+  })
   await $.session.start(START)
   const stopped = await $.tool.call({ tool: 'Bash', command: 'rm -rf build' })
   expect(stopped.deny).toContain('Mochi')
@@ -324,9 +330,12 @@ test('a stopped dangerous command never runs; an approved one does', async ($, o
   expect(ran).toEqual(['rm -rf build'])
   await $.tool.call({ tool: 'Bash', command: 'ls' })
   expect(asked.length).toBe(2)
+  answer = 'Durdur'
+  expect((await $.tool.call({ tool: 'PowerShell', command: 'git reset --hard HEAD~3' })).deny).toContain('Mochi')
+  expect(asked.length).toBe(3)
   await $.command.run({ command: 'mochi', args: 'kalkan' } as never)
   await $.tool.call({ tool: 'Bash', command: 'rm -rf build' })
-  expect(asked.length).toBe(2)
+  expect(asked.length).toBe(3)
   expect(ran.length).toBe(3)
 })
 
@@ -353,6 +362,8 @@ test('the loop watch speaks once when the same thing fails or repeats', async ()
   w = NEW_WATCH
   const poll = { tool: 'Bash', command: 'sleep 30; gh run view' }
   for (let i = 0; i < 6; i++) expect(step(poll, false, 'in progress')).toBe(null)
+  const wait = { tool: 'PowerShell', command: 'Start-Sleep 30; gh run view' }
+  for (let i = 0; i < 6; i++) expect(step(wait, false, 'in progress')).toBe(null)
 })
 
 test('the loop alarm reaches the band', async ($, on) => {
@@ -573,7 +584,7 @@ test('a new install speaks the system’s language; /mochi lang changes it and E
 
 test('on Windows: the home is USERPROFILE, the language the display one, and old files go with del', async ($, on) => {
   const clock = engine(on, {})
-  mock.env(on, { OS: 'Windows_NT', USERPROFILE: 'C:\\Users\\me' })
+  mock.env(on, { OS: 'Windows_NT', USERPROFILE: 'C:\\Users\\me', HOME: 'C:\\msys64\\home\\me' })
   on('session.id', () => ({ value: 'abc-1' }) as never)
   // The engine writes a path with the separators of the system the test runs on.
   const slashed = (path = '') => path.replaceAll('\\', '/')
@@ -592,7 +603,7 @@ test('on Windows: the home is USERPROFILE, the language the display one, and old
   expect((await $.command.run({ command: 'mochi', args: 'lang' } as never)).text).toContain('언어: 한국어.')
   expect(listed).toContain('C:/Users/me/.claude/mochi/days')
   expect(ran.some(r => r.argv[0] === 'uname')).toBe(false)
-  expect(ran).toContainEqual({ argv: ['cmd', '/c', 'del', '/f', '/q', 'old-2.json'], cwd: 'C:/Users/me/.claude/mochi/live' })
+  expect(ran).toContainEqual({ argv: ['cmd', '/d', '/c', 'del', '/f', '/q', 'old-2.json'], cwd: 'C:/Users/me/.claude/mochi/live' })
   setLang('tr')
 })
 
@@ -629,7 +640,7 @@ test('each system is asked its own way, and no word is spliced into a script', a
     expect(alert.env).toEqual({ MOCHI_TITLE: 'Mochi', MOCHI_SUBTITLE: 'web-app', MOCHI_TEXT: text })
   }
   expect(alertCommand('linux', 'Mochi', 'web-app', '-x').argv).toEqual(['notify-send', '--', 'Mochi · web-app', '-x'])
-  expect(removeCommand('windows', ['a-1.json', 'b&calc.json', '..\\c.json', 'd_2.json'])).toEqual(['cmd', '/c', 'del', '/f', '/q', 'a-1.json', 'd_2.json'])
+  expect(removeCommand('windows', ['a-1.json', 'b&calc.json', '..\\c.json', 'd_2.json'])).toEqual(['cmd', '/d', '/c', 'del', '/f', '/q', 'a-1.json', 'd_2.json'])
   expect(removeCommand('mac', ['a-1.json'])).toEqual(['rm', '-f', '--', 'a-1.json'])
   expect(removeCommand('linux', ['x y.json'])).toBe(null)
   expect(langCommand('mac')?.[0]).toBe('defaults')

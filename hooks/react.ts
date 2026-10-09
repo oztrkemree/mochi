@@ -1,6 +1,6 @@
 import type { Mood } from '../types'
 import { age, baseName } from './facts'
-import { danger } from './guard'
+import { danger, isShell } from './guard'
 import { t } from './i18n'
 import { clip } from './text'
 
@@ -49,7 +49,8 @@ export const waitsOnPerson = (tool: string): boolean => tool === 'AskUserQuestio
 /** What the call is, in a few words: `npm test`, `app.ts`, `github.com`. */
 export function subject(e: Args): string {
   switch (e.tool) {
-    case 'Bash': return short(str(e.command), 36)
+    case 'Bash':
+    case 'PowerShell': return short(str(e.command), 36)
     case 'Read':
     case 'Edit':
     case 'MultiEdit':
@@ -87,7 +88,8 @@ export function beforeTool(e: Args): Reaction {
     case 'MultiEdit':
     case 'NotebookEdit': return at('writing', w.editing)
     case 'Write': return at('writing', w.creating)
-    case 'Bash': {
+    case 'Bash':
+    case 'PowerShell': {
       const c = str(e.command)
       if (isScary(c)) return { mood: 'scared', line: `${w.careful} · ${s}`, holdMs: 0, sound: 'alarm' }
       if (isTest(c)) return { mood: 'nervous', line: `${w.test} · ${s}`, holdMs: 0 }
@@ -120,7 +122,7 @@ const REFUSED = /doesn't want to proceed|user (rejected|denied|declined)|permiss
  * `errorRun` counts failures in a row, this one included.
  */
 export function afterTool(e: Args, out: Outcome, errorRun: number, seconds: number): Reaction | null {
-  const c = e.tool === 'Bash' ? str(e.command) : ''
+  const c = isShell(e.tool) ? str(e.command) : ''
   const s = subject(e)
   const w = t().st
   if (out.deny !== undefined || (out.isError && REFUSED.test(out.text ?? ''))) {

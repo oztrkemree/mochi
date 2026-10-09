@@ -603,8 +603,10 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
 
   const tap = pose.tapsFoot ? loopT('rotate', ['0 55 84', '-14 55 84', '0 55 84', '0 55 84'], 0.5) : ''
   // What stands beside Mochi makes way for the first helper, who stands there too.
+  // An id this version does not know (an older one's, kept in $.state) is left off.
   const fit = (o: Outfit | undefined, agents: number): Outfit => {
     const v = { ...NO_OUTFIT, ...o }
+    for (const slot of Object.keys(NO_OUTFIT) as (keyof Outfit)[]) if (!Object.hasOwn(WEAR_AT, v[slot] ?? '')) v[slot] = null
     return agents >= 1 && v.ground ? { ...v, ground: null } : v
   }
   const outfit = fit(scene.outfit, scene.agents)

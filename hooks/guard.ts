@@ -26,6 +26,9 @@ const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [/(^|[\s;&|(])sudo\s/, 'sudo'],
 ]
 
+/** The tools that run a shell command: Bash, and PowerShell on Windows. */
+export const isShell = (tool: string): boolean => tool === 'Bash' || tool === 'PowerShell'
+
 /** Which kind of command that cannot be undone this is, or null. */
 export function dangerKey(cmd: string): keyof Dict['danger'] | null {
   for (const [re, what] of DANGERS) if (re.test(cmd)) return what
@@ -52,7 +55,8 @@ const str = (v: unknown): string => (typeof v === 'string' ? v : v === undefined
 export function signature(args: Record<string, unknown> & { tool: string }): string {
   const pick = (...keys: string[]) => keys.map(k => str(args[k])).join('\u0000')
   switch (args.tool) {
-    case 'Bash': return `Bash:${pick('command')}`
+    case 'Bash':
+    case 'PowerShell': return `${args.tool}:${pick('command')}`
     case 'Read': return `Read:${pick('file_path', 'offset', 'limit')}`
     case 'Edit':
     case 'MultiEdit': return `${args.tool}:${hash(pick('file_path', 'old_string', 'new_string', 'edits'))}`
@@ -72,7 +76,7 @@ export function gist(text: string): string {
 
 /** Calls whose result is expected to repeat while waiting on something. */
 const isPolling = (args: Record<string, unknown> & { tool: string }): boolean =>
-  /^(Monitor|BashOutput|TaskOutput|TaskGet|ScheduleWakeup)$/.test(args.tool) || (args.tool === 'Bash' && /\bsleep\b|\bwatch\b|--watch\b/.test(str(args.command)))
+  /^(Monitor|BashOutput|TaskOutput|TaskGet|ScheduleWakeup)$/.test(args.tool) || (isShell(args.tool) && /\bsleep\b|\bwatch\b|--watch\b/i.test(str(args.command)))
 
 export type Watch = {
   /** Per call: how often this turn, failures in a row, the last result and how often it came back unchanged. */

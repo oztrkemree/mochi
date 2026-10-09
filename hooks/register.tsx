@@ -6,7 +6,7 @@ import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
 import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
-import { NEW_WATCH, danger, dangerKey, watchCall } from './guard'
+import { NEW_WATCH, danger, dangerKey, isShell, watchCall } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
 import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, wearable, xpOf } from './level'
@@ -521,8 +521,8 @@ async function findPlatform($: Dollar): Promise<Platform> {
 
 /** Finds the shared folder, the clock's zone and this chat's name, and picks up where a resumed chat left off. */
 async function startShared($: Dollar) {
-  // Windows has no HOME, only USERPROFILE.
-  const home = (await $.env.get('HOME').catch(() => undefined)) || (await $.env.get('USERPROFILE').catch(() => undefined))
+  // Claude Code's own home: USERPROFILE on Windows, where a Unix shell may set HOME elsewhere.
+  const home = chat.platform === 'windows' ? await $.env.get('USERPROFILE').catch(() => undefined) : await $.env.get('HOME').catch(() => undefined)
   chat.sessionId = await $.session.id().catch(() => '')
   chat.dataDir = home ? `${home}/.claude/mochi` : ''
   // The module's own Date keeps the machine's time zone.
@@ -898,7 +898,7 @@ export const register: Register = on => {
     chat.lastActivity = startedAt
 
     // The shield: a command that cannot be undone waits for the person's word.
-    const cmd = e.tool === 'Bash' && typeof args.command === 'string' ? args.command : ''
+    const cmd = isShell(e.tool) && typeof args.command === 'string' ? args.command : ''
     const what = cmd === '' ? null : danger(cmd)
     const stop = what === null ? null : await shield($, args, cmd, what, startedAt)
     if (stop !== null) return stop
@@ -933,7 +933,7 @@ export const register: Register = on => {
           })(),
         ].slice(-60),
       }))
-      if (isWrite || e.tool === 'Bash') chat.isGitWanted = true
+      if (isWrite || isShell(e.tool)) chat.isGitWanted = true
     }
 
     let ran
