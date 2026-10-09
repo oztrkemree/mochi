@@ -1,0 +1,9 @@
+{
+  "name": "mochi",
+  "version": "0.2.0",
+  "description": "Mochi: a clay mascot above the prompt that reacts to everything Claude Code does, in 10 languages",
+  "author": {
+    "name": "Emre Öztürk"
+  },
+  "types": "./types/index.d.ts"
+}

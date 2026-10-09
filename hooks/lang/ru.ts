@@ -1,0 +1,317 @@
+import type { en } from './en'
+
+// Русский: тексты совпадают с английским словарём ключ в ключ.
+
+const U = { s: 'с', m: 'мин', h: 'ч', d: 'д' } as const
+
+/** Russian plural form: 1 файл, 2 файла, 5 файлов (11–14 take the "many" form). */
+const pl = (n: number, one: string, few: string, many: string) => {
+  const a = Math.abs(n) % 100
+  const b = a % 10
+  if (a >= 11 && a <= 14) return many
+  if (b === 1) return one
+  if (b >= 2 && b <= 4) return few
+  return many
+}
+
+/** Number plus its noun; a formatted number ("1 234") is read by its digits. */
+const pn = (n: number | string, one: string, few: string, many: string) =>
+  `${n} ${pl(typeof n === 'number' ? n : Number(n.replace(/\D/g, '')) || 0, one, few, many)}`
+
+const turnsN = (n: number | string) => pn(n, 'запрос', 'запроса', 'запросов')
+const editsN = (n: number | string) => pn(n, 'правка', 'правки', 'правок')
+const commitsN = (n: number | string) => pn(n, 'коммит', 'коммита', 'коммитов')
+const toolsN = (n: number) => pn(n, 'инструмент', 'инструмента', 'инструментов')
+const filesN = (n: number) => pn(n, 'файл', 'файла', 'файлов')
+const daysN = (n: number) => pn(n, 'день', 'дня', 'дней')
+const times = (n: number) => `${n} ${pl(n, 'раз', 'раза', 'раз')}`
+
+export const ru: typeof en = {
+  name: 'Русский',
+  thousands: ' ',
+  unit: (n, u) => `${n} ${U[u]}`,
+  justNow: 'только что',
+  ago: span => `${span} назад`,
+  days: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+  months: ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
+
+  mood: {
+    idle: 'без дела', wave: 'машет', listening: 'слушает тебя', thinking: 'думает', talking: 'пишет ответ',
+    reading: 'читает', searching: 'ищет', writing: 'пишет код', running: 'запускает команду', waiting: 'ждёт',
+    web: 'в интернете', agent: 'запускает агента', asking: 'ждёт тебя', success: 'готово', proud: 'готово', party: 'празднует',
+    error: 'ошибка', dizzy: 'ошибки подряд', scared: 'опасная команда', denied: 'отклонено', shocked: 'в шоке',
+    nervous: 'нервничает', pleased: 'доволен', tired: 'устал', sleepy: 'засыпает', sleeping: 'спит', squeezed: 'сжимает контекст',
+  },
+
+  st: {
+    ready: 'готов',
+    idle: span => `без дела · ${span}`,
+    listening: 'слушает',
+    thinking: 'думает',
+    talking: 'пишет ответ',
+    reading: 'читает',
+    searching: 'ищет',
+    editing: 'редактирует',
+    creating: 'создаёт',
+    running: 'запускает',
+    test: 'тест',
+    opening: 'открывает',
+    agent: 'агент',
+    careful: 'осторожно',
+    waitingAnswer: 'ждёт твоего ответа',
+    waitingPlan: 'ждёт одобрения плана',
+    planning: 'планирует',
+    todo: 'список задач',
+    publishing: 'публикует страницу',
+    browsing: 'в браузере',
+    denied: 'отклонено',
+    error: 'ошибка',
+    errorsInRow: n => `${n}-я ошибка подряд`,
+    testsFailed: 'тесты упали',
+    testsPassed: 'тесты прошли',
+    committed: 'коммит сделан',
+    pushed: 'запушено',
+    wokeUp: 'проснулся',
+    stopped: 'остановлено',
+    apiError: 'ошибка API',
+    refused: 'отказ',
+    done: 'готово',
+    tools: n => toolsN(n),
+    agents: n => pn(n, 'агент', 'агента', 'агентов'),
+    edits: n => editsN(n),
+    awaitingApproval: 'ждёт одобрения',
+    approved: 'одобрено',
+    halted: 'остановлено',
+    loop: 'цикл',
+    compacting: 'сжатие контекста',
+    compacted: 'контекст сжат',
+    commitNudge: (n, last) => `${filesN(n)} ${pl(n, 'ждёт', 'ждут', 'ждут')} коммита · ${last}`,
+    lastCommit: ago => `последний коммит ${ago}`,
+    noCommits: 'коммитов пока нет',
+    level: n => `уровень ${n}`,
+    newItems: names => `новое: ${names}`,
+  },
+
+  word: { file: 'файл', agent: 'агент', chat: 'чат' },
+
+  limit: {
+    short: { five_hour: 'сессия', seven_day: 'неделя', spend_limit: 'расходы' },
+    long: { five_hour: 'лимит сессии', seven_day: 'недельный лимит' },
+    pace: (name, at, reset) => `${name} при таком темпе закончится · около ${at} · сброс ${reset}`,
+  },
+
+  ctx: {
+    compactSoon: 'сжатие совсем скоро',
+    percent: p => `контекст ${p}%`,
+    biggest: (name, p) => `больше всего: ${name} ${p}%`,
+    hint: 'поможет /compact',
+    category: {
+      'system prompt': 'системный промпт', 'system tools': 'системные инструменты', 'mcp tools': 'инструменты MCP', 'custom agents': 'агенты',
+      'memory files': 'файлы памяти', skills: 'скиллы', messages: 'сообщения', 'free space': 'свободно',
+      'autocompact buffer': 'буфер сжатия', 'slash commands': 'команды',
+    },
+  },
+
+  panel: {
+    context: 'контекст',
+    fullAt: time => `заполнится к ${time}`,
+    lastTurn: s => `последний запрос · ${s}`,
+    changes: n => pn(n, 'изменение', 'изменения', 'изменений'),
+    clean: 'чисто',
+    contextUnknown: 'неизвестно',
+  },
+
+  peer: {
+    state: { busy: 'работает', asking: 'ждёт тебя', idle: 'без дела', error: 'ошибка' },
+    waiting: label => `«${label}» ждёт тебя`,
+    done: (label, span) => `«${label}» готово · ${span}`,
+    failed: label => `«${label}»: ошибка`,
+    asking: (label, more) => `${label} ждёт тебя${more > 0 ? ` +${more}` : ''}`,
+    error: label => `${label}: ошибка`,
+    busyOne: label => `${label} работает`,
+    busyMany: n => `${pn(n, 'чат', 'чата', 'чатов')} ${pl(n, 'работает', 'работают', 'работают')}`,
+  },
+
+  danger: {
+    forkBomb: 'вешает систему',
+    rm: 'безвозвратно удаляет файлы и папки',
+    findDelete: 'удаляет найденные файлы',
+    forcePush: 'перезаписывает историю удалённой ветки',
+    resetHard: 'стирает незакоммиченные изменения',
+    clean: 'удаляет неотслеживаемые файлы',
+    checkoutDot: 'откатывает незакоммиченные изменения',
+    branchDelete: 'удаляет ветку, даже если она не слита',
+    stashDrop: 'удаляет изменения из stash',
+    dropTable: 'удаляет таблицу базы данных',
+    deleteAll: 'удаляет все строки таблицы',
+    disk: 'пишет прямо на диск',
+    chmod: 'массово меняет права доступа',
+    infra: 'удаляет инфраструктуру',
+    repoDelete: 'удаляет репозиторий',
+    publish: 'публикует пакет для всех',
+    sudo: 'выполняется с правами администратора',
+  },
+
+  loopAlarm: {
+    sameFail: n => `та же команда упала ${times(n)} подряд`,
+    sameError: n => `та же ошибка ${times(n)}`,
+    sameResult: n => `делает одно и то же ${times(n)}, без изменений`,
+  },
+
+  item: {
+    name: {
+      baret: 'строительная каска', tac: 'корона', parti: 'праздничный колпак', cadi: 'шляпа ведьмы', noel: 'шапка Санты', gece: 'ночной колпак', kulaklik: 'наушники', kep: 'шапочка выпускника',
+      kovboy: 'ковбойская шляпа', korsan: 'пиратская шляпа', sef: 'поварской колпак', viking: 'шлем викинга', sihirbaz: 'шляпа волшебника', fes: 'феска', pervane: 'кепка с пропеллером', bere: 'вязаная шапка',
+      gunes: 'солнечные очки', gozluk: 'очки', biyik: 'усы', monokl: 'монокль',
+      papyon: 'галстук-бабочка', madalya: 'медаль', atki: 'шарф', kravat: 'галстук', nazar: 'бусина назар',
+      kupa: 'кружка кофе', cay: 'стаканчик чая', simit: 'симит', kalem: 'карандаш', anahtar: 'гаечный ключ', balon: 'воздушный шарик',
+      balkabagi: 'тыква', ordek: 'резиновая уточка', kaktus: 'кактус', kedi: 'кот', hediye: 'подарочная коробка',
+    },
+    short: {
+      baret: 'каска', tac: 'корона', parti: 'праздник', cadi: 'ведьма', noel: 'Санта', gece: 'ночной колпак', kulaklik: 'наушники', kep: 'выпускник',
+      kovboy: 'ковбой', korsan: 'пират', sef: 'шеф', viking: 'викинг', sihirbaz: 'волшебник', fes: 'феска', pervane: 'пропеллер', bere: 'шапка',
+      gunes: 'тёмные очки', gozluk: 'очки', biyik: 'усы', monokl: 'монокль',
+      papyon: 'бабочка', madalya: 'медаль', atki: 'шарф', kravat: 'галстук', nazar: 'назар',
+      kupa: 'кофе', cay: 'чай', simit: 'симит', kalem: 'карандаш', anahtar: 'ключ', balon: 'шарик',
+      balkabagi: 'тыква', ordek: 'уточка', kaktus: 'кактус', kedi: 'кот', hediye: 'подарок',
+    },
+    slot: { head: 'Голова', face: 'Лицо', neck: 'Шея', held: 'В руке', ground: 'Рядом' },
+    hint: {
+      start: 'открыто с самого начала',
+      level: n => `уровень ${n}`,
+      turns: n => turnsN(n),
+      days: n => daysN(n),
+      streak: n => `${daysN(n)} подряд`,
+      commits: n => commitsN(n),
+      edits: n => editsN(n),
+      night: n => `${turnsN(n)} ночью`,
+      halloween: '24 окт – 1 ноя',
+      xmas: '18–30 дек',
+    },
+  },
+
+  detail: {
+    title: 'Mochi · детали',
+    context: 'контекст',
+    session5h: 'сессия · 5 часов',
+    week7d: 'неделя · 7 дней',
+    resetsIn: span => `сброс через ${span}`,
+    paceFull: time => `при таком темпе заполнится к ${time}`,
+    stats: { time: 'время', turns: 'запросы', tools: 'инструменты', edits: 'правки', errors: 'ошибки', cost: 'стоимость' },
+    thisSession: 'ЭТА СЕССИЯ',
+    otherChats: 'ДРУГИЕ ЧАТЫ',
+    open: n => `открыто: ${n}`,
+    contextTitle: 'КОНТЕКСТ',
+    compactsAt: tokens => `сжатие при ${tokens}`,
+    contextWarn: ['Контекст заполняется', 'Скоро сжатие', 'Сжатие совсем скоро'],
+    recentTurns: 'ПОСЛЕДНИЕ ЗАПРОСЫ',
+    average: span => `в среднем ${span}`,
+    legend: { read: 'чтение', edit: 'правка', error: 'ошибка' },
+    countIsTools: 'число: инструменты',
+    history: 'ИСТОРИЯ',
+    allChats: 'все чаты',
+    today: 'запросов сегодня',
+    last7: 'запросов за 7 дней',
+    streak: 'дней подряд',
+    total: days => `запросов · за ${daysN(days)}`,
+    less: 'меньше',
+    more: 'больше',
+    toolsTitle: 'ИНСТРУМЕНТЫ',
+    kind: { read: 'чтение', search: 'поиск', edit: 'правка', bash: 'команда', web: 'веб', agent: 'агент', ask: 'вопрос', other: 'другое' },
+    changes: 'ИЗМЕНЕНИЯ',
+    files: n => filesN(n),
+    clean: 'чисто',
+    notRepo: 'не git-репозиторий · файлы, изменённые в этом чате',
+    cleanTree: 'рабочее дерево чистое: с последнего коммита ничего не менялось',
+    newFile: 'новый',
+    binary: 'бинарный',
+    moreFiles: n => `+ ещё ${filesN(n)}`,
+    byClaude: 'изменено Claude в этом чате · новые сверху',
+    lastEdit: 'ПОСЛЕДНЯЯ ПРАВКА',
+    moreLines: n => `… ещё ${pn(n, 'строка', 'строки', 'строк')}`,
+    levelN: n => `Уровень ${n}`,
+    toNext: xp => `${xp} XP до следующего уровня`,
+    totals: (turns, edits, commits) => `${turnsN(turns)} · ${editsN(edits)} · ${commitsN(commits)}`,
+    wardrobeCount: n => `гардероб: ${pl(n, 'открыт', 'открыто', 'открыто')} ${pn(n, 'аксессуар', 'аксессуара', 'аксессуаров')}`,
+    next: (name, hint) => `далее: ${name} (${hint})`,
+    summary: (level, pct) => `Уровень ${level} · ${pct}%`,
+    lineSession: (turns, tools) => `Сессия: ${turnsN(turns)} · ${toolsN(tools)}`,
+    lineContext: 'Контекст',
+    lineGit: (branch, files) => `Git: ${branch} · ${filesN(files)}`,
+    lineLastEdit: (file, ago) => `Последняя правка: ${file} · ${ago}`,
+  },
+
+  ui: {
+    levelTitle: 'УРОВЕНЬ',
+    wardrobeTitle: 'ГАРДЕРОБ',
+    open: 'Открыть',
+    close: 'Закрыть',
+    auto: 'Автоматически',
+    takeAllOff: 'Снять всё',
+    unlockedOf: (a, b) => `открыто ${a}/${b}`,
+    wearing: list => `надето: ${list}`,
+    nothing: 'ничего',
+    empty: 'пусто',
+    autoMark: ' (авто)',
+    wardrobe: 'Гардероб',
+  },
+
+  shield: {
+    question: (what, cmd) => `Эта команда ${what}:\n\n${cmd}\n\nЗапустить?`,
+    run: 'Запустить',
+    stop: 'Остановить',
+  },
+
+  note: {
+    loop: (alarm, about) => `${alarm} (${about}). Нажми Esc, чтобы остановить.`,
+    detailFailed: reason => `Не удалось открыть панель деталей: ${reason}`,
+    clickFailed: reason => `клик для деталей здесь не работает (${reason}); введи /mochi детали`,
+    seeWardrobe: ' · /mochi надеть',
+  },
+
+  cmd: {
+    description: 'Mochi: показать/скрыть, детали, уровень, аксессуары, щит, уведомления, звук, язык',
+    hint: '[details/детали | level/уровень | wear/надеть [вещь] | shield/щит | alerts/уведомления | sound/звук | lang/язык [код] | hide/скрыть | show/показать | small/маленький | big/большой | status/статус]',
+    small: 'Mochi в одну строку.',
+    big: 'Mochi в полный размер.',
+    detailOpened: 'Панель деталей открыта.',
+    shieldOn: 'Щит включён: перед командами, которые нельзя отменить, Mochi спросит разрешения.',
+    shieldOff: 'Щит выключен.',
+    alertsOn: minutes =>
+      `Уведомления включены: услышишь, когда закончится работа дольше ${minutes} ${pl(minutes, 'минуты', 'минут', 'минут')} и когда долгая задача будет ждать твоего одобрения.`,
+    alertsOff: 'Уведомления выключены.',
+    levelLine: (level, xp, toNext) => `Уровень ${level} · ${xp} XP · ${toNext} XP до следующего уровня`,
+    statsLine: (turns, edits, commits, days, streak) =>
+      `${turnsN(turns)} · ${editsN(edits)} · ${commitsN(commits)} · ${daysN(days)} · ${daysN(streak)} подряд`,
+    unlocked: list => `Открыто: ${list}`,
+    locked: list => `Закрыто: ${list}`,
+    none: 'нет',
+    noneYet: 'пока нет',
+    wearList: (a, b, list) => `Открыто: ${a}/${b} · ${list}`,
+    wearHow: 'Выбери в Гардеробе на панели деталей или: /mochi надеть <вещь> · авто · ничего',
+    wearAuto: 'Аксессуары выбираются автоматически: по уровню, сезону и времени суток.',
+    wearNone: 'Все аксессуары сняты.',
+    noSuchItem: want => `Нет такого аксессуара: ${want}`,
+    itemLocked: (name, hint) => `Пока закрыто: ${name} (${hint}).`,
+    itemOn: name => `Надето: ${name}.`,
+    soundOn: 'Звук включён.',
+    soundOff: 'Звук выключен.',
+    hidden: 'Mochi скрыт. Чтобы вернуть: /mochi',
+    shown: 'Mochi включён.',
+    statusLine: (label, line) => `Статус: ${label} · ${line}`,
+    contextLine: (ctx, agents, tools) => `Контекст: ${ctx} · агентов работает: ${agents} · инструментов за запрос: ${tools}`,
+    prefsLine: (sound, shield, alerts, compact) =>
+      `Звук: ${sound ? 'вкл' : 'выкл'} · Щит: ${shield ? 'вкл' : 'выкл'} · Уведомления: ${alerts ? 'вкл' : 'выкл'} · Размер: ${compact ? 'маленький' : 'большой'}`,
+    peersLine: (level, peers) => `Уровень ${level} · другие чаты: ${peers}`,
+    commands: 'Команды: /mochi (показать или скрыть) | details/детали | level/уровень | wear/надеть | shield/щит | alerts/уведомления | sound/звук | lang/язык | small/маленький | big/большой | status/статус',
+    langNow: (name, list) => `Язык: ${name}. Доступны: ${list} · /mochi язык <код> или авто`,
+    langSet: name => `Язык: ${name}.`,
+    langAuto: name => `Язык выбирается по Claude Code и системе: ${name}.`,
+    langUnknown: (code, list) => `Неизвестный язык: ${code}. Доступны: ${list}`,
+    words: {
+      hide: ['скрыть', 'спрятать'], show: ['показать'], small: ['маленький', 'мини'], big: ['большой'], sound: ['звук'],
+      status: ['статус', 'состояние'], details: ['детали', 'подробно'], level: ['уровень'], wear: ['надеть', 'аксессуары', 'гардероб'], shield: ['щит', 'защита'],
+      alerts: ['уведомления', 'оповещения'], lang: ['язык'], auto: ['авто', 'автоматически'], none: ['ничего', 'нет'],
+    },
+  },
+}
