@@ -76,6 +76,7 @@ export const ja: typeof en = {
     short: { five_hour: 'セッション', seven_day: '週間', spend_limit: '利用額' },
     long: { five_hour: 'セッション上限', seven_day: '週間上限' },
     pace: (name, at, reset) => `このペースだと${name}に到達 · ${at}ごろ · リセット ${reset}`,
+    back: name => `${name}がリセット · 続けられる`,
   },
 
   ctx: {
@@ -108,6 +109,16 @@ export const ja: typeof en = {
     error: label => `${label}でエラー`,
     busyOne: label => `${label}が作業中`,
     busyMany: n => `${n}件のチャットが作業中`,
+  },
+
+  chats: {
+    title: 'チャット',
+    heading: n => `チャット: ${n}件`,
+    here: 'ここ',
+    worktree: branch => `${branch}（ワークツリー）`,
+    waiting: n => `${n}件が返事待ち`,
+    waitingLong: (label, span) => `${label}が${span}返事待ち`,
+    words: 'チャット',
   },
 
   danger: {

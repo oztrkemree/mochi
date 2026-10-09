@@ -84,6 +84,7 @@ export const en = {
     short: { five_hour: 'session', seven_day: 'week', spend_limit: 'spend' } as Record<string, string>,
     long: { five_hour: 'session limit', seven_day: 'weekly limit' } as Record<string, string>,
     pace: (name: string, at: string, reset: string) => `${name} will run out at this pace · around ${at} · resets ${reset}`,
+    back: (name: string) => `${name} reset · you can carry on`,
   },
 
   /** The context window. */
@@ -120,6 +121,18 @@ export const en = {
     error: (label: string) => `${label} hit an error`,
     busyOne: (label: string) => `${label} is working`,
     busyMany: (n: number) => `${n} chats working`,
+  },
+
+  /** The board of every chat on the machine. */
+  chats: {
+    title: 'CHATS',
+    heading: (n: number) => `Chats: ${n} open`,
+    here: 'this chat',
+    worktree: (branch: string) => `${branch} (worktree)`,
+    waiting: (n: number) => `${n} waiting for you`,
+    waitingLong: (label: string, span: string) => `${label} has been waiting ${span}`,
+    /** Words this language accepts for /mochi chats besides the English ones, separated by spaces. */
+    words: '',
   },
 
   /** What a command that cannot be undone would do. */

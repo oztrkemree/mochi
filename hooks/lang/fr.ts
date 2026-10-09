@@ -80,6 +80,7 @@ export const fr: typeof en = {
     short: { five_hour: 'session', seven_day: 'semaine', spend_limit: 'dépenses' },
     long: { five_hour: 'limite de session', seven_day: 'limite hebdomadaire' },
     pace: (name, at, reset) => `${name} atteinte à ce rythme · vers ${at} · réinitialisation ${reset}`,
+    back: name => `${name} réinitialisée · vous pouvez continuer`,
   },
 
   ctx: {
@@ -112,6 +113,16 @@ export const fr: typeof en = {
     error: label => `${label} a rencontré une erreur`,
     busyOne: label => `${label} travaille`,
     busyMany: n => `${pl(n, 'conversation', 'conversations')} en cours`,
+  },
+
+  chats: {
+    title: 'CONVERSATIONS',
+    heading: n => `Conversations : ${n} ${n < 2 ? 'ouverte' : 'ouvertes'}`,
+    here: 'celle-ci',
+    worktree: branch => `${branch} (worktree)`,
+    waiting: n => `${n} vous ${n < 2 ? 'attend' : 'attendent'}`,
+    waitingLong: (label, span) => `${label} vous attend depuis ${span}`,
+    words: 'conversations',
   },
 
   danger: {

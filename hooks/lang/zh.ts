@@ -76,6 +76,7 @@ export const zh: typeof en = {
     short: { five_hour: '会话', seven_day: '每周', spend_limit: '花费' },
     long: { five_hour: '会话限额', seven_day: '每周限额' },
     pace: (name, at, reset) => `${name}照此速度将用完 · 约 ${at} · ${reset} 重置`,
+    back: name => `${name}已重置 · 可以继续了`,
   },
 
   ctx: {
@@ -108,6 +109,16 @@ export const zh: typeof en = {
     error: label => `${label} 出错了`,
     busyOne: label => `${label} 工作中`,
     busyMany: n => `${n} 个对话工作中`,
+  },
+
+  chats: {
+    title: '对话',
+    heading: n => `对话：${n} 个已打开`,
+    here: '当前',
+    worktree: branch => `${branch}（工作树）`,
+    waiting: n => `${n} 个在等你`,
+    waitingLong: (label, span) => `${label} 已等你 ${span}`,
+    words: '对话',
   },
 
   danger: {

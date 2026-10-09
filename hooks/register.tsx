@@ -5,7 +5,8 @@ import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, R
 import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
-import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
+import { boardLines, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from './chats'
+import { addSample, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
 import { NEW_WATCH, danger, dangerKey, isShell, watchCall } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
@@ -339,10 +340,17 @@ async function notify($: Dollar, text: string) {
 /** Where this chat stands, for the other chats: working, asking, idle or failed. */
 async function liveNow($: Dollar): Promise<Omit<Peer, 'at'>> {
   const f = await read($, face)
-  // Waiting on the person is the asking face held open; a nudge or another chat's news holds it only a while.
-  const isAsking = f.mood === 'asking' && f.until === 0
+  // Waiting on the person is the asking face held open, or the shield's question; a nudge or another chat's news holds it only a while.
+  const isAsking = (f.mood === 'asking' && f.until === 0) || chat.isAsking
   const state: Peer['state'] = isAsking ? 'asking' : chat.isBusy ? 'busy' : chat.lastTurnFailed ? 'error' : 'idle'
-  return { id: chat.sessionId, label: chat.label || t().word.chat, state, line: f.line, since: state === 'busy' ? chat.turn.startedAt : 0 }
+  if (state !== chat.state) {
+    chat.state = state
+    chat.stateAt = await $.clock.now()
+  }
+  return {
+    id: chat.sessionId, label: chat.label || t().word.chat, state, line: f.line, since: state === 'busy' ? chat.turn.startedAt : 0,
+    folder: chat.folder, branch: (await read($, env)).git?.branch ?? '', isWorktree: chat.isWorktree, stateAt: chat.stateAt,
+  }
 }
 
 /** Writes this chat's file when where it stands changed (at most every 1.5 s), and every 15 s so the others know it is alive. */
@@ -608,6 +616,7 @@ async function tick($: Dollar) {
   if (now - chat.peersAt > PEERS_EVERY_MS) void readPeers($).catch(() => undefined)
   if (now - chat.historyAt > HISTORY_EVERY_MS) void refreshHistory($).catch(() => undefined)
   if (now - chat.samplesAt > SAMPLES_EVERY_MS) void saveSamples($).catch(() => undefined)
+  void watchChats($, now).catch(() => undefined)
   if (now - chat.detailAt > 3000) {
     chat.detailAt = now
     const d = await read($, detail)
@@ -667,7 +676,9 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
   if (chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
   const shown = cmd.length > 300 ? `${cmd.slice(0, 299)}…` : cmd
   const d = t().shield
+  chat.isAsking = true
   const answer = await $.ui.ask(d.question(what, shown), { header: 'Mochi', options: [d.run, d.stop] }).catch(() => d.stop)
+  chat.isAsking = false
   if (answer !== d.run) {
     await show($, { mood: 'denied', line: `${t().st.halted} · ${what}`, holdMs: 5000 })
     const key = dangerKey(cmd)
@@ -680,10 +691,13 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
 
 // ---------- /mochi ----------
 
-type Word = keyof Dict['cmd']['words']
+type Word = keyof Dict['cmd']['words'] | 'chats'
+
+/** A command's words in the language in use: in `cmd.words`, or, for a newer command, in its own section. */
+const wordsFor = (key: Word): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : t().cmd.words[key])
 
 /** Whether `value` names the command: its English words, or the words of the language in use. */
-const names = (value: string, key: Word, ...english: string[]) => english.includes(value) || t().cmd.words[key].some(w => plain(w) === value)
+const names = (value: string, key: Word, ...english: string[]) => english.includes(value) || wordsFor(key).some(w => plain(w) === value)
 
 /** A subcommand: the key of its words in each language, the English words it answers to, and what it does with the rest of the line. */
 type Command = { name: Word; english: string[]; run: (arg: string) => Promise<string> }
@@ -702,6 +716,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'sound', english: ['sound'], run: () => toggleSound($) },
     { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
+    { name: 'chats', english: ['chats', 'board'], run: () => chatsNow($) },
   ]
 }
 
@@ -817,6 +832,66 @@ async function statusLines($: Dollar, p: Prefs): Promise<string> {
   ].join('\n')
 }
 
+// ---------- chats & limits ----------
+
+/** How long a claim waits before it is read back, so chats that claimed at once have all written. */
+const CLAIM_SETTLE_MS = 1500
+
+/** Where this chat works, for the board: its folder's name, and whether git keeps it as a linked worktree. */
+async function findWhere($: Dollar) {
+  chat.folder = baseName(await $.session.root().catch(() => ''))
+  const out = await $.process.run(['git', 'rev-parse', '--git-dir', '--git-common-dir'], { timeoutMs: 5000 }).catch(() => undefined)
+  chat.isWorktree = out?.exitCode === 0 && isLinkedWorktree(out.stdout)
+}
+
+/**
+ * On each beat: this chat's row for the board, one more notification for a
+ * wait on the person that went on, and a nearly used-up window that reset.
+ */
+async function watchChats($: Dollar, now: number) {
+  const me: Peer = { ...(await liveNow($)), at: 0 }
+  const v = await read($, env)
+  if (JSON.stringify(me) !== JSON.stringify(v.me)) await setEnv($, x => ({ ...x, me }))
+  if (isWaitLong(me, chat.waitTold, now)) {
+    chat.waitTold = me.stateAt ?? 0
+    await notify($, t().chats.waitingLong(me.label, age(now - chat.waitTold)))
+  }
+  // The readings are as old as the last response, so the reset comes from the time they gave.
+  const passed = resetsPassed(v.limits, chat.resetsSeenAt, now)
+  chat.resetsSeenAt = now
+  for (const l of passed) await limitBack($, l)
+}
+
+/** A nearly used-up window has reset: every chat's Mochi shows it, and one chat on the machine tells the person. */
+async function limitBack($: Dollar, l: Limit) {
+  const line = t().limit.back(t().limit.long[l.kind] ?? l.kind)
+  if (chat.isBusy) chat.pendingLimit = line
+  else await show($, { mood: 'party', line, holdMs: 10_000, sound: 'ding' })
+  if (await claim($, `reset-${l.kind}`, l.resetsAt)) await notify($, line)
+}
+
+/**
+ * Whether this chat is the one to tell of something every chat sees at once,
+ * by a marker file under the shared folder: a claim already there stands;
+ * chats that find none all write theirs, and the one read back a moment later wins.
+ */
+async function claim($: Dollar, name: string, at: number): Promise<boolean> {
+  if (chat.dataDir === '' || chat.sessionId === '') return true
+  const path = `${chat.dataDir}/${name}.json`
+  const holder = async () => claimOf(await $.fs.read(path).catch(() => null), at, chat.sessionId)
+  const found = await holder()
+  if (found !== 'free') return found === 'mine'
+  await $.fs.write(path, JSON.stringify({ at, id: chat.sessionId })).catch(() => undefined)
+  await $.clock.sleep(CLAIM_SETTLE_MS)
+  return (await holder()) === 'mine'
+}
+
+/** /mochi chats: every chat on the machine, this one first. */
+async function chatsNow($: Dollar): Promise<string> {
+  const now = await $.clock.now()
+  return boardLines({ ...(await liveNow($)), at: now }, (await read($, env)).peers, now).join('\n')
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     // The system, then the language: everything after speaks it.
@@ -834,6 +909,7 @@ export const register: Register = on => {
     await update($, panel, v => ({ shot: { ...FIRST_SHOT, ...v.shot }, info: { ...NO_INFO, ...v.info }, infoFrom: null, infoAt: v.infoAt ?? 0 }))
     chat.lastActivity = await $.clock.now()
     await startShared($).catch(() => undefined)
+    void findWhere($).catch(() => undefined)
     await measure($)
     chat.lastNudge = await $.clock.now()
     void refreshGit($).catch(() => undefined)

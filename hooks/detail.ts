@@ -1,9 +1,9 @@
 import type { Env, Recent } from '../types'
+import { boardLines, chatsCard } from './chats'
 import { age, ago, baseName, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, warnLevel } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { t } from './i18n'
 import { UNLOCKS, hintFor, itemName, levelOf, unlocked, xpOf } from './level'
-import { PEER_INK, peerState } from './live'
 import { KIND_INK, glyph, limitName, sliceInk, tokens, until } from './panel'
 import { duration } from './react'
 import { clip, cols } from './text'
@@ -21,7 +21,7 @@ const PAD = 14
 const IN = 16
 
 /** A card: its body is drawn from (x, y) and `content` tall; the card adds its heading and padding around it. */
-type Card = { title: string; right?: string; content: number; body: (x: number, y: number, w: number) => string }
+export type Card = { title: string; right?: string; content: number; body: (x: number, y: number, w: number) => string }
 
 const thousands = (v: number) => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, t().thousands)
 
@@ -96,27 +96,9 @@ export function detailSvg(env: Env, now: number, width: number): string {
     },
   })
 
-  // ---- the other chats ----
-  const peers = env.peers ?? []
-  if (peers.length > 0) {
-    cards.push({
-      title: t().detail.otherChats, right: t().detail.open(peers.length), content: 16 + (peers.length - 1) * 22,
-      body: (x, y, w) => peers.map((p, i) => {
-        const cy = y + 8 + i * 22
-        const ink = PEER_INK[p.state]
-        const pulse = p.state === 'asking' || p.state === 'busy'
-          ? `<animate attributeName="opacity" values="1;0.35;1" dur="${p.state === 'asking' ? 1.2 : 2}s" repeatCount="indefinite"/>`
-          : ''
-        const labelW = Math.min(170, w * 0.32)
-        const stateW = 128
-        const time = p.state === 'busy' && p.since > 0 ? ` · ${duration((now - p.since) / 1000)}` : ''
-        return `<circle cx="${x + 4}" cy="${cy}" r="4" fill="${ink}">${pulse}</circle>` +
-          `<text class="t fg" x="${x + 16}" y="${cy + 4}" font-size="12" font-weight="600">${esc(clip(p.label, Math.floor(labelW / 7)))}</text>` +
-          `<text class="t${p.state === 'idle' ? ' faint' : ''}" x="${n(x + 16 + labelW)}" y="${cy + 4}" font-size="11.5"${p.state === 'idle' ? '' : ` fill="${ink}"`}>${esc(peerState(p.state) + time)}</text>` +
-          (w - labelW - stateW - 16 > 40 ? `<text class="t faint" x="${n(x + 16 + labelW + stateW)}" y="${cy + 4}" font-size="11">${esc(clip(p.line, Math.floor((w - labelW - stateW - 16) / 6.2)))}</text>` : '')
-      }).join(''),
-    })
-  }
+  // ---- every chat on the machine ----
+  const board = chatsCard(env, now)
+  if (board) cards.push(board)
 
   // ---- what changed in the files ----
   const changes = changesCard(env, now, innerW)
@@ -519,6 +501,7 @@ export function detailLines(env: Env, now: number): string[] {
   out.push(`${d.lineContext}: ${tokens(env.tokens)} / ${tokens(env.window)}${env.compactAt > 0 ? ` · ${d.compactsAt(tokens(env.compactAt))}` : ''}`)
   for (const s of env.slices) out.push(`  ${categoryName(s.name)}: ${tokens(s.tokens)}`)
   for (const l of env.limits) out.push(`${limitName(l.kind)}: ${Math.round(l.percent)}%${l.resetsAt > now ? ` · ${d.resetsIn(until(l.resetsAt - now))}` : ''}`)
+  if ((env.peers ?? []).length > 0) out.push(...boardLines(env.me, env.peers, now))
   if (env.git) {
     const g = env.git
     const add = g.files.reduce((a, f) => a + (f.add ?? 0), 0)

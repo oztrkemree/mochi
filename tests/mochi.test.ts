@@ -482,7 +482,7 @@ test('the detail pane shows the other chats, the calendar and the level', async 
     samples: [{ kind: 'five_hour', at: 5_000_000_000_000 - 30 * 60_000, p: 40 }],
   }
   const svg = detailSvg(env, 5_000_000_000_000, 640)
-  for (const part of ['DİĞER SOHBETLER', 'web-app', 'onay bekliyor', 'GEÇMİŞ', 'bugün tur', 'bu hızla', 'dolar']) {
+  for (const part of ['SOHBETLER', 'web-app', 'onay bekliyor', 'GEÇMİŞ', 'bugün tur', 'bu hızla', 'dolar']) {
     expect(svg).toContain(part)
   }
   expect(/<[^a-zA-Z/!?]/.test(svg)).toBe(false)

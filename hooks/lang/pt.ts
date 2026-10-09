@@ -79,6 +79,7 @@ export const pt: typeof en = {
     short: { five_hour: 'sessão', seven_day: 'semana', spend_limit: 'gasto' },
     long: { five_hour: 'limite da sessão', seven_day: 'limite semanal' },
     pace: (name, at, reset) => `${name} vai acabar neste ritmo · por volta de ${at} · reinicia ${reset}`,
+    back: name => `${name} reiniciado · pode continuar`,
   },
 
   ctx: {
@@ -111,6 +112,16 @@ export const pt: typeof en = {
     error: label => `${label} deu erro`,
     busyOne: label => `${label} está trabalhando`,
     busyMany: n => `${pl(n, 'chat', 'chats')} trabalhando`,
+  },
+
+  chats: {
+    title: 'CHATS',
+    heading: n => `Chats: ${pl(n, 'aberto', 'abertos')}`,
+    here: 'este chat',
+    worktree: branch => `${branch} (worktree)`,
+    waiting: n => `${n} esperando você`,
+    waitingLong: (label, span) => `${label} está esperando você há ${span}`,
+    words: 'conversas',
   },
 
   danger: {
