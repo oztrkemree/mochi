@@ -38,7 +38,9 @@ Open an issue with the **Feature request** form, saying what you would like Moch
 
 | Path | What it holds |
 | --- | --- |
-| `hooks/register.tsx` | The hooks: events, state, commands, the band and the details pane |
+| `hooks/register.tsx` | The hooks and everything that acts through `$`: events, state, the shield, `/mochi` |
+| `hooks/render.tsx` | The band and the details pane, drawn from state |
+| `hooks/state.ts` | The defaults of the state and the bookkeeping both of those share |
 | `hooks/rig.ts` | The mascot drawing: poses, transitions, accessories |
 | `hooks/panel.ts`, `hooks/detail.ts` | The band and the details pane as SVG |
 | `hooks/react.ts` | What Mochi says about each tool call, prompt and turn |
@@ -46,6 +48,8 @@ Open an issue with the **Feature request** form, saying what you would like Moch
 | `hooks/level.ts` | Experience, levels, unlocks and outfits |
 | `hooks/lang/*.ts` | Every text, one file per language |
 | `tests/mochi.test.ts` | The tests |
+
+The engine follows `$` only into functions declared in the same file, and reads the state a file uses from that file's own consts. So code that acts through `$` goes in `register.tsx` (a `/mochi` subcommand is one more entry in its `commands` list); code that does not goes in its own module.
 
 ### Style
 

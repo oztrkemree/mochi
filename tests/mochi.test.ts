@@ -5,9 +5,10 @@ import { asciiRows, kaomoji, LOOKS } from '../hooks/looks'
 import { detailSvg, levelSummary, levelSvg } from '../hooks/detail'
 import { addSample, clockAt, contextWarning, dayKey, forecastFull, lineDelta, parseGit, parseNumstat, parseTz, parseWc, shiftDay, warnLevel, withLines } from '../hooks/facts'
 import { NEW_WATCH, danger, watchCall } from '../hooks/guard'
-import { levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
+import { itemOf, levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
 import { peerLabel, peerNews, peersLine } from '../hooks/live'
 import { DICTS, LANGS, pickLang, setLang } from '../hooks/i18n'
+import { restorePrefs } from '../hooks/state'
 import { clip, cols } from '../hooks/text'
 
 // Most of these read the Turkish lines; one test below speaks English.
@@ -388,17 +389,17 @@ test('days add up into a history, a level and things to wear', async () => {
   expect(xpOf(h)).toBe(47 * 10 + 20 * 2 + 3 * 25 + 3 * 30)
   expect(levelOf(0)).toEqual({ level: 1, at: 0, next: 100 })
   expect(levelOf(450)).toEqual({ level: 3, at: 400, next: 900 })
-  expect(unlocked(h)).toEqual(['bere', 'gozluk', 'kupa', 'cay', 'papyon', 'gunes', 'kulaklik', 'kalem'])
+  expect(unlocked(h)).toEqual(['beanie', 'glasses', 'mug', 'tea', 'bowtie', 'sunglasses', 'headphones', 'pencil'])
   const noon = Date.UTC(2026, 6, 1, 9, 0)
   const none = { head: null, face: null, neck: null, held: null, ground: null }
-  expect(outfitFor({}, ['papyon', 'kulaklik'], noon, 180, 'idle', true)).toEqual({ ...none, head: 'kulaklik', neck: 'papyon' })
-  expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 5, 0), 180, 'idle', true).held).toBe('kupa')
-  expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 23, 0), 180, 'writing', false).head).toBe('gece')
-  expect(outfitFor({}, ['baret'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true)).toEqual({ ...none, head: 'cadi', ground: 'balkabagi' })
-  expect(outfitFor({ head: 'baret' }, ['baret'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true).head).toBe('baret')
-  expect(outfitFor({ head: null, neck: null, ground: null }, ['baret', 'papyon'], noon, 180, 'idle', true)).toEqual(none)
-  expect(outfitFor({ face: 'gozluk', held: 'balon' }, [], noon, 180, 'idle', true)).toEqual({ ...none, face: 'gozluk', held: 'balon' })
-  expect(outfitFor({ held: 'balon' }, [], noon, 180, 'success', false).held).toBe(null)
+  expect(outfitFor({}, ['bowtie', 'headphones'], noon, 180, 'idle', true)).toEqual({ ...none, head: 'headphones', neck: 'bowtie' })
+  expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 5, 0), 180, 'idle', true).held).toBe('mug')
+  expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 23, 0), 180, 'writing', false).head).toBe('nightcap')
+  expect(outfitFor({}, ['hardhat'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true)).toEqual({ ...none, head: 'witchhat', ground: 'pumpkin' })
+  expect(outfitFor({ head: 'hardhat' }, ['hardhat'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true).head).toBe('hardhat')
+  expect(outfitFor({ head: null, neck: null, ground: null }, ['hardhat', 'bowtie'], noon, 180, 'idle', true)).toEqual(none)
+  expect(outfitFor({ face: 'glasses', held: 'balloon' }, [], noon, 180, 'idle', true)).toEqual({ ...none, face: 'glasses', held: 'balloon' })
+  expect(outfitFor({ held: 'balloon' }, [], noon, 180, 'success', false).held).toBe(null)
 })
 
 test('the wardrobe puts on, takes off and goes back to automatic', async ($, on) => {
@@ -406,14 +407,14 @@ test('the wardrobe puts on, takes off and goes back to automatic', async ($, on)
   await clock.set(Date.UTC(2026, 6, 1, 9, 0))
   await $.session.start(START)
   const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
-  expect(await pane.find({ key: 'wear:gozluk' })).toBeUndefined()
+  expect(await pane.find({ key: 'wear:glasses' })).toBeUndefined()
   expect(await pane.find({ type: 'Text', text: /^1?\d\/36 açık · takılı: / })).toBeDefined()
   await pane.press({ key: 'fold:wardrobe' } as never)
-  expect(await pane.find({ key: 'wear:gozluk' })).toBeDefined()
+  expect(await pane.find({ key: 'wear:glasses' })).toBeDefined()
   expect(await pane.find({ key: 'wear:viking' })).toBeUndefined()
-  await pane.press({ key: 'wear:gozluk' } as never)
+  await pane.press({ key: 'wear:glasses' } as never)
   expect((await pane.find({ type: 'Text', text: /^Yüz · / }))?.text).toBe('Yüz · gözlük')
-  await pane.press({ key: 'wear:gozluk' } as never)
+  await pane.press({ key: 'wear:glasses' } as never)
   expect((await pane.find({ type: 'Text', text: /^Yüz · / }))?.text).toBe('Yüz · boş')
   const said = await $.command.run({ command: 'mochi', args: 'aksesuar viking' } as never)
   expect(said.text).toBe('viking kaskı kilitli (seviye 12).')
@@ -422,6 +423,20 @@ test('the wardrobe puts on, takes off and goes back to automatic', async ($, on)
   await pane.press({ key: 'wear:auto' } as never)
   expect((await pane.find({ type: 'Text', text: /^Baş · / }))?.text).toBe('Baş · boş (otomatik)')
   await pane.unmount()
+})
+
+test('what an older version saved under the Turkish item ids carries over', async ($, on) => {
+  expect(itemOf('gozluk')).toBe('glasses')
+  expect(itemOf('glasses')).toBe('glasses')
+  expect(itemOf('toString')).toBe(null)
+  expect(restorePrefs({ pick: { head: 'tac', face: 'gozluk', neck: 'baret', held: null } } as never).pick).toEqual({ head: 'crown', face: 'glasses', held: null })
+  expect(restorePrefs({ wear: 'kedi' } as never).pick).toEqual({ ground: 'cat' })
+  const clock = engine(on, { prefs: { lang: 'en', pick: { face: 'gozluk' } } })
+  await clock.set(Date.UTC(2026, 6, 1, 9, 0))
+  await $.session.start(START)
+  expect((await $.command.run({ command: 'mochi', args: 'wear' } as never)).text).toContain('Face: glasses\n')
+  expect((await $.command.run({ command: 'mochi', args: 'wear bere' } as never)).text).toBe('beanie put on.')
+  setLang('tr')
 })
 
 test('the other chats are named and their news is told once', async () => {

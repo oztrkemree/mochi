@@ -139,6 +139,16 @@ export function forecastFull(samples: readonly Sample[], limit: Limit, now: numb
   return fullAt
 }
 
+/** When each usage window runs out at this pace, rounded to the minute so the panel does not redraw for nothing. */
+export function forecasts(v: Env, now: number): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const l of v.limits) {
+    const at = forecastFull(v.samples, l, now)
+    if (at !== null) out[l.kind] = Math.round(at / 60_000) * 60_000
+  }
+  return out
+}
+
 // ---------- what changed in the files ----------
 
 const lines = (text: string): string[] => (text === '' ? [] : text.replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n'))

@@ -1,61 +1,30 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Panel, Peer, Prefs, Recent, Scene, Shot, Slice } from '../types'
-import { LOOKS, asciiRows, kaomoji, moodLabel } from './looks'
-import { afterTool, beforeTool, duration, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
+import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
+import { kaomoji, moodLabel } from './looks'
+import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
-import { detailHeight, detailLines, detailSvg, levelSummary, levelSvg } from './detail'
-import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, lineDelta, local, parseGit, parseNumstat, parseTz, parseWc, warnLevel, withLines } from './facts'
+import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineDelta, parseGit, parseNumstat, parseTz, parseWc, warnLevel, withLines } from './facts'
 import { NEW_WATCH, danger, dangerKey, watchCall } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
-import type { Lang } from './i18n'
-import type { Watch } from './guard'
-import { ASCII_HAT, EMPTY_DAY, SLOT, SLOTS, SLOT_ITEMS, UNLOCKS, itemName, itemShort, slotName, addDay, hintFor, levelOf, outfitFor, season, summarize, unlocked, wearable, xpOf } from './level'
-import { WEAR } from './wear'
-import { peerLabel, peerNews, peerOf, peersLine } from './live'
-import { PANEL_H, limitName, panelSvg, toolKind } from './panel'
-import { POSES, VECTOR_WEAR, paramsAt, svgFor } from './rig'
+import type { Dict, Lang } from './i18n'
+import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, wearable, xpOf } from './level'
+import { peerLabel, peerNews, peerOf } from './live'
+import { toolKind } from './panel'
+import { band, detailPane } from './render'
+import { paramsAt } from './rig'
 import { clip } from './sound'
+import { ALL_ITEMS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, chat, rest0, restorePrefs } from './state'
 
-const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false }, lang: 'auto' }
-const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
-const isItem = (v: unknown): v is Item => typeof v === 'string' && (ALL_ITEMS as string[]).includes(v)
+// Everything that acts through `$` lives in this file: the engine follows `$`
+// only into functions declared beside the call, and reads the state a file
+// uses from that file's own consts. What needs no `$` lives in the other
+// modules, and the drawing hooks in render.tsx.
 
-/** Saved preferences, completed, with an older version's single `wear` turned into a choice per slot. */
-function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | undefined): Prefs {
-  const pick: Partial<Outfit> = {}
-  if (saved?.pick && typeof saved.pick === 'object') {
-    for (const slot of SLOTS) {
-      const v = (saved.pick as Record<string, unknown>)[slot]
-      if (v === null) pick[slot] = null
-      else if (isItem(v) && SLOT[v] === slot) pick[slot] = v
-    }
-  } else if (saved?.wear === 'none') {
-    for (const slot of SLOTS) pick[slot] = null
-  } else if (isItem(saved?.wear)) {
-    pick[SLOT[saved.wear]] = saved.wear
-  }
-  const { wear: _old, ...rest } = saved ?? {}
-  const open = { level: saved?.open?.level === true, wardrobe: saved?.open?.wardrobe === true }
-  // Choices saved before there were languages were made in Turkish, its only one then.
-  const lang = typeof saved?.lang === 'string' && (saved.lang === 'auto' || pickLang(saved.lang) !== null) ? saved.lang : saved !== undefined ? 'tr' : 'auto'
-  return { ...DEFAULT_PREFS, ...rest, pick, open, lang }
-}
-const NO_ENV: Env = {
-  context: -1, agents: 0, turnTools: 0, tokens: 0, window: 0, slices: [], limits: [], cost: 0, recent: [], last: '', compactAt: 0, allSlices: [], git: null, turns: [], files: [], kinds: {}, startedAt: 0,
-  samples: [], peers: [], history: null, tz: 0, lastEdit: null,
-}
-/** The face at rest, in the language in use. */
-const rest0 = (): Omit<Face, 'frameAt'> => ({ mood: 'idle', line: t().st.ready, until: 0, since: 0 })
-const FIRST_SHOT: Shot = { mood: 'idle', scene: { context: -1, agents: 0 }, at: 0, from: null }
-
-const face = atom({ plugin: 'mochi', key: 'face' } as const, { mood: 'idle' as Mood, line: '', until: 0, since: 0, frameAt: -1 })
+const face = atom({ plugin: 'mochi', key: 'face' } as const, NO_FACE)
 const shot = atom({ plugin: 'mochi', key: 'shot' } as const, FIRST_SHOT)
-const NO_INFO: Info = {
-  label: '', detail: '', context: { percent: -1, tokens: 0, window: 0, slices: [] }, limits: [], cost: 0, agents: 0, tools: 0, isBusy: false, recent: [], last: '', compactPct: 0, warn: 0, git: null,
-}
-const panel = atom({ plugin: 'mochi', key: 'panel' } as const, { shot: FIRST_SHOT, info: NO_INFO, infoFrom: null, infoAt: 0 })
+const panel = atom({ plugin: 'mochi', key: 'panel' } as const, NO_PANEL)
 const detail = atom({ plugin: 'mochi', key: 'detail' } as const, NO_ENV)
 const DETAIL = 'mochi-detay'
 const GIT_EVERY_MS = 60_000
@@ -88,74 +57,14 @@ const SAMPLES_EVERY_MS = 5 * 60_000
 /** Moods that belong to a running tool, so a long run turns them into `waiting`. */
 const TOOL_MOODS: ReadonlySet<Mood> = new Set(['reading', 'searching', 'writing', 'running', 'nervous', 'web', 'scared'])
 
-const width = (s: string) => [...s].length
 /** Turkish letters folded to ASCII, for matching what the person typed. */
 const plain = (s: string) => s.toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
-const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0, Math.max(1, max - 1)).join('')}…`)
 
 type Dollar = EngineInterface
-
-// Per-load bookkeeping (a reload starts it over); what the drawing reads lives in $.state.
-let isBusy = false
-let lastActivity = 0
-let lastTypedAt = 0
-let faceToken = 0
-let errorRun = 0
-let callId = 0
-let gitAt = 0
-let isGitWanted = true
-let lastNudge = 0
-let warned = 0
-let pendingWarn = 0
-let costAtStart = 0
-let detailAt = 0
-let stream: 'thinking' | 'talking' | null = null
-let turn = { startedAt: 0, tools: 0, edits: 0, errors: 0 }
-let watch: Watch = NEW_WATCH
-let pendingLimit = ''
-let warnedLimits: string[] = []
-
-// Where Mochi keeps what outlives the chat, shared by every chat on the machine.
-let dataDir = ''
-/** Where chats still running the mascot under its former name (Brutex) keep theirs, read alongside until they restart. */
-let formerDir = ''
-let sessionId = ''
-/** This chat's short name for the others; '' until known. */
-let label = ''
-let isLabelFromPrompt = false
-/** This chat's own days, written to its file in `days/` after each turn. */
-let myDays: Record<string, DayRec> = {}
-/** The other chats' days, as last read. */
-let otherDays: Record<string, DayRec>[] = []
-let historyAt = 0
-let samplesAt = 0
-let liveAt = 0
-let liveKey = ''
-let peersAt = 0
-let peerMtimes: Record<string, number> = {}
-let peerCache: Record<string, Peer> = {}
-let lastTurnFailed = false
-/** Where the band was last drawn: the desktop rebuilds the band on every redraw, so there the details live in the status line. */
-let drawnOn: 'terminal' | 'remote' | null = null
-let lastStatus: string | undefined
 
 async function play($: Dollar, sound: SoundName | undefined) {
   if (sound === undefined || !(await read($, prefs)).hasSound) return
   void $.audio.play({ base64: clip(sound), mime: 'audio/wav' }).catch(() => undefined)
-}
-
-/** Whether the pose leaves the right hand down and empty, to hold a cup or a balloon. */
-const canHold = (mood: Mood) => POSES[mood].held === undefined && POSES[mood].armR >= -40 && POSES[mood].armR <= 0
-
-/** What Mochi has on now: the person's choice (while it can still be worn), what it earned, the season and the hour. */
-function outfitNow(p: Prefs, v: Env, mood: Mood, now: number): Outfit {
-  const ok = wearable(v.history, now, v.tz)
-  const pick: Partial<Outfit> = {}
-  for (const slot of SLOTS) {
-    const chosen = p.pick[slot]
-    if (chosen === null || (chosen !== undefined && ok.includes(chosen))) pick[slot] = chosen
-  }
-  return outfitFor(pick, unlocked(v.history), now, v.tz, mood, canHold(mood))
 }
 
 /** Puts on an item, or takes it off when it is already on; the slot then stays empty. */
@@ -212,7 +121,7 @@ async function infoNow($: Dollar): Promise<Info> {
     cost: Math.round(v.cost * 100) / 100,
     agents: v.agents,
     tools: v.turnTools,
-    isBusy,
+    isBusy: chat.isBusy,
     recent: v.recent,
     last: v.last,
     compactPct: v.compactAt > 0 && v.window > 0 ? (v.compactAt / v.window) * 100 : 0,
@@ -224,22 +133,12 @@ async function infoNow($: Dollar): Promise<Info> {
   }
 }
 
-/** When each usage window runs out at this pace, rounded to the minute so the panel does not redraw for nothing. */
-function forecasts(v: Env, now: number): Record<string, number> {
-  const out: Record<string, number> = {}
-  for (const l of v.limits) {
-    const at = forecastFull(v.samples, l, now)
-    if (at !== null) out[l.kind] = Math.round(at / 60_000) * 60_000
-  }
-  return out
-}
-
 /**
  * Redraws the desktop panel when the pose changed, or when its figures did and
  * the last redraw is old enough; a minute's turn redraws the reset countdowns.
  */
 async function drawPanel($: Dollar) {
-  if (drawnOn !== 'remote') return
+  if (chat.drawnOn !== 'remote') return
   const now = await $.clock.now()
   const cur = await read($, panel)
   const s = await read($, shot)
@@ -283,13 +182,13 @@ async function noteLimits($: Dollar) {
   for (const l of v.limits) {
     const at = forecastFull(v.samples, l, now)
     const key = `${l.kind}:${Math.round(l.resetsAt / 60_000)}`
-    if (at === null || warnedLimits.includes(key)) continue
+    if (at === null || chat.warnedLimits.includes(key)) continue
     const isSoon = l.kind === 'five_hour' ? at - now <= 45 * 60_000 : at - now <= 24 * 60 * 60_000
     if (!isSoon) continue
-    warnedLimits = [...warnedLimits, key]
+    chat.warnedLimits = [...chat.warnedLimits, key]
     const name = t().limit.long[l.kind] ?? l.kind
     const line = t().limit.pace(name, clockAt(at, now, v.tz), clockAt(l.resetsAt, now, v.tz))
-    if (isBusy) pendingLimit = line
+    if (chat.isBusy) chat.pendingLimit = line
     else await show($, { mood: 'nervous', line, holdMs: 10_000, sound: 'alarm' })
     $.ui.toast(`Mochi: ${line}`, { timeoutMs: 8000 })
   }
@@ -297,8 +196,8 @@ async function noteLimits($: Dollar) {
 
 async function refreshStatus($: Dollar) {
   const text = await statusText($)
-  if (text === lastStatus) return
-  lastStatus = text
+  if (text === chat.lastStatus) return
+  chat.lastStatus = text
   $.ui.status(text)
 }
 
@@ -315,22 +214,22 @@ async function putFace($: Dollar, next: Omit<Face, 'frameAt'>) {
 /** Puts a reaction on the face; `since` starts a visible clock. Returns a token for "is it still mine". */
 async function show($: Dollar, r: Reaction, since = 0): Promise<number> {
   const now = await $.clock.now()
-  faceToken += 1
-  const token = faceToken
+  chat.faceToken += 1
+  const token = chat.faceToken
   await putFace($, { mood: r.mood, line: r.line, until: r.holdMs > 0 ? now + r.holdMs : 0, since })
   await play($, r.sound)
   return token
 }
 
 async function rest($: Dollar) {
-  faceToken += 1
-  await putFace($, isBusy ? { mood: 'thinking', line: t().st.thinking, until: 0, since: 0 } : rest0())
+  chat.faceToken += 1
+  await putFace($, chat.isBusy ? { mood: 'thinking', line: t().st.thinking, until: 0, since: 0 } : rest0())
 }
 
 /** The model's stream: thinking or writing its answer. Writes only on a change. */
 async function noteStream($: Dollar, kind: 'thinking' | 'talking') {
-  if (stream === kind) return
-  stream = kind
+  if (chat.stream === kind) return
+  chat.stream = kind
   const now = await $.clock.now()
   const f = await read($, face)
   if (f.until > now || TOOL_MOODS.has(f.mood) || f.mood === 'asking' || f.mood === 'agent' || f.mood === 'waiting') return
@@ -346,7 +245,7 @@ async function noteTyping($: Dollar, isEmpty: boolean) {
     return
   }
   if (f.mood !== 'listening' && f.until === 0) {
-    faceToken += 1
+    chat.faceToken += 1
     await putFace($, { mood: 'listening', line: 'dinliyor', until: 0, since: 0 })
   }
 }
@@ -365,15 +264,15 @@ async function setEnv($: Dollar, change: (v: Env) => Env) {
  */
 async function watchContext($: Dollar, v: Env) {
   const level = warnLevel(v)
-  if (level < warned) {
-    warned = level
-    pendingWarn = 0
+  if (level < chat.warned) {
+    chat.warned = level
+    chat.pendingWarn = 0
     return
   }
-  if (level <= warned) return
-  warned = level
-  if (isBusy) {
-    pendingWarn = level
+  if (level <= chat.warned) return
+  chat.warned = level
+  if (chat.isBusy) {
+    chat.pendingWarn = level
     return
   }
   await show($, { mood: level >= 3 ? 'scared' : 'nervous', line: contextWarning(v, level), holdMs: 10_000, sound: 'alarm' })
@@ -381,8 +280,8 @@ async function watchContext($: Dollar, v: Env) {
 
 /** Reads the repository: branch, ahead and behind, changed paths, the last commit. */
 async function refreshGit($: Dollar) {
-  gitAt = await $.clock.now()
-  isGitWanted = false
+  chat.gitAt = await $.clock.now()
+  chat.isGitWanted = false
   const run = (args: string[]) => $.process.run(args, { timeoutMs: 5000 }).catch(() => undefined)
   const status = await run(['git', 'status', '--porcelain=v1', '-b', '-uall'])
   const log = status?.exitCode === 0 ? await run(['git', 'log', '-1', '--format=%ct']) : undefined
@@ -429,7 +328,7 @@ const q = (s: string) => `"${s.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
 async function notify($: Dollar, text: string) {
   if (!(await read($, prefs)).hasAlert) return
   $.ui.toast(`Mochi: ${text}`, { timeoutMs: 8000 })
-  const script = `display notification ${q(text)} with title "Mochi" subtitle ${q(label)} sound name "Glass"`
+  const script = `display notification ${q(text)} with title "Mochi" subtitle ${q(chat.label)} sound name "Glass"`
   void $.process.run(['osascript', '-e', script], { timeoutMs: 5000 }).catch(() => undefined)
 }
 
@@ -438,49 +337,44 @@ async function liveNow($: Dollar): Promise<Omit<Peer, 'at'>> {
   const f = await read($, face)
   // Waiting on the person is the asking face held open; a nudge or another chat's news holds it only a while.
   const isAsking = f.mood === 'asking' && f.until === 0
-  const state: Peer['state'] = isAsking ? 'asking' : isBusy ? 'busy' : lastTurnFailed ? 'error' : 'idle'
-  return { id: sessionId, label: label || t().word.chat, state, line: f.line, since: state === 'busy' ? turn.startedAt : 0 }
+  const state: Peer['state'] = isAsking ? 'asking' : chat.isBusy ? 'busy' : chat.lastTurnFailed ? 'error' : 'idle'
+  return { id: chat.sessionId, label: chat.label || t().word.chat, state, line: f.line, since: state === 'busy' ? chat.turn.startedAt : 0 }
 }
 
 /** Writes this chat's file when where it stands changed (at most every 1.5 s), and every 15 s so the others know it is alive. */
 async function writeLive($: Dollar, isForced = false) {
-  if (dataDir === '' || sessionId === '') return
+  if (chat.dataDir === '' || chat.sessionId === '') return
   const now = await $.clock.now()
   const live = await liveNow($)
   const key = JSON.stringify(live)
-  if (!isForced && (key === liveKey ? now - liveAt < LIVE_EVERY_MS : now - liveAt < 1500)) return
-  liveKey = key
-  liveAt = now
-  await $.fs.write(`${dataDir}/live/${sessionId}.json`, JSON.stringify({ ...live, at: now })).catch(() => undefined)
+  if (!isForced && (key === chat.liveKey ? now - chat.liveAt < LIVE_EVERY_MS : now - chat.liveAt < 1500)) return
+  chat.liveKey = key
+  chat.liveAt = now
+  await $.fs.write(`${chat.dataDir}/live/${chat.sessionId}.json`, JSON.stringify({ ...live, at: now })).catch(() => undefined)
 }
 
 /** Reads the other chats' files that changed, and says what is worth saying about them. */
 async function readPeers($: Dollar) {
-  if (dataDir === '') return
+  if (chat.dataDir === '') return
   const now = await $.clock.now()
-  peersAt = now
+  chat.peersAt = now
   const seen: Record<string, number> = {}
-  for (const dir of [`${dataDir}/live`, ...(formerDir ? [`${formerDir}/live`] : [])]) {
-    for (const entry of await $.fs.list(dir).catch(() => [])) {
-      const path = `${dir}/${entry.name}`
-      if (!entry.name.endsWith('.json') || entry.name === `${sessionId}.json` || now - entry.mtimeMs > 60_000) continue
-      seen[path] = entry.mtimeMs
-      if (peerMtimes[path] === entry.mtimeMs && peerCache[path]) continue
-      const text = await $.fs.read(path).catch(() => '')
-      try {
-        const peer = peerOf(JSON.parse(text), now)
-        if (peer) peerCache[path] = peer
-      } catch {
-        // A file caught mid-write: read it next time.
-      }
+  for (const entry of await $.fs.list(`${chat.dataDir}/live`).catch(() => [])) {
+    const path = `${chat.dataDir}/live/${entry.name}`
+    if (!entry.name.endsWith('.json') || entry.name === `${chat.sessionId}.json` || now - entry.mtimeMs > 60_000) continue
+    seen[path] = entry.mtimeMs
+    if (chat.peerMtimes[path] === entry.mtimeMs && chat.peerCache[path]) continue
+    const text = await $.fs.read(path).catch(() => '')
+    try {
+      const peer = peerOf(JSON.parse(text), now)
+      if (peer) chat.peerCache[path] = peer
+    } catch {
+      // A file caught mid-write: read it next time.
     }
   }
-  peerMtimes = seen
-  for (const path of Object.keys(peerCache)) if (seen[path] === undefined) delete peerCache[path]
-  // A chat may have a file under both names: the fresher one counts.
-  const byId: Record<string, Peer> = {}
-  for (const p of Object.values(peerCache)) if (now - p.at <= 45_000 && (byId[p.id]?.at ?? 0) < p.at) byId[p.id] = p
-  const peers = Object.values(byId).sort((a, b) => a.label.localeCompare(b.label))
+  chat.peerMtimes = seen
+  for (const path of Object.keys(chat.peerCache)) if (seen[path] === undefined) delete chat.peerCache[path]
+  const peers = Object.values(chat.peerCache).filter(p => now - p.at <= 45_000).sort((a, b) => a.label.localeCompare(b.label))
   const before = (await read($, env)).peers
   if (JSON.stringify(before) === JSON.stringify(peers)) return
   await setEnv($, v => ({ ...v, peers }))
@@ -488,32 +382,28 @@ async function readPeers($: Dollar) {
   if (news.length === 0) return
   for (const line of news) $.ui.toast(`Mochi: ${line}`, { timeoutMs: 6000 })
   const f = await read($, face)
-  if (!isBusy && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy' || f.mood === 'sleeping')) {
+  if (!chat.isBusy && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy' || f.mood === 'sleeping')) {
     await show($, { mood: news[0]?.includes('onay') || news[0]?.includes('cevab') ? 'asking' : 'pleased', line: news[0] ?? '', holdMs: 5000 })
   }
 }
 
 /** Every chat's days, read in one go (each file is one line), with this chat's own from memory. */
 async function refreshHistory($: Dollar) {
-  if (dataDir === '') return
-  historyAt = await $.clock.now()
-  const ran = await $.process.run(['sh', '-c', 'cat "$0"/*.json "$1"/*.json 2>/dev/null; exit 0', `${dataDir}/days`, `${formerDir || dataDir}/days`], { timeoutMs: 8000 }).catch(() => undefined)
-  // A chat that ran under both names has a file in each, the later one holding all of the earlier: it counts once, by its fuller file.
-  const turnsIn = (days: Record<string, DayRec>) => Object.values(days).reduce((a, d) => a + (d.turns ?? 0), 0)
-  const byId: Record<string, Record<string, DayRec>> = {}
+  if (chat.dataDir === '') return
+  chat.historyAt = await $.clock.now()
+  const ran = await $.process.run(['sh', '-c', 'cat "$0"/*.json 2>/dev/null; exit 0', `${chat.dataDir}/days`], { timeoutMs: 8000 }).catch(() => undefined)
+  const others: Record<string, DayRec>[] = []
   for (const line of (ran?.stdout ?? '').split('\n')) {
     if (line.trim() === '') continue
     try {
       const file = JSON.parse(line) as { id?: unknown; days?: unknown }
-      if (typeof file.id !== 'string' || file.id === sessionId || typeof file.days !== 'object' || file.days === null) continue
-      const days = file.days as Record<string, DayRec>
-      const had = byId[file.id]
-      if (had === undefined || turnsIn(days) > turnsIn(had)) byId[file.id] = days
+      if (typeof file.id !== 'string' || file.id === chat.sessionId || typeof file.days !== 'object' || file.days === null) continue
+      others.push(file.days as Record<string, DayRec>)
     } catch {
       // A file caught mid-write counts next time.
     }
   }
-  otherDays = Object.values(byId)
+  chat.otherDays = others
   await recount($)
 }
 
@@ -521,37 +411,39 @@ async function refreshHistory($: Dollar) {
 async function recount($: Dollar) {
   const now = await $.clock.now()
   const v = await read($, env)
-  const history = summarize([...otherDays, myDays], dayKey(now, v.tz))
+  const history = summarize([...chat.otherDays, chat.myDays], dayKey(now, v.tz))
   await setEnv($, x => ({ ...x, history }))
   await checkLevel($)
 }
 
 async function saveDays($: Dollar) {
-  if (dataDir === '' || sessionId === '') return
-  await $.fs.write(`${dataDir}/days/${sessionId}.json`, `${JSON.stringify({ id: sessionId, label, days: myDays })}\n`).catch(() => undefined)
+  if (chat.dataDir === '' || chat.sessionId === '') return
+  await $.fs.write(`${chat.dataDir}/days/${chat.sessionId}.json`, `${JSON.stringify({ id: chat.sessionId, label: chat.label, days: chat.myDays })}\n`).catch(() => undefined)
 }
 
 async function addToday($: Dollar, rec: Partial<DayRec>) {
   const now = await $.clock.now()
   const key = dayKey(now, (await read($, env)).tz)
-  myDays = { ...myDays, [key]: addDay(myDays[key] ?? EMPTY_DAY, rec) }
+  chat.myDays = { ...chat.myDays, [key]: addDay(chat.myDays[key] ?? EMPTY_DAY, rec) }
 }
 
 /** A level or item earned since the last look is celebrated once, in whichever chat sees it first. */
 async function checkLevel($: Dollar) {
-  if (dataDir === '') return
+  if (chat.dataDir === '') return
   const h = (await read($, env)).history
   if (h === null) return
   const level = levelOf(xpOf(h)).level
   const items = unlocked(h)
-  const path = `${dataDir}/level.json`
-  let saved: { level?: number; items?: Item[] } | null = null
+  const path = `${chat.dataDir}/level.json`
+  let saved: { level?: number; items?: unknown } | null = null
   try {
-    saved = JSON.parse(await $.fs.read(path)) as { level?: number; items?: Item[] }
+    saved = JSON.parse(await $.fs.read(path)) as { level?: number; items?: unknown }
   } catch {
     saved = null
   }
-  const fresh = items.filter(i => !(saved?.items ?? []).includes(i))
+  // An older version saved the items under their Turkish ids.
+  const had = Array.isArray(saved?.items) ? saved.items.map(itemOf) : []
+  const fresh = items.filter(i => !had.includes(i))
   if (saved !== null && (saved.level ?? 1) >= level && fresh.length === 0) return
   await $.fs.write(path, JSON.stringify({ level, items })).catch(() => undefined)
   if (saved === null) return
@@ -562,9 +454,9 @@ async function checkLevel($: Dollar) {
 
 /** The usage readings are the account's, so every chat shares one file of them. */
 async function saveSamples($: Dollar) {
-  if (dataDir === '') return
-  samplesAt = await $.clock.now()
-  const path = `${dataDir}/usage.json`
+  if (chat.dataDir === '') return
+  chat.samplesAt = await $.clock.now()
+  const path = `${chat.dataDir}/usage.json`
   let theirs: Env['samples'] = []
   try {
     const parsed = JSON.parse(await $.fs.read(path)) as unknown
@@ -572,7 +464,7 @@ async function saveSamples($: Dollar) {
   } catch {
     theirs = []
   }
-  const now = samplesAt
+  const now = chat.samplesAt
   const v = await update($, env, x => {
     const all = [...theirs, ...x.samples].filter(s => now - s.at < 48 * 60 * 60_000).sort((a, b) => a.at - b.at)
     const merged = all.filter((s, i) => i === 0 || s.at !== all[i - 1]?.at || s.kind !== all[i - 1]?.kind).slice(-400)
@@ -581,26 +473,7 @@ async function saveSamples($: Dollar) {
   await $.fs.write(path, JSON.stringify(v.samples)).catch(() => undefined)
 }
 
-/**
- * The preferences saved under the mascot's former name (Brutex), which kept
- * its own store: read once, so the choices made there carry over.
- */
-async function formerPrefs($: Dollar): Promise<unknown> {
-  const home = await $.env.get('HOME').catch(() => undefined)
-  if (!home) return undefined
-  const dir = `${home}/.claude/plugins/store`
-  const old = (await $.fs.list(dir).catch(() => [])).find(f => f.name.startsWith('brutex_inline-') && f.name.endsWith('.json'))
-  if (old === undefined) return undefined
-  try {
-    return (JSON.parse(await $.fs.read(`${dir}/${old.name}`)) as { prefs?: unknown }).prefs
-  } catch {
-    return undefined
-  }
-}
-
 // ---------- the language ----------
-
-let autoLang: Lang | null = null
 
 /**
  * The language to speak when none is chosen: Claude Code's own `language`
@@ -628,35 +501,29 @@ async function applyLang($: Dollar, p: Prefs): Promise<Lang> {
     setLang(chosen)
     return chosen
   }
-  if (autoLang === null) autoLang = await detectLang($)
-  setLang(autoLang)
-  return autoLang
+  if (chat.autoLang === null) chat.autoLang = await detectLang($)
+  setLang(chat.autoLang)
+  return chat.autoLang
 }
 
 /** Finds the shared folder, the clock's zone and this chat's name, and picks up where a resumed chat left off. */
 async function startShared($: Dollar) {
   const home = await $.env.get('HOME').catch(() => undefined)
-  sessionId = await $.session.id().catch(() => '')
-  dataDir = home ? `${home}/.claude/mochi` : ''
-  formerDir = home ? `${home}/.claude/brutex` : ''
+  chat.sessionId = await $.session.id().catch(() => '')
+  chat.dataDir = home ? `${home}/.claude/mochi` : ''
   const zone = await $.process.run(['date', '+%z'], { timeoutMs: 3000 }).catch(() => undefined)
   const tz = zone?.exitCode === 0 ? parseTz(zone.stdout) : 0
   await update($, env, v => ({ ...v, tz }))
-  label = peerLabel(await $.session.root().catch(() => ''), '')
-  isLabelFromPrompt = label === ''
-  if (isLabelFromPrompt) void firstPromptLabel($).catch(() => undefined)
-  if (dataDir === '' || sessionId === '') return
-  // A resumed chat may have a file under both names; the fuller one holds the other.
-  myDays = {}
-  const turnsIn = (days: Record<string, DayRec>) => Object.values(days).reduce((a, d) => a + (d.turns ?? 0), 0)
-  for (const dir of [dataDir, formerDir]) {
-    if (dir === '') continue
-    try {
-      const file = JSON.parse(await $.fs.read(`${dir}/days/${sessionId}.json`)) as { days?: Record<string, DayRec> }
-      if (file.days && turnsIn(file.days) >= turnsIn(myDays)) myDays = file.days
-    } catch {
-      // Not under this name.
-    }
+  chat.label = peerLabel(await $.session.root().catch(() => ''), '')
+  chat.isLabelFromPrompt = chat.label === ''
+  if (chat.isLabelFromPrompt) void firstPromptLabel($).catch(() => undefined)
+  if (chat.dataDir === '' || chat.sessionId === '') return
+  chat.myDays = {}
+  try {
+    const file = JSON.parse(await $.fs.read(`${chat.dataDir}/days/${chat.sessionId}.json`)) as { days?: Record<string, DayRec> }
+    if (file.days) chat.myDays = file.days
+  } catch {
+    // A new chat has no file yet.
   }
   void saveSamples($).catch(() => undefined)
   void refreshHistory($).catch(() => undefined)
@@ -668,24 +535,23 @@ async function startShared($: Dollar) {
 async function firstPromptLabel($: Dollar) {
   const found = await $.session.messages()
   const first = Array.isArray(found) ? found.find(m => m.role === 'user' && typeof m.text === 'string' && !m.text.trim().startsWith('<')) : undefined
-  if (first && label === '') label = peerLabel('', first.text)
+  if (first && chat.label === '') chat.label = peerLabel('', first.text)
 }
 
 /** Files of chats closed long ago (or that never said goodbye) are removed. */
 async function cleanLive($: Dollar) {
   const now = await $.clock.now()
-  const list = await $.fs.list(`${dataDir}/live`).catch(() => [])
-  const old = list.filter(f => f.name.endsWith('.json') && now - f.mtimeMs > 10 * 60_000).map(f => `${dataDir}/live/${f.name}`)
+  const list = await $.fs.list(`${chat.dataDir}/live`).catch(() => [])
+  const old = list.filter(f => f.name.endsWith('.json') && now - f.mtimeMs > 10 * 60_000).map(f => `${chat.dataDir}/live/${f.name}`)
   if (old.length > 0) await $.process.run(['rm', '-f', ...old], { timeoutMs: 5000 }).catch(() => undefined)
 }
 
 async function openDetail($: Dollar) {
-  await update($, detail, () => ({ ...NO_ENV, ...(lastEnv ?? NO_ENV) }))
-  detailAt = await $.clock.now()
+  await update($, detail, () => ({ ...NO_ENV, ...(chat.lastEnv ?? NO_ENV) }))
+  chat.detailAt = await $.clock.now()
   const opened = await $.ui.open({ id: DETAIL, title: t().detail.title })
   if (!opened.isPlaced) $.ui.toast(t().note.detailFailed(opened.reason))
 }
-let lastEnv: Env | null = null
 
 async function setPrefs($: Dollar, change: (p: Prefs) => Prefs) {
   const next = await update($, prefs, change)
@@ -705,21 +571,21 @@ async function tick($: Dollar) {
   await refreshStatus($)
   await drawPanel($)
   const v = await read($, env)
-  lastEnv = v
-  if ((isGitWanted && now - gitAt > 4000) || now - gitAt > GIT_EVERY_MS) void refreshGit($).catch(() => undefined)
+  chat.lastEnv = v
+  if ((chat.isGitWanted && now - chat.gitAt > 4000) || now - chat.gitAt > GIT_EVERY_MS) void refreshGit($).catch(() => undefined)
   void writeLive($).catch(() => undefined)
-  if (now - peersAt > PEERS_EVERY_MS) void readPeers($).catch(() => undefined)
-  if (now - historyAt > HISTORY_EVERY_MS) void refreshHistory($).catch(() => undefined)
-  if (now - samplesAt > SAMPLES_EVERY_MS) void saveSamples($).catch(() => undefined)
-  if (now - detailAt > 3000) {
-    detailAt = now
+  if (now - chat.peersAt > PEERS_EVERY_MS) void readPeers($).catch(() => undefined)
+  if (now - chat.historyAt > HISTORY_EVERY_MS) void refreshHistory($).catch(() => undefined)
+  if (now - chat.samplesAt > SAMPLES_EVERY_MS) void saveSamples($).catch(() => undefined)
+  if (now - chat.detailAt > 3000) {
+    chat.detailAt = now
     const d = await read($, detail)
     if (JSON.stringify(d) !== JSON.stringify(v)) await update($, detail, () => v)
   }
   const git = v.git
-  if (!isBusy && git && git.changed > 0 && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy') && now - lastNudge > NUDGE_EVERY_MS
-    && (git.lastCommit === 0 || now - git.lastCommit > COMMIT_STALE_MS) && now - lastActivity > 20_000) {
-    lastNudge = now
+  if (!chat.isBusy && git && git.changed > 0 && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy') && now - chat.lastNudge > NUDGE_EVERY_MS
+    && (git.lastCommit === 0 || now - git.lastCommit > COMMIT_STALE_MS) && now - chat.lastActivity > 20_000) {
+    chat.lastNudge = now
     await show($, { mood: 'asking', line: t().st.commitNudge(git.changed, git.lastCommit > 0 ? t().st.lastCommit(ago(now - git.lastCommit)) : t().st.noCommits), holdMs: 9000 })
     return
   }
@@ -732,12 +598,12 @@ async function tick($: Dollar) {
     await putFace($, { ...f, mood: 'waiting' })
     return
   }
-  if (f.mood === 'listening' && now - lastTypedAt > LISTEN_FOR) {
+  if (f.mood === 'listening' && now - chat.lastTypedAt > LISTEN_FOR) {
     await rest($)
     return
   }
-  if (isBusy) return
-  const quiet = now - lastActivity
+  if (chat.isBusy) return
+  const quiet = now - chat.lastActivity
   // Late at night Mochi tires sooner.
   const isNight = season(now, v.tz).isNight
   const sleepAfter = isNight ? 4 * 60_000 : SLEEP_AFTER
@@ -749,46 +615,180 @@ async function tick($: Dollar) {
   }
 }
 
-/** The wardrobe's buttons act in the `ui.press` hook, where `$` is at hand; their own handler has nothing left to do. */
-const pressed = () => undefined
-
-/** An item's picture for the wardrobe, faded while locked. */
-function iconSvg(item: Item, isOpen: boolean): string {
-  const vector = VECTOR_WEAR[item]
-  if (vector) {
-    const [x, y, w, h] = vector.box
-    // Glasses read as glasses on a patch of Mochi's own clay, not on the dark card.
-    const skin = vector.onSkin ? `<rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" rx="${Math.min(w, h) / 2 - 1}" fill="#D97757"/>` : ''
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="100%" height="100%"><g opacity="${isOpen ? 1 : 0.38}">${skin}${vector.svg}</g></svg>`
-  }
-  const a = WEAR[item]
-  const scale = Math.min(44 / a.w, 30 / a.h)
-  const w = a.w * scale
-  const h = a.h * scale
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${a.uri}" x="${(46 - w) / 2}" y="${(32 - h) / 2}" width="${w}" height="${h}" opacity="${isOpen ? 1 : 0.38}"/></svg>`
-}
-
-/** The terminal drawing's hat row, when the mood leaves it empty and something is worn on the head. */
-function withHat(rows: string[], head: Item | null, isShiftedRight: boolean): string[] {
-  const hat = head ? ASCII_HAT[head] : undefined
-  const top = rows[0]
-  if (hat === undefined || top === undefined || top.trim() !== '') return rows
-  const at = isShiftedRight ? 3 : 2
-  return [top.slice(0, at) + hat + top.slice(at + 5), ...rows.slice(1)]
-}
-
 async function wake($: Dollar): Promise<boolean> {
   const now = await $.clock.now()
-  const quiet = now - lastActivity
-  lastActivity = now
+  const quiet = now - chat.lastActivity
+  chat.lastActivity = now
   const mood = (await read($, face)).mood
   return quiet > SLEEPY_AFTER || mood === 'sleeping' || mood === 'sleepy'
+}
+
+// ---------- the shield ----------
+
+/**
+ * A command that cannot be undone (`what` it would do) waits for the person's
+ * word: what to tell the model when they stop it; null when it may run.
+ */
+async function shield($: Dollar, args: Record<string, unknown> & { tool: string }, cmd: string, what: string, startedAt: number): Promise<{ deny: string } | null> {
+  if (!(await read($, prefs)).hasShield || (await $.session.surfaces()).length === 0) return null
+  await show($, { mood: 'scared', line: `${t().st.awaitingApproval} · ${what}`, holdMs: 0, sound: 'alarm' })
+  if (chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, `onay bekliyor · ${what}`)
+  const shown = cmd.length > 300 ? `${cmd.slice(0, 299)}…` : cmd
+  const d = t().shield
+  const answer = await $.ui.ask(d.question(what, shown), { header: 'Mochi', options: [d.run, d.stop] }).catch(() => d.stop)
+  if (answer !== d.run) {
+    await show($, { mood: 'denied', line: `${t().st.halted} · ${what}`, holdMs: 5000 })
+    const key = dangerKey(cmd)
+    // Said to the model, so always in English.
+    return { deny: `The user stopped this command at Mochi's prompt (it ${key ? DICTS.en.danger[key] : 'cannot be undone'}). Do not retry it; ask the user how to proceed if it is needed.` }
+  }
+  await show($, { mood: 'nervous', line: `${t().st.approved} · ${subject(args)}`, holdMs: 0 }, startedAt)
+  return null
+}
+
+// ---------- /mochi ----------
+
+type Word = keyof Dict['cmd']['words']
+
+/** Whether `value` names the command: its English words, or the words of the language in use. */
+const names = (value: string, key: Word, ...english: string[]) => english.includes(value) || t().cmd.words[key].some(w => plain(w) === value)
+
+/** A subcommand: the key of its words in each language, the English words it answers to, and what it does with the rest of the line. */
+type Command = { name: Word; english: string[]; run: (arg: string) => Promise<string> }
+
+/** The subcommands of /mochi, tried in this order. */
+function commands($: Dollar, p: Prefs): Command[] {
+  return [
+    { name: 'small', english: ['small', 'compact'], run: () => resize($, true) },
+    { name: 'big', english: ['big', 'full'], run: () => resize($, false) },
+    { name: 'details', english: ['details', 'detail'], run: () => details($) },
+    { name: 'shield', english: ['shield'], run: () => toggleShield($) },
+    { name: 'alerts', english: ['alerts', 'alert', 'notifications'], run: () => toggleAlerts($) },
+    { name: 'lang', english: ['lang', 'language'], run: arg => language($, arg) },
+    { name: 'level', english: ['level', 'xp'], run: () => levelNow($) },
+    { name: 'wear', english: ['wear', 'outfit', 'accessory', 'accessories'], run: arg => wear($, arg, p) },
+    { name: 'sound', english: ['sound'], run: () => toggleSound($) },
+    { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
+    { name: 'show', english: ['show'], run: () => setHidden($, false) },
+  ]
+}
+
+async function resize($: Dollar, isCompact: boolean): Promise<string> {
+  await setPrefs($, v => ({ ...v, isCompact, isHidden: false }))
+  return isCompact ? t().cmd.small : t().cmd.big
+}
+
+async function details($: Dollar): Promise<string> {
+  await openDetail($)
+  return t().cmd.detailOpened
+}
+
+async function toggleShield($: Dollar): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasShield: !v.hasShield }))
+  return next.hasShield ? t().cmd.shieldOn : t().cmd.shieldOff
+}
+
+async function toggleAlerts($: Dollar): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasAlert: !v.hasAlert }))
+  return next.hasAlert ? t().cmd.alertsOn(LONG_TURN_S / 60) : t().cmd.alertsOff
+}
+
+async function language($: Dollar, arg: string): Promise<string> {
+  const d = t().cmd
+  const list = LANGS.map(l => `${l} (${DICTS[l].name})`).join(', ')
+  if (arg === '') return d.langNow(t().name, list)
+  if (names(arg, 'auto', 'auto')) {
+    chat.autoLang = null
+    const next = await setPrefs($, v => ({ ...v, lang: 'auto' }))
+    await applyLang($, next)
+    await rest($)
+    return t().cmd.langAuto(t().name)
+  }
+  const chosen = pickLang(arg)
+  if (chosen === null) return d.langUnknown(arg, list)
+  const next = await setPrefs($, v => ({ ...v, lang: chosen }))
+  await applyLang($, next)
+  await rest($)
+  return t().cmd.langSet(t().name)
+}
+
+async function levelNow($: Dollar): Promise<string> {
+  const d = t().cmd
+  const h = (await read($, env)).history
+  const xp = xpOf(h)
+  const l = levelOf(xp)
+  const total = h?.total ?? EMPTY_DAY
+  const open = unlocked(h)
+  return [
+    d.levelLine(l.level, xp, l.next - xp),
+    d.statsLine(total.turns, total.edits, total.commits, h?.activeDays ?? 0, h?.streak ?? 0),
+    d.unlocked(open.map(itemName).join(', ') || d.noneYet),
+    d.locked(UNLOCKS.filter(u => !open.includes(u.item)).map(u => `${itemName(u.item)} (${hintFor(u.item)})`).join(', ') || d.none),
+  ].join('\n')
+}
+
+async function wear($: Dollar, arg: string, p: Prefs): Promise<string> {
+  const d = t().cmd
+  const v = await read($, env)
+  const now = await $.clock.now()
+  const ok = wearable(v.history, now, v.tz)
+  if (arg === '') {
+    const worn = outfitNow(p, v, (await read($, face)).mood, now)
+    return [
+      ...SLOTS.map(slot => `${slotName(slot)}: ${worn[slot] ? itemName(worn[slot]) : t().ui.empty}${p.pick[slot] === undefined ? t().ui.autoMark : ''}`),
+      d.wearList(ok.length, ALL_ITEMS.length, ok.map(itemShort).join(', ')),
+      d.wearHow,
+    ].join('\n')
+  }
+  if (names(arg, 'auto', 'auto')) {
+    await setPrefs($, x => ({ ...x, pick: {} }))
+    await sync($)
+    return d.wearAuto
+  }
+  if (names(arg, 'none', 'none', 'off')) {
+    await setPrefs($, x => ({ ...x, pick: { head: null, face: null, neck: null, held: null, ground: null } }))
+    await sync($)
+    return d.wearNone
+  }
+  // An item by its id (an older version's too), or its name in the language in use or in English.
+  const byId = itemOf(arg)
+  const item = ALL_ITEMS.find(i => i === byId || [itemName(i), itemShort(i), DICTS.en.item.name[i], DICTS.en.item.short[i]].some(n => plain(n) === arg || plain(n).startsWith(arg)))
+  if (item === undefined) return d.noSuchItem(arg)
+  if (!ok.includes(item)) return d.itemLocked(itemName(item), hintFor(item))
+  await setPrefs($, x => ({ ...x, pick: { ...x.pick, [SLOT[item]]: item } }))
+  await sync($)
+  return d.itemOn(itemName(item))
+}
+
+async function toggleSound($: Dollar): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasSound: !v.hasSound }))
+  if (next.hasSound) await play($, 'ding')
+  return next.hasSound ? t().cmd.soundOn : t().cmd.soundOff
+}
+
+async function setHidden($: Dollar, isHidden: boolean): Promise<string> {
+  await setPrefs($, v => ({ ...v, isHidden }))
+  return isHidden ? t().cmd.hidden : t().cmd.shown
+}
+
+/** What /mochi says to a word none of the subcommands knows: where Mochi stands. */
+async function statusLines($: Dollar, p: Prefs): Promise<string> {
+  const d = t().cmd
+  const f = await read($, face)
+  const v = await read($, env)
+  return [
+    d.statusLine(moodLabel(f.mood), f.line),
+    d.contextLine(v.context >= 0 ? `${v.context}%` : t().panel.contextUnknown, v.agents, v.turnTools),
+    d.prefsLine(p.hasSound, p.hasShield, p.hasAlert, p.isCompact),
+    d.peersLine(levelOf(xpOf(v.history)).level, v.peers.length === 0 ? d.none : v.peers.map(x => x.label).join(', ')),
+    d.commands,
+  ].join('\n')
 }
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     // The language first: everything after it speaks it.
-    const saved = ((await $.store.get('prefs')) ?? (await formerPrefs($))) as (Partial<Prefs> & { wear?: unknown }) | undefined
+    const saved = (await $.store.get('prefs')) as (Partial<Prefs> & { wear?: unknown }) | undefined
     const p = await update($, prefs, () => restorePrefs(saved))
     if (saved !== undefined) await $.store.set('prefs', p)
     await applyLang($, p)
@@ -799,10 +799,10 @@ export const register: Register = on => {
     await update($, face, f => ({ ...rest0(), ...f, frameAt: f.frameAt ?? -1 }))
     await update($, shot, v => ({ ...FIRST_SHOT, ...v, scene: { ...FIRST_SHOT.scene, ...v.scene } }))
     await update($, panel, v => ({ shot: { ...FIRST_SHOT, ...v.shot }, info: { ...NO_INFO, ...v.info }, infoFrom: null, infoAt: v.infoAt ?? 0 }))
-    lastActivity = await $.clock.now()
+    chat.lastActivity = await $.clock.now()
     await startShared($).catch(() => undefined)
     await measure($)
-    lastNudge = await $.clock.now()
+    chat.lastNudge = await $.clock.now()
     void refreshGit($).catch(() => undefined)
     await show($, { mood: 'wave', line: t().st.ready, holdMs: 3000 })
     if (p.isHidden) await refreshStatus($)
@@ -813,9 +813,9 @@ export const register: Register = on => {
 
   on('prompt.edit', async ($, e, next) => {
     const ran = await next(e)
-    if (isBusy) return ran
-    lastTypedAt = await $.clock.now()
-    lastActivity = lastTypedAt
+    if (chat.isBusy) return ran
+    chat.lastTypedAt = await $.clock.now()
+    chat.lastActivity = chat.lastTypedAt
     await noteTyping($, ran.text.trim() === '')
 
     return ran
@@ -824,24 +824,24 @@ export const register: Register = on => {
   on('prompt.submit', async ($, e, next) => {
     const text = e.text.trim()
     if (text.startsWith('/')) return next(e)
-    if (isLabelFromPrompt && label === '') label = peerLabel('', text)
-    lastTurnFailed = false
+    if (chat.isLabelFromPrompt && chat.label === '') chat.label = peerLabel('', text)
+    chat.lastTurnFailed = false
     const wasAsleep = await wake($)
     const now = await $.clock.now()
-    stream = null
+    chat.stream = null
     await show($, onPrompt(text, wasAsleep), now)
 
     return next(e)
   }).catch(($, e, next) => next(e))
 
   on('turn.start', async ($, e, next) => {
-    isBusy = true
-    stream = null
-    errorRun = 0
-    watch = NEW_WATCH
-    lastTurnFailed = false
-    turn = { startedAt: await $.clock.now(), tools: 0, edits: 0, errors: 0 }
-    costAtStart = (await read($, env)).cost
+    chat.isBusy = true
+    chat.stream = null
+    chat.errorRun = 0
+    chat.watch = NEW_WATCH
+    chat.lastTurnFailed = false
+    chat.turn = { startedAt: await $.clock.now(), tools: 0, edits: 0, errors: 0 }
+    chat.costAtStart = (await read($, env)).cost
     await setEnv($, v => ({ ...v, turnTools: 0 }))
 
     return next(e)
@@ -862,38 +862,26 @@ export const register: Register = on => {
     const isSub = e.agentId !== undefined
     const isAgent = e.tool === 'Agent' || String(e.tool) === 'Task'
     const startedAt = await $.clock.now()
-    lastActivity = startedAt
+    chat.lastActivity = startedAt
 
     // The shield: a command that cannot be undone waits for the person's word.
     const cmd = e.tool === 'Bash' && typeof args.command === 'string' ? args.command : ''
     const what = cmd === '' ? null : danger(cmd)
-    const whatKey = cmd === '' ? null : dangerKey(cmd)
-    if (what !== null && (await read($, prefs)).hasShield && (await $.session.surfaces()).length > 0) {
-      await show($, { mood: 'scared', line: `${t().st.awaitingApproval} · ${what}`, holdMs: 0, sound: 'alarm' })
-      if (isBusy && startedAt - turn.startedAt >= ASKS_AFTER_MS) await notify($, `onay bekliyor · ${what}`)
-      const shown = cmd.length > 300 ? `${cmd.slice(0, 299)}…` : cmd
-      const d = t().shield
-      const answer = await $.ui.ask(d.question(what, shown), { header: 'Mochi', options: [d.run, d.stop] }).catch(() => d.stop)
-      if (answer !== d.run) {
-        await show($, { mood: 'denied', line: `${t().st.halted} · ${what}`, holdMs: 5000 })
-        // Said to the model, so always in English.
-        return { deny: `The user stopped this command at Mochi's prompt (it ${whatKey ? DICTS.en.danger[whatKey] : 'cannot be undone'}). Do not retry it; ask the user how to proceed if it is needed.` }
-      }
-      await show($, { mood: 'nervous', line: `${t().st.approved} · ${subject(args)}`, holdMs: 0 }, startedAt)
-    }
+    const stop = what === null ? null : await shield($, args, cmd, what, startedAt)
+    if (stop !== null) return stop
 
     let token = -1
     if (isSub) {
       const f = await read($, face)
       if (f.mood === 'agent') await update($, face, v => ({ ...v, line: `ajan · ${beforeTool(args).line}` }))
     } else if (what === null || !(await read($, prefs)).hasShield) {
-      stream = null
+      chat.stream = null
       token = await show($, beforeTool(args), waitsOnPerson(e.tool) ? 0 : startedAt)
-      if (waitsOnPerson(e.tool) && isBusy && startedAt - turn.startedAt >= ASKS_AFTER_MS) await notify($, beforeTool(args).line)
+      if (waitsOnPerson(e.tool) && chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, beforeTool(args).line)
     }
     if (isAgent) await setEnv($, v => ({ ...v, agents: v.agents + 1 }))
-    callId += 1
-    const id = callId
+    chat.callId += 1
+    const id = chat.callId
     const path = typeof args.file_path === 'string' ? args.file_path : typeof args.notebook_path === 'string' ? args.notebook_path : ''
     const isWrite = /^(Edit|MultiEdit|Write|NotebookEdit)$/.test(e.tool)
     const delta = !isSub && isWrite && path !== '' ? await editDelta($, e.tool, args, path).catch(() => null) : null
@@ -912,7 +900,7 @@ export const register: Register = on => {
           })(),
         ].slice(-60),
       }))
-      if (isWrite || e.tool === 'Bash') isGitWanted = true
+      if (isWrite || e.tool === 'Bash') chat.isGitWanted = true
     }
 
     let ran
@@ -925,8 +913,8 @@ export const register: Register = on => {
     // The loop watch, over the subagents' calls too (each its own).
     const isError = ran.isError === true
     const isDenied = ran.deny !== undefined
-    const looked = watchCall(watch, isSub ? { ...args, tool: `${e.agentId}:${e.tool}` } : args, isError, typeof ran.text === 'string' ? ran.text : '')
-    watch = looked.watch
+    const looked = watchCall(chat.watch, isSub ? { ...args, tool: `${e.agentId}:${e.tool}` } : args, isError, typeof ran.text === 'string' ? ran.text : '')
+    chat.watch = looked.watch
     if (looked.alarm !== null && !waitsOnPerson(e.tool)) {
       const about = subject(args)
       await show($, { mood: 'dizzy', line: `${t().st.loop} · ${looked.alarm} · ${about}`, holdMs: 10_000, sound: 'alarm' })
@@ -945,11 +933,11 @@ export const register: Register = on => {
     }
 
     await update($, env, v => ({ ...v, recent: v.recent.map(r => (r.id === id ? { ...r, state: isError || isDenied ? 'fail' as const : 'ok' as const } : r)) }))
-    errorRun = isError || isDenied ? errorRun + 1 : 0
-    turn.tools += 1
-    if (/^(Edit|MultiEdit|Write|NotebookEdit)$/.test(e.tool) && !isError && !isDenied) turn.edits += 1
-    if (isError) turn.errors += 1
-    await update($, env, v => ({ ...v, turnTools: turn.tools }))
+    chat.errorRun = isError || isDenied ? chat.errorRun + 1 : 0
+    chat.turn.tools += 1
+    if (/^(Edit|MultiEdit|Write|NotebookEdit)$/.test(e.tool) && !isError && !isDenied) chat.turn.edits += 1
+    if (isError) chat.turn.errors += 1
+    await update($, env, v => ({ ...v, turnTools: chat.turn.tools }))
 
     const outcome = {
       ...(isDenied ? { deny: ran.deny } : {}),
@@ -957,12 +945,12 @@ export const register: Register = on => {
       ...(typeof ran.text === 'string' ? { text: ran.text } : {}),
     }
     const now = await $.clock.now()
-    const after = afterTool(args, outcome, errorRun, (now - startedAt) / 1000)
+    const after = afterTool(args, outcome, chat.errorRun, (now - startedAt) / 1000)
     if (looked.alarm !== null) {
       // The loop's alarm stays on the face.
     } else if (after !== null) {
       await show($, after)
-    } else if (token === faceToken) {
+    } else if (token === chat.faceToken) {
       await update($, face, f => ({ ...f, until: now + AFTER_TOOL_MS }))
     }
 
@@ -973,7 +961,7 @@ export const register: Register = on => {
     const input = typeof e.tool_input === 'object' && e.tool_input !== null ? (e.tool_input as Record<string, unknown>) : {}
     const line = `${t().st.awaitingApproval} · ${subject({ ...input, tool: e.tool_name })}`
     await show($, { mood: 'asking', line, holdMs: 0 })
-    if (isBusy && (await $.clock.now()) - turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
+    if (chat.isBusy && (await $.clock.now()) - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
 
     return next(e)
   }).catch(($, e, next) => next(e))
@@ -981,37 +969,37 @@ export const register: Register = on => {
   on('turn.complete', async ($, e, next) => {
     const done = await next(e)
     if (e.agentId !== undefined) return done
-    isBusy = false
-    stream = null
+    chat.isBusy = false
+    chat.stream = null
     const now = await $.clock.now()
-    lastActivity = now
+    chat.lastActivity = now
     void measure($).catch(() => undefined)
     const ended = onTurnEnd({
       reason: e.reason,
-      seconds: Math.round((now - turn.startedAt) / 1000),
-      tools: turn.tools,
-      edits: turn.edits,
-      errors: turn.errors,
+      seconds: Math.round((now - chat.turn.startedAt) / 1000),
+      tools: chat.turn.tools,
+      edits: chat.turn.edits,
+      errors: chat.turn.errors,
     })
-    const spent = Math.max(0, (await read($, env)).cost - costAtStart)
-    const rec = { at: now, seconds: Math.round((now - turn.startedAt) / 1000), tools: turn.tools, edits: turn.edits, errors: turn.errors, cost: spent }
+    const spent = Math.max(0, (await read($, env)).cost - chat.costAtStart)
+    const rec = { at: now, seconds: Math.round((now - chat.turn.startedAt) / 1000), tools: chat.turn.tools, edits: chat.turn.edits, errors: chat.turn.errors, cost: spent }
     const after = await update($, env, v => ({ ...v, last: ended.line.replace(/^bitti · /, ''), turns: [...v.turns, rec].slice(-40) }))
-    isGitWanted = true
-    lastTurnFailed = e.reason === 'error'
-    if (pendingWarn > 0) {
-      const level = pendingWarn
-      pendingWarn = 0
+    chat.isGitWanted = true
+    chat.lastTurnFailed = e.reason === 'error'
+    if (chat.pendingWarn > 0) {
+      const level = chat.pendingWarn
+      chat.pendingWarn = 0
       await show($, { mood: level >= 3 ? 'scared' : 'nervous', line: contextWarning(after, level), holdMs: 12_000, sound: 'alarm' })
-    } else if (pendingLimit !== '') {
-      await show($, { mood: 'nervous', line: pendingLimit, holdMs: 10_000, sound: 'alarm' })
+    } else if (chat.pendingLimit !== '') {
+      await show($, { mood: 'nervous', line: chat.pendingLimit, holdMs: 10_000, sound: 'alarm' })
     } else {
       await show($, ended)
     }
-    pendingLimit = ''
+    chat.pendingLimit = ''
     if (rec.seconds >= LONG_TURN_S && e.reason !== 'aborted') await notify($, ended.line)
 
     // The day's tally, for the history and the level.
-    await addToday($, { turns: 1, tools: turn.tools, edits: turn.edits, errors: turn.errors, cost: spent, secs: rec.seconds, night: season(now, after.tz).isNight ? 1 : 0 })
+    await addToday($, { turns: 1, tools: chat.turn.tools, edits: chat.turn.edits, errors: chat.turn.errors, cost: spent, secs: rec.seconds, night: season(now, after.tz).isNight ? 1 : 0 })
     await saveDays($)
     await recount($)
 
@@ -1035,9 +1023,9 @@ export const register: Register = on => {
   })
 
   on('session.end', async ($, e, next) => {
-    if (dataDir !== '' && sessionId !== '') {
+    if (chat.dataDir !== '' && chat.sessionId !== '') {
       await saveDays($)
-      await $.process.run(['rm', '-f', `${dataDir}/live/${sessionId}.json`], { timeoutMs: 3000 }).catch(() => undefined)
+      await $.process.run(['rm', '-f', `${chat.dataDir}/live/${chat.sessionId}.json`], { timeoutMs: 3000 }).catch(() => undefined)
     }
     return next(e)
   }).catch(($, e, next) => next(e))
@@ -1046,8 +1034,8 @@ export const register: Register = on => {
     const now = await $.clock.now()
     await show($, { mood: 'squeezed', line: t().st.compacting, holdMs: 0 }, now)
     const done = await next(e)
-    warned = 0
-    pendingWarn = 0
+    chat.warned = 0
+    chat.pendingWarn = 0
     await show($, { mood: 'success', line: t().st.compacted, holdMs: 4000 })
     void measure($).catch(() => undefined)
 
@@ -1059,117 +1047,10 @@ export const register: Register = on => {
     const word = plain(first)
     const arg = plain(more.join(' '))
     const p = await read($, prefs)
-    const d = t().cmd
-    /** Whether `value` names the command: its English words, or the words of the language in use. */
-    const names = (value: string, key: keyof typeof d.words, ...english: string[]) =>
-      english.includes(value) || d.words[key].some(w => plain(w) === value)
-
-    if (names(word, 'small', 'small', 'compact') || names(word, 'big', 'big', 'full')) {
-      const isCompact = names(word, 'small', 'small', 'compact')
-      await setPrefs($, v => ({ ...v, isCompact, isHidden: false }))
-      return { text: isCompact ? d.small : d.big }
-    }
-    if (names(word, 'details', 'details', 'detail')) {
-      await openDetail($)
-      return { text: d.detailOpened }
-    }
-    if (names(word, 'shield', 'shield')) {
-      const next = await setPrefs($, v => ({ ...v, hasShield: !v.hasShield }))
-      return { text: next.hasShield ? d.shieldOn : d.shieldOff }
-    }
-    if (names(word, 'alerts', 'alerts', 'alert', 'notifications')) {
-      const next = await setPrefs($, v => ({ ...v, hasAlert: !v.hasAlert }))
-      return { text: next.hasAlert ? d.alertsOn(LONG_TURN_S / 60) : d.alertsOff }
-    }
-    if (names(word, 'lang', 'lang', 'language')) {
-      const list = LANGS.map(l => `${l} (${DICTS[l].name})`).join(', ')
-      if (arg === '') return { text: d.langNow(t().name, list) }
-      if (names(arg, 'auto', 'auto')) {
-        autoLang = null
-        const next = await setPrefs($, v => ({ ...v, lang: 'auto' }))
-        await applyLang($, next)
-        await rest($)
-        return { text: t().cmd.langAuto(t().name) }
-      }
-      const chosen = pickLang(arg)
-      if (chosen === null) return { text: d.langUnknown(arg, list) }
-      const next = await setPrefs($, v => ({ ...v, lang: chosen }))
-      await applyLang($, next)
-      await rest($)
-      return { text: t().cmd.langSet(t().name) }
-    }
-    if (names(word, 'level', 'level', 'xp')) {
-      const h = (await read($, env)).history
-      const xp = xpOf(h)
-      const l = levelOf(xp)
-      const total = h?.total ?? EMPTY_DAY
-      const open = unlocked(h)
-      return {
-        text: [
-          d.levelLine(l.level, xp, l.next - xp),
-          d.statsLine(total.turns, total.edits, total.commits, h?.activeDays ?? 0, h?.streak ?? 0),
-          d.unlocked(open.map(itemName).join(', ') || d.noneYet),
-          d.locked(UNLOCKS.filter(u => !open.includes(u.item)).map(u => `${itemName(u.item)} (${hintFor(u.item)})`).join(', ') || d.none),
-        ].join('\n'),
-      }
-    }
-    if (names(word, 'wear', 'wear', 'outfit', 'accessory', 'accessories')) {
-      const v = await read($, env)
-      const now = await $.clock.now()
-      const ok = wearable(v.history, now, v.tz)
-      if (arg === '') {
-        const worn = outfitNow(p, v, (await read($, face)).mood, now)
-        return {
-          text: [
-            ...SLOTS.map(slot => `${slotName(slot)}: ${worn[slot] ? itemName(worn[slot]) : t().ui.empty}${p.pick[slot] === undefined ? t().ui.autoMark : ''}`),
-            d.wearList(ok.length, ALL_ITEMS.length, ok.map(itemShort).join(', ')),
-            d.wearHow,
-          ].join('\n'),
-        }
-      }
-      if (names(arg, 'auto', 'auto')) {
-        await setPrefs($, x => ({ ...x, pick: {} }))
-        await sync($)
-        return { text: d.wearAuto }
-      }
-      if (names(arg, 'none', 'none', 'off')) {
-        await setPrefs($, x => ({ ...x, pick: { head: null, face: null, neck: null, held: null, ground: null } }))
-        await sync($)
-        return { text: d.wearNone }
-      }
-      // An item by its id, or its name in the language in use or in English.
-      const item = ALL_ITEMS.find(i => i === arg || [itemName(i), itemShort(i), DICTS.en.item.name[i], DICTS.en.item.short[i]].some(n => plain(n) === arg || plain(n).startsWith(arg)))
-      if (item === undefined) return { text: d.noSuchItem(arg) }
-      if (!ok.includes(item)) return { text: d.itemLocked(itemName(item), hintFor(item)) }
-      await setPrefs($, x => ({ ...x, pick: { ...x.pick, [SLOT[item]]: item } }))
-      await sync($)
-      return { text: d.itemOn(itemName(item)) }
-    }
-    if (names(word, 'sound', 'sound')) {
-      const next = await setPrefs($, v => ({ ...v, hasSound: !v.hasSound }))
-      if (next.hasSound) await play($, 'ding')
-      return { text: next.hasSound ? d.soundOn : d.soundOff }
-    }
-    if (names(word, 'hide', 'hide') || (word === '' && !p.isHidden)) {
-      await setPrefs($, v => ({ ...v, isHidden: true }))
-      return { text: d.hidden }
-    }
-    if (names(word, 'show', 'show') || word === '') {
-      await setPrefs($, v => ({ ...v, isHidden: false }))
-      return { text: d.shown }
-    }
-
-    const f = await read($, face)
-    const v = await read($, env)
-    return {
-      text: [
-        d.statusLine(moodLabel(f.mood), f.line),
-        d.contextLine(v.context >= 0 ? `${v.context}%` : t().panel.contextUnknown, v.agents, v.turnTools),
-        d.prefsLine(p.hasSound, p.hasShield, p.hasAlert, p.isCompact),
-        d.peersLine(levelOf(xpOf(v.history)).level, v.peers.length === 0 ? d.none : v.peers.map(x => x.label).join(', ')),
-        d.commands,
-      ].join('\n'),
-    }
+    const list = commands($, p)
+    // Alone, /mochi hides Mochi or brings it back; a word no subcommand knows shows the status.
+    const command = word === '' ? list.find(c => c.name === (p.isHidden ? 'show' : 'hide')) : list.find(c => names(word, c.name, ...c.english))
+    return { text: command ? await command.run(arg) : await statusLines($, p) }
   })
 
   // Should the click region ever fail to load or draw, say so once instead of
@@ -1198,205 +1079,15 @@ export const register: Register = on => {
     }
     if (e.plugin === 'mochi' && e.element.startsWith('wear:')) {
       const what = e.element.slice(5)
+      const item = itemOf(what)
       if (what === 'auto') await setPrefs($, p => ({ ...p, pick: {} }))
       else if (what === 'none') await setPrefs($, p => ({ ...p, pick: { head: null, face: null, neck: null, held: null, ground: null } }))
-      else if (isItem(what)) await toggleItem($, what)
+      else if (item !== null) await toggleItem($, item)
       await sync($)
     }
     return next(e)
   })
 
-  on('ui.render', { component: 'Pane', requestId: DETAIL }, async ($, e) => {
-    const v = { ...NO_ENV, ...(await read($, detail)) }
-    const now = await $.clock.now()
-    if (e.surface === 'desktop' || e.surface === 'mobile' || e.surface === 'vscode') {
-      const { Box, Svg } = $.ui.resolve(e)
-      const width = Math.round(Math.min(1400, Math.max(320, e.props.bodyColumns * 8.1 - 8)))
-      const { Button, Text } = $.ui.resolve(e)
-      const p = await read($, prefs)
-      const dressed = outfitNow(p, v, (await read($, face)).mood, now)
-      const ok = wearable(v.history, now, v.tz)
-      const svg = detailSvg(v, now, width)
-      const isAuto = SLOTS.every(slot => p.pick[slot] === undefined)
-      // The wardrobe: every item with its picture; a press puts it on or takes it off.
-      const cell = (item: Item) => {
-        const isOn = dressed[SLOT[item]] === item
-        const isOpen = ok.includes(item)
-        return (
-          <Box key={`cell:${item}`} flexDirection="column" alignItems="center" width={11} paddingTop={0.4} borderStyle="round" borderColor={isOn ? 'claude' : 'inactive'} borderDimColor={!isOn}>
-            <Svg source={iconSvg(item, isOpen)} alt={itemName(item)} width={46} height={32} />
-            {isOpen
-              ? <Button key={`wear:${item}`} plain dimColor={!isOn} onPress={pressed}>{itemShort(item)}</Button>
-              : <Text dimColor wrap="truncate">{hintFor(item)}</Text>}
-          </Box>
-        )
-      }
-      const worn = SLOTS.map(slot => dressed[slot]).filter((x): x is Item => x !== null).map(itemShort)
-      const levelWidth = Math.max(280, width - 56)
-      const level = p.open.level ? levelSvg(v, now, levelWidth) : ''
-      // Two folding sections under the drawing, folded by default: a heading
-      // with the gist, the rest only when opened. Which are open is kept.
-      return (
-        <Box flexDirection="column">
-          <Svg source={svg} alt={t().detail.title} width={width} height={Math.round(detailHeight(svg))} />
-          <Box flexDirection="column" paddingX={2} paddingBottom={2} gap={1}>
-            <Box key="sec:level" flexDirection="column" borderStyle="round" borderColor="inactive" borderDimColor paddingX={1} gap={0.5}>
-              <Box flexDirection="row" alignItems="center" gap={2}>
-                <Text bold dimColor>{t().ui.levelTitle}</Text>
-                <Text wrap="truncate">{levelSummary(v)}</Text>
-                <Box flexGrow={1} />
-                <Button key="fold:level" variant="secondary" onPress={pressed}>{p.open.level ? t().ui.close : t().ui.open}</Button>
-              </Box>
-              {p.open.level ? <Svg source={level} alt={t().ui.levelTitle} width={levelWidth} height={Math.round(detailHeight(level))} /> : null}
-            </Box>
-            <Box key="sec:wardrobe" flexDirection="column" borderStyle="round" borderColor="inactive" borderDimColor paddingX={1} gap={1}>
-              <Box flexDirection="row" alignItems="center" gap={2}>
-                <Text bold dimColor>{t().ui.wardrobeTitle}</Text>
-                <Text wrap="truncate">{`${t().ui.unlockedOf(ok.length, ALL_ITEMS.length)} · ${t().ui.wearing(worn.length > 0 ? worn.join(', ') : t().ui.nothing)}`}</Text>
-                <Box flexGrow={1} />
-                {p.open.wardrobe ? <Button key="wear:auto" variant={isAuto ? 'primary' : 'secondary'} onPress={pressed}>{t().ui.auto}</Button> : null}
-                {p.open.wardrobe ? <Button key="wear:none" variant="secondary" onPress={pressed}>{t().ui.takeAllOff}</Button> : null}
-                <Button key="fold:wardrobe" variant="secondary" onPress={pressed}>{p.open.wardrobe ? t().ui.close : t().ui.open}</Button>
-              </Box>
-              {p.open.wardrobe ? SLOTS.map(slot => (
-                <Box key={`slot:${slot}`} flexDirection="column" gap={0.5}>
-                  <Text dimColor>{`${slotName(slot)} · ${dressed[slot] ? itemName(dressed[slot]) : t().ui.empty}${p.pick[slot] === undefined ? t().ui.autoMark : ''}`}</Text>
-                  <Box flexDirection="row" flexWrap="wrap" columnGap={1} rowGap={0.5}>
-                    {SLOT_ITEMS[slot].map(cell)}
-                  </Box>
-                </Box>
-              )) : null}
-            </Box>
-          </Box>
-        </Box>
-      )
-    }
-    const { Box, Button, Text } = $.ui.resolve(e)
-    const p = await read($, prefs)
-    const dressed = outfitNow(p, v, (await read($, face)).mood, now)
-    const ok = wearable(v.history, now, v.tz)
-    return (
-      <Box flexDirection="column">
-        {detailLines(v, now).map(line => <Text wrap="truncate">{line}</Text>)}
-        <Box flexDirection="row" gap={1}>
-          <Text bold>{levelSummary(v)}</Text>
-        </Box>
-        <Box flexDirection="row" gap={1}>
-          <Text bold>{`${t().ui.wardrobe} · ${t().ui.unlockedOf(ok.length, ALL_ITEMS.length)}`}</Text>
-          <Button key="fold:wardrobe" onPress={pressed}>{p.open.wardrobe ? t().ui.close : t().ui.open}</Button>
-        </Box>
-        {p.open.wardrobe ? SLOTS.map(slot => (
-          <Box key={`slot:${slot}`} flexDirection="row" flexWrap="wrap" columnGap={1}>
-            <Text dimColor>{`${slotName(slot)}:`}</Text>
-            {SLOT_ITEMS[slot].filter(i => ok.includes(i)).map(item => (
-              <Button key={`wear:${item}`} plain dimColor={dressed[slot] !== item} onPress={pressed}>{itemShort(item)}</Button>
-            ))}
-          </Box>
-        )) : null}
-        {p.open.wardrobe ? (
-          <Box flexDirection="row" gap={1}>
-            <Button key="wear:auto" onPress={pressed}>{t().ui.auto}</Button>
-            <Button key="wear:none" onPress={pressed}>{t().ui.takeAllOff}</Button>
-          </Box>
-        ) : null}
-      </Box>
-    )
-  })
-
-  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    if (e.props.hasSurvey) return next(e)
-    drawnOn = e.surface === 'terminal' ? 'terminal' : 'remote'
-    const p = await read($, prefs)
-    if (p.isHidden) return next(e)
-
-    if (e.surface === 'desktop' || e.surface === 'mobile' || e.surface === 'vscode') {
-      // The desktop rebuilds the whole band on every redraw, so this branch
-      // reads the panel alone, which changes only when its drawing should; the
-      // drawing resumes its animations mid-loop. An <img> (not interactive)
-      // keeps the painted parts the interactive frame's scrub would strip.
-      const { Box, Svg } = $.ui.resolve(e)
-      const pane = await read($, panel)
-      const now = await $.clock.now()
-      const width = Math.round(Math.min(1600, Math.max(420, e.props.bodyColumns * 8.1 - 8)))
-      const alt = `${pane.info.label}: ${pane.info.detail}`
-      let drawn: ReturnType<typeof panelSvg>
-      try {
-        drawn = panelSvg({ panel: pane, now, width })
-      } catch {
-        // Never an empty band: the mascot alone if the panel cannot be drawn.
-        return (
-          <Box flexDirection="row" alignItems="center">
-            <Svg source={svgFor(pane.shot, Math.max(0, now - pane.shot.at))} alt={alt} width={64} height={64} />
-          </Box>
-        )
-      }
-      // A clear region pulled back over the gauges: a click there opens the
-      // detail pane. Columns are the band's own unit, about 8.1 pixels here;
-      // 3.8 rows (lines) is the panel's height, so the band does not grow.
-      const cardCols = Math.max(8, Math.round(drawn.card.w / 8.1))
-      let hit: JSX.Element | null = null
-      if (e.surface === 'desktop') {
-        const { Client } = $.ui.resolve(e)
-        hit = (
-          <Box marginLeft={-cardCols} width={cardCols} height={3.8} flexShrink={0}>
-            <Client key="hit" module="./hit.tsx" props={{ rows: 6 }} width="100%" height="100%" />
-          </Box>
-        )
-      }
-      return (
-        <Box flexDirection="row" alignItems="stretch">
-          <Svg source={drawn.svg} alt={alt} width={drawn.width} height={PANEL_H} />
-          {hit}
-        </Box>
-      )
-    }
-
-    const f = await read($, face)
-    const v = await read($, env)
-    const look = LOOKS[f.mood]
-    const elapsed = f.since > 0 ? (await read($, sec)) - Math.floor(f.since / 1000) : 0
-    const status = elapsed >= 2 ? `${f.line} · ${duration(elapsed)}` : f.line
-    const now = await $.clock.now()
-    const full = forecasts(v, now).five_hour
-    const others = peersLine(v.peers)
-    const facts = [
-      ...(v.context >= 0 ? [t().ctx.percent(v.context)] : []),
-      ...(v.agents > 0 ? [t().st.agents(v.agents)] : []),
-      ...(isBusy && v.turnTools > 0 ? [t().st.tools(v.turnTools)] : []),
-      ...(full !== undefined ? [`${limitName('five_hour')} ${t().panel.fullAt(clockAt(full, now, v.tz))}`] : []),
-      ...(others !== null ? [others] : []),
-    ].join(' · ')
-    const factsColor = v.context >= 80 ? 'warning' : undefined
-
-    const { Box, Text } = $.ui.resolve(e)
-    const n = await read($, frame)
-    const room = Math.max(12, e.props.bodyColumns)
-
-    if (p.isCompact || e.props.maxRows < 5) {
-      const head = `${kaomoji(f.mood, n)} `
-      const tail = facts === '' ? '' : `  ${facts}`
-      return (
-        <Box flexDirection="row" gap={1}>
-          <Text wrap="truncate">
-            <Text color={look.color}>{head}{cut(status, Math.max(8, room - width(head) - width(tail) - 12))}</Text>
-            <Text dimColor color={factsColor}>{tail}</Text>
-          </Text>
-        </Box>
-      )
-    }
-
-    return (
-      <Box flexDirection="row" gap={1}>
-        <Box flexDirection="column">
-          {withHat(asciiRows(f.mood, n, n === f.frameAt), outfitNow(p, v, f.mood, now).head, LOOKS[f.mood].isShaking === true && n % 2 === 0).map(row => (
-            <Text color={look.color} wrap="truncate">{row}</Text>
-          ))}
-        </Box>
-        <Box flexDirection="column" flexShrink={1} justifyContent="center">
-          <Text bold color={look.color} wrap="truncate">{cut(status, room - 12)}</Text>
-          <Text dimColor color={factsColor} wrap="truncate">{facts === '' ? ' ' : facts}</Text>
-        </Box>
-      </Box>
-    )
-  })
+  on('ui.render', { component: 'Pane', requestId: DETAIL }, detailPane)
+  on('ui.render', { component: 'AbovePrompt' }, band)
 }

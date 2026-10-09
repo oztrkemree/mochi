@@ -138,20 +138,20 @@ export const zh: typeof en = {
 
   item: {
     name: {
-      baret: '安全帽', tac: '王冠', parti: '派对帽', cadi: '女巫帽', noel: '圣诞帽', gece: '睡帽', kulaklik: '耳机', kep: '学士帽',
-      kovboy: '牛仔帽', korsan: '海盗帽', sef: '厨师帽', viking: '维京头盔', sihirbaz: '巫师帽', fes: '土耳其毡帽', pervane: '螺旋桨帽', bere: '毛线帽',
-      gunes: '墨镜', gozluk: '眼镜', biyik: '胡子', monokl: '单片眼镜',
-      papyon: '领结', madalya: '奖牌', atki: '围巾', kravat: '领带', nazar: '恶魔之眼',
-      kupa: '咖啡杯', cay: '土耳其茶杯', simit: 'simit', kalem: '铅笔', anahtar: '扳手', balon: '气球',
-      balkabagi: '南瓜', ordek: '小黄鸭', kaktus: '仙人掌', kedi: '猫', hediye: '礼物盒',
+      hardhat: '安全帽', crown: '王冠', partyhat: '派对帽', witchhat: '女巫帽', santahat: '圣诞帽', nightcap: '睡帽', headphones: '耳机', gradcap: '学士帽',
+      cowboy: '牛仔帽', pirate: '海盗帽', chefhat: '厨师帽', viking: '维京头盔', wizard: '巫师帽', fez: '土耳其毡帽', propeller: '螺旋桨帽', beanie: '毛线帽',
+      sunglasses: '墨镜', glasses: '眼镜', mustache: '胡子', monocle: '单片眼镜',
+      bowtie: '领结', medal: '奖牌', scarf: '围巾', necktie: '领带', evileye: '恶魔之眼',
+      mug: '咖啡杯', tea: '土耳其茶杯', simit: 'simit', pencil: '铅笔', wrench: '扳手', balloon: '气球',
+      pumpkin: '南瓜', duck: '小黄鸭', cactus: '仙人掌', cat: '猫', gift: '礼物盒',
     },
     short: {
-      baret: '安全帽', tac: '王冠', parti: '派对', cadi: '女巫', noel: '圣诞', gece: '睡帽', kulaklik: '耳机', kep: '学士帽',
-      kovboy: '牛仔', korsan: '海盗', sef: '厨师', viking: '维京', sihirbaz: '巫师', fes: '毡帽', pervane: '螺旋桨', bere: '毛线帽',
-      gunes: '墨镜', gozluk: '眼镜', biyik: '胡子', monokl: '单片镜',
-      papyon: '领结', madalya: '奖牌', atki: '围巾', kravat: '领带', nazar: '恶魔之眼',
-      kupa: '咖啡', cay: '茶', simit: 'simit', kalem: '铅笔', anahtar: '扳手', balon: '气球',
-      balkabagi: '南瓜', ordek: '小黄鸭', kaktus: '仙人掌', kedi: '猫', hediye: '礼物',
+      hardhat: '安全帽', crown: '王冠', partyhat: '派对', witchhat: '女巫', santahat: '圣诞', nightcap: '睡帽', headphones: '耳机', gradcap: '学士帽',
+      cowboy: '牛仔', pirate: '海盗', chefhat: '厨师', viking: '维京', wizard: '巫师', fez: '毡帽', propeller: '螺旋桨', beanie: '毛线帽',
+      sunglasses: '墨镜', glasses: '眼镜', mustache: '胡子', monocle: '单片镜',
+      bowtie: '领结', medal: '奖牌', scarf: '围巾', necktie: '领带', evileye: '恶魔之眼',
+      mug: '咖啡', tea: '茶', simit: 'simit', pencil: '铅笔', wrench: '扳手', balloon: '气球',
+      pumpkin: '南瓜', duck: '小黄鸭', cactus: '仙人掌', cat: '猫', gift: '礼物',
     },
     slot: { head: '头部', face: '脸部', neck: '颈部', held: '手持', ground: '身旁' },
     hint: {

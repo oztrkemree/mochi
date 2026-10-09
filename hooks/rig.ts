@@ -400,42 +400,42 @@ function bodyLoops(loop: BodyLoop | undefined): { move: string; turn: string; sq
 
 /** Where each thing to wear sits: its center, width and tilt, in the drawing's 100×100. */
 export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number; flip?: true; ground?: true }> = {
-  baret: { x: 50, y: 32.5, w: 36 },
-  tac: { x: 50, y: 29.5, w: 26 },
-  kep: { x: 50, y: 31.5, w: 40 },
-  kulaklik: { x: 50, y: 49.5, w: 66 },
-  parti: { x: 36, y: 27, w: 16, r: -20 },
-  cadi: { x: 37, y: 24, w: 38, r: -14 },
-  noel: { x: 38, y: 29.5, w: 33, r: -16 },
-  gece: { x: 38, y: 29.5, w: 33, r: -16 },
-  kovboy: { x: 37.5, y: 29.5, w: 37, r: -14 },
-  korsan: { x: 41.5, y: 30, w: 41, r: -9 },
-  sef: { x: 37, y: 25, w: 25, r: -15 },
+  hardhat: { x: 50, y: 32.5, w: 36 },
+  crown: { x: 50, y: 29.5, w: 26 },
+  gradcap: { x: 50, y: 31.5, w: 40 },
+  headphones: { x: 50, y: 49.5, w: 66 },
+  partyhat: { x: 36, y: 27, w: 16, r: -20 },
+  witchhat: { x: 37, y: 24, w: 38, r: -14 },
+  santahat: { x: 38, y: 29.5, w: 33, r: -16 },
+  nightcap: { x: 38, y: 29.5, w: 33, r: -16 },
+  cowboy: { x: 37.5, y: 29.5, w: 37, r: -14 },
+  pirate: { x: 41.5, y: 30, w: 41, r: -9 },
+  chefhat: { x: 37, y: 25, w: 25, r: -15 },
   viking: { x: 50, y: 31.5, w: 48 },
-  sihirbaz: { x: 37, y: 23, w: 34, r: -20 },
-  fes: { x: 38, y: 31, w: 19, r: -18 },
-  pervane: { x: 39, y: 30, w: 28, r: -16 },
-  bere: { x: 39, y: 30.5, w: 31, r: -18 },
-  gunes: { x: 50, y: 52, w: 42 },
-  gozluk: { x: 50, y: 52, w: 40 },
-  biyik: { x: 50, y: 59.8, w: 16 },
-  monokl: { x: 61.3, y: 55.6, w: 13 },
-  papyon: { x: 50, y: 73.5, w: 15 },
-  madalya: { x: 50, y: 75, w: 10 },
-  atki: { x: 50, y: 77.5, w: 22 },
-  kravat: { x: 50, y: 76, w: 10 },
-  nazar: { x: 50, y: 68, w: 30 },
-  kupa: { x: 82.5, y: 69.5, w: 13 },
-  cay: { x: 82, y: 69.5, w: 12 },
+  wizard: { x: 37, y: 23, w: 34, r: -20 },
+  fez: { x: 38, y: 31, w: 19, r: -18 },
+  propeller: { x: 39, y: 30, w: 28, r: -16 },
+  beanie: { x: 39, y: 30.5, w: 31, r: -18 },
+  sunglasses: { x: 50, y: 52, w: 42 },
+  glasses: { x: 50, y: 52, w: 40 },
+  mustache: { x: 50, y: 59.8, w: 16 },
+  monocle: { x: 61.3, y: 55.6, w: 13 },
+  bowtie: { x: 50, y: 73.5, w: 15 },
+  medal: { x: 50, y: 75, w: 10 },
+  scarf: { x: 50, y: 77.5, w: 22 },
+  necktie: { x: 50, y: 76, w: 10 },
+  evileye: { x: 50, y: 68, w: 30 },
+  mug: { x: 82.5, y: 69.5, w: 13 },
+  tea: { x: 82, y: 69.5, w: 12 },
   simit: { x: 82.5, y: 69, w: 14 },
-  kalem: { x: 81.5, y: 65, w: 5.4, r: 18 },
-  anahtar: { x: 81.5, y: 65, w: 7.6, r: -12 },
-  balon: { x: 81.5, y: 53, w: 15 },
-  balkabagi: { x: 12, y: 80.9, w: 15, ground: true },
-  ordek: { x: 12, y: 80.7, w: 16, flip: true, ground: true },
-  kaktus: { x: 12, y: 79.2, w: 13, ground: true },
-  kedi: { x: 12.5, y: 77.6, w: 19, ground: true },
-  hediye: { x: 12, y: 80.5, w: 15, ground: true },
+  pencil: { x: 81.5, y: 65, w: 5.4, r: 18 },
+  wrench: { x: 81.5, y: 65, w: 7.6, r: -12 },
+  balloon: { x: 81.5, y: 53, w: 15 },
+  pumpkin: { x: 12, y: 80.9, w: 15, ground: true },
+  duck: { x: 12, y: 80.7, w: 16, flip: true, ground: true },
+  cactus: { x: 12, y: 79.2, w: 13, ground: true },
+  cat: { x: 12.5, y: 77.6, w: 19, ground: true },
+  gift: { x: 12, y: 80.5, w: 15, ground: true },
 }
 
 const NO_OUTFIT: Outfit = { head: null, face: null, neck: null, held: null, ground: null }
@@ -446,7 +446,7 @@ const NO_OUTFIT: Outfit = { head: null, face: null, neck: null, held: null, grou
  * the eyes to look around inside it.
  */
 export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, number, number, number]; onSkin?: true }>> = {
-  gozluk: {
+  glasses: {
     box: [23, 42, 54, 20],
     onSkin: true,
     svg: '<g fill="none" stroke="#2B1B17" stroke-width="1.8" stroke-linecap="round">' +
@@ -454,18 +454,18 @@ export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, numb
       '<path d="M47.6 50.6Q50 48.8 52.4 50.6"/><path d="M32.3 50.4L25.2 48.6"/><path d="M67.7 50.4L74.8 48.6"/></g>' +
       '<path d="M35.4 48.6A5.6 5.6 0 0 1 39.6 45.9M55.4 48.6A5.6 5.6 0 0 1 59.6 45.9" stroke="#fff" stroke-opacity="0.6" stroke-width="1.1" fill="none" stroke-linecap="round"/>',
   },
-  atki: {
+  scarf: {
     box: [18, 60, 64, 30],
-    svg: '<defs><pattern id="atkiP" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-12)"><rect width="7" height="7" fill="#F3ECE4"/><rect width="3.6" height="7" fill="#D8433B"/></pattern>' +
-      '<linearGradient id="atkiS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.32"/><stop offset="0.45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#3A120E" stop-opacity="0.32"/></linearGradient>' +
-      '<linearGradient id="atkiT" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3A120E" stop-opacity="0.22"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.12"/><stop offset="1" stop-color="#3A120E" stop-opacity="0.22"/></linearGradient></defs>' +
-      '<path d="M61.5 71L69.5 70.5L71.4 84.6Q67.2 86 63 85Z" fill="url(#atkiP)"/><path d="M61.5 71L69.5 70.5L71.4 84.6Q67.2 86 63 85Z" fill="url(#atkiT)" stroke="#8E2A22" stroke-opacity="0.35" stroke-width="0.5"/>' +
+    svg: '<defs><pattern id="scarfP" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-12)"><rect width="7" height="7" fill="#F3ECE4"/><rect width="3.6" height="7" fill="#D8433B"/></pattern>' +
+      '<linearGradient id="scarfS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.32"/><stop offset="0.45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#3A120E" stop-opacity="0.32"/></linearGradient>' +
+      '<linearGradient id="scarfT" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3A120E" stop-opacity="0.22"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.12"/><stop offset="1" stop-color="#3A120E" stop-opacity="0.22"/></linearGradient></defs>' +
+      '<path d="M61.5 71L69.5 70.5L71.4 84.6Q67.2 86 63 85Z" fill="url(#scarfP)"/><path d="M61.5 71L69.5 70.5L71.4 84.6Q67.2 86 63 85Z" fill="url(#scarfT)" stroke="#8E2A22" stroke-opacity="0.35" stroke-width="0.5"/>' +
       '<path d="M63.6 85.2V87.4M65.6 85.5V87.8M67.6 85.5V87.8M69.6 85.2V87.4" stroke="#D8433B" stroke-width="0.9" stroke-linecap="round"/>' +
-      '<path d="M21.6 63.4Q50 72 78.4 63.4L78.9 72.2Q50 80.6 21.1 72.2Z" fill="url(#atkiP)"/>' +
-      '<path d="M21.6 63.4Q50 72 78.4 63.4L78.9 72.2Q50 80.6 21.1 72.2Z" fill="url(#atkiS)" stroke="#8E2A22" stroke-opacity="0.35" stroke-width="0.5"/>' +
-      '<rect x="60.2" y="67.4" width="10" height="8.6" rx="3.4" fill="url(#atkiP)"/><rect x="60.2" y="67.4" width="10" height="8.6" rx="3.4" fill="url(#atkiS)" stroke="#8E2A22" stroke-opacity="0.4" stroke-width="0.5"/>',
+      '<path d="M21.6 63.4Q50 72 78.4 63.4L78.9 72.2Q50 80.6 21.1 72.2Z" fill="url(#scarfP)"/>' +
+      '<path d="M21.6 63.4Q50 72 78.4 63.4L78.9 72.2Q50 80.6 21.1 72.2Z" fill="url(#scarfS)" stroke="#8E2A22" stroke-opacity="0.35" stroke-width="0.5"/>' +
+      '<rect x="60.2" y="67.4" width="10" height="8.6" rx="3.4" fill="url(#scarfP)"/><rect x="60.2" y="67.4" width="10" height="8.6" rx="3.4" fill="url(#scarfS)" stroke="#8E2A22" stroke-opacity="0.4" stroke-width="0.5"/>',
   },
-  nazar: {
+  evileye: {
     box: [36, 61, 28, 20],
     svg: '<path d="M26.8 57.4Q50 86 73.2 57.4" stroke="#2B1B17" stroke-width="0.9" fill="none" stroke-linecap="round" opacity="0.9"/>' +
       '<circle cx="50" cy="71.6" r="1.1" fill="none" stroke="#C9A24A" stroke-width="0.6"/>' +
@@ -473,7 +473,7 @@ export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, numb
       '<circle cx="50" cy="76.4" r="2.05" fill="#5FA8F2"/><circle cx="50" cy="76.4" r="0.95" fill="#121212"/>' +
       '<ellipse cx="48.2" cy="74.2" rx="1.5" ry="0.8" fill="#fff" opacity="0.7" transform="rotate(-30 48.2 74.2)"/>',
   },
-  monokl: {
+  monocle: {
     box: [49, 42.5, 22, 19],
     onSkin: true,
     svg: '<path d="M66.4 57.6C69.6 61.5 70.8 65.5 69.4 70.5" stroke="#B8862A" stroke-width="1.2" fill="none" stroke-dasharray="1.3 0.9" stroke-linecap="round"/>' +
@@ -493,7 +493,7 @@ function wearSvg(item: Item): string {
   const pic = at.flip ? `<g transform="translate(${n(at.x * 2)} 0) scale(-1 1)">${flat}</g>` : flat
   // Things on the ground cast the same soft shadow as Mochi.
   const shadow = at.ground ? `<ellipse cx="${n(at.x)}" cy="88.6" rx="${n(at.w * 0.42)}" ry="1.7" fill="#2B1B17" opacity="0.13"/>` : ''
-  const steam = item === 'kupa'
+  const steam = item === 'mug'
     ? [0, 1].map(i => `<path d="M${n(at.x - 2 + i * 3.4)} ${n(at.y - h / 2 - 1)}q-1.6 -2.2 0 -4.4t0 -4.4" stroke="#C9B8AE" stroke-width="1" fill="none" stroke-linecap="round" opacity="0"><animateTransform attributeName="transform" type="translate" values="0 1;0 -3" dur="2.2s" begin="${n(i * 1.1)}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.7;0" dur="2.2s" begin="${n(i * 1.1)}s" repeatCount="indefinite"/></path>`).join('')
     : ''
   return shadow + (at.r ? `<g transform="rotate(${at.r} ${at.x} ${at.y})">${pic}</g>` : pic + steam)

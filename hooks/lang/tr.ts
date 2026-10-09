@@ -138,20 +138,20 @@ export const tr: typeof en = {
 
   item: {
     name: {
-      baret: 'baret', tac: 'taç', parti: 'parti şapkası', cadi: 'cadı şapkası', noel: 'noel şapkası', gece: 'gece şapkası', kulaklik: 'kulaklık', kep: 'mezuniyet kepi',
-      kovboy: 'kovboy şapkası', korsan: 'korsan şapkası', sef: 'şef şapkası', viking: 'viking kaskı', sihirbaz: 'sihirbaz şapkası', fes: 'fes', pervane: 'pervaneli şapka', bere: 'bere',
-      gunes: 'güneş gözlüğü', gozluk: 'gözlük', biyik: 'bıyık', monokl: 'monokl',
-      papyon: 'papyon', madalya: 'madalya', atki: 'atkı', kravat: 'kravat', nazar: 'nazar boncuğu',
-      kupa: 'kahve kupası', cay: 'çay bardağı', simit: 'simit', kalem: 'kalem', anahtar: 'İngiliz anahtarı', balon: 'balon',
-      balkabagi: 'balkabağı', ordek: 'lastik ördek', kaktus: 'kaktüs', kedi: 'kedi', hediye: 'hediye kutusu',
+      hardhat: 'baret', crown: 'taç', partyhat: 'parti şapkası', witchhat: 'cadı şapkası', santahat: 'noel şapkası', nightcap: 'gece şapkası', headphones: 'kulaklık', gradcap: 'mezuniyet kepi',
+      cowboy: 'kovboy şapkası', pirate: 'korsan şapkası', chefhat: 'şef şapkası', viking: 'viking kaskı', wizard: 'sihirbaz şapkası', fez: 'fes', propeller: 'pervaneli şapka', beanie: 'bere',
+      sunglasses: 'güneş gözlüğü', glasses: 'gözlük', mustache: 'bıyık', monocle: 'monokl',
+      bowtie: 'papyon', medal: 'madalya', scarf: 'atkı', necktie: 'kravat', evileye: 'nazar boncuğu',
+      mug: 'kahve kupası', tea: 'çay bardağı', simit: 'simit', pencil: 'kalem', wrench: 'İngiliz anahtarı', balloon: 'balon',
+      pumpkin: 'balkabağı', duck: 'lastik ördek', cactus: 'kaktüs', cat: 'kedi', gift: 'hediye kutusu',
     },
     short: {
-      baret: 'baret', tac: 'taç', parti: 'parti', cadi: 'cadı', noel: 'noel', gece: 'gece', kulaklik: 'kulaklık', kep: 'kep',
-      kovboy: 'kovboy', korsan: 'korsan', sef: 'şef', viking: 'viking', sihirbaz: 'sihirbaz', fes: 'fes', pervane: 'pervane', bere: 'bere',
-      gunes: 'güneş', gozluk: 'gözlük', biyik: 'bıyık', monokl: 'monokl',
-      papyon: 'papyon', madalya: 'madalya', atki: 'atkı', kravat: 'kravat', nazar: 'nazar',
-      kupa: 'kupa', cay: 'çay', simit: 'simit', kalem: 'kalem', anahtar: 'anahtar', balon: 'balon',
-      balkabagi: 'balkabağı', ordek: 'ördek', kaktus: 'kaktüs', kedi: 'kedi', hediye: 'hediye',
+      hardhat: 'baret', crown: 'taç', partyhat: 'parti', witchhat: 'cadı', santahat: 'noel', nightcap: 'gece', headphones: 'kulaklık', gradcap: 'kep',
+      cowboy: 'kovboy', pirate: 'korsan', chefhat: 'şef', viking: 'viking', wizard: 'sihirbaz', fez: 'fes', propeller: 'pervane', beanie: 'bere',
+      sunglasses: 'güneş', glasses: 'gözlük', mustache: 'bıyık', monocle: 'monokl',
+      bowtie: 'papyon', medal: 'madalya', scarf: 'atkı', necktie: 'kravat', evileye: 'nazar',
+      mug: 'kupa', tea: 'çay', simit: 'simit', pencil: 'kalem', wrench: 'anahtar', balloon: 'balon',
+      pumpkin: 'balkabağı', duck: 'ördek', cactus: 'kaktüs', cat: 'kedi', gift: 'hediye',
     },
     slot: { head: 'Baş', face: 'Yüz', neck: 'Boyun', held: 'El', ground: 'Yanında' },
     hint: {

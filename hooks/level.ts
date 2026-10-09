@@ -1,6 +1,7 @@
-import type { DayRec, History, Item, Mood, Outfit } from '../types'
+import type { DayRec, Env, History, Item, Mood, Outfit, Prefs } from '../types'
 import { local, shiftDay } from './facts'
 import { t } from './i18n'
+import { POSES } from './rig'
 
 // Mochi grows with the work done in every chat: experience from turns,
 // edits, commits and days, levels from experience, and things to wear that
@@ -16,48 +17,65 @@ export const slotName = (s: Slot): string => t().item.slot[s]
 
 /** Each slot's items, in the order the wardrobe shows them (roughly the order they unlock). */
 export const SLOT_ITEMS: Record<Slot, Item[]> = {
-  head: ['bere', 'kulaklik', 'baret', 'kep', 'sef', 'kovboy', 'tac', 'korsan', 'viking', 'sihirbaz', 'parti', 'pervane', 'fes', 'gece', 'cadi', 'noel'],
-  face: ['gozluk', 'gunes', 'biyik', 'monokl'],
-  neck: ['papyon', 'kravat', 'atki', 'nazar', 'madalya'],
-  held: ['kupa', 'cay', 'kalem', 'simit', 'anahtar', 'balon'],
-  ground: ['kaktus', 'ordek', 'kedi', 'hediye', 'balkabagi'],
+  head: ['beanie', 'headphones', 'hardhat', 'gradcap', 'chefhat', 'cowboy', 'crown', 'pirate', 'viking', 'wizard', 'partyhat', 'propeller', 'fez', 'nightcap', 'witchhat', 'santahat'],
+  face: ['glasses', 'sunglasses', 'mustache', 'monocle'],
+  neck: ['bowtie', 'necktie', 'scarf', 'evileye', 'medal'],
+  held: ['mug', 'tea', 'pencil', 'simit', 'wrench', 'balloon'],
+  ground: ['cactus', 'duck', 'cat', 'gift', 'pumpkin'],
 }
 
 export const SLOT: Record<Item, Slot> = Object.fromEntries(
   SLOTS.flatMap(slot => SLOT_ITEMS[slot].map(item => [item, slot])),
 ) as Record<Item, Slot>
 
+/** The ids that changed when they were made English, as an older version saved them (in prefs and level.json). */
+const OLD_IDS: Record<string, Item> = {
+  baret: 'hardhat', tac: 'crown', parti: 'partyhat', cadi: 'witchhat', noel: 'santahat', gece: 'nightcap', kulaklik: 'headphones', kep: 'gradcap',
+  kovboy: 'cowboy', korsan: 'pirate', sef: 'chefhat', sihirbaz: 'wizard', fes: 'fez', pervane: 'propeller', bere: 'beanie',
+  gunes: 'sunglasses', gozluk: 'glasses', biyik: 'mustache', monokl: 'monocle',
+  papyon: 'bowtie', madalya: 'medal', atki: 'scarf', kravat: 'necktie', nazar: 'evileye',
+  kupa: 'mug', cay: 'tea', kalem: 'pencil', anahtar: 'wrench', balon: 'balloon',
+  balkabagi: 'pumpkin', ordek: 'duck', kaktus: 'cactus', kedi: 'cat', hediye: 'gift',
+}
+
+/** The item an id names, its own or the one an older version saved; null for anything else. */
+export function itemOf(v: unknown): Item | null {
+  if (typeof v !== 'string') return null
+  if (Object.hasOwn(SLOT, v)) return v as Item
+  return Object.hasOwn(OLD_IDS, v) ? OLD_IDS[v] ?? null : null
+}
+
 type Need = { level?: number; commits?: number; night?: number; edits?: number; streak?: number; turns?: number; days?: number }
 
 /** What unlocks each item that can be earned: a level, or a habit. */
 export const UNLOCKS: ({ item: Item } & Need)[] = [
-  { item: 'bere', level: 1 }, { item: 'gozluk', level: 1 }, { item: 'kupa', level: 1 }, { item: 'cay', level: 1 },
-  { item: 'papyon', level: 2 }, { item: 'gunes', level: 2 },
-  { item: 'kulaklik', level: 3 }, { item: 'kalem', level: 3 },
-  { item: 'kravat', level: 4 }, { item: 'simit', level: 4 },
-  { item: 'baret', level: 5 }, { item: 'anahtar', level: 5 },
-  { item: 'atki', level: 6 }, { item: 'kaktus', level: 6 },
-  { item: 'kep', level: 7 }, { item: 'biyik', level: 7 },
-  { item: 'sef', level: 8 }, { item: 'ordek', level: 8 },
-  { item: 'kovboy', level: 9 }, { item: 'nazar', level: 9 },
-  { item: 'tac', level: 10 }, { item: 'monokl', level: 10 },
-  { item: 'korsan', level: 11 },
-  { item: 'viking', level: 12 }, { item: 'kedi', level: 12 },
-  { item: 'sihirbaz', level: 13 },
-  { item: 'madalya', level: 15 },
-  { item: 'balon', turns: 100 },
-  { item: 'hediye', days: 30 },
-  { item: 'fes', streak: 7 },
-  { item: 'parti', commits: 50 },
-  { item: 'pervane', edits: 500 },
-  { item: 'gece', night: 20 },
+  { item: 'beanie', level: 1 }, { item: 'glasses', level: 1 }, { item: 'mug', level: 1 }, { item: 'tea', level: 1 },
+  { item: 'bowtie', level: 2 }, { item: 'sunglasses', level: 2 },
+  { item: 'headphones', level: 3 }, { item: 'pencil', level: 3 },
+  { item: 'necktie', level: 4 }, { item: 'simit', level: 4 },
+  { item: 'hardhat', level: 5 }, { item: 'wrench', level: 5 },
+  { item: 'scarf', level: 6 }, { item: 'cactus', level: 6 },
+  { item: 'gradcap', level: 7 }, { item: 'mustache', level: 7 },
+  { item: 'chefhat', level: 8 }, { item: 'duck', level: 8 },
+  { item: 'cowboy', level: 9 }, { item: 'evileye', level: 9 },
+  { item: 'crown', level: 10 }, { item: 'monocle', level: 10 },
+  { item: 'pirate', level: 11 },
+  { item: 'viking', level: 12 }, { item: 'cat', level: 12 },
+  { item: 'wizard', level: 13 },
+  { item: 'medal', level: 15 },
+  { item: 'balloon', turns: 100 },
+  { item: 'gift', days: 30 },
+  { item: 'fez', streak: 7 },
+  { item: 'partyhat', commits: 50 },
+  { item: 'propeller', edits: 500 },
+  { item: 'nightcap', night: 20 },
 ]
 
 /** Worn by the date alone, never unlocked. */
 export const SEASONAL: { item: Item; season: 'halloween' | 'xmas' }[] = [
-  { item: 'cadi', season: 'halloween' },
-  { item: 'balkabagi', season: 'halloween' },
-  { item: 'noel', season: 'xmas' },
+  { item: 'witchhat', season: 'halloween' },
+  { item: 'pumpkin', season: 'halloween' },
+  { item: 'santahat', season: 'xmas' },
 ]
 
 /** What it takes, in a few words: "level 5", "50 commits". */
@@ -155,18 +173,18 @@ export function season(now: number, tz: number): Partial<Outfit> & { isNight: bo
   const isHalloween = (month === 10 && day >= 24) || (month === 11 && day === 1)
   const isXmas = month === 12 && day >= 18 && day <= 30
   const isNewYear = (month === 12 && day === 31) || (month === 1 && day === 1)
-  const head: Item | undefined = isHalloween ? 'cadi' : isXmas ? 'noel' : isNewYear ? 'parti' : undefined
+  const head: Item | undefined = isHalloween ? 'witchhat' : isXmas ? 'santahat' : isNewYear ? 'partyhat' : undefined
   return {
     ...(head ? { head } : {}),
-    ...(isHalloween ? { ground: 'balkabagi' as const } : {}),
+    ...(isHalloween ? { ground: 'pumpkin' as const } : {}),
     isNight: hour < 5,
     isMorning: hour >= 6 && hour < 11,
   }
 }
 
 /** Items worn by themselves when nothing is chosen, from the most to the least earned. */
-const HEAD_RANK: Item[] = ['tac', 'sihirbaz', 'viking', 'korsan', 'kovboy', 'sef', 'kep', 'baret', 'kulaklik']
-const NECK_RANK: Item[] = ['madalya', 'nazar', 'papyon']
+const HEAD_RANK: Item[] = ['crown', 'wizard', 'viking', 'pirate', 'cowboy', 'chefhat', 'gradcap', 'hardhat', 'headphones']
+const NECK_RANK: Item[] = ['medal', 'evileye', 'bowtie']
 const MUG_MOODS: ReadonlySet<Mood> = new Set(['idle', 'listening', 'pleased', 'sleepy'])
 
 /**
@@ -178,9 +196,9 @@ const MUG_MOODS: ReadonlySet<Mood> = new Set(['idle', 'listening', 'pleased', 's
 export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood, canHold: boolean): Outfit {
   const s = season(now, tz)
   const isAsleep = mood === 'sleeping' || mood === 'sleepy'
-  const head = pick.head !== undefined ? pick.head : s.head ?? (isAsleep || s.isNight ? 'gece' : HEAD_RANK.find(i => items.includes(i)) ?? null)
+  const head = pick.head !== undefined ? pick.head : s.head ?? (isAsleep || s.isNight ? 'nightcap' : HEAD_RANK.find(i => items.includes(i)) ?? null)
   const neck = pick.neck !== undefined ? pick.neck : NECK_RANK.find(i => items.includes(i)) ?? null
-  const held = pick.held !== undefined ? pick.held : s.isMorning && MUG_MOODS.has(mood) ? 'kupa' : null
+  const held = pick.held !== undefined ? pick.held : s.isMorning && MUG_MOODS.has(mood) ? 'mug' : null
   return {
     head,
     face: pick.face ?? null,
@@ -190,8 +208,22 @@ export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: nu
   }
 }
 
+/** Whether the pose leaves the right hand down and empty, to hold a cup or a balloon. */
+const canHold = (mood: Mood) => POSES[mood].held === undefined && POSES[mood].armR >= -40 && POSES[mood].armR <= 0
+
+/** What Mochi has on now: the person's choice (while it can still be worn), what it earned, the season and the hour. */
+export function outfitNow(p: Prefs, v: Env, mood: Mood, now: number): Outfit {
+  const ok = wearable(v.history, now, v.tz)
+  const pick: Partial<Outfit> = {}
+  for (const slot of SLOTS) {
+    const chosen = p.pick[slot]
+    if (chosen === null || (chosen !== undefined && ok.includes(chosen))) pick[slot] = chosen
+  }
+  return outfitFor(pick, unlocked(v.history), now, v.tz, mood, canHold(mood))
+}
+
 /** The terminal's hat row (five cells) for a head item. */
 export const ASCII_HAT: Partial<Record<Item, string>> = {
-  baret: ' ▄█▄ ', tac: ' ╻╻╻ ', parti: '  ▲  ', cadi: ' ▁▲▁ ', noel: ' ▄▀° ', gece: ' ▄▀° ', kulaklik: ' ╭─╮ ', kep: ' ▀▀▀ ',
-  kovboy: '▁▄█▄▁', korsan: ' ▀▄▀ ', sef: ' ▐█▌ ', viking: '╯▄█▄╰', sihirbaz: '  ▲* ', fes: '  ▆  ', pervane: ' ─┼─ ', bere: '  ▄° ',
+  hardhat: ' ▄█▄ ', crown: ' ╻╻╻ ', partyhat: '  ▲  ', witchhat: ' ▁▲▁ ', santahat: ' ▄▀° ', nightcap: ' ▄▀° ', headphones: ' ╭─╮ ', gradcap: ' ▀▀▀ ',
+  cowboy: '▁▄█▄▁', pirate: ' ▀▄▀ ', chefhat: ' ▐█▌ ', viking: '╯▄█▄╰', wizard: '  ▲* ', fez: '  ▆  ', propeller: ' ─┼─ ', beanie: '  ▄° ',
 }

@@ -153,20 +153,20 @@ export const en = {
   /** Things to wear. */
   item: {
     name: {
-      baret: 'hard hat', tac: 'crown', parti: 'party hat', cadi: 'witch hat', noel: 'Santa hat', gece: 'nightcap', kulaklik: 'headphones', kep: 'graduation cap',
-      kovboy: 'cowboy hat', korsan: 'pirate hat', sef: 'chef’s hat', viking: 'viking helmet', sihirbaz: 'wizard hat', fes: 'fez', pervane: 'propeller cap', bere: 'beanie',
-      gunes: 'sunglasses', gozluk: 'glasses', biyik: 'mustache', monokl: 'monocle',
-      papyon: 'bow tie', madalya: 'medal', atki: 'scarf', kravat: 'necktie', nazar: 'evil eye bead',
-      kupa: 'coffee mug', cay: 'tea glass', simit: 'simit', kalem: 'pencil', anahtar: 'wrench', balon: 'balloon',
-      balkabagi: 'pumpkin', ordek: 'rubber duck', kaktus: 'cactus', kedi: 'cat', hediye: 'gift box',
+      hardhat: 'hard hat', crown: 'crown', partyhat: 'party hat', witchhat: 'witch hat', santahat: 'Santa hat', nightcap: 'nightcap', headphones: 'headphones', gradcap: 'graduation cap',
+      cowboy: 'cowboy hat', pirate: 'pirate hat', chefhat: 'chef’s hat', viking: 'viking helmet', wizard: 'wizard hat', fez: 'fez', propeller: 'propeller cap', beanie: 'beanie',
+      sunglasses: 'sunglasses', glasses: 'glasses', mustache: 'mustache', monocle: 'monocle',
+      bowtie: 'bow tie', medal: 'medal', scarf: 'scarf', necktie: 'necktie', evileye: 'evil eye bead',
+      mug: 'coffee mug', tea: 'tea glass', simit: 'simit', pencil: 'pencil', wrench: 'wrench', balloon: 'balloon',
+      pumpkin: 'pumpkin', duck: 'rubber duck', cactus: 'cactus', cat: 'cat', gift: 'gift box',
     },
     short: {
-      baret: 'hard hat', tac: 'crown', parti: 'party', cadi: 'witch', noel: 'Santa', gece: 'nightcap', kulaklik: 'headphones', kep: 'grad cap',
-      kovboy: 'cowboy', korsan: 'pirate', sef: 'chef', viking: 'viking', sihirbaz: 'wizard', fes: 'fez', pervane: 'propeller', bere: 'beanie',
-      gunes: 'shades', gozluk: 'glasses', biyik: 'mustache', monokl: 'monocle',
-      papyon: 'bow tie', madalya: 'medal', atki: 'scarf', kravat: 'tie', nazar: 'evil eye',
-      kupa: 'coffee', cay: 'tea', simit: 'simit', kalem: 'pencil', anahtar: 'wrench', balon: 'balloon',
-      balkabagi: 'pumpkin', ordek: 'duck', kaktus: 'cactus', kedi: 'cat', hediye: 'gift',
+      hardhat: 'hard hat', crown: 'crown', partyhat: 'party', witchhat: 'witch', santahat: 'Santa', nightcap: 'nightcap', headphones: 'headphones', gradcap: 'grad cap',
+      cowboy: 'cowboy', pirate: 'pirate', chefhat: 'chef', viking: 'viking', wizard: 'wizard', fez: 'fez', propeller: 'propeller', beanie: 'beanie',
+      sunglasses: 'shades', glasses: 'glasses', mustache: 'mustache', monocle: 'monocle',
+      bowtie: 'bow tie', medal: 'medal', scarf: 'scarf', necktie: 'tie', evileye: 'evil eye',
+      mug: 'coffee', tea: 'tea', simit: 'simit', pencil: 'pencil', wrench: 'wrench', balloon: 'balloon',
+      pumpkin: 'pumpkin', duck: 'duck', cactus: 'cactus', cat: 'cat', gift: 'gift',
     },
     slot: { head: 'Head', face: 'Face', neck: 'Neck', held: 'Hand', ground: 'Beside' },
     hint: {

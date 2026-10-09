@@ -138,20 +138,20 @@ export const ko: typeof en = {
 
   item: {
     name: {
-      baret: '안전모', tac: '왕관', parti: '파티 모자', cadi: '마녀 모자', noel: '산타 모자', gece: '수면 모자', kulaklik: '헤드폰', kep: '학사모',
-      kovboy: '카우보이 모자', korsan: '해적 모자', sef: '요리사 모자', viking: '바이킹 투구', sihirbaz: '마법사 모자', fes: '페즈', pervane: '프로펠러 모자', bere: '비니',
-      gunes: '선글라스', gozluk: '안경', biyik: '콧수염', monokl: '모노클',
-      papyon: '나비넥타이', madalya: '메달', atki: '목도리', kravat: '넥타이', nazar: '나자르 부적',
-      kupa: '커피 머그', cay: '튤립 찻잔', simit: '시미트', kalem: '연필', anahtar: '렌치', balon: '풍선',
-      balkabagi: '호박', ordek: '고무 오리', kaktus: '선인장', kedi: '고양이', hediye: '선물 상자',
+      hardhat: '안전모', crown: '왕관', partyhat: '파티 모자', witchhat: '마녀 모자', santahat: '산타 모자', nightcap: '수면 모자', headphones: '헤드폰', gradcap: '학사모',
+      cowboy: '카우보이 모자', pirate: '해적 모자', chefhat: '요리사 모자', viking: '바이킹 투구', wizard: '마법사 모자', fez: '페즈', propeller: '프로펠러 모자', beanie: '비니',
+      sunglasses: '선글라스', glasses: '안경', mustache: '콧수염', monocle: '모노클',
+      bowtie: '나비넥타이', medal: '메달', scarf: '목도리', necktie: '넥타이', evileye: '나자르 부적',
+      mug: '커피 머그', tea: '튤립 찻잔', simit: '시미트', pencil: '연필', wrench: '렌치', balloon: '풍선',
+      pumpkin: '호박', duck: '고무 오리', cactus: '선인장', cat: '고양이', gift: '선물 상자',
     },
     short: {
-      baret: '안전모', tac: '왕관', parti: '파티', cadi: '마녀', noel: '산타', gece: '수면모', kulaklik: '헤드폰', kep: '학사모',
-      kovboy: '카우보이', korsan: '해적', sef: '요리사', viking: '바이킹', sihirbaz: '마법사', fes: '페즈', pervane: '프로펠러', bere: '비니',
-      gunes: '선글라스', gozluk: '안경', biyik: '콧수염', monokl: '모노클',
-      papyon: '보타이', madalya: '메달', atki: '목도리', kravat: '넥타이', nazar: '나자르',
-      kupa: '커피', cay: '차', simit: '시미트', kalem: '연필', anahtar: '렌치', balon: '풍선',
-      balkabagi: '호박', ordek: '오리', kaktus: '선인장', kedi: '고양이', hediye: '선물',
+      hardhat: '안전모', crown: '왕관', partyhat: '파티', witchhat: '마녀', santahat: '산타', nightcap: '수면모', headphones: '헤드폰', gradcap: '학사모',
+      cowboy: '카우보이', pirate: '해적', chefhat: '요리사', viking: '바이킹', wizard: '마법사', fez: '페즈', propeller: '프로펠러', beanie: '비니',
+      sunglasses: '선글라스', glasses: '안경', mustache: '콧수염', monocle: '모노클',
+      bowtie: '보타이', medal: '메달', scarf: '목도리', necktie: '넥타이', evileye: '나자르',
+      mug: '커피', tea: '차', simit: '시미트', pencil: '연필', wrench: '렌치', balloon: '풍선',
+      pumpkin: '호박', duck: '오리', cactus: '선인장', cat: '고양이', gift: '선물',
     },
     slot: { head: '머리', face: '얼굴', neck: '목', held: '손', ground: '옆' },
     hint: {

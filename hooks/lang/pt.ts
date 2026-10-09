@@ -141,20 +141,20 @@ export const pt: typeof en = {
 
   item: {
     name: {
-      baret: 'capacete de obra', tac: 'coroa', parti: 'chapéu de festa', cadi: 'chapéu de bruxa', noel: 'gorro de Papai Noel', gece: 'touca de dormir', kulaklik: 'fones de ouvido', kep: 'chapéu de formatura',
-      kovboy: 'chapéu de caubói', korsan: 'chapéu de pirata', sef: 'chapéu de chef', viking: 'capacete viking', sihirbaz: 'chapéu de mago', fes: 'fez', pervane: 'boné de hélice', bere: 'gorro',
-      gunes: 'óculos de sol', gozluk: 'óculos', biyik: 'bigode', monokl: 'monóculo',
-      papyon: 'gravata-borboleta', madalya: 'medalha', atki: 'cachecol', kravat: 'gravata', nazar: 'olho grego',
-      kupa: 'caneca de café', cay: 'copo de chá', simit: 'simit', kalem: 'lápis', anahtar: 'chave inglesa', balon: 'balão',
-      balkabagi: 'abóbora', ordek: 'patinho de borracha', kaktus: 'cacto', kedi: 'gato', hediye: 'caixa de presente',
+      hardhat: 'capacete de obra', crown: 'coroa', partyhat: 'chapéu de festa', witchhat: 'chapéu de bruxa', santahat: 'gorro de Papai Noel', nightcap: 'touca de dormir', headphones: 'fones de ouvido', gradcap: 'chapéu de formatura',
+      cowboy: 'chapéu de caubói', pirate: 'chapéu de pirata', chefhat: 'chapéu de chef', viking: 'capacete viking', wizard: 'chapéu de mago', fez: 'fez', propeller: 'boné de hélice', beanie: 'gorro',
+      sunglasses: 'óculos de sol', glasses: 'óculos', mustache: 'bigode', monocle: 'monóculo',
+      bowtie: 'gravata-borboleta', medal: 'medalha', scarf: 'cachecol', necktie: 'gravata', evileye: 'olho grego',
+      mug: 'caneca de café', tea: 'copo de chá', simit: 'simit', pencil: 'lápis', wrench: 'chave inglesa', balloon: 'balão',
+      pumpkin: 'abóbora', duck: 'patinho de borracha', cactus: 'cacto', cat: 'gato', gift: 'caixa de presente',
     },
     short: {
-      baret: 'capacete', tac: 'coroa', parti: 'festa', cadi: 'bruxa', noel: 'Noel', gece: 'touca', kulaklik: 'fones', kep: 'formatura',
-      kovboy: 'caubói', korsan: 'pirata', sef: 'chef', viking: 'viking', sihirbaz: 'mago', fes: 'fez', pervane: 'hélice', bere: 'gorro',
-      gunes: 'óculos de sol', gozluk: 'óculos', biyik: 'bigode', monokl: 'monóculo',
-      papyon: 'borboleta', madalya: 'medalha', atki: 'cachecol', kravat: 'gravata', nazar: 'olho grego',
-      kupa: 'café', cay: 'chá', simit: 'simit', kalem: 'lápis', anahtar: 'chave', balon: 'balão',
-      balkabagi: 'abóbora', ordek: 'patinho', kaktus: 'cacto', kedi: 'gato', hediye: 'presente',
+      hardhat: 'capacete', crown: 'coroa', partyhat: 'festa', witchhat: 'bruxa', santahat: 'Noel', nightcap: 'touca', headphones: 'fones', gradcap: 'formatura',
+      cowboy: 'caubói', pirate: 'pirata', chefhat: 'chef', viking: 'viking', wizard: 'mago', fez: 'fez', propeller: 'hélice', beanie: 'gorro',
+      sunglasses: 'óculos de sol', glasses: 'óculos', mustache: 'bigode', monocle: 'monóculo',
+      bowtie: 'borboleta', medal: 'medalha', scarf: 'cachecol', necktie: 'gravata', evileye: 'olho grego',
+      mug: 'café', tea: 'chá', simit: 'simit', pencil: 'lápis', wrench: 'chave', balloon: 'balão',
+      pumpkin: 'abóbora', duck: 'patinho', cactus: 'cacto', cat: 'gato', gift: 'presente',
     },
     slot: { head: 'Cabeça', face: 'Rosto', neck: 'Pescoço', held: 'Mão', ground: 'Ao lado' },
     hint: {

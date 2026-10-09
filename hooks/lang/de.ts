@@ -139,20 +139,20 @@ export const de: typeof en = {
 
   item: {
     name: {
-      baret: 'Schutzhelm', tac: 'Krone', parti: 'Partyhut', cadi: 'Hexenhut', noel: 'Weihnachtsmütze', gece: 'Schlafmütze', kulaklik: 'Kopfhörer', kep: 'Doktorhut',
-      kovboy: 'Cowboyhut', korsan: 'Piratenhut', sef: 'Kochmütze', viking: 'Wikingerhelm', sihirbaz: 'Zauberhut', fes: 'Fes', pervane: 'Propellermütze', bere: 'Strickmütze',
-      gunes: 'Sonnenbrille', gozluk: 'Brille', biyik: 'Schnurrbart', monokl: 'Monokel',
-      papyon: 'Fliege', madalya: 'Medaille', atki: 'Schal', kravat: 'Krawatte', nazar: 'Nazar-Amulett',
-      kupa: 'Kaffeebecher', cay: 'Teeglas', simit: 'simit', kalem: 'Bleistift', anahtar: 'Schraubenschlüssel', balon: 'Luftballon',
-      balkabagi: 'Kürbis', ordek: 'Quietscheente', kaktus: 'Kaktus', kedi: 'Katze', hediye: 'Geschenkbox',
+      hardhat: 'Schutzhelm', crown: 'Krone', partyhat: 'Partyhut', witchhat: 'Hexenhut', santahat: 'Weihnachtsmütze', nightcap: 'Schlafmütze', headphones: 'Kopfhörer', gradcap: 'Doktorhut',
+      cowboy: 'Cowboyhut', pirate: 'Piratenhut', chefhat: 'Kochmütze', viking: 'Wikingerhelm', wizard: 'Zauberhut', fez: 'Fes', propeller: 'Propellermütze', beanie: 'Strickmütze',
+      sunglasses: 'Sonnenbrille', glasses: 'Brille', mustache: 'Schnurrbart', monocle: 'Monokel',
+      bowtie: 'Fliege', medal: 'Medaille', scarf: 'Schal', necktie: 'Krawatte', evileye: 'Nazar-Amulett',
+      mug: 'Kaffeebecher', tea: 'Teeglas', simit: 'simit', pencil: 'Bleistift', wrench: 'Schraubenschlüssel', balloon: 'Luftballon',
+      pumpkin: 'Kürbis', duck: 'Quietscheente', cactus: 'Kaktus', cat: 'Katze', gift: 'Geschenkbox',
     },
     short: {
-      baret: 'Helm', tac: 'Krone', parti: 'Party', cadi: 'Hexe', noel: 'Nikolaus', gece: 'Schlafmütze', kulaklik: 'Kopfhörer', kep: 'Doktorhut',
-      kovboy: 'Cowboy', korsan: 'Pirat', sef: 'Koch', viking: 'Wikinger', sihirbaz: 'Zauberer', fes: 'Fes', pervane: 'Propeller', bere: 'Mütze',
-      gunes: 'Sonnenbrille', gozluk: 'Brille', biyik: 'Schnurrbart', monokl: 'Monokel',
-      papyon: 'Fliege', madalya: 'Medaille', atki: 'Schal', kravat: 'Krawatte', nazar: 'Nazar',
-      kupa: 'Kaffee', cay: 'Tee', simit: 'simit', kalem: 'Stift', anahtar: 'Schlüssel', balon: 'Ballon',
-      balkabagi: 'Kürbis', ordek: 'Ente', kaktus: 'Kaktus', kedi: 'Katze', hediye: 'Geschenk',
+      hardhat: 'Helm', crown: 'Krone', partyhat: 'Party', witchhat: 'Hexe', santahat: 'Nikolaus', nightcap: 'Schlafmütze', headphones: 'Kopfhörer', gradcap: 'Doktorhut',
+      cowboy: 'Cowboy', pirate: 'Pirat', chefhat: 'Koch', viking: 'Wikinger', wizard: 'Zauberer', fez: 'Fes', propeller: 'Propeller', beanie: 'Mütze',
+      sunglasses: 'Sonnenbrille', glasses: 'Brille', mustache: 'Schnurrbart', monocle: 'Monokel',
+      bowtie: 'Fliege', medal: 'Medaille', scarf: 'Schal', necktie: 'Krawatte', evileye: 'Nazar',
+      mug: 'Kaffee', tea: 'Tee', simit: 'simit', pencil: 'Stift', wrench: 'Schlüssel', balloon: 'Ballon',
+      pumpkin: 'Kürbis', duck: 'Ente', cactus: 'Kaktus', cat: 'Katze', gift: 'Geschenk',
     },
     slot: { head: 'Kopf', face: 'Gesicht', neck: 'Hals', held: 'Hand', ground: 'Daneben' },
     hint: {

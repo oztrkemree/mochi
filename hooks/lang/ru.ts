@@ -160,20 +160,20 @@ export const ru: typeof en = {
 
   item: {
     name: {
-      baret: 'строительная каска', tac: 'корона', parti: 'праздничный колпак', cadi: 'шляпа ведьмы', noel: 'шапка Санты', gece: 'ночной колпак', kulaklik: 'наушники', kep: 'шапочка выпускника',
-      kovboy: 'ковбойская шляпа', korsan: 'пиратская шляпа', sef: 'поварской колпак', viking: 'шлем викинга', sihirbaz: 'шляпа волшебника', fes: 'феска', pervane: 'кепка с пропеллером', bere: 'вязаная шапка',
-      gunes: 'солнечные очки', gozluk: 'очки', biyik: 'усы', monokl: 'монокль',
-      papyon: 'галстук-бабочка', madalya: 'медаль', atki: 'шарф', kravat: 'галстук', nazar: 'бусина назар',
-      kupa: 'кружка кофе', cay: 'стаканчик чая', simit: 'симит', kalem: 'карандаш', anahtar: 'гаечный ключ', balon: 'воздушный шарик',
-      balkabagi: 'тыква', ordek: 'резиновая уточка', kaktus: 'кактус', kedi: 'кот', hediye: 'подарочная коробка',
+      hardhat: 'строительная каска', crown: 'корона', partyhat: 'праздничный колпак', witchhat: 'шляпа ведьмы', santahat: 'шапка Санты', nightcap: 'ночной колпак', headphones: 'наушники', gradcap: 'шапочка выпускника',
+      cowboy: 'ковбойская шляпа', pirate: 'пиратская шляпа', chefhat: 'поварской колпак', viking: 'шлем викинга', wizard: 'шляпа волшебника', fez: 'феска', propeller: 'кепка с пропеллером', beanie: 'вязаная шапка',
+      sunglasses: 'солнечные очки', glasses: 'очки', mustache: 'усы', monocle: 'монокль',
+      bowtie: 'галстук-бабочка', medal: 'медаль', scarf: 'шарф', necktie: 'галстук', evileye: 'бусина назар',
+      mug: 'кружка кофе', tea: 'стаканчик чая', simit: 'симит', pencil: 'карандаш', wrench: 'гаечный ключ', balloon: 'воздушный шарик',
+      pumpkin: 'тыква', duck: 'резиновая уточка', cactus: 'кактус', cat: 'кот', gift: 'подарочная коробка',
     },
     short: {
-      baret: 'каска', tac: 'корона', parti: 'праздник', cadi: 'ведьма', noel: 'Санта', gece: 'ночной колпак', kulaklik: 'наушники', kep: 'выпускник',
-      kovboy: 'ковбой', korsan: 'пират', sef: 'шеф', viking: 'викинг', sihirbaz: 'волшебник', fes: 'феска', pervane: 'пропеллер', bere: 'шапка',
-      gunes: 'тёмные очки', gozluk: 'очки', biyik: 'усы', monokl: 'монокль',
-      papyon: 'бабочка', madalya: 'медаль', atki: 'шарф', kravat: 'галстук', nazar: 'назар',
-      kupa: 'кофе', cay: 'чай', simit: 'симит', kalem: 'карандаш', anahtar: 'ключ', balon: 'шарик',
-      balkabagi: 'тыква', ordek: 'уточка', kaktus: 'кактус', kedi: 'кот', hediye: 'подарок',
+      hardhat: 'каска', crown: 'корона', partyhat: 'праздник', witchhat: 'ведьма', santahat: 'Санта', nightcap: 'ночной колпак', headphones: 'наушники', gradcap: 'выпускник',
+      cowboy: 'ковбой', pirate: 'пират', chefhat: 'шеф', viking: 'викинг', wizard: 'волшебник', fez: 'феска', propeller: 'пропеллер', beanie: 'шапка',
+      sunglasses: 'тёмные очки', glasses: 'очки', mustache: 'усы', monocle: 'монокль',
+      bowtie: 'бабочка', medal: 'медаль', scarf: 'шарф', necktie: 'галстук', evileye: 'назар',
+      mug: 'кофе', tea: 'чай', simit: 'симит', pencil: 'карандаш', wrench: 'ключ', balloon: 'шарик',
+      pumpkin: 'тыква', duck: 'уточка', cactus: 'кактус', cat: 'кот', gift: 'подарок',
     },
     slot: { head: 'Голова', face: 'Лицо', neck: 'Шея', held: 'В руке', ground: 'Рядом' },
     hint: {

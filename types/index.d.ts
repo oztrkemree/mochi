@@ -64,11 +64,11 @@ export type Params = {
 
 /** Something Mochi can wear or have beside it (see hooks/level.ts). */
 export type Item =
-  | 'baret' | 'tac' | 'parti' | 'cadi' | 'noel' | 'gece' | 'kulaklik' | 'kep' | 'kovboy' | 'korsan' | 'sef' | 'viking' | 'sihirbaz' | 'fes' | 'pervane' | 'bere'
-  | 'gunes' | 'gozluk' | 'biyik' | 'monokl'
-  | 'papyon' | 'madalya' | 'atki' | 'kravat' | 'nazar'
-  | 'kupa' | 'cay' | 'simit' | 'kalem' | 'anahtar' | 'balon'
-  | 'balkabagi' | 'ordek' | 'kaktus' | 'kedi' | 'hediye'
+  | 'hardhat' | 'crown' | 'partyhat' | 'witchhat' | 'santahat' | 'nightcap' | 'headphones' | 'gradcap' | 'cowboy' | 'pirate' | 'chefhat' | 'viking' | 'wizard' | 'fez' | 'propeller' | 'beanie'
+  | 'sunglasses' | 'glasses' | 'mustache' | 'monocle'
+  | 'bowtie' | 'medal' | 'scarf' | 'necktie' | 'evileye'
+  | 'mug' | 'tea' | 'simit' | 'pencil' | 'wrench' | 'balloon'
+  | 'pumpkin' | 'duck' | 'cactus' | 'cat' | 'gift'
 
 /** What is on Mochi right now, slot by slot. */
 export type Outfit = { head: Item | null; face: Item | null; neck: Item | null; held: Item | null; ground: Item | null }

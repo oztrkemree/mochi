@@ -138,20 +138,20 @@ export const ja: typeof en = {
 
   item: {
     name: {
-      baret: 'ヘルメット', tac: '王冠', parti: 'パーティー帽', cadi: '魔女の帽子', noel: 'サンタ帽', gece: 'ナイトキャップ', kulaklik: 'ヘッドホン', kep: '卒業帽',
-      kovboy: 'カウボーイハット', korsan: '海賊帽', sef: 'コック帽', viking: 'バイキングの兜', sihirbaz: '魔法使いの帽子', fes: 'トルコ帽', pervane: 'プロペラ帽', bere: 'ニット帽',
-      gunes: 'サングラス', gozluk: 'メガネ', biyik: '口ひげ', monokl: 'モノクル',
-      papyon: '蝶ネクタイ', madalya: 'メダル', atki: 'マフラー', kravat: 'ネクタイ', nazar: 'ナザールボンジュウ',
-      kupa: 'コーヒーマグ', cay: 'チャイグラス', simit: 'シミット', kalem: '鉛筆', anahtar: 'レンチ', balon: '風船',
-      balkabagi: 'かぼちゃ', ordek: 'ラバーダック', kaktus: 'サボテン', kedi: 'ねこ', hediye: 'プレゼント箱',
+      hardhat: 'ヘルメット', crown: '王冠', partyhat: 'パーティー帽', witchhat: '魔女の帽子', santahat: 'サンタ帽', nightcap: 'ナイトキャップ', headphones: 'ヘッドホン', gradcap: '卒業帽',
+      cowboy: 'カウボーイハット', pirate: '海賊帽', chefhat: 'コック帽', viking: 'バイキングの兜', wizard: '魔法使いの帽子', fez: 'トルコ帽', propeller: 'プロペラ帽', beanie: 'ニット帽',
+      sunglasses: 'サングラス', glasses: 'メガネ', mustache: '口ひげ', monocle: 'モノクル',
+      bowtie: '蝶ネクタイ', medal: 'メダル', scarf: 'マフラー', necktie: 'ネクタイ', evileye: 'ナザールボンジュウ',
+      mug: 'コーヒーマグ', tea: 'チャイグラス', simit: 'シミット', pencil: '鉛筆', wrench: 'レンチ', balloon: '風船',
+      pumpkin: 'かぼちゃ', duck: 'ラバーダック', cactus: 'サボテン', cat: 'ねこ', gift: 'プレゼント箱',
     },
     short: {
-      baret: 'メット', tac: '王冠', parti: 'パーティー', cadi: '魔女', noel: 'サンタ', gece: 'ナイト帽', kulaklik: 'ヘッドホン', kep: '角帽',
-      kovboy: 'カウボーイ', korsan: '海賊', sef: 'コック', viking: 'バイキング', sihirbaz: '魔法使い', fes: 'トルコ帽', pervane: 'プロペラ', bere: 'ニット帽',
-      gunes: 'サングラス', gozluk: 'メガネ', biyik: 'ひげ', monokl: 'モノクル',
-      papyon: '蝶ネクタイ', madalya: 'メダル', atki: 'マフラー', kravat: 'ネクタイ', nazar: 'ナザール',
-      kupa: 'コーヒー', cay: 'チャイ', simit: 'シミット', kalem: '鉛筆', anahtar: 'レンチ', balon: '風船',
-      balkabagi: 'かぼちゃ', ordek: 'アヒル', kaktus: 'サボテン', kedi: 'ねこ', hediye: 'プレゼント',
+      hardhat: 'メット', crown: '王冠', partyhat: 'パーティー', witchhat: '魔女', santahat: 'サンタ', nightcap: 'ナイト帽', headphones: 'ヘッドホン', gradcap: '角帽',
+      cowboy: 'カウボーイ', pirate: '海賊', chefhat: 'コック', viking: 'バイキング', wizard: '魔法使い', fez: 'トルコ帽', propeller: 'プロペラ', beanie: 'ニット帽',
+      sunglasses: 'サングラス', glasses: 'メガネ', mustache: 'ひげ', monocle: 'モノクル',
+      bowtie: '蝶ネクタイ', medal: 'メダル', scarf: 'マフラー', necktie: 'ネクタイ', evileye: 'ナザール',
+      mug: 'コーヒー', tea: 'チャイ', simit: 'シミット', pencil: '鉛筆', wrench: 'レンチ', balloon: '風船',
+      pumpkin: 'かぼちゃ', duck: 'アヒル', cactus: 'サボテン', cat: 'ねこ', gift: 'プレゼント',
     },
     slot: { head: '頭', face: '顔', neck: '首', held: '手', ground: '足元' },
     hint: {
