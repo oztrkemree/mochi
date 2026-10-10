@@ -37,11 +37,11 @@ type Args = Record<string, unknown> & { tool: string }
 
 export const isScary = (cmd: string): boolean => danger(cmd) !== null
 
-const isTest = (cmd: string): boolean =>
+export const isTest = (cmd: string): boolean =>
   /(^|[\s;&|])(npm|yarn|pnpm|bun)\s+(run\s+)?test\b|\b(jest|vitest|pytest|mocha|rspec|phpunit)\b|go\s+test|cargo\s+test|xcodebuild\s+.*\btest\b|swift\s+test|gradlew?\s+test|dotnet\s+test|claude\s+plugin\s+test/i.test(cmd)
 
 export const isCommit = (cmd: string): boolean => /git\s+commit\b/i.test(cmd)
-const isPush = (cmd: string): boolean => /git\s+push\b/i.test(cmd)
+export const isPush = (cmd: string): boolean => /git\s+push\b/i.test(cmd)
 
 /** Tools that wait on the person rather than run. */
 export const waitsOnPerson = (tool: string): boolean => tool === 'AskUserQuestion' || tool === 'ExitPlanMode'

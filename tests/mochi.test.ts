@@ -232,7 +232,7 @@ const ENV = {
   turns: [{ at: 1, seconds: 40, tools: 6, edits: 2, errors: 0, cost: 0.4 }, { at: 2, seconds: 95, tools: 12, edits: 0, errors: 1, cost: 0.9 }],
   files: [{ path: '/p/hooks/rig.ts', reads: 4, edits: 3, at: 1 }, { path: '/p/hooks/panel.ts', reads: 2, edits: 1, at: 2 }],
   git: { branch: 'main', ahead: 1, behind: 0, changed: 2, lastCommit: 0, files: [{ code: ' M', path: 'hooks/rig.ts' }, { code: '??', path: 'x.png' }] },
-  samples: [], peers: [], history: null, tz: 180, lastEdit: null,
+  samples: [], peers: [], history: null, tz: 180, lastEdit: null, badges: [],
 }
 
 test('the context warns in three steps and names the largest part', async () => {
@@ -411,7 +411,7 @@ test('days add up into a history, a level and things to wear', async () => {
   expect(outfitFor({}, ['bowtie', 'headphones'], noon, 180, 'idle', true)).toEqual({ ...none, head: 'headphones', neck: 'bowtie' })
   expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 5, 0), 180, 'idle', true).held).toBe('mug')
   expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 23, 0), 180, 'writing', false).head).toBe('nightcap')
-  expect(outfitFor({}, ['hardhat'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true)).toEqual({ ...none, head: 'witchhat', ground: 'pumpkin' })
+  expect(outfitFor({}, ['hardhat'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true)).toEqual({ ...none, head: 'witchhat', neck: 'pin', ground: 'pumpkin' })
   expect(outfitFor({ head: 'hardhat' }, ['hardhat'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true).head).toBe('hardhat')
   expect(outfitFor({ head: null, neck: null, ground: null }, ['hardhat', 'bowtie'], noon, 180, 'idle', true)).toEqual(none)
   expect(outfitFor({ face: 'glasses', held: 'balloon' }, [], noon, 180, 'idle', true)).toEqual({ ...none, face: 'glasses', held: 'balloon' })
@@ -424,7 +424,7 @@ test('the wardrobe puts on, takes off and goes back to automatic', async ($, on)
   await $.session.start(START)
   const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   expect(await pane.find({ key: 'wear:glasses' })).toBeUndefined()
-  expect(await pane.find({ type: 'Text', text: /^1?\d\/36 açık · takılı: / })).toBeDefined()
+  expect(await pane.find({ type: 'Text', text: /^1?\d\/46 açık · takılı: / })).toBeDefined()
   await pane.press({ key: 'fold:wardrobe' } as never)
   expect(await pane.find({ key: 'wear:glasses' })).toBeDefined()
   expect(await pane.find({ key: 'wear:viking' })).toBeUndefined()

@@ -1,11 +1,13 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
+import type { Badge, DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
 import { kaomoji, moodLabel } from './looks'
-import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
+import { afterTool, beforeTool, duration, isCommit, isTest, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
+import { BADGES, TEAM_AT, badgeHint, badgeName, badgesOf, commandBadges, isEarly, langBit, provenBy, turnBadges } from './badges'
 import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
+import { dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, workFrom } from './fun'
 import { NEW_WATCH, danger, dangerKey, isShell, watchCall } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
@@ -75,10 +77,11 @@ async function play($: Dollar, sound: SoundName | undefined) {
 async function toggleItem($: Dollar, item: Item) {
   const now = await $.clock.now()
   const v = await read($, env)
-  if (!wearable(v.history, now, v.tz).includes(item)) return
-  const worn = outfitNow(await read($, prefs), v, (await read($, face)).mood, now)
+  const p = await read($, prefs)
+  if (!wearable(v.history, now, v.tz, p).includes(item)) return
+  const worn = outfitNow(p, v, (await read($, face)).mood, now)
   const slot = SLOT[item]
-  await setPrefs($, p => ({ ...p, pick: { ...p.pick, [slot]: worn[slot] === item ? null : item } }))
+  await setPrefs($, x => ({ ...x, pick: { ...x.pick, [slot]: worn[slot] === item ? null : item } }))
   await sync($)
 }
 
@@ -419,6 +422,8 @@ async function recount($: Dollar) {
   const history = summarize([...chat.otherDays, chat.myDays], dayKey(now, v.tz))
   await setEnv($, x => ({ ...x, history }))
   await checkLevel($)
+  await keepFirstDay($)
+  await award($, [])
 }
 
 async function saveDays($: Dollar) {
@@ -620,6 +625,7 @@ async function tick($: Dollar) {
     await show($, { mood: 'asking', line: t().st.commitNudge(git.changed, git.lastCommit > 0 ? t().st.lastCommit(ago(now - git.lastCommit)) : t().st.noCommits), holdMs: 9000 })
     return
   }
+  if (await restMoments($, p, f, now)) return
 
   if (f.until > 0) {
     if (now > f.until) await rest($)
@@ -702,6 +708,9 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'sound', english: ['sound'], run: () => toggleSound($) },
     { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
+    { name: 'badges', english: ['badges', 'badge', 'achievements'], run: () => badgesNow($) },
+    { name: 'breaks', english: ['breaks', 'break'], run: () => toggleBreaks($) },
+    { name: 'birthday', english: ['birthday', 'bday'], run: arg => birthday($, arg) },
   ]
 }
 
@@ -763,7 +772,7 @@ async function wear($: Dollar, arg: string, p: Prefs): Promise<string> {
   const d = t().cmd
   const v = await read($, env)
   const now = await $.clock.now()
-  const ok = wearable(v.history, now, v.tz)
+  const ok = wearable(v.history, now, v.tz, p)
   if (arg === '') {
     const worn = outfitNow(p, v, (await read($, face)).mood, now)
     return [
@@ -817,6 +826,129 @@ async function statusLines($: Dollar, p: Prefs): Promise<string> {
   ].join('\n')
 }
 
+// ---------- delight ----------
+
+/** The first start on a special day greets it, once for each occasion; null when there is nothing to greet. */
+async function greetToday($: Dollar, p: Prefs): Promise<Reaction | null> {
+  const today = dayKey(await $.clock.now(), (await read($, env)).tz)
+  const saved = await $.store.get('greeted').catch(() => undefined)
+  const greeted = Array.isArray(saved) ? saved.filter((x): x is string => typeof x === 'string') : []
+  const due = dueGreeting(today, p, greeted)
+  if (due === null) return null
+  await $.store.set('greeted', [...greeted, ...due.keys.filter(k => !greeted.includes(k))].slice(-40)).catch(() => undefined)
+  return greeting(due.name, today, p)
+}
+
+/** Keeps the first day Mochi ran here, for its anniversary: today, or an earlier day a chat's file knows. */
+async function keepFirstDay($: Dollar) {
+  const p = await read($, prefs)
+  const first = firstDayOf(p.firstDay, dayKey(await $.clock.now(), (await read($, env)).tz), [...chat.otherDays, chat.myDays])
+  if (first !== p.firstDay) await setPrefs($, x => ({ ...x, firstDay: first }))
+}
+
+/**
+ * Badges earned since the last look (`fresh` from what just happened, the
+ * rest proven by the history) are kept and celebrated once, in whichever chat
+ * sees them first. The very first look records quietly what the history
+ * already proves.
+ */
+async function award($: Dollar, fresh: Badge[]) {
+  if (chat.dataDir === '') return
+  const v = await read($, env)
+  if (fresh.length > 0 && fresh.every(b => v.badges.includes(b))) return
+  const path = `${chat.dataDir}/badges.json`
+  const text = await $.fs.read(path).catch(() => null)
+  let saved: Badge[] | null = null
+  if (text !== null) {
+    try {
+      saved = badgesOf(JSON.parse(text)) ?? []
+    } catch {
+      // A file caught mid-write counts next time.
+      return
+    }
+  }
+  const had = saved ?? []
+  const news = [...new Set([...fresh, ...provenBy(v.history)])].filter(b => !had.includes(b))
+  const all = [...had, ...news]
+  if (JSON.stringify(all) !== JSON.stringify(v.badges)) await setEnv($, x => ({ ...x, badges: all }))
+  if (saved !== null && news.length === 0) return
+  await $.fs.write(path, JSON.stringify(all)).catch(() => undefined)
+  const told = saved === null ? news.filter(b => fresh.includes(b)) : news
+  if (told.length === 0) return
+  const line = t().fun.newBadge(told.map(badgeName).join(', '))
+  await show($, { mood: 'party', line, holdMs: 8000, sound: 'party' })
+  $.ui.toast(`Mochi: ${line}${t().fun.seeBadges}`, { timeoutMs: 8000 })
+}
+
+/** A finished shell command: a failing test run marks the turn red; a passing one, or a push, may earn a badge. */
+async function noteCommand($: Dollar, cmd: string, isError: boolean) {
+  const won = commandBadges(cmd, !isError, chat.isTestRed)
+  if (isError && isTest(cmd)) chat.isTestRed = true
+  if (won.length > 0) await award($, won)
+}
+
+/** After a turn: an early one counted for the day, the turns in a row without an error, and what the turn earned. */
+async function noteTurn($: Dollar, reason: string, seconds: number, now: number) {
+  if (isEarly(now, (await read($, env)).tz)) await addToday($, { early: 1 })
+  const turned = turnBadges(reason, seconds, chat.turn.errors, chat.calm)
+  chat.calm = turned.calm
+  chat.isTestRed = false
+  if (turned.badges.length > 0) await award($, turned.badges)
+}
+
+/**
+ * On the timer, while Mochi rests: a stretch after two hours of work without
+ * a break (at most every two hours), and a wink at 13:37 once a day. True
+ * when one of them took the face.
+ */
+async function restMoments($: Dollar, p: Prefs, f: Face, now: number): Promise<boolean> {
+  chat.workFrom = workFrom(chat.workFrom, chat.lastActivity, now)
+  if (chat.isBusy || f.until !== 0 || f.mood !== 'idle' || now - chat.lastActivity < 20_000) return false
+  if (p.hasBreaks && isBreakDue(chat.workFrom, chat.lastStretch, now)) {
+    chat.lastStretch = now
+    await show($, { mood: 'stretch', line: t().fun.breakLine(duration((now - chat.workFrom) / 1000)), holdMs: 10_000 })
+    return true
+  }
+  const tz = (await read($, env)).tz
+  if (!isLeet(now, tz) || chat.winkDay === dayKey(now, tz)) return false
+  chat.winkDay = dayKey(now, tz)
+  await show($, { mood: 'wink', line: t().fun.leet, holdMs: 2500 })
+  return true
+}
+
+async function badgesNow($: Dollar): Promise<string> {
+  const f = t().fun
+  const have = (await read($, env)).badges
+  return [
+    f.badgesList(have.length, BADGES.length, have.map(badgeName).join(', ') || t().cmd.noneYet),
+    f.badgesLocked(BADGES.filter(b => !have.includes(b)).map(b => `${badgeName(b)} (${badgeHint(b)})`).join(', ') || t().cmd.none),
+  ].join('\n')
+}
+
+async function toggleBreaks($: Dollar): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasBreaks: !v.hasBreaks }))
+  return next.hasBreaks ? t().fun.breaksOn : t().fun.breaksOff
+}
+
+/** Shows, sets or removes the person's birthday, kept with the preferences; set on the day itself, it is greeted at once. */
+async function birthday($: Dollar, arg: string): Promise<string> {
+  const f = t().fun
+  if (arg === '') {
+    const day = (await read($, prefs)).birthday
+    return day === '' ? f.birthdayNone : f.birthdayNow(day)
+  }
+  if (names(arg, 'none', 'none', 'off')) {
+    await setPrefs($, v => ({ ...v, birthday: '' }))
+    return f.birthdayOff
+  }
+  const day = parseBirthday(arg)
+  if (day === null) return f.birthdayBad(arg)
+  const next = await setPrefs($, v => ({ ...v, birthday: day }))
+  const hello = await greetToday($, next)
+  if (hello !== null) await show($, hello)
+  return f.birthdaySet(day)
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     // The system, then the language: everything after speaks it.
@@ -837,7 +969,7 @@ export const register: Register = on => {
     await measure($)
     chat.lastNudge = await $.clock.now()
     void refreshGit($).catch(() => undefined)
-    await show($, { mood: 'wave', line: t().st.ready, holdMs: 3000 })
+    await show($, (await greetToday($, p)) ?? { mood: 'wave', line: t().st.ready, holdMs: 3000 })
     if (p.isHidden) await refreshStatus($)
     $.clock.every(TICK_MS, () => void tick($).catch(() => undefined))
 
@@ -862,7 +994,7 @@ export const register: Register = on => {
     const wasAsleep = await wake($)
     const now = await $.clock.now()
     chat.stream = null
-    await show($, onPrompt(text, wasAsleep), now)
+    await show($, (wasAsleep ? null : promptEgg(text)) ?? onPrompt(text, wasAsleep), now)
 
     return next(e)
   }).catch(($, e, next) => next(e))
@@ -913,6 +1045,7 @@ export const register: Register = on => {
       if (waitsOnPerson(e.tool) && chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, beforeTool(args).line)
     }
     if (isAgent) await setEnv($, v => ({ ...v, agents: v.agents + 1 }))
+    if (isAgent && (await read($, env)).agents >= TEAM_AT) await award($, ['team'])
     chat.callId += 1
     const id = chat.callId
     const path = typeof args.file_path === 'string' ? args.file_path : typeof args.notebook_path === 'string' ? args.notebook_path : ''
@@ -963,6 +1096,7 @@ export const register: Register = on => {
         files: v.files.map(f => (f.path === path ? { ...f, add: (f.add ?? 0) + delta.add, del: (f.del ?? 0) + delta.del } : f)),
         lastEdit: delta.add + delta.del > 0 ? { path, at, ...delta } : v.lastEdit,
       }))
+      await addToday($, { add: delta.add, del: delta.del, langs: langBit(path) })
     }
 
     await update($, env, v => ({ ...v, recent: v.recent.map(r => (r.id === id ? { ...r, state: isError || isDenied ? 'fail' as const : 'ok' as const } : r)) }))
@@ -986,6 +1120,7 @@ export const register: Register = on => {
     } else if (token === chat.faceToken) {
       await update($, face, f => ({ ...f, until: now + AFTER_TOOL_MS }))
     }
+    if (cmd !== '' && !isDenied) await noteCommand($, cmd, isError)
 
     return ran
   }).catch(($, e, next) => next(e))
@@ -1036,6 +1171,7 @@ export const register: Register = on => {
 
     // The day's tally, for the history and the level.
     await addToday($, { turns: 1, tools: chat.turn.tools, edits: chat.turn.edits, errors: chat.turn.errors, cost: spent, secs: rec.seconds, night: season(now, after.tz).isNight ? 1 : 0 })
+    await noteTurn($, e.reason, rec.seconds, now)
     await saveDays($)
     await recount($)
 
@@ -1113,6 +1249,7 @@ export const register: Register = on => {
       const which = e.element === 'fold:level' ? 'level' : 'wardrobe'
       await setPrefs($, p => ({ ...p, open: { ...p.open, [which]: !p.open[which] } }))
     }
+    if (e.plugin === 'mochi' && e.element === 'fold:badges') await setPrefs($, p => ({ ...p, open: { ...p.open, badges: !p.open.badges } }))
     if (e.plugin === 'mochi' && e.element.startsWith('wear:')) {
       const what = e.element.slice(5)
       const item = itemOf(what)

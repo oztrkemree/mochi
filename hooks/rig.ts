@@ -53,7 +53,7 @@ const line = (a: Pt, b: Pt): number[] => [a[0] + (b[0] - a[0]) / 3, a[1] + (b[1]
 /** A polygon of four points as a shape, in left, top, right, bottom order. */
 const quad = (l: Pt, t: Pt, r: Pt, b: Pt): Shape => [...l, ...line(l, t), ...line(t, r), ...line(r, b), ...line(b, l)]
 
-type EyeKind = 'dot' | 'wide' | 'happy' | 'closed' | 'half' | 'squint' | 'none'
+type EyeKind = 'dot' | 'wide' | 'happy' | 'closed' | 'half' | 'squint' | 'wink' | 'none'
 type MouthKind = 'smile' | 'grin' | 'open' | 'o' | 'flat' | 'frown' | 'small' | 'pout'
 
 function eyeShape(kind: EyeKind, side: -1 | 1): Shape {
@@ -66,6 +66,7 @@ function eyeShape(kind: EyeKind, side: -1 | 1): Shape {
     case 'squint': return side < 0
       ? quad([-1, 0], [-4.2, -3.6], [4.2, 0], [-4.2, 3.6])
       : quad([-4.2, 0], [4.2, -3.6], [1, 0], [4.2, 3.6])
+    case 'wink': return side < 0 ? ellipse(3.3, 4.3) : crescent(4.6, 1.6, -4.6, 2.3)
     case 'none': return ellipse(0.1, 0.1)
   }
 }
@@ -88,7 +89,7 @@ function mouthShape(kind: MouthKind): Shape {
 type BodyLoop = { dur: number; keys: { lift?: number; shift?: number; tilt?: number; sx?: number; sy?: number }[]; once?: boolean }
 type ArmLoop = { dur: number; values: number[] }
 type Held = 'laptop' | 'book' | 'glass' | 'flag'
-type Over = 'question' | 'bang' | 'zzz' | 'check' | 'dizzy' | 'thought' | 'hourglass' | 'confetti' | 'terminal' | 'squeeze'
+type Over = 'question' | 'bang' | 'zzz' | 'check' | 'dizzy' | 'thought' | 'hourglass' | 'confetti' | 'terminal' | 'squeeze' | 'hearts'
 type Special = 'x' | 'star' | 'spiral'
 
 type Pose = {
@@ -130,6 +131,7 @@ const L = {
   startle: { dur: 0.55, once: true, keys: [{ lift: 0, sy: 1 }, { lift: -9, sy: 1.06 }, { lift: 0, sy: 0.94 }, { lift: 0, sy: 1 }] },
   squash: { dur: 0.6, keys: [{ sx: 1, sy: 1 }, { sx: 1.13, sy: 0.88 }, { sx: 1, sy: 1 }] },
   slowBreathe: { dur: 4.6, keys: [{ sx: 1, sy: 1 }, { sx: 1.018, sy: 1.035 }, { sx: 1, sy: 1 }] },
+  stretch: { dur: 2.8, keys: [{ sx: 1, sy: 1 }, { sx: 0.95, sy: 1.07 }, { sx: 1, sy: 1 }] },
 } satisfies Record<string, BodyLoop>
 
 const RED: [string, number] = ['#E0412E', 0.32]
@@ -162,6 +164,9 @@ export const POSES: Record<Mood, Pose> = {
   sleepy: { lift: 1, armL: 8, armR: -8, eye: 'half', eyeDy: 0.6, mouth: 'small', mouthLoop: 'yawn', loop: L.slowBreathe, eyeLoop: 'none' },
   sleeping: { lift: 1.5, tilt: -3, armL: 6, armR: -6, eye: 'closed', mouth: 'small', tint: ['#5B4FB0', 0.14], loop: L.slowBreathe, eyeLoop: 'none', over: 'zzz' },
   squeezed: { armL: 30, armR: -30, eye: 'squint', mouth: 'pout', mouthLoop: 'wobble', loop: L.squash, over: 'squeeze' },
+  stretch: { lift: -1, armL: 162, armR: -162, armLoopL: { dur: 2.8, values: [0, -10, 0] }, armLoopR: { dur: 2.8, values: [0, 10, 0] }, eye: 'closed', mouth: 'small', mouthLoop: 'yawn', loop: L.stretch, eyeLoop: 'none' },
+  love: { armL: -40, armR: 40, eye: 'happy', mouth: 'smile', blush: 1, loop: L.sway, over: 'hearts' },
+  wink: { tilt: 5, armL: 16, armR: -16, eye: 'wink', mouth: 'smile', blush: 0.5, loop: L.breathe, eyeLoop: 'none' },
 }
 
 // ---------- the numbers on screen ----------
@@ -330,10 +335,13 @@ function heldSvg(kind: Held): string {
   }
 }
 
+/** A heart two units wide around (0, 0). */
+const HEART = 'M0 0.9C-0.3 0.66 -1 0.2 -1 -0.3C-1 -0.72 -0.66 -0.98 -0.32 -0.98C-0.12 -0.98 0 -0.84 0 -0.68C0 -0.84 0.12 -0.98 0.32 -0.98C0.66 -0.98 1 -0.72 1 -0.3C1 0.2 0.3 0.66 0 0.9Z'
+
 const HELD_AT: Record<Held, Pt> = { laptop: [50, 72], book: [50, 70], glass: [75, 63], flag: [88, 30] }
 const OVER_AT: Record<Over, Pt> = {
   question: [79, 13], bang: [80, 13], zzz: [76, 16], check: [79, 14], dizzy: [50, 26], thought: [74, 18],
-  hourglass: [80, 13], confetti: [50, 20], terminal: [79, 12], squeeze: [50, 56],
+  hourglass: [80, 13], confetti: [50, 20], terminal: [79, 12], squeeze: [50, 56], hearts: [50, 20],
 }
 
 function overSvg(kind: Over): string {
@@ -357,6 +365,8 @@ function overSvg(kind: Over): string {
     case 'terminal': return `<g><rect x="69" y="5" width="21" height="13" rx="3" fill="#1C1D21"/><rect x="69" y="5" width="21" height="13" rx="3" fill="none" stroke="#3A3D45" stroke-width="0.8"/><text x="72" y="13.6" font-size="6.4" font-family="ui-monospace, Menlo, monospace" fill="#7CFC9A">&gt;_</text><rect x="81.5" y="9" width="2.6" height="5" fill="#7CFC9A"><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="0.9s" repeatCount="indefinite"/></rect></g>`
     case 'squeeze': return ['M6 56 L15 56 M11 52 L15 56 L11 60', 'M94 56 L85 56 M89 52 L85 56 L89 60']
       .map(d => `<path d="${d}" stroke="#9A8F8A" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">${loopT('translate', ['0 0', d.startsWith('M6') ? '2 0' : '-2 0', '0 0'], 0.6)}</path>`).join('')
+    case 'hearts': return [[30, 27, 3.4, 0], [70, 23, 4.2, 0.9], [60, 12, 3, 1.8]]
+      .map(([x, y, s, delay]) => `<g opacity="0">${floatUp(2.7, delay ?? 0)}<path transform="translate(${x} ${y}) scale(${s})" d="${HEART}" fill="#FF7A95" stroke="#E0245E" stroke-width="${n(0.5 / (s ?? 1))}"/></g>`).join('')
   }
 }
 
@@ -436,14 +446,44 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   cactus: { x: 12, y: 79.2, w: 13, ground: true },
   cat: { x: 12.5, y: 77.6, w: 19, ground: true },
   gift: { x: 12, y: 80.5, w: 15, ground: true },
+  sakura: { x: 39, y: 31, w: 18 },
+  pin: { x: 34.6, y: 70.8, w: 9 },
+  rosette: { x: 50, y: 76, w: 12 },
+  candy: { x: 83, y: 69, w: 14 },
+  lantern: { x: 80.5, y: 73, w: 9 },
+  envelope: { x: 83, y: 70, w: 9 },
+  diya: { x: 13, y: 84, w: 17, ground: true },
+  sprouts: { x: 12, y: 81, w: 14, ground: true },
+  songpyeon: { x: 12, y: 85, w: 16, ground: true },
+  cake: { x: 12, y: 82, w: 15, ground: true },
 }
 
 const NO_OUTFIT: Outfit = { head: null, face: null, neck: null, held: null, ground: null }
 
+/** `count` circles of radius `r` around (x, y), `d` from it: a blossom's petals, a rosette's pleats. */
+const around = (x: number, y: number, d: number, r: number, count: number) =>
+  Array.from({ length: count }, (_, i) => {
+    const a = (i * 2 * Math.PI) / count
+    return `<circle cx="${n(x + Math.sin(a) * d)}" cy="${n(y - Math.cos(a) * d)}" r="${n(r)}"/>`
+  }).join('')
+
+/** A small flame standing at (x, y), `s` times its size, flickering in its glow. */
+const flame = (x: number, y: number, s: number) =>
+  `<circle cx="${n(x)}" cy="${n(y - 2 * s)}" r="${n(3.4 * s)}" fill="#FFE7CF" opacity="0.45"><animate attributeName="opacity" values="0.45;0.25;0.45" dur="1.3s" repeatCount="indefinite"/></circle>` +
+  `<g transform="translate(${n(x)} ${n(y)}) scale(${n(s)})"><g><animateTransform attributeName="transform" type="scale" values="1 1;0.88 1.1;1.04 0.94;1 1" dur="0.9s" repeatCount="indefinite"/>` +
+  '<path d="M0 -4.6C1.6 -2.6 2 -1 1.5 0C1.1 0.8 0.6 1 0 1C-0.6 1 -1.1 0.8 -1.5 0C-2 -1 -1.6 -2.6 0 -4.6Z" fill="#FF9F40"/>' +
+  '<path d="M0 -2.6C0.8 -1.5 1 -0.6 0.7 0C0.5 0.4 0.3 0.5 0 0.5C-0.3 0.5 -0.5 0.4 -0.7 0C-1 -0.6 -0.8 -1.5 0 -2.6Z" fill="#FFF3D6"/></g></g>'
+
+/** A songpyeon: half a moon of rice cake, its flat side down at (x, y). */
+const halfMoon = (x: number, y: number, fill: string) =>
+  `<g transform="translate(${n(x)} ${n(y)})"><path d="M-3.4 0Q-3.8 -4 0 -4.2Q3.8 -4 3.4 0Q0 0.8 -3.4 0Z" fill="${fill}" stroke="#C9B8AE" stroke-width="0.35"/>` +
+  '<path d="M-2.4 -1.6Q0 -3.2 2.4 -1.6" stroke="#2B1B17" stroke-opacity="0.12" stroke-width="0.4" fill="none"/><ellipse cx="-1.2" cy="-2.8" rx="1" ry="0.45" fill="#fff" opacity="0.6"/></g>'
+
 /**
  * Glasses and a monocle drawn as lines rather than pictures: a thin painted
  * rim vanishes on the clay at band size, and a drawn lens is wide enough for
- * the eyes to look around inside it.
+ * the eyes to look around inside it. The days' own things (a sakura sprig, a
+ * lantern, a cake) are drawn the same way.
  */
 export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, number, number, number]; onSkin?: true }>> = {
   glasses: {
@@ -481,6 +521,83 @@ export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, numb
       '<circle cx="60" cy="52" r="7.6" fill="none" stroke="#E9B949" stroke-width="1.1"/>' +
       '<path d="M55.4 48.6A5.6 5.6 0 0 1 59.6 45.9" stroke="#fff" stroke-opacity="0.6" stroke-width="1.1" fill="none" stroke-linecap="round"/>',
   },
+  sakura: {
+    box: [27, 21, 24, 17],
+    svg: '<path d="M30.2 38Q38 32.4 48.4 30.2M40.6 33.4Q41.8 29 40.2 25.6M35.4 34.6Q35 32.4 36.2 30.8" stroke="#7A4A2E" stroke-width="1.2" fill="none" stroke-linecap="round"/>' +
+      `<g fill="#FAD0DC" stroke="#E68AA6" stroke-width="0.3">${around(36.2, 30.6, 1.2, 1.1, 5)}${around(33, 35.8, 1.9, 1.75, 5)}${around(39.6, 32.3, 2.2, 2, 5)}${around(46.2, 30.6, 1.6, 1.5, 5)}</g>` +
+      '<g fill="#E0607F"><circle cx="36.2" cy="30.6" r="0.6"/><circle cx="33" cy="35.8" r="0.9"/><circle cx="39.6" cy="32.3" r="1"/><circle cx="46.2" cy="30.6" r="0.8"/></g>' +
+      '<ellipse cx="40.2" cy="25.2" rx="1.1" ry="1.5" fill="#F59AB5" transform="rotate(-14 40.2 25.2)"/>' +
+      // Now and then a petal drifts down past the cheek.
+      '<ellipse cx="36" cy="37" rx="1" ry="0.6" fill="#FAD0DC" opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;-6 9;-9 18" dur="6s" repeatCount="indefinite"/>' +
+      '<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.5;0.6;0.9;1" dur="6s" repeatCount="indefinite"/></ellipse>',
+  },
+  pin: {
+    box: [29, 65, 11.5, 11.5],
+    onSkin: true,
+    svg: '<circle cx="35" cy="71.4" r="4.4" fill="#2B1B17" opacity="0.18"/><circle cx="34.6" cy="70.8" r="4.2" fill="#2B2D5C" stroke="#E9B949" stroke-width="0.9"/>' +
+      '<path d="M33 69.2L31.4 70.8L33 72.4M36.2 69.2L37.8 70.8L36.2 72.4M35.2 68.6L34 73" stroke="#FFB38A" stroke-width="0.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M31.8 68.6Q32.6 67.4 34 67.2" stroke="#fff" stroke-opacity="0.45" stroke-width="0.7" fill="none" stroke-linecap="round"/>',
+  },
+  rosette: {
+    box: [41, 66.5, 18, 20],
+    onSkin: true,
+    svg: '<path d="M47.8 76.4L45.4 84.6L47.2 83.6L48.4 85.4L50.6 77Z" fill="#B8322B"/><path d="M52.2 76.4L54.6 84.6L52.8 83.6L51.6 85.4L49.4 77Z" fill="#B8322B"/>' +
+      `<g fill="#D8433B" stroke="#B8322B" stroke-width="0.3">${around(50, 75.5, 4.6, 1.7, 12)}</g>` +
+      '<circle cx="50" cy="75.5" r="4.6" fill="#D8433B"/><circle cx="50" cy="75.5" r="3.3" fill="#F3ECE4"/><circle cx="50" cy="75.5" r="2.3" fill="#E9B949" stroke="#B8862A" stroke-width="0.4"/>' +
+      '<path d="M48.7 74.4Q49.2 73.6 50.2 73.5" stroke="#fff" stroke-opacity="0.7" stroke-width="0.6" fill="none" stroke-linecap="round"/>',
+  },
+  candy: {
+    box: [74, 62, 18, 14],
+    svg: '<g transform="rotate(-24 83 69)"><g fill="#F2B84B" stroke="#B8862A" stroke-width="0.4" stroke-linejoin="round"><path d="M79.8 69L76.2 66.2L77 69L76.2 71.8Z"/><path d="M86.2 69L89.8 66.2L89 69L89.8 71.8Z"/></g>' +
+      '<ellipse cx="83" cy="69" rx="3.8" ry="3" fill="#E8685F" stroke="#B8322B" stroke-width="0.4"/>' +
+      '<path d="M81.4 66.4Q82.6 69 81.4 71.6M84.2 66.2Q85.4 69 84.2 71.8" stroke="#FFF6EC" stroke-width="0.8" fill="none"/>' +
+      '<ellipse cx="82" cy="67.4" rx="1.4" ry="0.6" fill="#fff" opacity="0.5"/></g>',
+  },
+  lantern: {
+    box: [73.5, 63.5, 14, 17],
+    svg: '<circle cx="80.5" cy="74.4" r="5.4" fill="#FFE7CF" opacity="0.4"><animate attributeName="opacity" values="0.4;0.22;0.4" dur="1.6s" repeatCount="indefinite"/></circle>' +
+      '<circle cx="80.5" cy="66.4" r="1.2" fill="none" stroke="#B8862A" stroke-width="0.7"/><path d="M80.5 67.6V69.2" stroke="#B8862A" stroke-width="0.7"/>' +
+      '<path d="M77.6 71.2Q80.5 67.8 83.4 71.2Z" fill="#E9B949" stroke="#B8862A" stroke-width="0.5"/>' +
+      '<rect x="78" y="71.2" width="5" height="6.8" rx="1.2" fill="#FFD27A" stroke="#B8862A" stroke-width="0.6"/>' +
+      '<path d="M79.7 71.4V77.8M81.3 71.4V77.8" stroke="#B8862A" stroke-width="0.45"/><ellipse cx="80.5" cy="74.6" rx="1" ry="1.6" fill="#FFF3D6"/>' +
+      '<rect x="77.4" y="77.8" width="6.2" height="1.4" rx="0.6" fill="#E9B949" stroke="#B8862A" stroke-width="0.4"/>',
+  },
+  envelope: {
+    box: [75.5, 62.5, 15, 15],
+    svg: '<g transform="rotate(14 83 70)"><rect x="79.2" y="64.8" width="7.6" height="10.4" rx="1" fill="#D8433B" stroke="#8E2A22" stroke-width="0.45"/>' +
+      '<path d="M79.4 66.2L83 68.8L86.6 66.2" stroke="#E9B949" stroke-width="0.6" fill="none" stroke-linejoin="round"/>' +
+      '<circle cx="83" cy="71" r="1.7" fill="#E9B949"/><path d="M83 70.1L83.9 71L83 71.9L82.1 71Z" fill="#D8433B"/>' +
+      '<path d="M80.2 73.8H85.8" stroke="#E9B949" stroke-width="0.4" opacity="0.7"/></g>',
+  },
+  diya: {
+    box: [3, 73, 21, 17],
+    svg: '<ellipse cx="12.5" cy="88.6" rx="7" ry="1.7" fill="#2B1B17" opacity="0.13"/>' +
+      '<path d="M17.6 83.6Q20.4 83 21.6 81.2Q20.8 84.4 18 85.4Z" fill="#B65A3C"/><path d="M5 83.6Q5.8 88.4 12 88.4Q18.2 88.4 19 83.6Z" fill="#C9694A"/>' +
+      '<ellipse cx="12" cy="83.7" rx="7" ry="1.2" fill="#7A2E16"/><path d="M5 83.6Q12 85.6 19 83.6" stroke="#E08A6A" stroke-width="0.7" fill="none"/>' +
+      `<g fill="#F2B84B"><circle cx="8.4" cy="86.2" r="0.55"/><circle cx="12" cy="87" r="0.55"/><circle cx="15.6" cy="86.2" r="0.55"/></g>${flame(21.3, 81, 1.15)}`,
+  },
+  sprouts: {
+    box: [3, 70.5, 18, 19.5],
+    svg: '<ellipse cx="12" cy="88.6" rx="7" ry="1.7" fill="#2B1B17" opacity="0.13"/>' +
+      '<path d="M7 84.4Q6.2 80 4.8 77.4M8.2 84.4Q7.6 79 6.6 75M9.4 84.4Q9 78 8.4 73.4M10.6 84.4Q10.6 77.6 10.4 72.4M12 84.4Q12.2 77.4 12.8 72.6M13.2 84.4Q13.8 78.4 15 74.2M14.6 84.4Q15.4 79.6 17 76.2M16 84.4Q17 81 18.8 78.6" stroke="#5FAF4E" stroke-width="1" fill="none" stroke-linecap="round"/>' +
+      '<path d="M7.6 84.4Q7.2 81 5.8 79.2M9 84.4Q8.6 80.4 7.6 77.6M11.2 84.4Q11.2 79.6 11.6 76M13.8 84.4Q14.2 80.6 15.4 78.2M15.4 84.4Q16 82 17.4 80.4" stroke="#3F8A3A" stroke-width="0.9" fill="none" stroke-linecap="round"/>' +
+      '<rect x="7" y="80.4" width="10" height="1.6" fill="#D8433B"/><path d="M12 81.2L9.8 80L10 82.4ZM12 81.2L14.2 80L14 82.4Z" fill="#D8433B" stroke="#8E2A22" stroke-width="0.3" stroke-linejoin="round"/>' +
+      '<path d="M5.4 84Q6.2 88.2 12 88.2Q17.8 88.2 18.6 84Z" fill="#F3ECE4" stroke="#C9B8AE" stroke-width="0.5"/><path d="M6 85.6Q12 87.4 18 85.6" stroke="#1E4CC2" stroke-width="0.7" fill="none"/>',
+  },
+  songpyeon: {
+    box: [3, 77, 18.5, 13],
+    svg: '<ellipse cx="12" cy="88.6" rx="7.4" ry="1.6" fill="#2B1B17" opacity="0.13"/><ellipse cx="12" cy="87" rx="7.6" ry="2" fill="#E9DCCB" stroke="#C9B8AE" stroke-width="0.4"/>' +
+      '<path d="M5.6 86.4L9.2 84.6M6.6 87.2L10.6 85.6M15 84.8L18.4 86.4M14 85.6L17.6 87.4" stroke="#3F8A3A" stroke-width="0.55" stroke-linecap="round"/>' +
+      halfMoon(8.8, 86, '#F7F1E8') + halfMoon(15.2, 86.2, '#F5B8C4') + halfMoon(12, 83.2, '#A9D18E'),
+  },
+  cake: {
+    box: [3.5, 70, 17, 20],
+    svg: '<ellipse cx="12" cy="88.6" rx="7" ry="1.7" fill="#2B1B17" opacity="0.13"/><ellipse cx="12" cy="87.6" rx="7.6" ry="1.5" fill="#E9DCCB" stroke="#C9B8AE" stroke-width="0.4"/>' +
+      '<rect x="6" y="80.6" width="12" height="7" rx="1.4" fill="#F3ECE4" stroke="#C9B8AE" stroke-width="0.4"/><rect x="6.2" y="84.6" width="11.6" height="1.2" fill="#F5B8C4"/>' +
+      '<path d="M6 82.2Q6 80.6 7.6 80.6H16.4Q18 80.6 18 82.2Q17 83.8 16 82.4Q15 84 14 82.4Q13 84.2 12 82.4Q11 84 10 82.4Q9 84.2 8 82.4Q7 83.8 6 82.2Z" fill="#F5B8C4"/>' +
+      '<g stroke-width="0.6" stroke-linecap="round"><path d="M8.4 81.4L9.2 81.1" stroke="#5B8DEF"/><path d="M11 81.2L11.6 81.6" stroke="#FFD23F"/><path d="M14.6 81.4L15.4 81.2" stroke="#2EA043"/><path d="M16 82L16.4 82.6" stroke="#5B8DEF"/></g>' +
+      `<rect x="11.3" y="76.2" width="1.4" height="4.6" rx="0.4" fill="#7AA2F7"/><path d="M11.3 77.4L12.7 76.8M11.3 79L12.7 78.4" stroke="#fff" stroke-width="0.4"/>${flame(12, 76, 0.7)}`,
+  },
 }
 
 function wearSvg(item: Item): string {
@@ -488,6 +605,7 @@ function wearSvg(item: Item): string {
   if (vector) return `<g>${vector.svg}</g>`
   const at = WEAR_AT[item]
   const a = WEAR[item]
+  if (a === undefined) return ''
   const h = (at.w * a.h) / a.w
   const flat = img(a, at.x - at.w / 2, at.y - h / 2, at.w)
   const pic = at.flip ? `<g transform="translate(${n(at.x * 2)} 0) scale(-1 1)">${flat}</g>` : flat

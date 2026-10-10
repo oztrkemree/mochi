@@ -9,7 +9,7 @@ import type { Platform } from './system'
 // What register.tsx and render.tsx share: the defaults of the values kept in
 // $.state, and this load's own bookkeeping.
 
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false }, lang: 'auto' }
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false, badges: false }, lang: 'auto', hasBreaks: true, birthday: '', firstDay: '' }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**
@@ -32,14 +32,14 @@ export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | unde
     pick[SLOT[worn]] = worn
   }
   const { wear: _old, ...rest } = saved ?? {}
-  const open = { level: saved?.open?.level === true, wardrobe: saved?.open?.wardrobe === true }
+  const open = { level: saved?.open?.level === true, wardrobe: saved?.open?.wardrobe === true, badges: saved?.open?.badges === true }
   // Choices saved before there were languages were made in Turkish, its only one then.
   const lang = typeof saved?.lang === 'string' && (saved.lang === 'auto' || pickLang(saved.lang) !== null) ? saved.lang : saved !== undefined ? 'tr' : 'auto'
   return { ...DEFAULT_PREFS, ...rest, pick, open, lang }
 }
 export const NO_ENV: Env = {
   context: -1, agents: 0, turnTools: 0, tokens: 0, window: 0, slices: [], limits: [], cost: 0, recent: [], last: '', compactAt: 0, allSlices: [], git: null, turns: [], files: [], kinds: {}, startedAt: 0,
-  samples: [], peers: [], history: null, tz: 0, lastEdit: null,
+  samples: [], peers: [], history: null, tz: 0, lastEdit: null, badges: [],
 }
 /** The face at rest, in the language in use. */
 export const rest0 = (): Omit<Face, 'frameAt'> => ({ mood: 'idle', line: t().st.ready, until: 0, since: 0 })
@@ -100,4 +100,13 @@ export const chat = {
   lastStatus: undefined as string | undefined,
   autoLang: null as Lang | null,
   lastEnv: null as Env | null,
+  /** Turns in a row without an error, for a badge. */
+  calm: 0,
+  /** A test run failed in this turn: a green one after it is a comeback. */
+  isTestRed: false,
+  /** When the current stretch of work began (0 after a quiet gap), and when a stretch was last suggested. */
+  workFrom: 0,
+  lastStretch: 0,
+  /** The day of the last 13:37 wink. */
+  winkDay: '',
 }

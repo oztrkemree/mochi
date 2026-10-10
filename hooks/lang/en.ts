@@ -24,6 +24,7 @@ export const en = {
     web: 'on the web', agent: 'running an agent', asking: 'waiting for you', success: 'done', proud: 'done', party: 'celebrating',
     error: 'hit an error', dizzy: 'errors in a row', scared: 'dangerous command', denied: 'denied', shocked: 'startled',
     nervous: 'tense', pleased: 'pleased', tired: 'tired', sleepy: 'sleepy', sleeping: 'asleep', squeezed: 'compacting',
+    stretch: 'stretching', love: 'in love', wink: 'winking',
   },
 
   /** Status lines: what is happening now. */
@@ -150,6 +151,60 @@ export const en = {
     sameResult: (n: number) => `doing the same thing ${n} times, no change`,
   },
 
+  /** Days Mochi celebrates, badges earned from real work, small surprises and breaks. */
+  fun: {
+    /** What the first start says on a special day. */
+    greet: {
+      birthday: 'happy birthday!',
+      anniversary: (years: number) => (years === 1 ? 'one year together today' : `${years} years together today`),
+      newYear: 'happy new year',
+      lunarNewYear: 'happy lunar new year',
+      eidFitr: 'eid mubarak',
+      eidAdha: 'eid mubarak',
+      nowruz: 'happy nowruz',
+      piDay: 'π day · 3.14159…',
+      hanami: 'sakura season',
+      chuseok: 'happy chuseok',
+      diwali: 'happy diwali',
+      halloween: 'happy halloween',
+      hacktoberfest: 'hacktoberfest · happy contributing',
+      xmas: 'merry christmas',
+      friday13: 'friday the 13th',
+    },
+    goodNight: 'good night',
+    love: 'love you too',
+    hello: 'hello',
+    welcome: 'you’re welcome',
+    leet: '13:37',
+    breakLine: (span: string) => `${span} without a break · a stretch?`,
+    badgesTitle: 'BADGES',
+    badges: 'Badges',
+    earned: (a: number, b: number) => `${a}/${b} earned`,
+    newBadge: (names: string) => `new badge: ${names}`,
+    seeBadges: ' · /mochi badges',
+    badge: {
+      name: {
+        green: 'first green', push: 'first push', steady: 'steady hands', comeback: 'comeback', tidy: 'tidy day', team: 'team lead',
+        owl: 'night owl', bird: 'early bird', polyglot: 'polyglot', marathon: 'marathon', week: 'full week', hundred: 'hundred commits',
+      },
+      hint: {
+        green: 'a test run that passes', push: 'a git push', steady: '10 turns in a row without an error',
+        comeback: 'failing tests made to pass in one turn', tidy: 'a day removing more lines than adding', team: '3 agents at once',
+        owl: 'work after midnight on 5 days', bird: 'work before 7:00 on 5 days', polyglot: '5 languages edited in a week',
+        marathon: 'a 30-minute turn that ends well', week: 'a 7-day streak', hundred: '100 commits',
+      },
+    },
+    badgesList: (a: number, b: number, list: string) => `Badges ${a}/${b}: ${list}`,
+    badgesLocked: (list: string) => `To earn: ${list}`,
+    breaksOn: 'Breaks on: after two hours of work without a pause, Mochi suggests a stretch.',
+    breaksOff: 'Breaks off.',
+    birthdayNow: (day: string) => `Birthday: ${day}. To change it: /mochi birthday MM-DD · none`,
+    birthdayNone: 'No birthday set. To add it: /mochi birthday MM-DD (it stays on this machine)',
+    birthdaySet: (day: string) => `Birthday set: ${day}. It stays on this machine.`,
+    birthdayOff: 'Birthday removed.',
+    birthdayBad: (want: string) => `Not a date: ${want}. Use MM-DD, e.g. /mochi birthday 04-23`,
+  },
+
   /** Things to wear. */
   item: {
     name: {
@@ -159,6 +214,8 @@ export const en = {
       bowtie: 'bow tie', medal: 'medal', scarf: 'scarf', necktie: 'necktie', evileye: 'evil eye bead',
       mug: 'coffee mug', tea: 'tea glass', simit: 'simit', pencil: 'pencil', wrench: 'wrench', balloon: 'balloon',
       pumpkin: 'pumpkin', duck: 'rubber duck', cactus: 'cactus', cat: 'cat', gift: 'gift box',
+      sakura: 'cherry blossom sprig', pin: 'Hacktoberfest pin', rosette: 'anniversary rosette', candy: 'wrapped candy', lantern: 'festive lantern',
+      envelope: 'red envelope', diya: 'diya lamp', sprouts: 'Nowruz sprouts', songpyeon: 'songpyeon', cake: 'birthday cake',
     },
     short: {
       hardhat: 'hard hat', crown: 'crown', partyhat: 'party', witchhat: 'witch', santahat: 'Santa', nightcap: 'nightcap', headphones: 'headphones', gradcap: 'grad cap',
@@ -167,6 +224,7 @@ export const en = {
       bowtie: 'bow tie', medal: 'medal', scarf: 'scarf', necktie: 'tie', evileye: 'evil eye',
       mug: 'coffee', tea: 'tea', simit: 'simit', pencil: 'pencil', wrench: 'wrench', balloon: 'balloon',
       pumpkin: 'pumpkin', duck: 'duck', cactus: 'cactus', cat: 'cat', gift: 'gift',
+      sakura: 'sakura', pin: 'hacktober', rosette: 'rosette', candy: 'candy', lantern: 'lantern', envelope: 'envelope', diya: 'diya', sprouts: 'sprouts', songpyeon: 'songpyeon', cake: 'cake',
     },
     slot: { head: 'Head', face: 'Face', neck: 'Neck', held: 'Hand', ground: 'Beside' },
     hint: {
@@ -180,6 +238,17 @@ export const en = {
       night: (n: number) => `${n} turns at night`,
       halloween: 'Oct 24 – Nov 1',
       xmas: 'Dec 18 – 30',
+      birthday: 'on your birthday',
+      anniversary: 'on Mochi’s anniversary',
+      newYear: 'Dec 31 – Jan 1',
+      lunarNewYear: 'Lunar New Year',
+      eidFitr: 'Eid al-Fitr',
+      eidAdha: 'Eid al-Adha',
+      nowruz: 'Nowruz',
+      hanami: 'Apr 1 – 10',
+      chuseok: 'Chuseok',
+      diwali: 'Diwali',
+      hacktoberfest: 'October',
     },
   },
 
@@ -311,6 +380,7 @@ export const en = {
       hide: [] as string[], show: [] as string[], small: [] as string[], big: [] as string[], sound: [] as string[],
       status: [] as string[], details: [] as string[], level: [] as string[], wear: [] as string[], shield: [] as string[],
       alerts: [] as string[], lang: [] as string[], auto: [] as string[], none: [] as string[],
+      badges: [] as string[], breaks: [] as string[], birthday: [] as string[],
     },
   },
 }

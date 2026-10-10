@@ -53,6 +53,7 @@ export const MOOD_INK: Record<Mood, string> = {
   web: '#7AA2F7', agent: '#B794F6', asking: '#A9B4F5', success: '#5CC97A', proud: '#5CC97A', party: '#F2C14E',
   error: '#F0707A', dizzy: '#F0707A', scared: '#F2C14E', denied: '#9A918B', shocked: '#F2C14E',
   nervous: '#F2C14E', pleased: '#E08A6A', tired: '#9A918B', sleepy: '#9A918B', sleeping: '#9A918B', squeezed: '#5FB3A8',
+  stretch: '#5FB3A8', love: '#F07CB8', wink: '#E08A6A',
 }
 
 /** /context's palette, matched by the category's name. */

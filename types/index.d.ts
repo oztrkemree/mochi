@@ -26,6 +26,9 @@ export type Mood =
   | 'sleepy'
   | 'sleeping'
   | 'squeezed'
+  | 'stretch'
+  | 'love'
+  | 'wink'
 
 export type Face = {
   mood: Mood
@@ -69,6 +72,10 @@ export type Item =
   | 'bowtie' | 'medal' | 'scarf' | 'necktie' | 'evileye'
   | 'mug' | 'tea' | 'simit' | 'pencil' | 'wrench' | 'balloon'
   | 'pumpkin' | 'duck' | 'cactus' | 'cat' | 'gift'
+  | 'sakura' | 'pin' | 'rosette' | 'candy' | 'lantern' | 'envelope' | 'diya' | 'sprouts' | 'songpyeon' | 'cake'
+
+/** Something earned once from real work (see hooks/badges.ts). */
+export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' | 'owl' | 'bird' | 'polyglot' | 'marathon' | 'week' | 'hundred'
 
 /** What is on Mochi right now, slot by slot. */
 export type Outfit = { head: Item | null; face: Item | null; neck: Item | null; held: Item | null; ground: Item | null }
@@ -125,6 +132,8 @@ export type Env = {
   /** The machine's offset from UTC, in minutes. */
   tz: number
   lastEdit: Hunk | null
+  /** The badges earned on this machine, oldest first. */
+  badges: Badge[]
 }
 
 /** One reading of a usage window. */
@@ -133,8 +142,12 @@ export type Sample = { kind: string; at: number; p: number }
 /** Another chat, as its own Mochi last wrote it. */
 export type Peer = { id: string; label: string; state: 'busy' | 'asking' | 'idle' | 'error'; line: string; since: number; at: number }
 
-/** One day of work, in one chat or all of them. */
-export type DayRec = { turns: number; tools: number; edits: number; errors: number; commits: number; cost: number; secs: number; night: number }
+/**
+ * One day of work, in one chat or all of them: besides the counts, the lines
+ * edits added and removed, turns between 5:00 and 7:00, and the languages
+ * edited as bits (see hooks/badges.ts). A record older than a field reads it as 0.
+ */
+export type DayRec = { turns: number; tools: number; edits: number; errors: number; commits: number; cost: number; secs: number; night: number; add: number; del: number; early: number; langs: number }
 
 export type History = {
   /** Local days ("2026-10-09"), the last 126 at most. */
@@ -158,9 +171,15 @@ export type Prefs = {
   /** The person's choice per slot: an item, or null for nothing; a slot left out dresses itself (level, season, hour). */
   pick: Partial<Outfit>
   /** Which of the detail pane's folding sections are open. */
-  open: { level: boolean; wardrobe: boolean }
+  open: { level: boolean; wardrobe: boolean; badges: boolean }
   /** `auto` follows Claude Code's language setting and the system; otherwise a language code (en, tr, de…). */
   lang: string
+  /** A stretch suggested after two hours of work without a break. */
+  hasBreaks: boolean
+  /** The person's birthday as "MM-DD", '' when not given. */
+  birthday: string
+  /** The first day Mochi ran on this machine ("2026-10-09"), for its anniversary; '' until recorded. */
+  firstDay: string
 }
 
 /** One slice of the context window, coloured as /context colours it. */
