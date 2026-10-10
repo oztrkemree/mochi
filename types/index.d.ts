@@ -204,6 +204,8 @@ export type Prefs = {
   pick: Partial<Outfit>
   /** Which of the detail pane's folding sections are open. */
   open: { level: boolean; wardrobe: boolean; badges: boolean }
+  /** The wardrobe's category (slot) shown in the details pane. */
+  shelf: Slot
   /** `auto` follows Claude Code's language setting and the system; otherwise a language code (en, tr, de…). */
   lang: string
   /** Follow the CI of a push made in this chat, and show the branch's pull request, through gh. */

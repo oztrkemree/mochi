@@ -79,11 +79,11 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       const isOn = dressed[SLOT[item]] === item
       const isOpen = ok.includes(item)
       return (
-        <Box key={`cell:${item}`} flexDirection="column" alignItems="center" width={11} paddingTop={0.4} borderStyle="round" borderColor={isOn ? 'claude' : 'inactive'} borderDimColor={!isOn}>
+        <Box key={`cell:${item}`} flexDirection="column" alignItems="center" width={18} paddingX={1} paddingTop={0.4} borderStyle="round" borderColor={isOn ? 'claude' : 'inactive'} borderDimColor={!isOn}>
           <Svg source={iconSvg(item, isOpen)} alt={itemName(item)} width={46} height={32} />
           {isOpen
             ? <Button key={`wear:${item}`} plain dimColor={!isOn} onPress={pressed}>{itemShort(item)}</Button>
-            : <Text dimColor wrap="truncate">{hintFor(item)}</Text>}
+            : <Box flexDirection="column" alignItems="center"><Text bold dimColor>{itemShort(item)}</Text><Text dimColor>{hintFor(item)}</Text></Box>}
         </Box>
       )
     }
@@ -127,14 +127,21 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
               {p.open.wardrobe ? <Button key="wear:none" variant="secondary" onPress={pressed}>{t().ui.takeAllOff}</Button> : null}
               <Button key="fold:wardrobe" variant="secondary" onPress={pressed}>{p.open.wardrobe ? t().ui.close : t().ui.open}</Button>
             </Box>
-            {p.open.wardrobe ? SLOTS.map(slot => (
-              <Box key={`slot:${slot}`} flexDirection="column" gap={0.5}>
-                <Text dimColor>{`${slotName(slot)} · ${dressed[slot] ? itemName(dressed[slot]) : t().ui.empty}${p.pick[slot] === undefined ? t().ui.autoMark : ''}`}</Text>
+            {p.open.wardrobe ? (
+              <Box flexDirection="column" gap={1}>
                 <Box flexDirection="row" flexWrap="wrap" columnGap={1} rowGap={0.5}>
-                  {SLOT_ITEMS[slot].map(cell)}
+                  {SLOTS.map(slot => (
+                    <Button key={`shelf:${slot}`} variant={slot === p.shelf ? 'primary' : 'secondary'} onPress={pressed}>
+                      {`${slotName(slot)} ${SLOT_ITEMS[slot].filter(i => ok.includes(i)).length}/${SLOT_ITEMS[slot].length}`}
+                    </Button>
+                  ))}
+                </Box>
+                <Text dimColor>{`${slotName(p.shelf)} · ${dressed[p.shelf] ? itemName(dressed[p.shelf]) : t().ui.empty}${p.pick[p.shelf] === undefined ? t().ui.autoMark : ''}`}</Text>
+                <Box flexDirection="row" flexWrap="wrap" columnGap={1} rowGap={0.5}>
+                  {SLOT_ITEMS[p.shelf].map(cell)}
                 </Box>
               </Box>
-            )) : null}
+            ) : null}
           </Box>
           <Box key="sec:badges" flexDirection="column" borderStyle="round" borderColor="inactive" borderDimColor paddingX={1} gap={1}>
             <Box flexDirection="row" alignItems="center" gap={2}>

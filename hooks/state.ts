@@ -11,7 +11,7 @@ import type { Platform } from './system'
 // What register.tsx and render.tsx share: the defaults of the values kept in
 // $.state, and this load's own bookkeeping.
 
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false, badges: false }, lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, birthday: '', firstDay: '' }
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false, badges: false }, shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, birthday: '', firstDay: '' }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**
@@ -37,7 +37,8 @@ export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | unde
   const open = { level: saved?.open?.level === true, wardrobe: saved?.open?.wardrobe === true, badges: saved?.open?.badges === true }
   // Choices saved before there were languages were made in Turkish, its only one then.
   const lang = typeof saved?.lang === 'string' && (saved.lang === 'auto' || pickLang(saved.lang) !== null) ? saved.lang : saved !== undefined ? 'tr' : 'auto'
-  return { ...DEFAULT_PREFS, ...rest, pick, open, lang }
+  const shelf = SLOTS.find(slot => slot === saved?.shelf) ?? 'head'
+  return { ...DEFAULT_PREFS, ...rest, pick, open, shelf, lang }
 }
 export const NO_ENV: Env = {
   context: -1, agents: 0, turnTools: 0, tokens: 0, window: 0, slices: [], limits: [], cost: 0, recent: [], last: '', compactAt: 0, allSlices: [], git: null, turns: [], files: [], kinds: {}, startedAt: 0,

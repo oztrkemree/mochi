@@ -2042,6 +2042,10 @@ export const register: Register = on => {
       const which = e.element === 'fold:level' ? 'level' : 'wardrobe'
       await setPrefs($, p => ({ ...p, open: { ...p.open, [which]: !p.open[which] } }))
     }
+    if (e.plugin === 'mochi' && e.element.startsWith('shelf:')) {
+      const shelf = SLOTS.find(slot => slot === e.element.slice(6))
+      if (shelf !== undefined) await setPrefs($, p => ({ ...p, shelf }))
+    }
     if (e.plugin === 'mochi' && e.element === 'fold:badges') await setPrefs($, p => ({ ...p, open: { ...p.open, badges: !p.open.badges } }))
     if (e.plugin === 'mochi' && e.element.startsWith('wear:')) {
       const what = e.element.slice(5)

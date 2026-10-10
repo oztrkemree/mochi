@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- The wardrobe shows one category at a time, picked from a row of buttons with how many items are unlocked, instead of every category at once. Cells are wider and a locked item shows its name with the hint to open it.
+
 ## 0.3.0
 
 Needs Claude Code 2.1.293 or later.
