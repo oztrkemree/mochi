@@ -76,6 +76,7 @@ export const tr: typeof en = {
     short: { five_hour: 'oturum', seven_day: 'hafta', spend_limit: 'harcama' },
     long: { five_hour: 'oturum limiti', seven_day: 'haftalık limit' },
     pace: (name, at, reset) => `${name} bu hızla dolacak · tahmini ${at} · sıfırlanma ${reset}`,
+    back: name => `${name} sıfırlandı · devam edebilirsin`,
   },
 
   ctx: {
@@ -108,6 +109,16 @@ export const tr: typeof en = {
     error: label => `${label} hata aldı`,
     busyOne: label => `${label} çalışıyor`,
     busyMany: n => `${n} sohbet çalışıyor`,
+  },
+
+  chats: {
+    title: 'SOHBETLER',
+    heading: n => `Sohbetler: ${n} açık`,
+    here: 'bu sohbet',
+    worktree: branch => `${branch} (worktree)`,
+    waiting: n => `${n} sohbet seni bekliyor`,
+    waitingLong: (label, span) => `${label} seni bekliyor · ${span}`,
+    words: 'sohbetler sohbet',
   },
 
   danger: {

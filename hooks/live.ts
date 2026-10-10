@@ -34,7 +34,10 @@ export function peerOf(value: unknown, now: number): Peer | null {
   const v = value as Partial<Peer>
   if (typeof v.id !== 'string' || typeof v.at !== 'number' || now - v.at > ALIVE_MS) return null
   const state = v.state === 'busy' || v.state === 'asking' || v.state === 'error' ? v.state : 'idle'
-  return { id: v.id, label: typeof v.label === 'string' && v.label !== '' ? v.label : t().word.chat, state, line: typeof v.line === 'string' ? v.line : '', since: typeof v.since === 'number' ? v.since : 0, at: v.at }
+  return {
+    id: v.id, label: typeof v.label === 'string' && v.label !== '' ? v.label : t().word.chat, state, line: typeof v.line === 'string' ? v.line : '', since: typeof v.since === 'number' ? v.since : 0, at: v.at,
+    folder: typeof v.folder === 'string' ? v.folder : '', branch: typeof v.branch === 'string' ? v.branch : '', isWorktree: v.isWorktree === true, stateAt: typeof v.stateAt === 'number' ? v.stateAt : 0,
+  }
 }
 
 /** A change among the other chats worth saying: one waits on the person, finished a long turn, or failed. */

@@ -76,6 +76,7 @@ export const ko: typeof en = {
     short: { five_hour: '세션', seven_day: '주간', spend_limit: '지출' },
     long: { five_hour: '세션 한도', seven_day: '주간 한도' },
     pace: (name, at, reset) => `이 속도면 ${name} 소진 · ${at}쯤 · ${reset} 초기화`,
+    back: name => `${name} 초기화됨 · 계속할 수 있음`,
   },
 
   ctx: {
@@ -108,6 +109,16 @@ export const ko: typeof en = {
     error: label => `${label} 오류 발생`,
     busyOne: label => `${label} 작업 중`,
     busyMany: n => `채팅 ${n}개 작업 중`,
+  },
+
+  chats: {
+    title: '채팅',
+    heading: n => `채팅: ${n}개 열림`,
+    here: '여기',
+    worktree: branch => `${branch} (워크트리)`,
+    waiting: n => `${n}개 응답 대기`,
+    waitingLong: (label, span) => `${label} ${span}째 응답 대기 중`,
+    words: '채팅',
   },
 
   danger: {

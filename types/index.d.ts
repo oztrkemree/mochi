@@ -125,13 +125,22 @@ export type Env = {
   /** The machine's offset from UTC, in minutes. */
   tz: number
   lastEdit: Hunk | null
+  /** This chat as the others see it, for the board of chats; absent until first written. */
+  me?: Peer
 }
 
 /** One reading of a usage window. */
 export type Sample = { kind: string; at: number; p: number }
 
-/** Another chat, as its own Mochi last wrote it. */
-export type Peer = { id: string; label: string; state: 'busy' | 'asking' | 'idle' | 'error'; line: string; since: number; at: number }
+/**
+ * Another chat, as its own Mochi last wrote it: `since` is when its turn began,
+ * `stateAt` when it came to its state. An older Mochi leaves out where it works
+ * (folder, branch, worktree) and `stateAt`.
+ */
+export type Peer = {
+  id: string; label: string; state: 'busy' | 'asking' | 'idle' | 'error'; line: string; since: number; at: number
+  folder?: string; branch?: string; isWorktree?: boolean; stateAt?: number
+}
 
 /** One day of work, in one chat or all of them. */
 export type DayRec = { turns: number; tools: number; edits: number; errors: number; commits: number; cost: number; secs: number; night: number }

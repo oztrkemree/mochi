@@ -77,6 +77,7 @@ export const de: typeof en = {
     short: { five_hour: 'Sitzung', seven_day: 'Woche', spend_limit: 'Ausgaben' },
     long: { five_hour: 'Sitzungslimit', seven_day: 'Wochenlimit' },
     pace: (name, at, reset) => `${name} wird bei diesem Tempo erreicht · gegen ${at} · Reset ${reset}`,
+    back: name => `${name} zurückgesetzt · du kannst weitermachen`,
   },
 
   ctx: {
@@ -109,6 +110,16 @@ export const de: typeof en = {
     error: label => `${label} hat einen Fehler`,
     busyOne: label => `${label} arbeitet`,
     busyMany: n => `${n} ${n === 1 ? 'Chat arbeitet' : 'Chats arbeiten'}`,
+  },
+
+  chats: {
+    title: 'CHATS',
+    heading: n => `Chats: ${n} offen`,
+    here: 'dieser Chat',
+    worktree: branch => `${branch} (Worktree)`,
+    waiting: n => `${n} ${n === 1 ? 'wartet' : 'warten'} auf dich`,
+    waitingLong: (label, span) => `${label} wartet seit ${span} auf dich`,
+    words: '',
   },
 
   danger: {

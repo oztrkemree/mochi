@@ -100,4 +100,15 @@ export const chat = {
   lastStatus: undefined as string | undefined,
   autoLang: null as Lang | null,
   lastEnv: null as Env | null,
+  /** Where this chat stands for the others, since when, and the wait last told of (its `stateAt`). */
+  state: null as Peer['state'] | null,
+  stateAt: 0,
+  waitTold: 0,
+  /** The shield waits on the person's word. */
+  isAsking: false,
+  /** This chat's folder and whether git keeps it as a linked worktree, for the board of chats. */
+  folder: '',
+  isWorktree: false,
+  /** The timer's last look at the usage windows' resets. */
+  resetsSeenAt: 0,
 }

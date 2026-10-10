@@ -98,6 +98,7 @@ export const ru: typeof en = {
     short: { five_hour: 'сессия', seven_day: 'неделя', spend_limit: 'расходы' },
     long: { five_hour: 'лимит сессии', seven_day: 'недельный лимит' },
     pace: (name, at, reset) => `${name} при таком темпе закончится · около ${at} · сброс ${reset}`,
+    back: name => `${name} сброшен · можно продолжать`,
   },
 
   ctx: {
@@ -130,6 +131,16 @@ export const ru: typeof en = {
     error: label => `${label}: ошибка`,
     busyOne: label => `${label} работает`,
     busyMany: n => `${pn(n, 'чат', 'чата', 'чатов')} ${pl(n, 'работает', 'работают', 'работают')}`,
+  },
+
+  chats: {
+    title: 'ЧАТЫ',
+    heading: n => `Чаты: открыто ${n}`,
+    here: 'этот чат',
+    worktree: branch => `${branch} (worktree)`,
+    waiting: n => `${pl(n, 'ждёт', 'ждут', 'ждут')} тебя: ${n}`,
+    waitingLong: (label, span) => `${label} ждёт тебя уже ${span}`,
+    words: 'чаты',
   },
 
   danger: {
