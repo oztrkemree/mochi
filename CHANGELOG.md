@@ -8,10 +8,10 @@ Needs Claude Code 2.1.293 or later.
 
 - Knows the Windows ways to destroy things (`Remove-Item -Recurse`, `del /s`, `Format-Volume`, `reg delete`, `Stop-Computer`…) and reads commands Claude runs through PowerShell as well as Bash.
 - Asks about many more commands that cannot be undone: cloud deletes, database wipes, history rewrites, scripts piped from the internet, `npm unpublish`, `docker system prune -a`.
-- Judges a force push by its branch: onto `main`, `master`, `trunk` or `develop` it asks and names the branch; a `--force-with-lease` to your own branch only gets a nervous look.
+- Judges a force push by its branch: onto `main`, `master`, `trunk` or `develop` it asks and names the branch; onto your own branch it asks with a nervous look instead of the alarm, and a `--force-with-lease` there only gets the look.
 - Secret guard: before Claude writes, `git add`s or commits something that looks like a live key or token, or a file like `.env` or `id_rsa`, Mochi asks and shows the value masked.
-- “Always allow here” remembers a kind of command for one repository; `/mochi shield` lists what is allowed, `/mochi shield reset` forgets it.
-- Your own rules in `~/.claude/mochi/shield.json`: patterns to ask about, and built-in kinds to stop asking about.
+- “Always allow here” remembers a kind of command for one repository, for what stays inside it: a command or an edit that reaches outside asks again. `/mochi shield` says whether the shield is on and lists what is allowed, `/mochi shield on` or `off` switches it, `/mochi shield reset` forgets it.
+- Your own rules in `~/.claude/mochi/shield.json`: patterns to ask about, and built-in kinds to stop asking about. Mochi asks before Claude itself changes that file, and says when it changed.
 
 ### Chats and limits
 
@@ -21,7 +21,7 @@ Needs Claude Code 2.1.293 or later.
 
 ### CI
 
-- After a push, Mochi follows the GitHub Actions runs through your own `gh`: `ci running · 2/5` in the band, a party on a pass, and the failed workflow's name on a failure, with a notification if Claude is not working.
+- After a push, Mochi follows the GitHub Actions runs through your own `gh`: `ci running · 2/5` in the band (and between runs your pull request), a party on a pass, and the failed workflow's name on a failure, with a notification if Claude is not working.
 - The details pane shows the last CI result and your branch's pull request with its review and checks.
 - `/mochi ci` turns it off; `/mochi status` says when `gh` is missing or not signed in.
 
@@ -35,7 +35,7 @@ Needs Claude Code 2.1.293 or later.
 
 - 12 badges earned from real work, each celebrated once: `/mochi badges` and a Badges section in the details pane.
 - Eid al-Fitr, Eid al-Adha, Lunar New Year, Nowruz, Diwali, Chuseok, sakura season, Hacktoberfest, your birthday (`/mochi birthday`) and Mochi's own anniversary, each with a greeting and something to wear. The wardrobe grows to 46 items.
-- Small surprises: say good night, thank Mochi or tell it you love it, in any of its languages; a wink at 13:37.
+- Small surprises: say good night (Mochi goes to sleep once the reply is done), call its name, thank it or tell it you love it, in any of its languages; a wink at 13:37.
 - After two hours of work with no break, a suggested stretch, once for all your chats. `/mochi breaks` turns it off.
 - Three new moods: stretching, in love and winking.
 
@@ -43,11 +43,11 @@ Needs Claude Code 2.1.293 or later.
 
 - `/mochi card` draws a card for your GitHub profile, with the line to paste into its README.
 - `/mochi wrapped` sums up your month (or `/mochi wrapped year` your year) across every chat; Mochi tells you once when last month's is ready.
-- `/mochi snap` saves the band and the details pane as pictures.
+- `/mochi snap` saves the band and the details pane as pictures, leaving out your other chats and the lines of your last edit; a PNG too where `rsvg-convert` or ImageMagick is installed.
 
 ### Your data and other plugins
 
-- `/mochi export` saves everything Mochi keeps in one JSON file; `/mochi reset level`, `history` or `all` clears it after asking; `/mochi feedback` prints a bug report link filled with versions only.
+- `/mochi export` saves everything Mochi keeps in one JSON file; `/mochi reset level`, `history` or `all` clears it after asking (exports and your `shield.json` stay); `/mochi feedback` prints a bug report link filled with versions only.
 - Other plugins can make Mochi react through `$.mochi`, signed with their name and at most once every 10 seconds ([docs/API.md](docs/API.md)); `/mochi plugins` turns it off.
 - A guide for adding something to wear ([docs/OUTFITS.md](docs/OUTFITS.md)) and an Outfit idea form.
 
@@ -56,7 +56,8 @@ Needs Claude Code 2.1.293 or later.
 - Six more languages: Italian, Polish, Ukrainian, Hindi, Indonesian and Arabic. Mochi now speaks 16.
 - Runs the same on Windows, Linux and macOS: notifications, the system's language, the home folder and deleting old files each the system's own way.
 - Item ids are English now; what older versions saved carries over.
-- A lighter timer while Mochi dozes.
+- A lighter timer while Mochi dozes or is hidden.
+- Every on/off command takes `on` or `off` (`/mochi tips off`), and `/mochi status` also says whether tips, breaks and other plugins’ reactions are on.
 - When another chat waits for you, Mochi now looks like it is waiting too; when one hits an error, it looks nervous.
 - No longer reads the settings or files of Brutex, Mochi's earlier name.
 - `/mochi` lists every command in its hint and in `/mochi status`.

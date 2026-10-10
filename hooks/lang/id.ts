@@ -105,8 +105,10 @@ export const id: typeof en = {
     tour: [
       { line: 'hai, aku Mochi', text: 'Hai, aku Mochi. Aku tinggal di atas prompt-mu dan menunjukkan apa yang sedang dilakukan Claude Code: membaca, menjalankan, menunggumu.' },
       { line: 'klik lingkarannya · detail', text: 'Lingkaran menunjukkan konteks dan limit pemakaianmu. Klik, atau ketik /mochi detail, untuk gambaran lengkapnya.' },
-      { line: '/mochi pakai · perisai', text: 'Naik level dan dandani aku dengan /mochi pakai. Perisai bertanya dulu sebelum perintah yang tidak bisa dibatalkan; /mochi perisai mematikannya.' },
+      { line: '/mochi pakai · perisai', text: 'Naik level dan dandani aku dengan /mochi pakai. Perisai bertanya dulu sebelum perintah yang tidak bisa dibatalkan; /mochi perisai matikan untuk mematikannya.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: 'ketik /mochi detail', text: 'Ketik /mochi detail untuk melihat konteks, limit pemakaianmu, perubahan, dan riwayatmu.' },
     rule: {
       question: rule => `Tambahkan “${rule}” ke CLAUDE.md?`,
       add: 'Tambahkan',
@@ -224,6 +226,7 @@ export const id: typeof en = {
     helm: 'mencopot release dari cluster',
     unpublish: 'menarik paket dari registry untuk semua orang',
     pruneAll: 'menghapus semua image, container, dan network yang tidak terpakai',
+    shieldRules: 'mengubah aturan perisai itu sendiri',
   },
 
   loopAlarm: {
@@ -399,6 +402,7 @@ export const id: typeof en = {
     cardHow: 'Untuk profil GitHub-mu, taruh kartunya di samping README.md di repositori profilmu, lalu tempel:',
     wrappedSaved: (title, path) => `Rekap ${title}: ${path}`,
     snapSaved: (band, details) => `Bilah: ${band}\nPanel detail: ${details}`,
+    noPng: 'X dan Reddit menerima PNG, bukan SVG: jika rsvg-convert atau ImageMagick terpasang, /mochi jepret juga menyimpan PNG.',
     failed: reason => `Tidak bisa menyimpan: ${reason}`,
     ready: month => `rekap bulan ${month} sudah siap · /mochi rekap`,
   },
@@ -482,6 +486,7 @@ export const id: typeof en = {
     detailOpened: 'Panel detail dibuka.',
     shieldOn: 'Perisai aktif: Mochi bertanya dulu sebelum perintah yang tidak bisa dibatalkan dijalankan, dan sebelum sesuatu yang tampak seperti rahasia ditulis atau di-commit.',
     shieldOff: 'Perisai nonaktif.',
+    shieldHow: isOn => (isOn ? 'Untuk mematikan: /mochi perisai matikan' : 'Untuk menyalakan: /mochi perisai nyalakan'),
     alertsOn: minutes => `Notifikasi aktif: kamu diberi tahu saat pekerjaan yang lebih dari ${minutes} menit selesai, saat sebuah chat menunggumu, saat limit di-reset, dan saat CI gagal.`,
     alertsOff: 'Notifikasi nonaktif.',
     levelLine: (level, xp, toNext) => `Level ${level} · ${xp} XP · ${toNext} XP lagi ke level berikutnya`,
@@ -505,6 +510,8 @@ export const id: typeof en = {
     contextLine: (ctx, agents, tools) => `Konteks: ${ctx} · agen berjalan: ${agents} · tool di giliran ini: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `Suara: ${sound ? 'aktif' : 'nonaktif'} · Perisai: ${shield ? 'aktif' : 'nonaktif'} · Notifikasi: ${alerts ? 'aktif' : 'nonaktif'} · Ukuran: ${compact ? 'kecil' : 'besar'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `Tips: ${tips ? 'aktif' : 'nonaktif'} · Istirahat: ${breaks ? 'aktif' : 'nonaktif'} · Reaksi plugin: ${plugins ? 'aktif' : 'nonaktif'}`,
     peersLine: (level, peers) => `Level ${level} · chat lain: ${peers}`,
     commands: 'Perintah: /mochi (tampilkan/sembunyikan) | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | ekspor | reset | masukan | status',
     langNow: (name, list) => `Bahasa: ${name}. Tersedia: ${list} · /mochi bahasa <kode> atau otomatis`,
@@ -512,6 +519,7 @@ export const id: typeof en = {
     langAuto: name => `Bahasa mengikuti Claude Code dan sistem: ${name}.`,
     langUnknown: (code, list) => `Bahasa tidak dikenal: ${code}. Tersedia: ${list}`,
     words: {
+      on: ['nyalakan', 'aktifkan'], off: ['matikan', 'nonaktifkan'],
       hide: ['sembunyikan', 'sembunyi'], show: ['tampilkan', 'tampil'], small: ['kecil'], big: ['besar'], sound: ['suara', 'bunyi'],
       status: [], details: ['rincian'], level: [], wear: ['pakai', 'kenakan', 'aksesori'], shield: ['perisai', 'pelindung'],
       alerts: ['notifikasi', 'notif'], lang: ['bahasa'], auto: ['otomatis'], none: ['lepas', 'hapus', 'kosong'],

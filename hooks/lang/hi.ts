@@ -108,8 +108,10 @@ export const hi: typeof en = {
     tour: [
       { line: 'नमस्ते, मैं Mochi हूँ', text: 'नमस्ते, मैं Mochi हूँ। मैं आपके प्रॉम्प्ट के ऊपर रहता हूँ और दिखाता हूँ कि Claude Code क्या कर रहा है: पढ़ रहा है, चला रहा है, आपका इंतज़ार कर रहा है।' },
       { line: 'छल्लों पर क्लिक · विवरण', text: 'छल्ले context और आपकी इस्तेमाल की लिमिट दिखाते हैं। पूरी तस्वीर के लिए उन पर क्लिक करें, या /mochi details लिखें।' },
-      { line: '/mochi wear · कवच', text: 'लेवल बढ़ाइए और /mochi wear से मुझे सजाइए। कवच ऐसी कमांड से पहले पूछता है जिसका असर पलटा नहीं जा सकता; /mochi shield से यह बंद होता है।' },
+      { line: '/mochi wear · कवच', text: 'लेवल बढ़ाइए और /mochi wear से मुझे सजाइए। कवच ऐसी कमांड से पहले पूछता है जिसका असर पलटा नहीं जा सकता; /mochi shield off से यह बंद होता है।' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: '/mochi details लिखें', text: 'context, अपनी इस्तेमाल की लिमिट, बदलाव और इतिहास देखने के लिए /mochi details लिखें।' },
     rule: {
       question: rule => `“${rule}” को CLAUDE.md में जोड़ें?`,
       add: 'जोड़ें',
@@ -228,6 +230,7 @@ export const hi: typeof en = {
     helm: 'release cluster से uninstall हो जाएगी',
     unpublish: 'पैकेज registry से सबके लिए हट जाएगा',
     pruneAll: 'इस्तेमाल न होने वाली सारी images, containers और networks मिट जाएँगे',
+    shieldRules: 'कवच के अपने नियम बदल जाएँगे',
   },
 
   loopAlarm: {
@@ -403,6 +406,7 @@ export const hi: typeof en = {
     cardHow: 'GitHub प्रोफ़ाइल के लिए इसे अपनी प्रोफ़ाइल repository में README.md के बगल में रखें और यह पेस्ट करें:',
     wrappedSaved: (title, path) => `${title} का लेखा-जोखा: ${path}`,
     snapSaved: (band, details) => `पट्टी: ${band}\nविवरण पैनल: ${details}`,
+    noPng: 'X और Reddit SVG नहीं, PNG लेते हैं: rsvg-convert या ImageMagick इंस्टॉल हो तो /mochi snap एक PNG भी सेव करता है।',
     failed: reason => `सेव नहीं हो सका: ${reason}`,
     ready: month => `आपका ${month} का लेखा-जोखा तैयार है · /mochi wrapped`,
   },
@@ -486,6 +490,7 @@ export const hi: typeof en = {
     detailOpened: 'विवरण पैनल खुल गया।',
     shieldOn: 'कवच चालू: जिस कमांड का असर पलटा नहीं जा सकता, उसके चलने से पहले Mochi पूछेगा; और secret जैसी दिखने वाली किसी चीज़ के लिखे या commit होने से पहले भी।',
     shieldOff: 'कवच बंद।',
+    shieldHow: isOn => (isOn ? 'बंद करने के लिए: /mochi shield off' : 'चालू करने के लिए: /mochi shield on'),
     alertsOn: minutes => `अलर्ट चालू: ${minutes} मिनट से लंबा काम पूरा होने पर, किसी चैट के आपका इंतज़ार करने पर, लिमिट रीसेट होने पर और CI फ़ेल होने पर आपको सुनाई देगा।`,
     alertsOff: 'अलर्ट बंद।',
     levelLine: (level, xp, toNext) => `लेवल ${level} · ${xp} XP · अगले लेवल तक ${toNext} XP`,
@@ -509,6 +514,8 @@ export const hi: typeof en = {
     contextLine: (ctx, agents, tools) => `Context: ${ctx} · चल रहे एजेंट: ${agents} · इस टर्न के टूल: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `आवाज़: ${sound ? 'चालू' : 'बंद'} · कवच: ${shield ? 'चालू' : 'बंद'} · अलर्ट: ${alerts ? 'चालू' : 'बंद'} · आकार: ${compact ? 'छोटा' : 'बड़ा'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `सुझाव: ${tips ? 'चालू' : 'बंद'} · ब्रेक: ${breaks ? 'चालू' : 'बंद'} · प्लगइन प्रतिक्रियाएँ: ${plugins ? 'चालू' : 'बंद'}`,
     peersLine: (level, peers) => `लेवल ${level} · दूसरी चैट: ${peers}`,
     commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name, list) => `भाषा: ${name}। उपलब्ध: ${list} · /mochi lang <कोड> या auto`,
@@ -516,6 +523,7 @@ export const hi: typeof en = {
     langAuto: name => `भाषा Claude Code और सिस्टम के हिसाब से: ${name}।`,
     langUnknown: (code, list) => `अनजान भाषा: ${code}। उपलब्ध: ${list}`,
     words: {
+      on: ['चालू'], off: ['बंद'],
       hide: ['छिपाओ', 'छुपाओ'], show: ['दिखाओ'], small: ['छोटा'], big: ['बड़ा'], sound: ['आवाज़', 'आवाज'],
       status: ['स्थिति'], details: ['विवरण'], level: ['लेवल'], wear: ['पहनो', 'पहनाओ'], shield: ['कवच', 'शील्ड'],
       alerts: ['अलर्ट', 'सूचना'], lang: ['भाषा'], auto: ['ऑटो', 'अपने-आप'], none: ['कुछ नहीं', 'कोई नहीं'],

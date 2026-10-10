@@ -104,8 +104,10 @@ export const tr: typeof en = {
     tour: [
       { line: 'merhaba, ben Mochi', text: 'Merhaba, ben Mochi. Prompt’unun üstünde yaşıyorum ve Claude Code’un ne yaptığını gösteriyorum: okuyor, çalıştırıyor, seni bekliyor.' },
       { line: 'halkalara tıkla · detay', text: 'Halkalar context’i ve kullanım limitlerini gösterir. Tamamı için tıkla ya da /mochi detay yaz.' },
-      { line: '/mochi aksesuar · kalkan', text: 'Seviye atladıkça beni /mochi aksesuar ile giydir. Kalkan, geri alınamayan bir komuttan önce sorar; /mochi kalkan ile kapanır.' },
+      { line: '/mochi aksesuar · kalkan', text: 'Seviye atladıkça beni /mochi aksesuar ile giydir. Kalkan, geri alınamayan bir komuttan önce sorar; /mochi kalkan kapat ile kapanır.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: '/mochi detay yaz', text: 'Context, kullanım limitlerin, değişiklikler ve geçmişin için /mochi detay yaz.' },
     rule: {
       question: rule => `“${rule}” CLAUDE.md’ye eklensin mi?`,
       add: 'Ekle',
@@ -223,6 +225,7 @@ export const tr: typeof en = {
     helm: 'sürümü kümeden kaldırır',
     unpublish: 'paketi herkes için yayından kaldırır',
     pruneAll: 'kullanılmayan bütün imajları, konteynerleri ve ağları siler',
+    shieldRules: 'kalkanın kendi kurallarını değiştirir',
   },
 
   loopAlarm: {
@@ -398,6 +401,7 @@ export const tr: typeof en = {
     cardHow: 'GitHub profilin için dosyayı profil deposunda README.md’nin yanına koy ve şunu yapıştır:',
     wrappedSaved: (title, path) => `${title} özeti: ${path}`,
     snapSaved: (band, details) => `Bant: ${band}\nDetay paneli: ${details}`,
+    noPng: 'X ve Reddit SVG değil PNG kabul eder: rsvg-convert ya da ImageMagick kuruluysa /mochi fotoğraf bir PNG de kaydeder.',
     failed: reason => `Kaydedilemedi: ${reason}`,
     ready: month => `${month} özetin hazır · /mochi özet`,
   },
@@ -481,6 +485,7 @@ export const tr: typeof en = {
     detailOpened: 'Detay paneli açıldı.',
     shieldOn: 'Kalkan açık: geri alınamayan komutlar çalışmadan önce sorulacak; gizli bilgiye benzeyen bir şey yazılmadan ya da commit edilmeden önce de.',
     shieldOff: 'Kalkan kapalı.',
+    shieldHow: isOn => (isOn ? 'Kapatmak için: /mochi kalkan kapat' : 'Açmak için: /mochi kalkan aç'),
     alertsOn: minutes => `Bildirim açık: ${minutes} dakikadan uzun işler bitince, bir sohbet seni beklerken, bir limit sıfırlanınca ve CI başarısız olunca haber verilecek.`,
     alertsOff: 'Bildirim kapalı.',
     levelLine: (level, xp, toNext) => `Seviye ${level} · ${xp} XP · sonraki seviyeye ${toNext} XP`,
@@ -504,6 +509,8 @@ export const tr: typeof en = {
     contextLine: (ctx, agents, tools) => `Context: ${ctx} · çalışan ajan: ${agents} · bu turdaki araç: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `Ses: ${sound ? 'açık' : 'kapalı'} · Kalkan: ${shield ? 'açık' : 'kapalı'} · Bildirim: ${alerts ? 'açık' : 'kapalı'} · Boyut: ${compact ? 'küçük' : 'büyük'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `İpuçları: ${tips ? 'açık' : 'kapalı'} · Mola: ${breaks ? 'açık' : 'kapalı'} · Eklenti tepkileri: ${plugins ? 'açık' : 'kapalı'}`,
     peersLine: (level, peers) => `Seviye ${level} · diğer sohbetler: ${peers}`,
     commands: 'Komutlar: /mochi (göster/gizle) | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | durum',
     langNow: (name, list) => `Dil: ${name}. Seçenekler: ${list} · /mochi dil <kod> ya da otomatik`,
@@ -511,6 +518,7 @@ export const tr: typeof en = {
     langAuto: name => `Dil Claude Code’a ve sisteme göre seçiliyor: ${name}.`,
     langUnknown: (code, list) => `Bilinmeyen dil: ${code}. Seçenekler: ${list}`,
     words: {
+      on: ['aç', 'açık'], off: ['kapat', 'kapalı'],
       hide: ['gizle'], show: ['göster', 'goster'], small: ['küçük', 'kucuk'], big: ['büyük', 'buyuk'], sound: ['ses'],
       status: ['durum'], details: ['detay'], level: ['seviye'], wear: ['aksesuar', 'giy'], shield: ['kalkan'],
       alerts: ['bildirim'], lang: ['dil'], auto: ['otomatik'], none: ['yok', 'hiçbiri', 'hicbiri'],

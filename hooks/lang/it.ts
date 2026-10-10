@@ -109,8 +109,10 @@ export const it: typeof en = {
     tour: [
       { line: 'ciao, sono Mochi', text: 'Ciao, sono Mochi. Vivo sopra il tuo prompt e mostro cosa sta facendo Claude Code: legge, esegue, ti aspetta.' },
       { line: 'clic sugli anelli · dettagli', text: 'Gli anelli mostrano il contesto e i tuoi limiti di utilizzo. Fai clic, o scrivi /mochi dettagli, per il quadro completo.' },
-      { line: '/mochi indossa · lo scudo', text: 'Sali di livello e vestimi con /mochi indossa. Lo scudo chiede conferma prima di un comando che non si può annullare; /mochi scudo lo disattiva.' },
+      { line: '/mochi indossa · lo scudo', text: 'Sali di livello e vestimi con /mochi indossa. Lo scudo chiede conferma prima di un comando che non si può annullare; per disattivarlo, /mochi scudo disattiva.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: 'scrivi /mochi dettagli', text: 'Scrivi /mochi dettagli per il contesto, i tuoi limiti di utilizzo, le modifiche e la cronologia.' },
     rule: {
       question: rule => `Aggiungere “${rule}” a CLAUDE.md?`,
       add: 'Aggiungi',
@@ -228,6 +230,7 @@ export const it: typeof en = {
     helm: 'disinstalla la release dal cluster',
     unpublish: 'ritira il pacchetto dal registro per tutti',
     pruneAll: 'elimina tutte le immagini, i container e le reti inutilizzati',
+    shieldRules: 'modifica le regole dello scudo stesso',
   },
 
   loopAlarm: {
@@ -403,6 +406,7 @@ export const it: typeof en = {
     cardHow: 'Per il tuo profilo GitHub, mettila accanto a README.md nel repository del tuo profilo e incolla:',
     wrappedSaved: (title, path) => `Riepilogo · ${title}: ${path}`,
     snapSaved: (band, details) => `Barra: ${band}\nPannello dei dettagli: ${details}`,
+    noPng: 'X e Reddit accettano PNG, non SVG: con rsvg-convert o ImageMagick installato, /mochi istantanea salva anche un PNG.',
     failed: reason => `Salvataggio non riuscito: ${reason}`,
     ready: month => `il tuo riepilogo di ${month} è pronto · /mochi riepilogo`,
   },
@@ -486,6 +490,7 @@ export const it: typeof en = {
     detailOpened: 'Pannello dei dettagli aperto.',
     shieldOn: 'Scudo attivo: Mochi chiede conferma prima che parta un comando che non si può annullare, e prima che venga scritto o committato qualcosa che sembra un segreto.',
     shieldOff: 'Scudo disattivato.',
+    shieldHow: isOn => (isOn ? 'Per disattivarlo: /mochi scudo disattiva' : 'Per attivarlo: /mochi scudo attiva'),
     alertsOn: minutes =>
       `Avvisi attivi: sentirai un suono quando finisce un lavoro di oltre ${pl(minutes, 'minuto', 'minuti')}, quando una chat ti aspetta, quando un limite si azzera e quando la CI fallisce.`,
     alertsOff: 'Avvisi disattivati.',
@@ -511,6 +516,8 @@ export const it: typeof en = {
     contextLine: (ctx, agents, tools) => `Contesto: ${ctx} · agenti in esecuzione: ${agents} · strumenti in questo turno: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `Suono: ${sound ? 'sì' : 'no'} · Scudo: ${shield ? 'sì' : 'no'} · Avvisi: ${alerts ? 'sì' : 'no'} · Dimensione: ${compact ? 'piccola' : 'grande'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `Consigli: ${tips ? 'sì' : 'no'} · Pause: ${breaks ? 'sì' : 'no'} · Reazioni dei plugin: ${plugins ? 'sì' : 'no'}`,
     peersLine: (level, peers) => `Livello ${level} · altre chat: ${peers}`,
     commands: 'Comandi: /mochi (mostra/nascondi) | dettagli | livello | indossa | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua | piccolo | grande | esporta | azzera | feedback | stato',
     langNow: (name, list) => `Lingua: ${name}. Disponibili: ${list} · /mochi lingua <codice> o automatico`,
@@ -518,6 +525,7 @@ export const it: typeof en = {
     langAuto: name => `La lingua segue Claude Code e il sistema: ${name}.`,
     langUnknown: (code, list) => `Lingua sconosciuta: ${code}. Disponibili: ${list}`,
     words: {
+      on: ['attiva', 'accendi'], off: ['disattiva', 'spegni'],
       hide: ['nascondi'], show: ['mostra'], small: ['piccolo'], big: ['grande'], sound: ['suono', 'audio'],
       status: ['stato'], details: ['dettagli', 'dettaglio'], level: ['livello'], wear: ['indossa', 'accessori'], shield: ['scudo'],
       alerts: ['avvisi', 'notifiche'], lang: ['lingua'], auto: ['automatico'], none: ['niente', 'nessuno'],

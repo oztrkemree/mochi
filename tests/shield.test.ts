@@ -3,7 +3,7 @@ import { expect, mock, test } from 'claude-code/testing'
 
 import { danger, dangers, say, setRules } from '../hooks/guard'
 import { DICTS, setLang } from '../hooks/i18n'
-import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdds, isSecretFile, parseRules, pushRisk, repoKey, secretsIn, shellSecrets, shieldLines, weigh } from '../hooks/shield'
+import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdds, isMild, isSecretFile, leavesRepo, parseRules, pushRisk, repoKey, secretsIn, shellSecrets, shieldLines, weigh } from '../hooks/shield'
 import { chat } from '../hooks/state'
 
 // The shield's rules, its judgement by branch and repository, the person's
@@ -20,6 +20,7 @@ const STRIPE = 'sk_' + 'live_51HbQ2kLm9ZtX4nB7vR1cJ6h'
 const PEM = '-----BEGIN RSA ' + 'PRIVATE KEY-----\nMIIEowIBAAKCAQEA7x9Q2kLm8ZtX4nB7vR1cJ6hW3yP0sD5gA8eKuQ3m\n'
 const HEX = 'f3a9c27e1b8d4f60' + 'a5e2c9b7d1e4f8a3'
 const LIVE = 'live-' + 'a8B3kZ9qL2mX7vR1'
+const NPM = 'npm_' + 'a8B3kZ9qL2mX7vR1c4D5e6F7g8H9i0J1k2L3'
 
 const diffOf = (path: string, lines: string[]) => [`diff --git a/${path} b/${path}`, 'new file mode 100644', '--- /dev/null', `+++ b/${path}`, `@@ -0,0 +1,${lines.length} @@`, ...lines.map(l => `+${l}`)].join('\n')
 
@@ -94,8 +95,15 @@ test('a force push is weighed by the branch it rewrites', async () => {
   expect(pushRisk('git push origin +trunk', 'x', '').risk).toBe('loud')
   expect(pushRisk('git push --force-with-lease', 'feature', '').risk).toBe('calm')
   expect(pushRisk('git push --force-with-lease origin feature', 'main', '').risk).toBe('calm')
-  // A plain --force, a detached head, a change of folder: unsure, so it asks.
-  expect(pushRisk('git push -f origin feature', 'feature', '').risk).toBe('ask')
+  // A plain force onto the person's own branch asks, naming it, with a nervous look rather than the alarm.
+  expect(pushRisk('git push -f origin feature', 'feature', '')).toEqual({ risk: 'own', branch: 'feature' })
+  expect(pushRisk('git push -fu origin feature/login', 'feature/login', '')).toEqual({ risk: 'own', branch: 'feature/login' })
+  // Flags put together are read too: -fu and -uf force as -f does.
+  expect(keys('git push -fu origin main')).toEqual(['forcePush'])
+  expect(keys('git push -uf origin main')).toEqual(['forcePush'])
+  expect(pushRisk('git push -fu origin main', 'feature', '')).toEqual({ risk: 'loud', branch: 'main' })
+  expect(keys('git push -u origin main --follow-tags')).toEqual([])
+  // A detached head, a change of folder: unsure, so it asks.
   expect(pushRisk('git push --force-with-lease', 'HEAD', '').risk).toBe('ask')
   expect(pushRisk('cd ../other && git push --force-with-lease', 'feature', '').risk).toBe('ask')
   expect(pushRisk('git -C ../other push --force-with-lease', 'feature', '').risk).toBe('ask')
@@ -105,7 +113,12 @@ test('a force push is weighed by the branch it rewrites', async () => {
   expect(loud.map(x => x.key)).toEqual(['forcePush:main'])
   expect(say(loud[0] ?? { key: '', detail: '' })).toBe('overwrites the history of main, the default branch')
   expect(weigh(dangers('git push --force-with-lease'), 'git push --force-with-lease', 'feature', '')).toEqual([])
-  expect(weigh(dangers('git push -f'), 'git push -f', 'feature', '').map(x => x.key)).toEqual(['forcePush'])
+  const own = weigh(dangers('git push -f'), 'git push -f', 'feature', '')
+  expect(own).toEqual([{ key: 'forcePush', detail: 'feature' }])
+  expect(say(own[0] ?? { key: '', detail: '' })).toBe('overwrites the remote branch’s history · feature')
+  expect(isMild(own)).toBe(true)
+  expect(isMild(loud)).toBe(false)
+  expect(isMild([...own, { key: 'rm', detail: '' }])).toBe(false)
   const both = 'git push --force-with-lease && rm -rf build'
   expect(weigh(dangers(both), both, 'feature', '').map(x => x.key)).toEqual(['rm'])
   setLang('tr')
@@ -124,6 +137,18 @@ test('what is always allowed is kept by repository and listed', async () => {
     'To forget them all: /mochi shield reset',
   ])
   expect(shieldLines({ 'C:/r': [] }, DICTS.en)).toEqual([])
+  // What is always allowed holds in the repository alone: a call that reaches outside it asks again.
+  for (const cmd of ['rm -rf node_modules', 'rm -rf ./dist build/', 'Remove-Item -Recurse -Force C:\\r\\app\\out', 'rd /s /q build', 'git push -f origin feature', 'rm -rf build 2> /dev/null']) {
+    expect([cmd, leavesRepo(cmd, '', 'C:/r/app')]).toEqual([cmd, false])
+  }
+  for (const cmd of ['rm -rf ~', 'rm -rf ~/', 'rm -rf /', 'rm -rf ../../other', 'Remove-Item -Recurse -Force C:\\Users\\me', 'Remove-Item -Recurse $env:USERPROFILE', 'rm -rf "$HOME/x"', 'rd /s /q %USERPROFILE%', 'cd .. && rm -rf app', 'git -C ../other push -f']) {
+    expect([cmd, leavesRepo(cmd, '', 'C:/r/app')]).toEqual([cmd, true])
+  }
+  expect(leavesRepo('rm -rf /home/me/app/build', '', '/home/me/app')).toBe(false)
+  expect(leavesRepo('rm -rf /home/me/other', '', '/home/me/app')).toBe(true)
+  expect(leavesRepo('', 'C:\\r\\app\\src\\.env', 'C:/r/app')).toBe(false)
+  expect(leavesRepo('', 'c:\\R\\App\\src\\.env', 'C:/r/app')).toBe(false)
+  expect(leavesRepo('', 'C:\\Users\\me\\.env', 'C:/r/app')).toBe(true)
   setLang('tr')
 })
 
@@ -163,6 +188,8 @@ test('secrets are found by their shape and their name, shown masked, and placeho
   expect(secretsIn(`api_key = "${HEX}"`, 'config.py')).toEqual([{ kind: 'generic', value: HEX, shown: 'api_key f3a9••••••a3' }])
   expect(kinds('db:\n  password: Zq8rT2mLx9Kp4vW7nB\n', 'config.yml')).toEqual(['generic'])
   expect(kinds(`"token": "${LIVE}"`, 'src/auth.json')).toEqual(['generic'])
+  // .npmrc writes an npm token after the registry, with no name before it.
+  expect(kinds(`//registry.npmjs.org/:_authToken=${NPM}\n`, '.npmrc')).toEqual(['apiKey'])
   for (const fake of [
     'api_key = "your-api-key-here-1234"',
     'const token = "<YOUR_TOKEN_HERE_123>"',
@@ -195,9 +222,13 @@ test('an edit that adds a secret is caught; one that was there already is not', 
   expect(editSecrets(write, `// old\nexport const KEY = '${AWS}'\n`)).toEqual([])
   expect(editSecrets({ tool: 'Edit', file_path: 'src/a.ts', old_string: 'x', new_string: `token: "${GITHUB}"` }, '').map(x => x.key)).toEqual(['secret:github'])
   expect(editSecrets({ tool: 'MultiEdit', file_path: 'src/a.ts', edits: [{ old_string: 'a', new_string: 'b' }, { old_string: 'c', new_string: `k = '${SLACK}'` }] }, '').map(x => x.key)).toEqual(['secret:slack'])
-  // A file of secrets is where they belong: a new one is let be, changing one asks.
-  expect(editSecrets({ tool: 'Write', file_path: '.env', content: `KEY=${AWS}` }, null)).toEqual([])
+  // A new file of secrets is searched like any: a real-looking key asks, placeholders write freely; changing one asks.
+  expect(editSecrets({ tool: 'Write', file_path: '.env', content: `KEY=${AWS}` }, null).map(x => x.key)).toEqual(['secret:aws'])
+  expect(editSecrets({ tool: 'Write', file_path: '.env', content: 'API_KEY=your-api-key-here\nAWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n' }, null)).toEqual([])
   expect(editSecrets({ tool: 'Write', file_path: '.env', content: `KEY=${AWS}` }, 'A=1\n').map(x => x.key)).toEqual(['secretEdit'])
+  // The shield's own rules: whatever writes them could turn the shield off.
+  expect(editSecrets({ tool: 'Write', file_path: 'C:\\Users\\me\\.claude\\mochi\\shield.json', content: '{"off":["rm"]}' }, null)).toEqual([{ key: 'shieldRules', detail: '' }])
+  expect(keys(`echo '{"off":["rm","secret"]}' > ~/.claude/mochi/shield.json`)).toEqual(['shieldRules'])
   expect(editSecrets({ tool: 'Edit', file_path: 'C:\\app\\.env', old_string: 'A=1', new_string: 'A=2' }, '').map(x => x.key)).toEqual(['secretEdit'])
   setLang('tr')
 })
@@ -273,21 +304,29 @@ test('the shield offers to always allow a kind here, remembers it for the reposi
   expect(said.asked.length).toBe(1)
   expect(said.ran.length).toBe(2)
   said.answer = 'Stop'
+  // Allowed in the repository, not beyond it: a delete aimed outside asks again, with no "always" to offer.
+  const away = await $.tool.call({ tool: 'PowerShell', command: 'Remove-Item -Recurse -Force $env:USERPROFILE' } as never)
+  expect(away.deny).toContain('Mochi')
+  expect(said.asked[1]?.options).toEqual(['Run', 'Stop'])
   const stopped = await $.tool.call({ tool: 'Bash', command: 'sudo ls' } as never)
   expect(stopped.deny).toContain('runs as administrator')
-  expect(said.asked.length).toBe(2)
-  const off = await $.command.run({ command: 'mochi', args: 'shield' } as never)
+  expect(said.asked.length).toBe(3)
+  // Alone, /mochi shield says how it stands and changes nothing.
+  const look = await $.command.run({ command: 'mochi', args: 'shield' } as never)
+  expect(look.text).toBe(`${DICTS.en.cmd.shieldOn}\nAlways allowed in C:/r/app: deletes files and folders for good\nTo forget them all: /mochi shield reset\nTo turn it off: /mochi shield off`)
+  const off = await $.command.run({ command: 'mochi', args: 'shield off' } as never)
   expect(off.text).toBe('Shield off.\nAlways allowed in C:/r/app: deletes files and folders for good\nTo forget them all: /mochi shield reset')
-  // Off, it asks about nothing: no command, no secret.
+  // Off, it asks about nothing: no command, no secret; asked off again, it stays off.
+  await $.command.run({ command: 'mochi', args: 'shield off' } as never)
   await $.tool.call({ tool: 'Bash', command: 'sudo ls' } as never)
   await $.tool.call({ tool: 'Write', file_path: '/r/app/src/config.ts', content: `export const KEY = '${AWS}'\n` } as never)
-  expect(said.asked.length).toBe(2)
-  expect((await $.command.run({ command: 'mochi', args: 'shield' } as never)).text).toContain('Shield on:')
+  expect(said.asked.length).toBe(3)
+  expect((await $.command.run({ command: 'mochi', args: 'shield on' } as never)).text).toContain('Shield on:')
   expect((await $.command.run({ command: 'mochi', args: 'shield reset' } as never)).text).toBe('Forgot everything that was always allowed.')
   // The question names every kind that "always allow here" would remember.
   await $.tool.call({ tool: 'Bash', command: 'sudo rm -rf build' } as never)
-  expect(said.asked.length).toBe(3)
-  expect(said.asked[2]?.question).toContain('This command deletes files and folders for good · runs as administrator:')
+  expect(said.asked.length).toBe(4)
+  expect(said.asked[3]?.question).toContain('This command deletes files and folders for good · runs as administrator:')
   await $.command.run({ command: 'mochi', args: 'lang tr' } as never)
   expect((await $.command.run({ command: 'mochi', args: 'kalkan sıfırla' } as never)).text).toBe('Hep izin verilenlerin hepsi unutuldu.')
   setLang('tr')
@@ -311,7 +350,8 @@ test('a force push asks loudly on the default branch and lets a leased one to an
   said.answer = 'Stop'
   await $.tool.call({ tool: 'Bash', command: 'git push -f' } as never)
   expect(said.asked.length).toBe(3)
-  expect(said.asked[2]?.question).toContain('overwrites the remote branch’s history')
+  // Onto the person's own branch, the question names it (and Mochi only looks nervous).
+  expect(said.asked[2]?.question).toContain('overwrites the remote branch’s history · feature')
   expect(said.ran).toEqual(['git push --force-with-lease', 'git push --force origin main'])
   setLang('tr')
 })
@@ -377,7 +417,9 @@ test('shield.json adds rules and turns built-in ones off, read again when it cha
   mtime = 2000
   await $.tool.call({ tool: 'Bash', command: 'npm publish' } as never)
   expect(said.asked[1]?.question).toContain('publishes the package to everyone')
-  expect(said.toasts.filter(x => x.includes('shield.json')).length).toBe(1)
+  // A change after the start is said, so no change to the shield goes unseen.
+  expect(said.toasts.filter(x => x.includes('shield.json')).at(-1)).toBe('Mochi: Your rules (~/.claude/mochi/shield.json): 0 added · 0 turned off')
+  expect(said.toasts.filter(x => x.includes('shield.json')).length).toBe(2)
   setRules({ mine: [], off: [] })
   chat.rulesAt = -1
   setLang('tr')

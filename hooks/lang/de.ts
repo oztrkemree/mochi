@@ -105,8 +105,10 @@ export const de: typeof en = {
     tour: [
       { line: 'hallo, ich bin Mochi', text: 'Hallo, ich bin Mochi. Ich wohne über deinem Prompt und zeige, was Claude Code gerade tut: lesen, ausführen, auf dich warten.' },
       { line: 'Ringe anklicken · Details', text: 'Die Ringe zeigen den Kontext und deine Nutzungslimits. Klick sie an oder tippe /mochi details für das ganze Bild.' },
-      { line: '/mochi tragen · der Schild', text: 'Steig im Level auf und zieh mich mit /mochi tragen an. Der Schild fragt vor Befehlen, die sich nicht rückgängig machen lassen; /mochi schild schaltet ihn aus.' },
+      { line: '/mochi tragen · der Schild', text: 'Steig im Level auf und zieh mich mit /mochi tragen an. Der Schild fragt vor Befehlen, die sich nicht rückgängig machen lassen; /mochi schild aus schaltet ihn aus.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: '/mochi details tippen', text: 'Tippe /mochi details für den Kontext, deine Nutzungslimits, die Änderungen und deinen Verlauf.' },
     rule: {
       question: rule => `„${rule}“ in die CLAUDE.md aufnehmen?`,
       add: 'Aufnehmen',
@@ -224,6 +226,7 @@ export const de: typeof en = {
     helm: 'deinstalliert das Release aus dem Cluster',
     unpublish: 'zieht das Paket für alle aus der Registry zurück',
     pruneAll: 'löscht alle ungenutzten Images, Container und Netzwerke',
+    shieldRules: 'ändert die Regeln des Schilds selbst',
   },
 
   loopAlarm: {
@@ -400,6 +403,7 @@ export const de: typeof en = {
     cardHow: 'Für dein GitHub-Profil: lege sie neben README.md in dein Profil-Repository und füge ein:',
     wrappedSaved: (title, path) => `Rückblick ${title}: ${path}`,
     snapSaved: (band, details) => `Leiste: ${band}\nDetailansicht: ${details}`,
+    noPng: 'X und Reddit nehmen PNG, kein SVG: Ist rsvg-convert oder ImageMagick installiert, speichert /mochi foto auch ein PNG.',
     failed: reason => `Speichern fehlgeschlagen: ${reason}`,
     ready: month => `dein Rückblick auf den ${month} ist fertig · /mochi rückblick`,
   },
@@ -483,6 +487,7 @@ export const de: typeof en = {
     detailOpened: 'Detailansicht geöffnet.',
     shieldOn: 'Schild an: Mochi fragt nach, bevor ein Befehl läuft, der sich nicht rückgängig machen lässt, und bevor etwas, das wie ein Geheimnis aussieht, geschrieben oder committet wird.',
     shieldOff: 'Schild aus.',
+    shieldHow: isOn => (isOn ? 'Ausschalten: /mochi schild aus' : 'Einschalten: /mochi schild an'),
     alertsOn: minutes =>
       `Hinweise an: Du hörst es, wenn Arbeit von über ${pl(minutes, 'Minute', 'Minuten')} fertig ist, wenn ein Chat auf dich wartet, wenn ein Limit zurückgesetzt wird und wenn die CI fehlschlägt.`,
     alertsOff: 'Hinweise aus.',
@@ -508,6 +513,8 @@ export const de: typeof en = {
     contextLine: (ctx, agents, tools) => `Kontext: ${ctx} · aktive Agenten: ${agents} · Tools in dieser Runde: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `Ton: ${sound ? 'an' : 'aus'} · Schild: ${shield ? 'an' : 'aus'} · Hinweise: ${alerts ? 'an' : 'aus'} · Größe: ${compact ? 'klein' : 'groß'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `Tipps: ${tips ? 'an' : 'aus'} · Pausen: ${breaks ? 'an' : 'aus'} · Plugin-Reaktionen: ${plugins ? 'an' : 'aus'}`,
     peersLine: (level, peers) => `Level ${level} · andere Chats: ${peers}`,
     commands: 'Befehle: /mochi (zeigen/verstecken) | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | status',
     langNow: (name, list) => `Sprache: ${name}. Verfügbar: ${list} · /mochi sprache <Code> oder automatisch`,
@@ -515,6 +522,7 @@ export const de: typeof en = {
     langAuto: name => `Sprache folgt Claude Code und dem System: ${name}.`,
     langUnknown: (code, list) => `Unbekannte Sprache: ${code}. Verfügbar: ${list}`,
     words: {
+      on: ['an', 'ein'], off: ['aus'],
       hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'],
       status: [], details: [], level: [], wear: ['tragen', 'anziehen'], shield: ['schild', 'schutz'],
       alerts: ['hinweise', 'benachrichtigungen', 'meldungen'], lang: ['sprache'], auto: ['automatisch'], none: ['nichts', 'keins'],

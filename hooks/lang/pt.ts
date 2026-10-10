@@ -107,8 +107,10 @@ export const pt: typeof en = {
     tour: [
       { line: 'oi, eu sou o Mochi', text: 'Oi, eu sou o Mochi. Moro acima do seu prompt e mostro o que o Claude Code está fazendo: lendo, rodando, esperando você.' },
       { line: 'clique nos anéis · detalhes', text: 'Os anéis mostram o contexto e seus limites de uso. Clique neles, ou digite /mochi detalhes, para ver tudo.' },
-      { line: '/mochi vestir · o escudo', text: 'Suba de nível e me vista com /mochi vestir. O escudo pergunta antes de um comando que não pode ser desfeito; /mochi escudo desliga.' },
+      { line: '/mochi vestir · o escudo', text: 'Suba de nível e me vista com /mochi vestir. O escudo pergunta antes de um comando que não pode ser desfeito; para desligar, /mochi escudo desligar.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: 'digite /mochi detalhes', text: 'Digite /mochi detalhes para ver o contexto, seus limites de uso, as mudanças e seu histórico.' },
     rule: {
       question: rule => `Adicionar “${rule}” ao CLAUDE.md?`,
       add: 'Adicionar',
@@ -226,6 +228,7 @@ export const pt: typeof en = {
     helm: 'desinstala a release do cluster',
     unpublish: 'tira o pacote do registro para todo mundo',
     pruneAll: 'apaga todas as imagens, contêineres e redes sem uso',
+    shieldRules: 'altera as regras do próprio escudo',
   },
 
   loopAlarm: {
@@ -401,6 +404,7 @@ export const pt: typeof en = {
     cardHow: 'Para o seu perfil do GitHub, coloque-o ao lado do README.md no repositório do seu perfil e cole:',
     wrappedSaved: (title, path) => `Retrospectiva · ${title}: ${path}`,
     snapSaved: (band, details) => `Faixa: ${band}\nPainel de detalhes: ${details}`,
+    noPng: 'O X e o Reddit aceitam PNG, não SVG: com o rsvg-convert ou o ImageMagick instalado, /mochi captura também salva um PNG.',
     failed: reason => `Não foi possível salvar: ${reason}`,
     ready: month => `sua retrospectiva de ${month} está pronta · /mochi retrospectiva`,
   },
@@ -484,6 +488,7 @@ export const pt: typeof en = {
     detailOpened: 'Painel de detalhes aberto.',
     shieldOn: 'Escudo ligado: o Mochi vai pedir confirmação antes de rodar um comando que não pode ser desfeito e antes de gravar ou fazer commit de algo que pareça um segredo.',
     shieldOff: 'Escudo desligado.',
+    shieldHow: isOn => (isOn ? 'Para desligar: /mochi escudo desligar' : 'Para ligar: /mochi escudo ligar'),
     alertsOn: minutes => `Alertas ligados: você vai ouvir um aviso quando um trabalho de mais de ${pl(minutes, 'minuto', 'minutos')} terminar, quando um chat estiver esperando você, quando um limite for reiniciado e quando a CI falhar.`,
     alertsOff: 'Alertas desligados.',
     levelLine: (level, xp, toNext) => `Nível ${level} · ${xp} XP · ${toNext} XP para o próximo nível`,
@@ -508,6 +513,8 @@ export const pt: typeof en = {
     contextLine: (ctx, agents, tools) => `Contexto: ${ctx} · agentes rodando: ${agents} · ferramentas neste turno: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `Som: ${sound ? 'ligado' : 'desligado'} · Escudo: ${shield ? 'ligado' : 'desligado'} · Alertas: ${alerts ? 'ligados' : 'desligados'} · Tamanho: ${compact ? 'pequeno' : 'grande'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `Dicas: ${tips ? 'ligadas' : 'desligadas'} · Pausas: ${breaks ? 'ligadas' : 'desligadas'} · Reações de plugins: ${plugins ? 'ligadas' : 'desligadas'}`,
     peersLine: (level, peers) => `Nível ${level} · outros chats: ${peers}`,
     commands: 'Comandos: /mochi (mostrar/esconder) | detalhes | nível | vestir | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma | pequeno | grande | exportar | redefinir | relatar | status',
     langNow: (name, list) => `Idioma: ${name}. Disponíveis: ${list} · /mochi idioma <código> ou automático`,
@@ -515,6 +522,7 @@ export const pt: typeof en = {
     langAuto: name => `O idioma segue o Claude Code e o sistema: ${name}.`,
     langUnknown: (code, list) => `Idioma desconhecido: ${code}. Disponíveis: ${list}`,
     words: {
+      on: ['ligar', 'ativar'], off: ['desligar', 'desativar'],
       hide: ['esconder', 'ocultar'], show: ['mostrar'], small: ['pequeno'], big: ['grande'], sound: ['som'],
       status: [], details: ['detalhes'], level: ['nível', 'nivel'], wear: ['vestir', 'usar'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma', 'língua', 'lingua'], auto: ['automático', 'automatico'], none: ['nenhum', 'nada'],

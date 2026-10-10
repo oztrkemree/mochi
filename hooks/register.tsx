@@ -24,13 +24,13 @@ import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName,
 import { peerLabel, peerNews, peerOf } from './live'
 import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
-import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdds, parseRules, repoKey, shellSecrets, shieldLines, weigh } from './shield'
+import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdds, isMild, leavesRepo, parseRules, repoKey, shellSecrets, shieldLines, weigh } from './shield'
 import { paramsAt } from './rig'
 import { SNAP_W, bestOutfit, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
 import type { ChatDays } from './share'
 import { clip } from './sound'
 import { ALL_ITEMS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, chat, rest0, restorePrefs } from './state'
-import { alertCommand, langCommand, removeCommand } from './system'
+import { alertCommand, langCodes, langCommand, pngCommands, removeCommand } from './system'
 import type { Platform } from './system'
 
 // Everything that acts through `$` lives in this file: the engine follows `$`
@@ -52,8 +52,8 @@ const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
 const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
 
 const TICK_MS = 450
-/** While Mochi dozes, the timer does its rounds on one beat in this many. */
-const DOZE_EVERY = 4
+/** While Mochi dozes or is hidden, the timer does its rounds on one beat in this many, about every 2 seconds. */
+const DOZE_EVERY = 5
 const SLEEPY_AFTER = 3 * 60_000
 const SLEEP_AFTER = 8 * 60_000
 const LISTEN_FOR = 4000
@@ -79,6 +79,17 @@ const TOOL_MOODS: ReadonlySet<Mood> = new Set(['reading', 'searching', 'writing'
 const plain = (s: string) => s.toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
 
 type Dollar = EngineInterface
+
+/** Whether anyone can see this session: a plain `-p` run draws nowhere, so what is said once waits for one that does. */
+async function isSeen($: Dollar): Promise<boolean> {
+  return (await $.session.surfaces().catch(() => [])).length > 0
+}
+
+/** Whether a celebration may take the face: not over a question, a warning or a compaction; another party gives way. */
+const mayCelebrate = (f: Face, now: number): boolean => f.mood === 'party' || !isKept(f, now)
+
+/** A tool call as a permission question names it: the loop, the tool and what it acts on. */
+const callKey = (agent: string | undefined, tool: string, about: string) => `${agent ?? ''}|${tool}|${about}`
 
 async function play($: Dollar, sound: SoundName | undefined) {
   if (sound === undefined || !(await read($, prefs)).hasSound) return
@@ -150,6 +161,7 @@ async function infoNow($: Dollar): Promise<Info> {
     tz: v.tz,
     peers: v.peers,
     ci: v.ci ?? null,
+    pr: v.pr ?? null,
   }
 }
 
@@ -469,9 +481,9 @@ async function addToday($: Dollar, rec: Partial<DayRec>) {
   chat.myDays = { ...chat.myDays, [key]: addDay(chat.myDays[key] ?? EMPTY_DAY, rec) }
 }
 
-/** A level or item earned since the last look is celebrated once, in whichever chat sees it first. */
+/** A level or item earned since the last look is celebrated once, in whichever chat sees it first; over a face that must stay, by a toast alone. */
 async function checkLevel($: Dollar) {
-  if (chat.dataDir === '') return
+  if (chat.dataDir === '' || !(await isSeen($))) return
   const h = (await read($, env)).history
   if (h === null) return
   const level = levelOf(xpOf(h)).level
@@ -490,7 +502,7 @@ async function checkLevel($: Dollar) {
   await $.fs.write(path, JSON.stringify({ level, items })).catch(() => undefined)
   if (saved === null) return
   const parts = [...((saved.level ?? 1) < level ? [t().st.level(level)] : []), ...(fresh.length > 0 ? [t().st.newItems(fresh.map(itemName).join(', '))] : [])]
-  await show($, { mood: 'party', line: parts.join(' · '), holdMs: 8000, sound: 'party' })
+  if (mayCelebrate(await read($, face), await $.clock.now())) await show($, { mood: 'party', line: parts.join(' · '), holdMs: 8000, sound: 'party' })
   $.ui.toast(`Mochi: ${parts.join(' · ')}${fresh.length > 0 ? t().note.seeWardrobe : ''}`, { timeoutMs: 8000 })
 }
 
@@ -529,7 +541,7 @@ async function detectLang($: Dollar): Promise<Lang> {
   const ask = langCommand(chat.platform)
   const sys = ask === null ? undefined : await $.process.run(ask, { timeoutMs: 5000 }).catch(() => undefined)
   if (sys?.exitCode === 0) {
-    for (const code of sys.stdout.match(/[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]+)*/g) ?? []) {
+    for (const code of langCodes(sys.stdout)) {
       const found = pickLang(code)
       if (found) return found
     }
@@ -630,9 +642,9 @@ async function tick($: Dollar) {
   const p = await read($, prefs)
   const f = await read($, face)
   chat.beat += 1
-  // Dozing, Mochi makes its rounds on fewer beats, its frame turning slower.
+  // Dozing or hidden, Mochi makes its rounds on fewer beats, its frame turning slower.
   const isDozing = !chat.isBusy && f.until === 0 && (f.mood === 'sleepy' || f.mood === 'sleeping')
-  if (isDozing && chat.beat % DOZE_EVERY !== 0) return
+  if ((isDozing || p.isHidden) && chat.beat % DOZE_EVERY !== 0) return
   const s = Math.floor(now / 1000)
   if (f.since > 0 && (await read($, sec)) !== s) await update($, sec, () => s)
   // Hidden, the drawing waits until shown again; the face's timing runs on, for the status line.
@@ -685,7 +697,8 @@ async function tick($: Dollar) {
   const sleepAfter = isNight ? 4 * 60_000 : SLEEP_AFTER
   const sleepyAfter = isNight ? 90_000 : SLEEPY_AFTER
   const mood: Mood | null = quiet > sleepAfter ? 'sleeping' : quiet > sleepyAfter ? 'sleepy' : null
-  if (mood !== null && (f.mood === 'idle' || f.mood === 'sleepy' || f.mood === 'sleeping')) {
+  // Put to sleep by a good night, Mochi sleeps on rather than waking to doze.
+  if (mood !== null && (f.mood === 'idle' || f.mood === 'sleepy' || f.mood === 'sleeping') && !(f.mood === 'sleeping' && mood === 'sleepy')) {
     const line = restLine(mood, quiet)
     if (f.mood !== mood || f.line !== line) await putFace($, { mood, line, until: 0, since: 0 })
   }
@@ -711,7 +724,8 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
   if (first === undefined || (await $.session.surfaces()).length === 0) return null
   const what = say(first)
   const line = `${t().st.awaitingApproval} · ${what}`
-  await show($, { mood: 'scared', line, holdMs: 0, sound: 'alarm' })
+  // A force push onto the person's own branch asks with a nervous look, no alarm.
+  await show($, isMild(v.ask) ? { mood: 'nervous', line, holdMs: 0 } : { mood: 'scared', line, holdMs: 0, sound: 'alarm' })
   if (chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
   const shown = cmd.length > 300 ? `${cmd.slice(0, 299)}…` : cmd
   const d = t().shield
@@ -747,34 +761,37 @@ const names = (value: string, key: Name, ...english: string[]) => english.includ
 /** A subcommand: its name, the English words it answers to, and what it does with the rest of the line (folded, and as typed). */
 type Command = { name: Name; english: string[]; run: (arg: string, raw: string) => Promise<string> }
 
+/** What a setting's command asks for: on or off by its word, or turned over when it names neither. */
+const wanted = (arg: string, now: boolean): boolean => (names(arg, 'on', 'on') ? true : names(arg, 'off', 'off') ? false : !now)
+
 /** The subcommands of /mochi, tried in this order. */
 function commands($: Dollar, p: Prefs): Command[] {
   return [
     { name: 'small', english: ['small', 'compact'], run: () => resize($, true) },
     { name: 'big', english: ['big', 'full'], run: () => resize($, false) },
     { name: 'details', english: ['details', 'detail'], run: () => details($) },
-    { name: 'shield', english: ['shield'], run: arg => toggleShield($, arg) },
-    { name: 'alerts', english: ['alerts', 'alert', 'notifications'], run: () => toggleAlerts($) },
-    { name: 'ci', english: ['ci'], run: () => toggleCi($) },
-    { name: 'lang', english: ['lang', 'language'], run: arg => language($, arg) },
+    { name: 'shield', english: ['shield'], run: arg => shieldNow($, arg) },
+    { name: 'alerts', english: ['alerts', 'alert', 'notifications'], run: arg => toggleAlerts($, arg) },
+    { name: 'ci', english: ['ci'], run: arg => toggleCi($, arg) },
+    { name: 'lang', english: ['lang', 'language'], run: (arg, raw) => language($, arg, raw) },
     { name: 'level', english: ['level', 'xp'], run: () => levelNow($) },
     { name: 'wear', english: ['wear', 'outfit', 'accessory', 'accessories'], run: arg => wear($, arg, p) },
-    { name: 'sound', english: ['sound'], run: () => toggleSound($) },
+    { name: 'sound', english: ['sound'], run: arg => toggleSound($, arg) },
     { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
     { name: 'chats', english: ['chats', 'board'], run: () => chatsNow($) },
     { name: 'card', english: ['card'], run: (_, raw) => card($, raw) },
     { name: 'wrapped', english: ['wrapped', 'wrap'], run: arg => wrapped($, arg) },
     { name: 'snap', english: ['snap', 'snapshot'], run: () => snap($) },
-    { name: 'tips', english: ['tips', 'tip'], run: () => toggleTips($) },
+    { name: 'tips', english: ['tips', 'tip'], run: arg => toggleTips($, arg) },
     { name: 'tour', english: ['tour', 'welcome'], run: () => replayTour() },
     { name: 'news', english: ['news', 'new'], run: () => Promise.resolve(newsLines(chat.coach.version)) },
     { name: 'export', english: ['export'], run: () => exportAll($) },
     { name: 'reset', english: ['reset'], run: arg => reset($, arg) },
     { name: 'feedback', english: ['feedback', 'bug'], run: () => feedback($) },
-    { name: 'plugins', english: ['plugins'], run: () => togglePlugins($) },
+    { name: 'plugins', english: ['plugins'], run: arg => togglePlugins($, arg) },
     { name: 'badges', english: ['badges', 'badge', 'achievements'], run: () => badgesNow($) },
-    { name: 'breaks', english: ['breaks', 'break'], run: () => toggleBreaks($) },
+    { name: 'breaks', english: ['breaks', 'break'], run: arg => toggleBreaks($, arg) },
     { name: 'birthday', english: ['birthday', 'bday'], run: arg => birthday($, arg) },
   ]
 }
@@ -789,23 +806,33 @@ async function details($: Dollar): Promise<string> {
   return t().cmd.detailOpened
 }
 
-/** Turns the shield on or off and says what is always allowed where; `reset` forgets all of that instead. */
-async function toggleShield($: Dollar, arg: string): Promise<string> {
+/**
+ * Says whether the shield is on and what is always allowed where; `on` or
+ * `off` turns it so first, and `reset` forgets what is always allowed. Alone
+ * it changes nothing, so a look never turns the shield off.
+ */
+async function shieldNow($: Dollar, arg: string): Promise<string> {
   if (arg === 'reset' || arg === plain(t().guard.reset)) {
     await $.store.set('allowed', {})
     return t().guard.forgot
   }
-  const next = await setPrefs($, v => ({ ...v, hasShield: !v.hasShield }))
+  const isOn = names(arg, 'on', 'on') ? true : names(arg, 'off', 'off') ? false : null
+  const next = isOn === null ? await read($, prefs) : await setPrefs($, v => ({ ...v, hasShield: isOn }))
   await loadRules($).catch(() => undefined)
-  return [next.hasShield ? t().cmd.shieldOn : t().cmd.shieldOff, ...shieldLines(allowedOf(await $.store.get('allowed')))].join('\n')
+  return [
+    next.hasShield ? t().cmd.shieldOn : t().cmd.shieldOff,
+    ...shieldLines(allowedOf(await $.store.get('allowed'))),
+    ...(isOn === null ? [t().cmd.shieldHow(next.hasShield)] : []),
+  ].join('\n')
 }
 
-async function toggleAlerts($: Dollar): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasAlert: !v.hasAlert }))
+async function toggleAlerts($: Dollar, arg: string): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasAlert: wanted(arg, v.hasAlert) }))
   return next.hasAlert ? t().cmd.alertsOn(LONG_TURN_S / 60) : t().cmd.alertsOff
 }
 
-async function language($: Dollar, arg: string): Promise<string> {
+/** Shows the language, or sets it: by code or name, as typed or folded (folding takes the marks off ї and splits Hangul). */
+async function language($: Dollar, arg: string, raw: string): Promise<string> {
   const d = t().cmd
   const list = LANGS.map(l => `${l} (${DICTS[l].name})`).join(', ')
   if (arg === '') return d.langNow(t().name, list)
@@ -816,8 +843,8 @@ async function language($: Dollar, arg: string): Promise<string> {
     await rest($)
     return t().cmd.langAuto(t().name)
   }
-  const chosen = pickLang(arg)
-  if (chosen === null) return d.langUnknown(arg, list)
+  const chosen = pickLang(arg) ?? pickLang(raw)
+  if (chosen === null) return d.langUnknown(raw.trim(), list)
   const next = await setPrefs($, v => ({ ...v, lang: chosen }))
   await applyLang($, next)
   await rest($)
@@ -872,8 +899,8 @@ async function wear($: Dollar, arg: string, p: Prefs): Promise<string> {
   return d.itemOn(itemName(item))
 }
 
-async function toggleSound($: Dollar): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasSound: !v.hasSound }))
+async function toggleSound($: Dollar, arg: string): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasSound: wanted(arg, v.hasSound) }))
   if (next.hasSound) await play($, 'ding')
   return next.hasSound ? t().cmd.soundOn : t().cmd.soundOff
 }
@@ -892,6 +919,7 @@ async function statusLines($: Dollar, p: Prefs): Promise<string> {
     d.statusLine(moodLabel(f.mood), f.line),
     d.contextLine(v.context >= 0 ? `${v.context}%` : t().panel.contextUnknown, v.agents, v.turnTools),
     d.prefsLine(p.hasSound, p.hasShield, p.hasAlert, p.isCompact),
+    d.moreLine(p.hasTips, p.hasBreaks, p.hasPlugins),
     d.peersLine(levelOf(xpOf(v.history)).level, v.peers.length === 0 ? d.none : v.peers.map(x => x.label).join(', ')),
     t().ci.status(p.hasCi, p.hasCi && chat.ghTrouble !== null ? t().ci[chat.ghTrouble] : ''),
     d.commands,
@@ -1065,8 +1093,8 @@ async function ciDone($: Dollar, ci: Ci) {
   void refreshPr($).catch(() => undefined)
 }
 
-async function toggleCi($: Dollar): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasCi: !v.hasCi }))
+async function toggleCi($: Dollar, arg: string): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasCi: wanted(arg, v.hasCi) }))
   chat.ciSha = ''
   if (next.hasCi) void refreshPr($).catch(() => undefined)
   else await setEnv($, v => ({ ...v, ci: null, pr: null }))
@@ -1127,17 +1155,34 @@ async function wrapped($: Dollar, arg: string): Promise<string> {
   }
 }
 
-/** The band as the desktop draws it and the details pane, as they stand now. */
+/**
+ * The band as the desktop draws it and the details pane, as they stand now,
+ * without the other chats (named after a prompt, some) or the last edit's
+ * lines of code. A PNG beside each, for sites that take no SVG, where the
+ * machine has a tool that draws one.
+ */
 async function snap($: Dollar): Promise<string> {
   const now = await $.clock.now()
-  const band = panelSvg({ panel: { shot: await read($, shot), info: await infoNow($), infoFrom: null, infoAt: now }, now, width: SNAP_W })
-  const details = detailSvg(await read($, env), now, SNAP_W)
+  const band = panelSvg({ panel: { shot: await read($, shot), info: { ...(await infoNow($)), peers: [] }, infoFrom: null, infoAt: now }, now, width: SNAP_W })
+  const details = detailSvg({ ...(await read($, env)), lastEdit: null, peers: [] }, now, SNAP_W)
   try {
     const a = await saveShare($, 'mochi-band.svg', framed(band.svg, band.width, PANEL_H))
-    return t().share.snapSaved(a, await saveShare($, 'mochi-details.svg', framed(details, SNAP_W, detailHeight(details))))
+    const b = await saveShare($, 'mochi-details.svg', framed(details, SNAP_W, detailHeight(details)))
+    const pngs = [await toPng($, a), await toPng($, b)]
+    return pngs[0] !== null && pngs[1] !== null ? t().share.snapSaved(pngs[0], pngs[1]) : `${t().share.snapSaved(a, b)}\n${t().share.noPng}`
   } catch (e) {
     return failed(e)
   }
+}
+
+/** A PNG drawn beside an SVG by the first tool the machine has (rsvg-convert, ImageMagick); its path, or null when none could. */
+async function toPng($: Dollar, svg: string): Promise<string | null> {
+  const png = svg.replace(/\.svg$/, '.png')
+  for (const argv of pngCommands(svg, png)) {
+    const ran = await $.process.run(argv, { timeoutMs: 20_000 }).catch(() => null)
+    if (ran?.exitCode === 0 && (await $.fs.exists(png).catch(() => false))) return png
+  }
+  return null
 }
 
 /** In a new month's first week, says once (in whichever chat looks first) that the month just ended can be wrapped; not while alerts are off. */
@@ -1145,7 +1190,7 @@ async function offerWrapped($: Dollar) {
   const v = await read($, env)
   if (v.history === null || !(await read($, prefs)).hasAlert) return
   const key = monthToOffer(dayKey(await $.clock.now(), v.tz), v.history.days, await $.store.get('wrapped'))
-  if (key === null) return
+  if (key === null || !(await isSeen($))) return
   await $.store.set('wrapped', key)
   $.ui.toast(`Mochi: ${t().share.ready(monthName(key))}`, { timeoutMs: 10_000 })
 }
@@ -1168,22 +1213,37 @@ function wantTip(id: TipId, now: number, arg = '') {
 /**
  * On the very first start ever (no preferences, no version seen, no day
  * recorded), the tour; on the first start of a newer version, a word on what
- * is new, once.
+ * is new, once. Weighed at the start, said by onceSeen.
  */
 async function welcome($: Dollar, hasPrefs: boolean) {
   const seen = await $.store.get('version')
   const version = await mochiVersion($)
   chat.coach.version = version
   if (seen === version) return
-  await $.store.set('version', version)
   // Someone who used an older version, preferences untouched, has days on record.
-  if (!hasPrefs && seen === undefined && (await $.fs.list(`${chat.dataDir}/days`).catch(() => [])).length === 0) {
-    chat.coach.tour = 0
-    return
+  const isFirst = !hasPrefs && seen === undefined && (await $.fs.list(`${chat.dataDir}/days`).catch(() => [])).length === 0
+  chat.coach.welcome = isFirst ? 'tour' : newsFor(version) !== null && !(typeof seen === 'string' && !isNewer(version, seen)) ? 'news' : 'seen'
+}
+
+/**
+ * What is said once, said when someone can see it: the day's greeting a start
+ * that drew nowhere held back, then the tour or what is new, the version kept
+ * as seen only then.
+ */
+async function onceSeen($: Dollar) {
+  if (!(await isSeen($))) return
+  if (chat.coach.greet) {
+    chat.coach.greet = false
+    const hello = await greetToday($, await read($, prefs))
+    if (hello !== null) return void (await show($, hello))
   }
-  const news = newsFor(version)
-  if (news === null || (typeof seen === 'string' && !isNewer(version, seen)) || !(await read($, prefs)).hasTips) return
-  $.ui.toast(t().coach.newsToast(version, news.headline), { timeoutMs: 12_000 })
+  const due = chat.coach.welcome
+  if (due === '') return
+  chat.coach.welcome = ''
+  await $.store.set('version', chat.coach.version)
+  const news = newsFor(chat.coach.version)
+  if (due === 'tour') chat.coach.tour = 0
+  else if (due === 'news' && news !== null && (await read($, prefs)).hasTips) $.ui.toast(t().coach.newsToast(chat.coach.version, news.headline), { timeoutMs: 12_000 })
 }
 
 /** A prompt: a long one opening a fresh chat may call for plan mode; a standing instruction the person typed counts for its project. */
@@ -1208,7 +1268,7 @@ async function noteAsk($: Dollar, tool: string, input: Record<string, unknown>) 
 async function noteTurn($: Dollar, reason: string, errorRun: number) {
   const now = await $.clock.now()
   const hasPick = Object.keys((await read($, prefs)).pick).length > 0
-  const ids = turnTips(await read($, env), { reason, errorRun, isLongFirst: chat.coach.isLongFirst, hasPlanned: chat.coach.hasPlanned, hasPick }, now)
+  const ids = turnTips(await read($, env), { reason, errorRun, isLongFirst: chat.coach.isLongFirst, hasPlanned: chat.coach.hasPlanned, hasPick, canClick: chat.canClick }, now)
   const asked = chat.coach.pending.permissions
   chat.coach.isLongFirst = false
   chat.coach.pending = asked ? { permissions: asked } : {}
@@ -1219,6 +1279,7 @@ async function noteTurn($: Dollar, reason: string, errorRun: number) {
 async function coach($: Dollar, now: number, f: Face) {
   if (chat.isBusy || f.until > 0 || f.mood !== 'idle' || now - chat.coach.at < COACH_EVERY_MS) return
   chat.coach.at = now
+  if (chat.coach.greet || chat.coach.welcome !== '') return await onceSeen($)
   if (chat.coach.tour >= 0) return await tourStep($)
   const p = await read($, prefs)
   if (chat.dataDir === '' || p.isHidden || !p.hasTips) return
@@ -1237,6 +1298,8 @@ async function coach($: Dollar, now: number, f: Face) {
   const { [id]: _shown, ...rest } = chat.coach.pending
   chat.coach.pending = rest
   await $.fs.write(coachFile(), JSON.stringify(shownTip(log, id, now, v.tz)))
+  // The commit tip says what the commit nudge would: it counts as one.
+  if (id === 'commit') chat.lastNudge = now
   await show($, { mood: 'pleased', line: `${t().coach.tip} · ${tip.line}`, holdMs: 10_000 })
   $.ui.toast(`Mochi: ${tip.text} (${t().coach.off})`, { timeoutMs: 12_000 })
 }
@@ -1246,7 +1309,8 @@ async function tourStep($: Dollar) {
   const at = chat.coach.tour
   const steps = t().coach.tour
   chat.coach.tour = at + 1 < steps.length ? at + 1 : -1
-  const step = steps[at]
+  // Where there are no rings to click, the step about them points to /mochi details.
+  const step = at === 1 && !chat.canClick ? t().coach.tourDetails : steps[at]
   if (step === undefined) return
   await show($, { mood: TOUR_MOODS[at] ?? 'pleased', line: step.line, holdMs: 8000 })
   $.ui.toast(step.text, { timeoutMs: 10_000 })
@@ -1289,8 +1353,8 @@ async function retireTip($: Dollar, id: TipId) {
   if ((log.shown[id] ?? 0) < MAX_SHOWN) await $.fs.write(coachFile(), JSON.stringify({ ...log, shown: { ...log.shown, [id]: MAX_SHOWN } }))
 }
 
-async function toggleTips($: Dollar): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasTips: !v.hasTips }))
+async function toggleTips($: Dollar, arg: string): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasTips: wanted(arg, v.hasTips) }))
   return next.hasTips ? t().coach.tipsOn : t().coach.tipsOff
 }
 
@@ -1314,8 +1378,8 @@ async function reactFor($: Dollar, r: Required<MochiReaction> | null, plugin: st
   return { isShown: true }
 }
 
-async function togglePlugins($: Dollar): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasPlugins: !v.hasPlugins }))
+async function togglePlugins($: Dollar, arg: string): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasPlugins: wanted(arg, v.hasPlugins) }))
   return next.hasPlugins ? t().data.pluginsOn : t().data.pluginsOff
 }
 
@@ -1423,16 +1487,22 @@ async function git($: Dollar, args: string[]): Promise<string> {
   return ran?.exitCode === 0 ? ran.stdout : ''
 }
 
-/** Reads the person's own rules (~/.claude/mochi/shield.json) at start and whenever the file changes; what cannot be used is said once. */
+/**
+ * Reads the person's own rules (~/.claude/mochi/shield.json) at start and
+ * whenever the file changes; what cannot be used is said once, and a change
+ * after the start is said too, so no change to the shield goes unseen.
+ */
 async function loadRules($: Dollar) {
   if (chat.dataDir === '') return
   const path = `${chat.dataDir}/shield.json`
   const at = (await $.fs.stat(path).catch(() => undefined))?.mtimeMs ?? 0
   if (at === chat.rulesAt) return
+  const isChange = chat.rulesAt !== -1
   chat.rulesAt = at
   const rules = parseRules(at === 0 ? '' : await $.fs.read(path).catch(() => ''))
   setRules(rules)
   if (rules.bad.length > 0) $.ui.toast(`Mochi: ${t().guard.badRules(rules.bad.join(', '))}`, { timeoutMs: 8000 })
+  else if (isChange) $.ui.toast(`Mochi: ${t().guard.rules(rules.mine.length, rules.off.length)}`, { timeoutMs: 8000 })
 }
 
 /** Where "always allow here" holds: the repository's top folder, else the session's. */
@@ -1492,6 +1562,8 @@ async function judge($: Dollar, args: Record<string, unknown> & { tool: string }
   const careful = (words: string): Reaction => ({ mood: 'nervous', line: `${words} · ${subject(args)}`, holdMs: 0 })
   if (found.length === 0) return isCalm ? { ask: [], face: careful(t().st.careful), root: '' } : null
   const root = await repoRoot($)
+  // "Always allow here" holds in the repository: a call that reaches outside it asks, and offers no "always".
+  if (leavesRepo(cmd, path, root)) return { ask: found, face: null, root: '' }
   const allowed = allowedOf(await $.store.get('allowed'))[root] ?? []
   const ask = found.filter(x => !allowed.includes(x.key))
   return { ask, face: ask.length === 0 ? careful(t().guard.allowed) : null, root }
@@ -1527,11 +1599,11 @@ function award($: Dollar, fresh: Badge[]): Promise<void> {
 /**
  * Badges earned since the last look (`fresh` from what just happened, the
  * rest proven by the history) are kept and celebrated once, in whichever chat
- * sees them first. The very first look records quietly what the history
- * already proves.
+ * sees them first, over a face that must stay by a toast alone. The very
+ * first look records quietly what the history already proves.
  */
 async function awardNow($: Dollar, fresh: Badge[]) {
-  if (chat.dataDir === '') return
+  if (chat.dataDir === '' || !(await isSeen($))) return
   const v = await read($, env)
   if (fresh.length > 0 && fresh.every(b => v.badges.includes(b))) return
   const path = `${chat.dataDir}/badges.json`
@@ -1556,7 +1628,7 @@ async function awardNow($: Dollar, fresh: Badge[]) {
   const told = saved === null ? news.filter(b => fresh.includes(b)) : news
   if (told.length === 0) return
   const line = t().fun.newBadge(told.map(badgeName).join(', '))
-  await show($, { mood: 'party', line, holdMs: 8000, sound: 'party' })
+  if (mayCelebrate(await read($, face), await $.clock.now())) await show($, { mood: 'party', line, holdMs: 8000, sound: 'party' })
   $.ui.toast(`Mochi: ${line}${t().fun.seeBadges}`, { timeoutMs: 8000 })
 }
 
@@ -1611,8 +1683,8 @@ async function badgesNow($: Dollar): Promise<string> {
   ].join('\n')
 }
 
-async function toggleBreaks($: Dollar): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasBreaks: !v.hasBreaks }))
+async function toggleBreaks($: Dollar, arg: string): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasBreaks: wanted(arg, v.hasBreaks) }))
   return next.hasBreaks ? t().fun.breaksOn : t().fun.breaksOff
 }
 
@@ -1664,7 +1736,9 @@ export const register: Register = on => {
     chat.lastNudge = await $.clock.now()
     void refreshGit($).catch(() => undefined)
     void resumeCi($).catch(() => undefined)
-    await show($, (await greetToday($, p)) ?? { mood: 'wave', line: t().st.ready, holdMs: 3000 })
+    // A start that draws nowhere yet keeps the day's greeting for when someone can see it.
+    chat.coach.greet = !(await isSeen($))
+    await show($, (chat.coach.greet ? null : await greetToday($, p)) ?? { mood: 'wave', line: t().st.ready, holdMs: 3000 })
     void welcome($, saved !== undefined).catch(() => undefined)
     if (p.isHidden) await refreshStatus($)
     $.clock.every(TICK_MS, () => void tick($).catch(() => undefined))
@@ -1691,7 +1765,10 @@ export const register: Register = on => {
     const wasAsleep = await wake($)
     const now = await $.clock.now()
     chat.stream = null
-    await show($, promptEgg(text) ?? onPrompt(text, wasAsleep), now)
+    const egg = promptEgg(text)
+    // A good night (the egg's stretch) puts Mochi to sleep once the reply is done.
+    chat.isGoodNight = egg?.mood === 'stretch'
+    await show($, egg ?? onPrompt(text, wasAsleep), now)
 
     return next(e)
   }).catch(($, e, next) => next(e))
@@ -1774,6 +1851,14 @@ export const register: Register = on => {
       if (isAgent) await setEnv($, v => ({ ...v, agents: Math.max(0, v.agents - 1) }))
     }
 
+    // A permission this call asked for was answered once the call is over: the face it covered comes back, its own again.
+    const perm = chat.perm
+    if (perm !== null && perm.token === chat.faceToken && perm.key === callKey(e.agentId, e.tool, subject(args))) {
+      chat.perm = null
+      chat.faceToken = perm.was
+      await putFace($, isSub && perm.face.mood === 'agent' ? { ...perm.face, line: `${t().st.agent} · ${beforeTool(args).line}` } : perm.face)
+    }
+
     // The loop watch, over the subagents' calls too (each its own).
     const isError = ran.isError === true
     const isDenied = ran.deny !== undefined
@@ -1826,8 +1911,12 @@ export const register: Register = on => {
 
   on('classic.PermissionRequest', async ($, e, next) => {
     const input = typeof e.tool_input === 'object' && e.tool_input !== null ? (e.tool_input as Record<string, unknown>) : {}
-    const line = `${t().st.awaitingApproval} · ${subject({ ...input, tool: e.tool_name })}`
-    await show($, { mood: 'asking', line, holdMs: 0 })
+    const about = subject({ ...input, tool: e.tool_name })
+    const line = `${t().st.awaitingApproval} · ${about}`
+    // Mochi cannot see the answer: the call's end tells it (tool.call), and the face it covers comes back then.
+    const { frameAt: _at, ...covered } = await read($, face)
+    const was = chat.faceToken
+    chat.perm = { token: await show($, { mood: 'asking', line, holdMs: 0 }), was, face: covered, key: callKey(e.agent_id, e.tool_name, about) }
     void noteAsk($, e.tool_name, input).catch(() => undefined)
     if (chat.isBusy && (await $.clock.now()) - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
 
@@ -1864,10 +1953,13 @@ export const register: Register = on => {
       await show($, { mood: level >= 3 ? 'scared' : 'nervous', line: contextWarning(after, level), holdMs: 12_000, sound: 'alarm' })
     } else if (chat.pendingLimit !== '') {
       await show($, { mood: 'nervous', line: chat.pendingLimit, holdMs: 10_000, sound: 'alarm' })
+    } else if (chat.isGoodNight && !['aborted', 'error', 'refusal'].includes(e.reason)) {
+      await show($, { mood: 'sleeping', line: t().fun.goodNight, holdMs: 0 })
     } else {
       await show($, ended)
     }
     chat.pendingLimit = ''
+    chat.isGoodNight = false
     if (rec.seconds >= LONG_TURN_S && e.reason !== 'aborted') await notify($, ended.line)
 
     // The day's tally, for the history and the level.

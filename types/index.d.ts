@@ -274,6 +274,8 @@ export type Info = {
   tz?: number
   peers?: Peer[]
   ci?: Ci | null
+  /** The branch's open pull request, shown in the band while no run goes. */
+  pr?: Pr | null
 }
 
 /** The desktop band: one drawing of the mascot and the panel, redrawn together. */

@@ -84,7 +84,7 @@ It uses a fixed moment, so the same code always gives the same file.
 
 1. Copy `hooks/lang/en.ts` to `hooks/lang/<code>.ts` and translate every value, keeping the keys and the functions' parameters (the type `typeof en` checks you missed none).
 2. Add it to `DICTS` and `Lang` in `hooks/i18n.ts`, and its names to `NAMES` there.
-3. Teach Mochi what people say in it: good night, love and hello in `hooks/fun.ts`; thanks and “it does not work” in `hooks/react.ts`.
+3. Teach Mochi what people say in it: good night, love and hello in `hooks/fun.ts`; thanks and “it does not work” in `hooks/react.ts`. The standing instructions people give (always, never, use…), their “this” and “here” and their “please”, in `hooks/coach.ts`.
 4. Run the tests: one of them checks that every language has every key.
 
 Keep lines short, especially in Chinese, Japanese and Korean, where each character takes two columns.

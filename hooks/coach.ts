@@ -100,7 +100,7 @@ export function permKey(tool: string, input: Record<string, unknown>): string {
 }
 
 /** How the end of a turn went, beyond what Env holds. */
-export type TurnNote = { reason: string; errorRun: number; isLongFirst: boolean; hasPlanned: boolean; hasPick: boolean }
+export type TurnNote = { reason: string; errorRun: number; isLongFirst: boolean; hasPlanned: boolean; hasPick: boolean; canClick: boolean }
 
 /** The tips the end of a turn calls for. */
 export function turnTips(v: Env, turn: TurnNote, now: number): TipId[] {
@@ -113,7 +113,8 @@ export function turnTips(v: Env, turn: TurnNote, now: number): TipId[] {
       case 'mcp': return top !== undefined && top.name.toLowerCase() === 'mcp tools' && v.window > 0 && top.tokens / v.window >= 0.05
       case 'plan': return turn.isLongFirst && !turn.hasPlanned
       case 'commit': return git !== null && git.changed >= 10 && (git.lastCommit === 0 || now - git.lastCommit > HOUR)
-      case 'rings': return (v.history?.total.turns ?? 0) >= 20
+      // Only where the rings can be clicked: elsewhere the tour already pointed to /mochi details.
+      case 'rings': return turn.canClick && (v.history?.total.turns ?? 0) >= 20
       case 'wear': return levelOf(xpOf(v.history)).level >= 2 && !turn.hasPick
       default: return false
     }
@@ -122,7 +123,7 @@ export function turnTips(v: Env, turn: TurnNote, now: number): TipId[] {
 
 /** The tips still waiting, less those about how things stood that no longer do: a /compact or a commit since answers them. */
 export function stillPending(pending: Pending, v: Env, now: number): Pending {
-  const holds = turnTips(v, { reason: '', errorRun: 0, isLongFirst: false, hasPlanned: true, hasPick: true }, now)
+  const holds = turnTips(v, { reason: '', errorRun: 0, isLongFirst: false, hasPlanned: true, hasPick: true, canClick: true }, now)
   return Object.fromEntries(Object.entries(pending).filter(([id]) => !['compact', 'mcp', 'commit'].includes(id) || holds.includes(id as TipId)))
 }
 
@@ -143,7 +144,8 @@ export const ASK_AT = 3
 const RULES: RegExp[] = [
   /^((always|never|use|prefer|avoid|don't|do not|dont) (?!(know|understand|get|think|see|care|worry|work|mind)( |$))|no (?!(worries|thanks)( |$))\S{2,}s( |$))/,
   /^(siempre|nunca|usa|utiliza|evita|prefiere|no (?!es )\S+[ae]s) /,
-  /^(immer|nie|niemals|verwende|benutze|nutze|vermeide|bevorzuge|kein|keine) (?!(noch|ahnung|problem)( |$))/,
+  // "nie" wants the infinitive at the end, as German puts it: Polish "nie działa" is a complaint.
+  /^((immer|verwende|benutze|nutze|vermeide|bevorzuge|kein|keine) (?!(noch|ahnung|problem)( |$))|(nie|niemals) .*\S+en$)/,
   /^(toujours (?!(pas|rien|pareil|le même|la même|les mêmes)( |$))|jamais|utilise|utilisez|évite|évitez|privilégie|pas de (?!souci|problème)|(ne |n')(?!est|marche|fonctionne|sais|peux|comprends|vois|va )\S+ (pas|jamais)( |$))/,
   /^(sempre|nunca|use|usa|utilize|evite|prefira|não (?!pode|funciona|consegue|entende)\S+[ea]) /,
   /^(всегда|никогда|используй|используйте|избегай|не \S+(й|йте|и|ите|ь|ьте)) /,
@@ -152,18 +154,25 @@ const RULES: RegExp[] = [
   /^(总是|始终|一律|永远|务必|不要|请勿|勿|使用|用(?!户)|别(?!人))/,
   /^(常に|必ず|絶対)|(使って|使用して|ないで)$/,
   /^(항상|절대|언제나) |(사용해|사용하세요|지 ?마|지 ?마세요|지 ?말아|지 ?말 ?것)(요|줘|라)?$/,
+  // Italian (sempre, usa and evita are the Spanish and Portuguese patterns'): "non" with an infinitive asks, "non funziona" does not.
+  /^(utilizza|preferisci|mai|non \S+re) /,
+  /^(zawsze|nigdy|używaj|stosuj|unikaj|preferuj|nie \S+(j|jcie|sz|rz)) /,
+  /^(завжди|ніколи|використовуй|використовуйте|уникай|уникайте|не \S+(й|йте|и|іть|ь|ьте)) /,
+  /^(हमेशा|कभी (भी|नहीं|मत)) |(^| )मत \S+$|(इस्तेमाल|उपयोग|प्रयोग) (करो|करें|कीजिए|करना)$/,
+  /^(selalu (?!(gagal|error|salah)( |$))|jangan (?!(khawatir|kuatir)( |$))|(gunakan|pakai|hindari|utamakan) )/,
+  /^(دائما|دائمًا|أبدا|أبدًا|استخدم|استعمل|تجنب|تجنّب|لا ت\S+) |(دائما|دائمًا)$/,
 ]
 
 /** Words that point at this chat (this, here, again), not at how the project works. */
-const HERE = / (this|that|it|these|those|here|there|again|now|bunu|şunu|onu|bunları|bu|şu|burada|şimdi|yine|tekrar|esto|eso|esta|este|aquí|ahora|dies|diese|hier|jetzt|wieder|ça|cela|ceci|ici|maintenant|encore|isso|isto|esse|essa|aqui|agora|это|этот|эту|эти|тут|здесь|сейчас|снова|опять|이거|그거|이것|그것|여기|지금|다시) /
+const HERE = / (this|that|it|these|those|here|there|again|now|bunu|şunu|onu|bunları|bu|şu|burada|şimdi|yine|tekrar|esto|eso|esta|este|aquí|ahora|dies|diese|hier|jetzt|wieder|ça|cela|ceci|ici|maintenant|encore|isso|isto|esse|essa|aqui|agora|это|этот|эту|эти|тут|здесь|сейчас|снова|опять|이거|그거|이것|그것|여기|지금|다시|questo|questa|questi|quello|qui|qua|ora|adesso|ancora|tutaj|teraz|znowu|ponownie|tego|tę|це|цей|цю|ці|зараз|знову|यह|ये|इसे|इसको|यहाँ|यहां|अभी|फिर|दोबारा|वह|वो|ini|itu|sini|sekarang|lagi|هذا|هذه|هنا|الآن|ذلك|مجددا|مجددًا) /
 const HERE_CJK = /这|那|これ|それ|ここ|今(?!後)|また/
 /** Han and kana: words without spaces between them. */
 const UNSPACED = /[぀-ヿ㐀-鿿]/
-const PLEASE = /^((please|pls|lütfen|por favor|bitte|s'il (te|vous) pla[iî]t|пожалуйста) |请)|,? (please|lütfen|por favor|bitte|s'il (te|vous) pla[iî]t|пожалуйста)$|(ください|下さい)$/g
+const PLEASE = /^((please|pls|lütfen|por favor|bitte|s'il (te|vous) pla[iî]t|пожалуйста|per favore|proszę|будь ласка|कृपया|tolong|mohon|من فضلك|لو سمحت) |请)|,? (please|lütfen|por favor|bitte|s'il (te|vous) pla[iî]t|пожалуйста|per favore|proszę|будь ласка|कृपया|من فضلك|لو سمحت)$|(ください|下さい)$/g
 
 /** A sentence in the form an instruction is kept and compared: lower case, plain quotes, no "please", no end mark. */
 export function normalRule(s: string): string {
-  const trim = (x: string) => x.replace(/^[\s\-*•>"“”«»(]+|[\s"“”«».!;:,)。！…、]+$/g, '')
+  const trim = (x: string) => x.replace(/^[\s\-*•>"“”«»(]+|[\s"“”«».!;:,)。！…、،।]+$/g, '')
   return trim(trim(s.toLowerCase().replace(/̇/g, '').replace(/[’‘`´]/g, "'").replace(/\s+/g, ' ')).replace(PLEASE, ''))
 }
 
@@ -171,8 +180,8 @@ export function normalRule(s: string): string {
 export function rulesOf(text: string): string[] {
   if (text.length > 2000) return []
   const found = new Set<string>()
-  for (const part of text.split(/\n+|(?<=[.!?])\s+|(?<=[。！？；;])/)) {
-    if (/[?？]/.test(part)) continue
+  for (const part of text.split(/\n+|(?<=[.!?।])\s+|(?<=[。！？；;؟])/)) {
+    if (/[?？؟]/.test(part)) continue
     const s = normalRule(part)
     const words = s.split(' ').length
     const isShort = UNSPACED.test(s) ? s.length >= 4 && s.length <= 30 : words >= 2 && words <= 8 && s.length <= 60

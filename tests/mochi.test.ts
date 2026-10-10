@@ -8,8 +8,8 @@ import { NEW_WATCH, danger, watchCall } from '../hooks/guard'
 import { itemOf, levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
 import { peerLabel, peerNews, peersLine } from '../hooks/live'
 import { DICTS, LANGS, pickLang, setLang } from '../hooks/i18n'
-import { restorePrefs } from '../hooks/state'
-import { alertCommand, langCommand, removeCommand } from '../hooks/system'
+import { NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
+import { alertCommand, langCodes, langCommand, removeCommand } from '../hooks/system'
 import { clip, cols } from '../hooks/text'
 
 // Most of these read the Turkish lines; one test below speaks English.
@@ -333,9 +333,13 @@ test('a stopped dangerous command never runs; an approved one does', async ($, o
   answer = 'Durdur'
   expect((await $.tool.call({ tool: 'PowerShell', command: 'git reset --hard HEAD~3' })).deny).toContain('Mochi')
   expect(asked.length).toBe(3)
+  // Alone, /mochi kalkan only says how the shield stands; with its word for off, it turns off.
   await $.command.run({ command: 'mochi', args: 'kalkan' } as never)
   await $.tool.call({ tool: 'Bash', command: 'rm -rf build' })
-  expect(asked.length).toBe(3)
+  expect(asked.length).toBe(4)
+  await $.command.run({ command: 'mochi', args: 'kalkan kapat' } as never)
+  await $.tool.call({ tool: 'Bash', command: 'rm -rf build' })
+  expect(asked.length).toBe(4)
   expect(ran.length).toBe(3)
 })
 
@@ -539,6 +543,16 @@ test('the level folds open and shut, and stays as left', async ($, on) => {
   await pane.unmount()
 })
 
+test('in Arabic the drawings order their lines right to left; code stays as written', async () => {
+  const shot = { mood: 'idle' as const, scene: { context: -1, agents: 0 }, at: 1, from: null }
+  const draw = () => [panelSvg({ panel: { shot, info: { ...NO_INFO, detail: 'يحرر · app.ts' }, infoFrom: null, infoAt: 1 }, now: 2, width: 900 }).svg, detailSvg(NO_ENV, 2, 560)]
+  setLang('ar')
+  for (const svg of draw()) expect(svg).toContain('<style>text.t{direction:rtl;unicode-bidi:embed;text-anchor:end}text.t[text-anchor="end"]{text-anchor:start}')
+  setLang('en')
+  for (const svg of draw()) expect(svg).not.toContain('direction:rtl')
+  setLang('tr')
+})
+
 test('every language has every word, and the language is picked from names and codes', async () => {
   const shape = (v: unknown): unknown =>
     typeof v === 'function' ? 'fn' : Array.isArray(v) ? v.length : v !== null && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, shape(x)])) : typeof v
@@ -584,6 +598,11 @@ test('a new install speaks the system’s language; /mochi lang changes it and E
   expect(back.text).toBe('Dil: Türkçe.')
   const word = await $.command.run({ command: 'mochi', args: 'aksesuar yok' } as never)
   expect(word.text).toBe('Bütün aksesuarlar çıkarıldı.')
+  // A language by the name the list offers, whose letters folding would change (ї, й, Hangul); an unknown one echoed as typed.
+  for (const [name, code] of [['Українська', 'uk'], ['Русский', 'ru'], ['한국어', 'ko'], ['Türkçe', 'tr']] as const) {
+    expect((await $.command.run({ command: 'mochi', args: `lang ${name}` } as never)).text).toBe(DICTS[code].cmd.langSet(name))
+  }
+  expect((await $.command.run({ command: 'mochi', args: 'lang Klingon' } as never)).text?.startsWith('Bilinmeyen dil: Klingon.')).toBe(true)
   setLang('tr')
   await ui.unmount()
 })
@@ -597,7 +616,9 @@ test('on Windows: the home is USERPROFILE, the language the display one, and old
   const ran: { argv: readonly string[]; cwd?: string }[] = []
   on('process.run', ($, e) => {
     ran.push({ argv: e.argv, cwd: slashed(e.init?.cwd) })
-    return { value: e.argv[0] === 'powershell' ? { exitCode: 0, stdout: 'ko-KR\r\n', stderr: '' } : { exitCode: 0, stdout: '', stderr: '' } } as never
+    // reg names the key before its values: none of its words is taken for a language.
+    const reg = '\r\nHKEY_CURRENT_USER\\Control Panel\\Desktop\\MuiCached\r\n    MachinePreferredUILanguages    REG_MULTI_SZ    ko-KR\\0en-US\r\n\r\nEnd of search: 1 match(es) found.\r\n'
+    return { value: e.argv[0] === 'reg' ? { exitCode: 0, stdout: reg, stderr: '' } : { exitCode: 0, stdout: '', stderr: '' } } as never
   })
   const listed: string[] = []
   on('fs.list', ($, e) => {
@@ -613,11 +634,17 @@ test('on Windows: the home is USERPROFILE, the language the display one, and old
   setLang('tr')
 })
 
-test('dozing, the timer turns the frame on every fourth beat; work wakes it at once', async ($, on) => {
+test('dozing or hidden, the timer makes its rounds on every fifth beat; work wakes it at once', async ($, on) => {
   const clock = engine(on)
   let frames = 0
+  let reads = 0
   on('state.set', ($, e, next) => {
     if (e.key === 'frame') frames += 1
+    return next(e)
+  })
+  // Each round of the timer reads the figures; a skipped beat reads none.
+  on('state.get', ($, e, next) => {
+    if (e.key === 'env') reads += 1
     return next(e)
   })
   on('tool.call', () => ({ result: 'ok', text: 'ok' }) as never)
@@ -627,13 +654,21 @@ test('dozing, the timer turns the frame on every fourth beat; work wakes it at o
   await clock.advance(4 * 60_000)
   expect(await ui.find({ text: /^boşta · \ddk$/ })).toBeDefined()
   frames = 0
-  for (let i = 0; i < 8; i++) await clock.advance(450)
+  for (let i = 0; i < 10; i++) await clock.advance(450)
   expect(frames).toBe(2)
   await $.tool.call({ tool: 'Read', file_path: 'C:\\r\\app.ts' } as never)
   expect(await ui.find({ text: 'okuyor · app.ts' })).toBeDefined()
   frames = 0
   for (let i = 0; i < 4; i++) await clock.advance(450)
   expect(frames).toBe(4)
+  // Hidden, awake or not, the timer does its rounds as seldom as when dozing.
+  reads = 0
+  for (let i = 0; i < 10; i++) await clock.advance(450)
+  const shown = reads
+  await $.command.run({ command: 'mochi', args: 'gizle' } as never)
+  reads = 0
+  for (let i = 0; i < 10; i++) await clock.advance(450)
+  expect(reads * 4 <= shown).toBe(true)
   await ui.unmount()
 })
 
@@ -650,8 +685,12 @@ test('each system is asked its own way, and no word is spliced into a script', a
   expect(removeCommand('mac', ['a-1.json'])).toEqual(['rm', '-f', '--', 'a-1.json'])
   expect(removeCommand('linux', ['x y.json'])).toBe(null)
   expect(langCommand('mac')?.[0]).toBe('defaults')
-  expect(langCommand('windows')).toContain('(Get-UICulture).Name')
+  expect(langCommand('windows')?.[0]).toBe('reg')
   expect(langCommand('linux')).toBe(null)
+  // The person's own display language before the machine's, and none of reg's other words.
+  expect(langCodes('HKEY_CURRENT_USER\\Control Panel\\Desktop\r\n    PreferredUILanguages    REG_MULTI_SZ    tr-TR\r\n\r\nHKEY_CURRENT_USER\\Control Panel\\Desktop\\MuiCached\r\n    MachinePreferredUILanguages    REG_MULTI_SZ    en-US\r\n'))
+    .toEqual(['tr-TR', 'en-US'])
+  expect(langCodes('(\n    "de-DE",\n    "en-US"\n)')).toEqual(['de-DE', 'en-US'])
 })
 
 test('wide characters clip by the room they take, and marks on a letter take none', async () => {

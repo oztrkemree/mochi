@@ -50,8 +50,25 @@ export function removeCommand(platform: Platform, names: readonly string[]): str
   return platform === 'windows' ? ['cmd', '/d', '/c', 'del', '/f', '/q', ...plain] : ['rm', '-f', '--', ...plain]
 }
 
-/** The command that prints the system's languages: macOS's preferred list, Windows's display language. Linux has `LANG` alone. */
+/**
+ * The command that prints the system's languages: macOS's preferred list;
+ * on Windows the display languages from the registry, the person's own choice
+ * before the machine's (reg answers at once, where PowerShell takes seconds to
+ * start). Linux has `LANG` alone.
+ */
 export function langCommand(platform: Platform): string[] | null {
   if (platform === 'mac') return ['defaults', 'read', '-g', 'AppleLanguages']
-  return platform === 'windows' ? ['powershell', '-NoProfile', '-NonInteractive', '-Command', '(Get-UICulture).Name'] : null
+  return platform === 'windows' ? ['reg', 'query', 'HKCU\\Control Panel\\Desktop', '/s', '/f', 'PreferredUILanguages'] : null
 }
+
+/** The language codes a langCommand printed, in order: reg's values alone, not its keys' names. */
+export function langCodes(out: string): string[] {
+  const values = [...out.matchAll(/REG_\w*SZ[ \t]+(.*)/g)].map(m => m[1] ?? '')
+  return (values.length > 0 ? values.join('\n') : out).match(/[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]+)*/g) ?? []
+}
+
+/** Commands that draw a PNG of an SVG at twice its size, the first the machine has wins: rsvg-convert, then ImageMagick. */
+export const pngCommands = (svg: string, png: string): string[][] => [
+  ['rsvg-convert', '--zoom=2', '-o', png, svg],
+  ['magick', '-density', '192', '-background', 'none', svg, png],
+]

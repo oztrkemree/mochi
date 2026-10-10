@@ -175,7 +175,7 @@ test('a question left five minutes gets one more notification; /mochi chats list
   on('tool.call', { tool: 'AskUserQuestion' }, () => new Promise(() => {}) as never)
   await clock.set(NOW)
   await $.session.start(START)
-  void $.tool.call({ tool: 'AskUserQuestion', questions: [{ question: 'Which one?', header: 'Pick', options: [], multiSelect: false }] } as never)
+  void $.tool.call({ tool: 'AskUserQuestion', questions: [{ question: 'Which one?', header: 'Pick', options: [], multiSelect: false }] } as never).catch(() => undefined)
   await clock.advance(450)
   expect((await $.command.run({ command: 'mochi', args: 'chats' } as never)).text).toBe('Chats: 1 open\n  ● web-app (this chat) · waiting for you · waiting for your answer')
   await clock.advance(4 * MIN)
@@ -184,4 +184,58 @@ test('a question left five minutes gets one more notification; /mochi chats list
   expect(alerts).toEqual(['web-app has been waiting 5m'])
   await clock.advance(MIN)
   expect(alerts.length).toBe(1)
+})
+
+/** A Bash call that runs until `finish()`. */
+function pendingBash(on: On) {
+  const call = { finish: () => {} }
+  on('tool.call', { tool: 'Bash' }, () => new Promise(resolve => {
+    call.finish = () => resolve({ result: { stdout: '', stderr: '', interrupted: false }, text: '' })
+  }) as never)
+  return call
+}
+
+test('an approved permission leaves the face once its call is over: no wait is told', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, alerts } = machine(on)
+  on('classic.PermissionRequest', () => ({}) as never)
+  const bash = pendingBash(on)
+  await clock.set(NOW)
+  await $.session.start(START)
+  const call = $.tool.call({ tool: 'Bash', command: 'npm test' })
+  await clock.advance(450)
+  await $.classic.PermissionRequest({ tool_name: 'Bash', tool_input: { command: 'npm test' } } as never)
+  expect((await $.command.run({ command: 'mochi', args: 'chats' } as never)).text).toContain('waiting for you · awaiting approval · npm test')
+  bash.finish()
+  await call
+  await clock.advance(450)
+  expect((await $.command.run({ command: 'mochi', args: 'chats' } as never)).text).not.toContain('waiting for you')
+  await clock.advance(6 * MIN)
+  expect(alerts).toEqual([])
+})
+
+test('a subagent’s approved permission gives the face back to the agent; its work goes on, no wait is told', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, alerts } = machine(on)
+  on('classic.PermissionRequest', () => ({}) as never)
+  on('turn.start', () => ({ turnId: 't' }) as never)
+  on('tool.call', { tool: 'Agent' }, () => new Promise(() => {}) as never)
+  on('tool.call', { tool: 'Read' }, () => ({ result: 'ok', text: 'ok' }) as never)
+  const bash = pendingBash(on)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await $.turn.start({ text: 'go', turnId: 't' } as never)
+  void $.tool.call({ tool: 'Agent', description: 'write tests', prompt: 'x', subagent_type: 'general-purpose' } as never).catch(() => undefined)
+  await clock.advance(450)
+  const call = $.tool.call({ tool: 'Bash', command: 'npm test', agentId: 'sub-1' } as never)
+  await clock.advance(450)
+  await $.classic.PermissionRequest({ tool_name: 'Bash', tool_input: { command: 'npm test' }, agent_id: 'sub-1' } as never)
+  bash.finish()
+  await call
+  for (let i = 0; i < 6; i++) {
+    await $.tool.call({ tool: 'Read', file_path: '/w/a.ts', agentId: 'sub-1' } as never)
+    await clock.advance(MIN)
+  }
+  const board = (await $.command.run({ command: 'mochi', args: 'chats' } as never)).text
+  expect(board).toContain('working · agent · reading · a.ts')
+  expect(board).not.toContain('waiting for you')
+  expect(alerts).toEqual([])
 })

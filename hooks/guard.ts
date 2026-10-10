@@ -5,6 +5,9 @@ import { t } from './i18n'
 // would destroy before it runs, and the loop watch, which notices the model
 // trying the same thing again and again without getting anywhere.
 
+/** The person's own rules: a command or an edit that writes them could turn the shield off unseen. */
+export const RULES_FILE = /\.claude[\\/]+mochi[\\/]+shield\.json/i
+
 /** Commands that cannot be undone, each with what it would do, in plain words. */
 const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [/:\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}/, 'forkBomb'],
@@ -15,7 +18,7 @@ const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [/(^|[\s;&|("'])(?<!\b(?:s3|gsutil(?:\s+-m)?|storage)\s+)(remove-item|ri|rm|rmdir|rd|del|erase)\b[^|;&\n]*\s(-r(e(c(u(r(se?)?)?)?)?)?|\/s)(?=[\s:]|$)/i, 'rm'],
   [/\bfind\b[^|;&]*\s-delete\b/, 'findDelete'],
   [/\s-r(e(c(u(r(se?)?)?)?)?)?\b[^;&\n]*\|\s*(remove-item|ri|rm|del|erase)\b/i, 'findDelete'],
-  [/\bgit\s+push\b[^|;&]*(\s--force\b|\s-f\b|\s--force-with-lease\b|\s\+\S)/, 'forcePush'],
+  [/\bgit\s+push\b[^|;&]*(\s--force\b|\s-[a-zA-Z]*f[a-zA-Z]*\b|\s--force-with-lease\b|\s\+\S)/, 'forcePush'],
   [/\bgit\s+push\b[^|;&\n]*\s--mirror\b/, 'pushMirror'],
   [/\bgit\s+push\b[^|;&\n]*(\s--delete\b|\s-d\b|\s\+?:[^\s:]+)/, 'pushDelete'],
   [/\bgit\s+filter-(branch|repo)\b/, 'rewrite'],
@@ -46,6 +49,7 @@ const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [/\b(npm|pnpm|yarn)\s+unpublish\b/, 'unpublish'],
   [/\b(curl|wget|iwr|irm|invoke-webrequest|invoke-restmethod)\b[^;&\n]*\|\s*(sudo\s+)?((ba|z|da|k|fi)?sh|iex|invoke-expression)\b|\b(ba|z)?sh\s+(-c\s+)?["']?(\$\(|<\()\s*(curl|wget)\b|\b(iex|invoke-expression)\b[^;&\n]*\b(iwr|irm|invoke-webrequest|invoke-restmethod|downloadstring)\b/i, 'pipeShell'],
   [/(^|[\s;&|(])sudo\s/, 'sudo'],
+  [RULES_FILE, 'shieldRules'],
 ]
 
 /** The tools that run a shell command: Bash, and PowerShell on Windows. */

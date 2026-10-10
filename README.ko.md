@@ -91,7 +91,7 @@
 <td valign="top">
 
 **🚦 푸시 후 CI**<br>
-Mochi가 내 `gh`로 GitHub Actions 실행을 따라가요. 밴드에는 `CI 실행 중 · 2/5`, 통과하면 축하 파티, 실패하면 실패한 워크플로 이름이 떠요. 상세 패널에서는 내 브랜치의 PR과 리뷰 상태, 검사 결과를 볼 수 있어요.
+Mochi가 내 `gh`로 GitHub Actions 실행을 따라가요. 밴드에는 `CI 실행 중 · 2/5`, 통과하면 축하 파티, 실패하면 실패한 워크플로 이름이 떠요. 실행이 없을 때는 밴드에 내 브랜치의 PR과 리뷰 상태, 검사 결과가 떠요. 상세 패널에서는 전부 볼 수 있어요.
 
 </td>
 <td valign="top">
@@ -121,9 +121,9 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
 
 보호막은 Claude가 Bash나 PowerShell로 실행하는 모든 명령과 모든 파일 수정을 읽어요. 되돌릴 수 없는 일 앞에서는 멈추고 물어봐요: 파일과 폴더 영구 삭제(`rm -rf`, `Remove-Item -Recurse`, `del /s`), 드라이브 통째로 지우기, 브랜치 기록 덮어쓰기, 커밋하지 않은 변경 사항 버리기, 데이터베이스 삭제, 인프라나 클라우드 버킷 철거, `npm unpublish`, `docker system prune -a`, 인터넷에서 받아 바로 실행하는 스크립트, `sudo`.
 
-- **강제 푸시는 브랜치를 보고 판단해요.** `main`, `master`, `trunk`, `develop`에 강제 푸시하면 브랜치 이름을 짚어 물어봐요. 내 브랜치에 `--force-with-lease`로 푸시할 땐 살짝 긴장한 표정만 지어요.
+- **강제 푸시는 브랜치를 보고 판단해요.** `main`, `master`, `trunk`, `develop`에 강제 푸시하면 브랜치 이름을 짚어 물어봐요. 내 브랜치에 강제 푸시하면 경보 대신 긴장한 표정으로 브랜치 이름을 짚어 묻고, `--force-with-lease`라면 그 표정만 지어요.
 - **비밀 정보는 기록에 남기지 않아요.** 실제로 쓰이는 키나 토큰처럼 보이는 값(AWS, GitHub, Anthropic, OpenAI, Slack, Stripe, 개인 키, 비밀번호)이나 `.env`, `id_rsa` 같은 파일을 Claude가 쓰거나, `git add`하거나, 커밋하기 전에 Mochi가 값을 가려서 보여 주며 물어봐요: `AKIA••••••LE`. 자리표시자나 누가 봐도 테스트용인 값은 그냥 통과해요.
-- **여기서는 항상 허용.** 질문에는 **실행**(또는 **쓰기**), **중지**, **여기서는 항상 허용**이 있어요. 마지막을 고르면 이 저장소에서는 그런 종류의 명령을 기억해 두고 다시 묻지 않아요. `/mochi 보호막`은 어디서 무엇을 허용했는지 보여 주고, `/mochi 보호막 초기화`는 전부 잊어요.
+- **여기서는 항상 허용.** 질문에는 **실행**(또는 **쓰기**), **중지**, **여기서는 항상 허용**이 있어요. 마지막을 고르면 이 저장소에서는 그런 종류의 명령을 기억해 두고 다시 묻지 않아요. 저장소 안에서 끝나는 것만 해당되고, 밖으로 나가는 명령이나 편집(`rm -rf ~`, 홈 폴더의 파일 등)은 다시 물어봐요. `/mochi 보호막`은 보호막이 켜져 있는지와 어디서 무엇을 허용했는지 보여 주고, `/mochi 보호막 초기화`는 전부 잊어요.
 
 나만의 규칙은 `~/.claude/mochi/shield.json`에 적어요:
 
@@ -136,7 +136,7 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
 
 - `match`는 모든 Bash·PowerShell 명령에 대소문자 구분 없이 대어 보는 정규식이에요. `says`는 그 명령이 하는 일로, 질문에 그대로 나와요. 없으면 질문에는 내 규칙에 해당한다고만 나와요.
 - `off`에는 더는 묻지 않을 기본 종류를 적어요: [`hooks/lang/ko.ts`](hooks/lang/ko.ts)에 있는 `danger`의 키 중 아무거나(`rm`, `forcePush`, `publish`, `sudo`…), `secret` 또는 그 세부 종류 하나(`secret:aws`, `secret:github`, `secret:apiKey`, `secret:slack`, `secret:stripe`, `secret:privateKey`, `secret:generic`), `secretFile`, `secretEdit`.
-- Mochi는 파일이 바뀔 때마다 다시 읽어요. 쓸 수 없는 항목은 건너뛰고 토스트로 이름을 알려 줘요. 파일이 올바른 JSON이 아니면 고칠 때까지 내 규칙은 하나도 적용되지 않아요.
+- Mochi는 파일이 바뀔 때마다 다시 읽고 토스트로 알려 줘요. 쓸 수 없는 항목은 건너뛰고 이름을 알려 줘요. 파일이 올바른 JSON이 아니면 고칠 때까지 내 규칙은 하나도 적용되지 않아요. Claude가 직접 이 파일을 바꾸려 하면 보호막이 먼저 물어봐요.
 
 ## 🔍 상세 패널
 
@@ -173,9 +173,9 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
 
 - **`/mochi 카드`**는 카드를 그려요: 오늘 옷차림의 Mochi, 내 레벨, 경험치, 연속 기록.
 - **`/mochi 결산`**은 모든 채팅에서 보낸 한 달을 그림 한 장에 정리해요: 작업 시간, 턴, 커밋, 가장 바빴던 날, 가장 긴 연속 기록, 가장 오래 머문 폴더. `/mochi 결산 연간`은 한 해를 정리해요. 매달 첫 주에는 지난달 결산이 준비됐다고 Mochi가 한 번 알려 줘요.
-- **`/mochi 스냅샷`**은 밴드와 상세 패널을 지금 모습 그대로 저장해요. 올리기 전에 한번 확인하세요: 밴드에 보이는 건 다 담기니까, 브랜치와 다른 채팅도 함께 나와요.
+- **`/mochi 스냅샷`**은 밴드와 상세 패널을 지금 모습 그대로 저장해요. 올리기 전에 한번 확인하세요: 밴드에 보이는 건 다 담기니까 브랜치도 함께 나와요. 다른 채팅과 마지막 편집의 내용 줄은 빠져요.
 
-모두 `~/.claude/mochi/share/` 아래에 SVG 파일로 저장돼요. 밝은 페이지에서도 어두운 페이지에서도 잘 보이고, 다른 파일 없이 그 파일 하나로 충분해요.
+모두 `~/.claude/mochi/share/` 아래에 SVG 파일로 저장돼요. 밝은 페이지에서도 어두운 페이지에서도 잘 보이고, 다른 파일 없이 그 파일 하나로 충분해요. X와 Reddit은 PNG만 받아요. `rsvg-convert`나 ImageMagick이 설치되어 있으면 `/mochi 스냅샷`이 각각의 PNG도 저장해요.
 
 GitHub 프로필에 카드를 올리려면:
 
@@ -199,7 +199,7 @@ GitHub 프로필에 카드를 올리려면:
 | `/mochi 착용 [아이템 \| 자동 \| 없음]` | 골라서 입히기, Mochi가 알아서 입게 두기, 또는 전부 벗기기 |
 | `/mochi 배지` | 지금까지 얻은 배지와 나머지를 얻는 방법 |
 | `/mochi 채팅` | 이 컴퓨터의 모든 채팅, 나를 기다리는 채팅부터 |
-| `/mochi 보호막` | 보호막 켜기/끄기, 어디서 무엇을 항상 허용했는지 보기 |
+| `/mochi 보호막 [켜기 \| 끄기]` | 보호막이 켜져 있는지, 어디서 무엇을 항상 허용했는지 보기. `켜기`나 `끄기`로 바꾸기 |
 | `/mochi 보호막 초기화` | “여기서는 항상 허용”으로 기억해 둔 것을 모두 잊기 |
 | `/mochi 알림` | 알림 켜기/끄기 (결산이 준비됐다는 안내도 함께) |
 | `/mochi ci` | CI 추적 켜기/끄기 |
@@ -216,11 +216,11 @@ GitHub 프로필에 카드를 올리려면:
 | `/mochi 언어 [코드 \| 자동]` | 언어 확인 또는 변경 |
 | `/mochi 작게` · `/mochi 크게` | 한 줄 또는 전체 크기 |
 | `/mochi 내보내기` | Mochi가 보관하는 모든 것을 JSON 파일 하나로 저장 |
-| `/mochi 초기화 [레벨 \| 기록 \| 전체]` | 레벨 정보, 기록, 또는 설정과 `shield.json`까지 전부 지우기. 먼저 물어보고, 내보낸 파일은 남아요 |
+| `/mochi 초기화 [레벨 \| 기록 \| 전체]` | 레벨 정보, 기록, 또는 설정까지 전부 지우기. 먼저 물어보고, 내보낸 파일과 `shield.json`은 남아요 |
 | `/mochi 피드백` | 버전, 시스템, 화면, 언어가 미리 채워진 버그 신고 링크 |
 | `/mochi 상태` | Mochi가 지금 알고 있는 것 |
 
-영어 명령어도 언제나 그대로 쓸 수 있어요 (`/mochi details`, `/mochi wear`, `/mochi reset all`…).
+영어 명령어도 언제나 그대로 쓸 수 있어요 (`/mochi details`, `/mochi wear`, `/mochi reset all`…). 켜고 끄는 명령은 칠 때마다 바뀌어요. `켜기`나 `끄기`를 붙이면 그 상태로 맞춰요 (`/mochi 팁 끄기`).
 
 ## 🌍 언어
 
@@ -234,7 +234,7 @@ Claude Code의 `language` 설정이 이 중 하나라면 Mochi는 그 언어로 
 
 - **git**: 채팅 폴더에서 읽기만 해요. 밴드와 상세 패널을 위해 `git status`, `git log`, `git diff --numstat`, `git rev-parse`를 실행해요. 보호막이 더 자세히 봐야 할 때는 현재 브랜치와 기본 브랜치, `git add`가 추가할 파일(`git ls-files`), `git commit`이 커밋할 내용(`git diff`)을 확인해요.
 - **gh**: CI 추적이 켜져 있을 때만, 내 로그인으로 실행해요(Mochi는 토큰을 볼 수 없어요). `gh pr view`는 채팅이 시작될 때, 상세 패널을 열 때, 그리고 푸시 전후로 실행해요. `gh run list`는 이 채팅에서 푸시한 뒤에만, 실행이 끝날 때까지 30초마다, 길어야 30분 동안 실행해요. `/mochi ci`로 둘 다 끌 수 있어요.
-- **시스템 도구**: 알림은 macOS에서 `osascript`, Windows에서 PowerShell, Linux에서 `notify-send`로 보내요. 언어 확인에는 macOS에서 `defaults read -g AppleLanguages`, Windows에서 PowerShell을 쓰고, macOS와 Linux는 `uname`으로 구분해요. 닫힌 채팅의 파일과 `/mochi 초기화`가 지우는 파일은 `~/.claude/mochi/` 안에서만, 이름을 하나하나 지정해 `rm`(Windows에서는 `cmd`의 `del`)으로 지워요.
+- **시스템 도구**: 알림은 macOS에서 `osascript`, Windows에서 PowerShell, Linux에서 `notify-send`로 보내요. 언어 확인에는 macOS에서 `defaults read -g AppleLanguages`, Windows에서 `reg query`를 쓰고, macOS와 Linux는 `uname`으로 구분해요. `/mochi 스냅샷`의 PNG에는 설치되어 있으면 `rsvg-convert`나 ImageMagick의 `magick`을 써요. 닫힌 채팅의 파일과 `/mochi 초기화`가 지우는 파일은 `~/.claude/mochi/` 안에서만, 이름을 하나하나 지정해 `rm`(Windows에서는 `cmd`의 `del`)으로 지워요.
 - **`~/.claude/mochi/` 아래 파일**: 열려 있는 채팅별 상태, 일별 카운트, 내 레벨과 배지, 소진 예측에 쓰는 사용량 기록, 팁마다 보여 준 횟수와 내가 반복한 짧은 지시(프롬프트 전체는 저장하지 않아요), 한도 초기화를 한 채팅에서만 알리도록 하는 표시, 직접 만들었다면 `shield.json`, 그리고 `/mochi 카드`, `결산`, `스냅샷`, `내보내기`가 저장하는 파일. 설정, 항상 허용한 항목, 생일은 Claude Code의 플러그인용 저장소에 보관해요.
 - **내 프로젝트**: 지시를 제안하기 전에 `CLAUDE.md`를 읽고, **추가**를 고른 뒤에만 한 줄을 덧붙여요. 카드는 `/mochi 카드`에 프로젝트 안의 경로를 줬을 때만 거기에 저장해요. 줄 수를 세고 비밀 정보를 찾으려고 Claude가 덮어쓰려는 파일을 읽고, 추가와 커밋을 한 번에 하는 명령이라면 새로 추가될 파일도 읽어요(최대 20개, 각각 1MB 미만). 읽은 내용은 하나도 남기지 않아요.
 - **다른 플러그인**은 Mochi를 통해 기분과 짧은 한 줄을 보여 줄 수 있어요. 플러그인 이름이 함께 붙고, 플러그인마다 10초에 한 번까지예요. `/mochi 플러그인`으로 끌 수 있어요. `/mochi 피드백`은 링크만 보여 줄 뿐, 아무것도 보내지 않아요.
@@ -245,7 +245,7 @@ Claude Code의 `language` 설정이 이 중 하나라면 Mochi는 그 언어로 
 
 ## 🤝 기여하기
 
-버그 제보, 아이디어, 번역, 그림, PR 모두 대환영이에요. [이슈를 열거나](https://github.com/oztrkemree/mochi/issues/new/choose)(`/mochi 피드백`을 쓰면 내용이 미리 채워진 버그 신고서가 나와요), 코드부터 살펴보고 싶다면 [CONTRIBUTING.md](CONTRIBUTING.md)를 읽어 보세요. 명령어 두 개로 전부 검사할 수 있고(`claude plugin validate .`와 `claude plugin test .`), 새 언어는 파일 하나면 충분해요. 버전마다 달라진 점은 [CHANGELOG.md](CHANGELOG.md)에 있어요.
+버그 제보, 아이디어, 번역, 그림, PR 모두 대환영이에요. [이슈를 열거나](https://github.com/oztrkemree/mochi/issues/new/choose)(`/mochi 피드백`을 쓰면 내용이 미리 채워진 버그 신고서가 나와요), 코드부터 살펴보고 싶다면 [CONTRIBUTING.md](CONTRIBUTING.md)를 읽어 보세요. 명령어 두 개로 전부 검사할 수 있고(`claude plugin validate .`와 `claude plugin test .`), 새 언어는 사전 하나와 몇 줄이면 충분해요. 버전마다 달라진 점은 [CHANGELOG.md](CHANGELOG.md)에 있어요.
 
 ## 📄 라이선스
 

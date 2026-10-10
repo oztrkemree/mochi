@@ -130,7 +130,7 @@ const GOOD_NIGHT = /good ?night|iyi geceler|iyi uykular|buenas noches|gute nacht
 const LOVE = /love (you|u)\b(?! to\b)|seni seviyorum|seviyorum seni|te quiero(?! +\p{L}+[aei]r(?!\p{L}))|te amo|amo voc[eê]|ich liebe dich|hab dich lieb|je t['’]aime|ti amo|ti voglio bene|kocham ci[eę]|(sayang|cinta) (kamu|kau)|люблю тебя|тебя люблю|кохаю тебе|тебе кохаю|люблю тебе|тебе люблю|爱你|愛你|愛してる|大好き|사랑해|(तुमसे|आपसे) प्यार|[أا]حبك|بحبك/iu
 const HELLO = /(?<!\p{L})(hi|hello|hey|hiya|merhaba|selam|hola|hallo|salut|bonjour|ol[aá]|oi|ciao|cze[sś][cć]|halo|привет|здравствуй|привіт)(?!\p{L})|你好|こんにちは|안녕|नमस्ते|नमस्कार|مرحب|[أا]هلا|السلام عليكم/iu
 
-/** A short prompt that says good night, or loves, thanks or greets Mochi by name: a moment of its own; null otherwise. */
+/** A short prompt that says good night, or loves, thanks, greets or just calls Mochi by name: a moment of its own; null otherwise. */
 export function promptEgg(text: string): Reaction | null {
   const said = text.trim()
   if (said.length > 60) return null
@@ -141,7 +141,8 @@ export function promptEgg(text: string): Reaction | null {
   if (!isNamed) return null
   // Thanks and praise, as the ordinary reaction to a prompt reads them.
   if (onPrompt(said, false).mood === 'pleased') return { mood: 'pleased', line: w.welcome, holdMs: 3000 }
-  if (HELLO.test(said)) return { mood: 'wave', line: w.hello, holdMs: 3000 }
+  // A greeting, or the name alone ("mochi", "Mochi?"), waves.
+  if (HELLO.test(said) || said.replace(NAME, '').replace(/[\p{P}\p{S}\s]/gu, '') === '') return { mood: 'wave', line: w.hello, holdMs: 3000 }
   return null
 }
 

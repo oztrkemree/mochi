@@ -166,6 +166,7 @@ test('an export takes every file Mochi keeps; each reset clears its own and keep
   expect(take('', 'usage.json')).toEqual([true, false, false, true])
   expect(take('live', 'abc-2.json')).toEqual([false, false, false, true])
   expect(take('', 'export-2026-07-01.json')).toEqual([false, false, false, false])
+  expect(take('', 'shield.json')).toEqual([true, false, false, false])
   expect(take('days', 'notes.txt')).toEqual([false, false, false, false])
   const out = exportOf(Date.UTC(2026, 6, 1, 9, 0), '0.2.0', { prefs: { lang: 'en' } }, { 'level.json': '{"level":3}', 'days/a.json': 'half{' })
   expect(out).toEqual({ mochi: '0.2.0', exportedAt: '2026-07-01T09:00:00.000Z', store: { prefs: { lang: 'en' } }, files: { 'level.json': { level: 3 }, 'days/a.json': 'half{' } })
@@ -180,18 +181,20 @@ test('/mochi export writes one file beside the rest; reset asks first, then clea
     [`${DIR}/days/other-chat.json`]: JSON.stringify({ id: 'other-chat', label: 'web', days: { '2026-06-30': day } }),
     [`${DIR}/live/other-chat.json`]: '{}',
     [`${DIR}/export-2026-06-01.json`]: '{}',
+    [`${DIR}/shield.json`]: '{"add":[]}',
     '/home/me/project/notes.json': '{}',
   }, store)
   let answer = 'Keep'
   const asked = answering(on, () => answer)
   await clock.set(NOON)
   await $.session.start(START)
+  await clock.settle()
 
   expect(await say($, 'mochi', 'export')).toBe('Everything Mochi keeps is in one file: ~/.claude/mochi/export-2026-07-01.json')
   const exported = JSON.parse(files[`${DIR}/export-2026-07-01.json`] ?? '{}') as { mochi: string; store: { prefs: { hasSound: boolean } }; files: Record<string, unknown> }
   expect(exported.mochi).toBe('0.2.0')
   expect(exported.store.prefs.hasSound).toBe(true)
-  expect(Object.keys(exported.files).sort()).toEqual(['badges.json', 'days/chat-1.json', 'days/other-chat.json', 'level.json', 'usage.json'])
+  expect(Object.keys(exported.files).sort()).toEqual(['badges.json', 'days/chat-1.json', 'days/other-chat.json', 'level.json', 'shield.json', 'usage.json'])
   expect((exported.files['days/other-chat.json'] as { days: Record<string, unknown> }).days['2026-06-30']).toEqual(day)
 
   expect(await say($, 'mochi', 'reset')).toBe('Clear what? /mochi reset level · history · all')
@@ -222,6 +225,8 @@ test('/mochi export writes one file beside the rest; reset asks first, then clea
   expect(files['/home/me/project/notes.json']).toBeDefined()
   expect(files[`${DIR}/export-2026-06-01.json`]).toBeDefined()
   expect(files[`${DIR}/export-2026-07-01.json`]).toBeDefined()
+  // The shield's rules are the person's own writing: they stay too.
+  expect(files[`${DIR}/shield.json`]).toBeDefined()
   expect(files[`${DIR}/live/other-chat.json`]).toBeUndefined()
   expect(await say($, 'mochi', 'status')).toContain('Sound: off')
   // All but the first day, recorded again for the anniversary.

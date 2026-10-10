@@ -124,8 +124,10 @@ export const pl: typeof en = {
     tour: [
       { line: 'cześć, jestem Mochi', text: 'Cześć, jestem Mochi. Mieszkam nad twoim promptem i pokazuję, co robi Claude Code: czyta, uruchamia, czeka na ciebie.' },
       { line: 'kliknij kółka · szczegóły', text: 'Kółka pokazują kontekst i limity użycia. Kliknij je albo wpisz /mochi szczegóły, żeby zobaczyć całość.' },
-      { line: '/mochi ubierz · tarcza', text: 'Zdobywaj poziomy i ubieraj mnie przez /mochi ubierz. Tarcza pyta przed poleceniem, którego nie da się cofnąć; /mochi tarcza ją wyłącza.' },
+      { line: '/mochi ubierz · tarcza', text: 'Zdobywaj poziomy i ubieraj mnie przez /mochi ubierz. Tarcza pyta przed poleceniem, którego nie da się cofnąć; wyłączysz ją przez /mochi tarcza wyłącz.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: 'wpisz /mochi szczegóły', text: 'Wpisz /mochi szczegóły, żeby zobaczyć kontekst, limity użycia, zmiany i historię.' },
     rule: {
       question: rule => `Dodać „${rule}” do CLAUDE.md?`,
       add: 'Dodaj',
@@ -243,6 +245,7 @@ export const pl: typeof en = {
     helm: 'odinstalowuje release z klastra',
     unpublish: 'wycofuje pakiet z rejestru dla wszystkich',
     pruneAll: 'usuwa wszystkie nieużywane obrazy, kontenery i sieci',
+    shieldRules: 'zmienia reguły samej tarczy',
   },
 
   loopAlarm: {
@@ -418,6 +421,7 @@ export const pl: typeof en = {
     cardHow: 'Na profil GitHub: połóż ją obok README.md w repozytorium profilu i wklej:',
     wrappedSaved: (title, path) => `Podsumowanie · ${title}: ${path}`,
     snapSaved: (band, details) => `Pasek: ${band}\nPanel szczegółów: ${details}`,
+    noPng: 'X i Reddit przyjmują PNG, nie SVG: z zainstalowanym rsvg-convert lub ImageMagick /mochi zrzut zapisze też PNG.',
     failed: reason => `Nie udało się zapisać: ${reason}`,
     ready: month => `twoje podsumowanie za ${month} jest gotowe · /mochi podsumowanie`,
   },
@@ -501,6 +505,7 @@ export const pl: typeof en = {
     detailOpened: 'Panel szczegółów otwarty.',
     shieldOn: 'Tarcza włączona: Mochi zapyta, zanim uruchomi się polecenie, którego nie da się cofnąć, i zanim zostanie zapisane lub zacommitowane coś, co wygląda na sekret.',
     shieldOff: 'Tarcza wyłączona.',
+    shieldHow: isOn => (isOn ? 'Aby wyłączyć: /mochi tarcza wyłącz' : 'Aby włączyć: /mochi tarcza włącz'),
     alertsOn: minutes =>
       `Powiadomienia włączone: usłyszysz, gdy skończy się praca dłuższa niż ${minutes} ${form(minutes, 'minuta', 'minuty', 'minut')}, gdy czat na ciebie czeka, gdy limit się odnowi i gdy CI się nie powiedzie.`,
     alertsOff: 'Powiadomienia wyłączone.',
@@ -526,6 +531,8 @@ export const pl: typeof en = {
     contextLine: (ctx, agents, tools) => `Kontekst: ${ctx} · działający agenci: ${agents} · narzędzia w tej turze: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `Dźwięk: ${sound ? 'wł.' : 'wył.'} · Tarcza: ${shield ? 'wł.' : 'wył.'} · Powiadomienia: ${alerts ? 'wł.' : 'wył.'} · Rozmiar: ${compact ? 'mały' : 'duży'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `Porady: ${tips ? 'wł.' : 'wył.'} · Przerwy: ${breaks ? 'wł.' : 'wył.'} · Reakcje wtyczek: ${plugins ? 'wł.' : 'wył.'}`,
     peersLine: (level, peers) => `Poziom ${level} · inne czaty: ${peers}`,
     commands: 'Polecenia: /mochi (pokaż/ukryj) | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | eksport | resetuj | opinia | stan',
     langNow: (name, list) => `Język: ${name}. Dostępne: ${list} · /mochi język <kod> lub auto`,
@@ -533,6 +540,7 @@ export const pl: typeof en = {
     langAuto: name => `Język zgodny z Claude Code i systemem: ${name}.`,
     langUnknown: (code, list) => `Nieznany język: ${code}. Dostępne: ${list}`,
     words: {
+      on: ['włącz', 'wlacz'], off: ['wyłącz', 'wylacz'],
       hide: ['ukryj', 'schowaj'], show: ['pokaż'], small: ['mały', 'maly', 'mini'], big: ['duży'], sound: ['dźwięk'],
       status: ['stan'], details: ['szczegóły', 'szczegoly'], level: ['poziom'], wear: ['ubierz', 'załóż', 'zaloz', 'garderoba'], shield: ['tarcza', 'ochrona'],
       alerts: ['powiadomienia', 'alerty'], lang: ['język'], auto: ['automatycznie'], none: ['nic', 'brak'],

@@ -104,8 +104,10 @@ export const ko: typeof en = {
     tour: [
       { line: '안녕하세요, Mochi예요', text: '안녕하세요, Mochi예요. 프롬프트 위에 살면서 Claude Code가 하는 일을 보여 드려요: 읽기, 실행, 답 기다리기.' },
       { line: '링 클릭 · 상세', text: '링은 컨텍스트와 사용 한도를 보여 줍니다. 클릭하거나 /mochi details를 입력하면 전체를 볼 수 있습니다.' },
-      { line: '/mochi wear · 보호막', text: '레벨을 올리고 /mochi wear로 저를 꾸며 주세요. 보호막은 되돌릴 수 없는 명령 전에 확인합니다. /mochi shield로 끌 수 있습니다.' },
+      { line: '/mochi wear · 보호막', text: '레벨을 올리고 /mochi wear로 저를 꾸며 주세요. 보호막은 되돌릴 수 없는 명령 전에 확인합니다. /mochi shield off로 끌 수 있습니다.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: '/mochi details 입력', text: '/mochi details를 입력하면 컨텍스트, 사용 한도, 변경 사항, 기록을 볼 수 있습니다.' },
     rule: {
       question: rule => `“${rule}”을(를) CLAUDE.md에 추가할까요?`,
       add: '추가',
@@ -223,6 +225,7 @@ export const ko: typeof en = {
     helm: '클러스터에서 릴리스 제거',
     unpublish: '패키지를 모두에게서 게시 취소',
     pruneAll: '사용하지 않는 이미지·컨테이너·네트워크 모두 삭제',
+    shieldRules: '보호막 자체의 규칙 변경',
   },
 
   loopAlarm: {
@@ -398,6 +401,7 @@ export const ko: typeof en = {
     cardHow: 'GitHub 프로필용: 프로필 저장소의 README.md 옆에 두고 아래 줄을 붙여 넣으세요:',
     wrappedSaved: (title, path) => `${title} 결산: ${path}`,
     snapSaved: (band, details) => `밴드: ${band}\n상세 패널: ${details}`,
+    noPng: 'X와 Reddit은 SVG가 아니라 PNG를 받습니다. rsvg-convert나 ImageMagick이 설치되어 있으면 /mochi snap이 PNG도 저장합니다.',
     failed: reason => `저장하지 못했습니다: ${reason}`,
     ready: month => `${month} 결산이 준비되었습니다 · /mochi 결산`,
   },
@@ -481,6 +485,7 @@ export const ko: typeof en = {
     detailOpened: '상세 패널을 열었습니다.',
     shieldOn: '보호막 켜짐: 되돌릴 수 없는 명령은 실행 전에 확인하고, 비밀 정보로 보이는 내용을 쓰거나 커밋하기 전에도 확인합니다.',
     shieldOff: '보호막 꺼짐.',
+    shieldHow: isOn => (isOn ? '끄려면: /mochi shield off' : '켜려면: /mochi shield on'),
     alertsOn: minutes => `알림 켜짐: ${minutes}분 넘게 걸린 작업이 끝나거나, 채팅이 응답을 기다리거나, 한도가 초기화되거나, CI가 실패하면 알려 드립니다.`,
     alertsOff: '알림 꺼짐.',
     levelLine: (level, xp, toNext) => `레벨 ${level} · ${xp} XP · 다음 레벨까지 ${toNext} XP`,
@@ -504,6 +509,8 @@ export const ko: typeof en = {
     contextLine: (ctx, agents, tools) => `컨텍스트: ${ctx} · 실행 중인 에이전트: ${agents} · 이번 턴 도구: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `소리: ${sound ? '켜짐' : '꺼짐'} · 보호막: ${shield ? '켜짐' : '꺼짐'} · 알림: ${alerts ? '켜짐' : '꺼짐'} · 크기: ${compact ? '작게' : '크게'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `팁: ${tips ? '켜짐' : '꺼짐'} · 휴식 알림: ${breaks ? '켜짐' : '꺼짐'} · 플러그인 반응: ${plugins ? '켜짐' : '꺼짐'}`,
     peersLine: (level, peers) => `레벨 ${level} · 다른 채팅: ${peers}`,
     commands: '명령: /mochi (표시/숨기기) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name, list) => `언어: ${name}. 사용 가능: ${list} · /mochi lang <코드> 또는 auto`,
@@ -511,6 +518,7 @@ export const ko: typeof en = {
     langAuto: name => `언어는 Claude Code와 시스템 설정을 따릅니다: ${name}.`,
     langUnknown: (code, list) => `알 수 없는 언어: ${code}. 사용 가능: ${list}`,
     words: {
+      on: ['켜기', '켜'], off: ['끄기', '꺼'],
       hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'],
       status: ['상태'], details: ['상세', '자세히'], level: ['레벨'], wear: ['착용', '입기'], shield: ['보호막', '실드'],
       alerts: ['알림'], lang: ['언어'], auto: ['자동'], none: ['없음', '벗기'],

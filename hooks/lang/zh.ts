@@ -104,8 +104,10 @@ export const zh: typeof en = {
     tour: [
       { line: '你好，我是 Mochi', text: '你好，我是 Mochi。我住在输入框上方，显示 Claude Code 正在做什么：读取、运行、等你回复。' },
       { line: '点击圆环 · 详情', text: '圆环显示上下文和用量限制。点击它们，或输入 /mochi details，查看全部。' },
-      { line: '/mochi wear · 护盾', text: '升级后用 /mochi wear 给我打扮。护盾会在无法撤销的命令运行前询问；/mochi shield 可关闭。' },
+      { line: '/mochi wear · 护盾', text: '升级后用 /mochi wear 给我打扮。护盾会在无法撤销的命令运行前询问；/mochi shield off 可关闭。' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: '输入 /mochi details', text: '输入 /mochi details，查看上下文、用量限制、改动和历史。' },
     rule: {
       question: rule => `把“${rule}”加入 CLAUDE.md？`,
       add: '加入',
@@ -223,6 +225,7 @@ export const zh: typeof en = {
     helm: '从集群卸载该 release',
     unpublish: '为所有人撤下这个包',
     pruneAll: '删除所有未使用的镜像、容器和网络',
+    shieldRules: '修改护盾自身的规则',
   },
 
   loopAlarm: {
@@ -398,6 +401,7 @@ export const zh: typeof en = {
     cardHow: '用于 GitHub 个人主页：把它放在个人主页仓库的 README.md 旁边，然后粘贴：',
     wrappedSaved: (title, path) => `${title}回顾：${path}`,
     snapSaved: (band, details) => `状态栏：${band}\n详情面板：${details}`,
+    noPng: 'X 和 Reddit 只接受 PNG，不接受 SVG：装有 rsvg-convert 或 ImageMagick 时，/mochi snap 会同时保存 PNG。',
     failed: reason => `无法保存：${reason}`,
     ready: month => `你的${month}回顾已就绪 · /mochi 回顾`,
   },
@@ -481,6 +485,7 @@ export const zh: typeof en = {
     detailOpened: '详情面板已打开。',
     shieldOn: '护盾已开启：无法撤销的命令运行前会先询问；写入或提交疑似密钥的内容前也会询问。',
     shieldOff: '护盾已关闭。',
+    shieldHow: isOn => (isOn ? '关闭：/mochi shield off' : '开启：/mochi shield on'),
     alertsOn: minutes => `提醒已开启：超过 ${minutes} 分钟的任务完成、有对话在等你、限额重置或 CI 失败时，会提醒你。`,
     alertsOff: '提醒已关闭。',
     levelLine: (level, xp, toNext) => `等级 ${level} · ${xp} XP · 距下一级 ${toNext} XP`,
@@ -504,6 +509,8 @@ export const zh: typeof en = {
     contextLine: (ctx, agents, tools) => `上下文：${ctx} · 运行中的 agent：${agents} · 本轮工具：${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `声音：${sound ? '开' : '关'} · 护盾：${shield ? '开' : '关'} · 提醒：${alerts ? '开' : '关'} · 尺寸：${compact ? '小' : '大'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `提示：${tips ? '开' : '关'} · 休息提醒：${breaks ? '开' : '关'} · 插件反应：${plugins ? '开' : '关'}`,
     peersLine: (level, peers) => `等级 ${level} · 其他对话：${peers}`,
     commands: '命令：/mochi（显示/隐藏）| details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name, list) => `语言：${name}。可选：${list} · /mochi lang <代码> 或 auto`,
@@ -511,6 +518,7 @@ export const zh: typeof en = {
     langAuto: name => `语言跟随 Claude Code 和系统：${name}。`,
     langUnknown: (code, list) => `未知语言：${code}。可选：${list}`,
     words: {
+      on: ['开', '开启', '打开'], off: ['关', '关闭'],
       hide: ['隐藏'], show: ['显示'], small: ['小', '缩小'], big: ['大', '放大'], sound: ['声音', '音效'],
       status: ['状态'], details: ['详情'], level: ['等级'], wear: ['穿戴', '配饰'], shield: ['护盾'],
       alerts: ['提醒', '通知'], lang: ['语言'], auto: ['自动'], none: ['无', '不戴'],

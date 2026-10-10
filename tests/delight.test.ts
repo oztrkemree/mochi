@@ -213,6 +213,11 @@ test('a few words to Mochi get a moment of their own', async () => {
   expect(promptEgg('hi Mochi')).toEqual({ mood: 'wave', line: 'hello', holdMs: 3000 })
   expect(promptEgg('merhaba mochi')?.mood).toBe('wave')
   expect(promptEgg('hi')).toBe(null)
+  // Its name alone is a greeting too.
+  expect(promptEgg('mochi')).toEqual({ mood: 'wave', line: 'hello', holdMs: 3000 })
+  expect(promptEgg('Mochi?')?.mood).toBe('wave')
+  expect(promptEgg('모찌!')?.mood).toBe('wave')
+  expect(promptEgg('mochi build')).toBe(null)
   expect(promptEgg('mochila de viaje')).toBe(null)
   expect(promptEgg('te quiero mucho, mochi')?.mood).toBe('love')
   expect(promptEgg('mochi, te quiero preguntar algo')).toBe(null)
@@ -293,10 +298,17 @@ test('/mochi birthday, breaks and badges', async ($, on) => {
   expect(await run('birthday off')).toBe('Birthday removed.')
   expect(await run('breaks')).toBe('Breaks off.')
   expect(await run('breaks')).toBe('Breaks on: after two hours of work without a pause, Mochi suggests a stretch.')
+  // On or off sets it; only a bare word turns it over. /mochi status says how each stands.
+  expect(await run('breaks off')).toBe('Breaks off.')
+  expect(await run('breaks off')).toBe('Breaks off.')
+  expect(await run('tips off')).toBe('Tips off.')
+  expect(await run('status')).toContain('Tips: off · Breaks: off · Plugin reactions: on')
+  expect(await run('breaks on')).toBe('Breaks on: after two hours of work without a pause, Mochi suggests a stretch.')
   expect((await run('badges')).startsWith('Badges 0/12: none yet\nTo earn: first green (a test run that passes), first push (a git push)')).toBe(true)
   // The words of the language in use work too.
   await run('lang tr')
   expect(await run('mola')).toBe('Mola hatırlatması kapalı.')
+  expect(await run('mola kapat')).toBe('Mola hatırlatması kapalı.')
   expect(await run('doğumgünü 04-23')).toBe('Doğum günü kaydedildi: 23 Nisan. Yalnızca bu bilgisayarda kalır.')
   setLang('en')
 })
@@ -327,6 +339,27 @@ test('badges are earned from real work, kept in a file of Mochi’s own, and cel
   await $.tool.call({ tool: 'Bash', command: 'git push origin main' })
   expect(toasts.filter(x => x.includes('badge')).length).toBe(2)
   expect(((await $.command.run({ command: 'mochi', args: 'badges' } as never)).text ?? '').split('\n')[0]).toBe('Badges 3/12: first green, comeback, first push')
+})
+
+test('a badge earned while a question is open is told in a toast; the question keeps the face', { timeoutMs: 30_000 }, async ($, on) => {
+  const toasts: string[] = []
+  const clock = engine(on, { prefs: { lang: 'en' } }, toasts)
+  mock.env(on, { HOME: '/home/me' })
+  on('session.id', () => ({ value: 'chat-4' }) as never)
+  memoryFiles(on)
+  on('tool.call', { tool: 'Edit' }, () => ({ result: '', text: '' }) as never)
+  on('tool.call', { tool: 'AskUserQuestion' }, () => new Promise(() => {}) as never)
+  await clock.set(at(2026, 7, 1, 12))
+  await $.session.start(START)
+  await clock.settle()
+  // Lines removed today make a tidy day, which the history proves at its next reading, ten minutes on.
+  await $.tool.call({ tool: 'Edit', file_path: '/home/me/app/a.ts', old_string: 'a\nb\nc\nd\n', new_string: '' } as never)
+  void $.tool.call({ tool: 'AskUserQuestion', questions: [{ question: 'Which one?', header: 'Pick', options: [], multiSelect: false }] } as never).catch(() => undefined)
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  for (let i = 0; i < 11; i++) await clock.advance(60_000)
+  expect(toasts.filter(x => x.includes('tidy day'))).toEqual(['Mochi: new badge: tidy day · /mochi badges'])
+  expect(await ui.find({ text: /waiting for your answer/ })).toBeDefined()
+  await ui.unmount()
 })
 
 test('awards at once celebrate a badge once, and a file that cannot be read a moment is never overwritten', async ($, on) => {
@@ -416,6 +449,24 @@ test('good night to Mochi gets a yawn and a stretch, even from its sleep', async
   await clock.advance(5 * 60_000)
   await $.prompt.submit({ text: 'good night mochi' } as never)
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await ui.find({ text: 'good night' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('once the reply to a good night is done, Mochi goes to sleep and sleeps on', async ($, on) => {
+  const clock = engine(on)
+  on('prompt.submit', ($, e) => ({ text: e.text }))
+  on('turn.start', () => ({ turnId: 't' }) as never)
+  on('turn.complete', () => ({ text: '' }) as never)
+  await clock.set(at(2026, 7, 1, 23))
+  await $.session.start(START)
+  await $.prompt.submit({ text: 'iyi geceler' } as never)
+  await $.turn.start({ text: 'iyi geceler', turnId: 't' } as never)
+  await $.turn.complete({ answer: '', durationMs: 1000, isAborted: false, turnId: 't', reason: 'answer' } as never)
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await ui.find({ text: 'good night' })).toBeDefined()
+  // Past the minute and a half that makes a quiet Mochi sleepy at night, it does not wake to doze.
+  for (let i = 0; i < 3; i++) await clock.advance(60_000)
   expect(await ui.find({ text: 'good night' })).toBeDefined()
   await ui.unmount()
 })

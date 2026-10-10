@@ -5,7 +5,7 @@ import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { isShell } from './guard'
 import { t } from './i18n'
 import { PEER_INK, peersLine } from './live'
-import { clip, cols } from './text'
+import { clip, cols, rtlStyle } from './text'
 import type { Arc } from './gauge'
 import { mascotInner, shiftTimeline } from './rig'
 
@@ -125,6 +125,7 @@ function whole(info: Partial<Info> | undefined): Info {
     tz: info?.tz ?? 0,
     peers: info?.peers ?? [],
     ci: info?.ci ?? null,
+    pr: info?.pr ?? null,
   }
 }
 
@@ -250,8 +251,8 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const room3 = sepX - metaX - 12
   const peerText = others ? clip(others, Math.max(4, Math.floor((room3 * 0.55 - 12) / 6))) : ''
   const peerW = others ? cols(peerText) * 6 + 12 : 0
-  // A push's CI while its runs go, just before the other chats, where it leaves the branch some room.
-  const ci = ciMark(info.ci, sepX - 12 - (peerW > 0 ? peerW + 10 : 0), 67, room3 - (peerW > 0 ? peerW + 10 : 0) - 40)
+  // A push's CI while its runs go, else the branch's pull request, just before the other chats, where it leaves the branch some room.
+  const ci = ciMark(info.ci, info.pr, sepX - 12 - (peerW > 0 ? peerW + 10 : 0), 67, room3 - (peerW > 0 ? peerW + 10 : 0) - 40)
   const peerSvg = others && lead
     ? `<circle cx="${n(sepX - 12 - peerW + 3.5)}" cy="63.2" r="3" fill="${PEER_INK[lead.state]}">${lead.state === 'asking' ? '<animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>' : ''}</circle>` +
       `<text class="t" x="${n(sepX - 12 - peerW + 11)}" y="67" font-size="11" fill="${lead.state === 'busy' ? '#A59D96' : PEER_INK[lead.state]}">${esc(peerText)}</text>`
@@ -260,7 +261,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
     `<text class="t faint" x="${metaX}" y="67" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (peerW > 0 ? peerW + 14 : 0) - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + peerSvg + ci.svg
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
-    STYLE + DEFS + glow + mascot +
+    STYLE + rtlStyle() + DEFS + glow + mascot +
     shiftTimeline(dot + title + second + third, (now / 1000) % 600) +
     `<path class="rule" d="M${n(sepX)} 14V62"/>` +
     shiftTimeline(rings, since) +

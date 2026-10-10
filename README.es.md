@@ -91,7 +91,7 @@ Cada chat de tu máquina, primero este y después los que te esperan, con su ram
 <td valign="top">
 
 **🚦 CI después de cada push**<br>
-Mochi sigue las ejecuciones de GitHub Actions con tu propio `gh`: `ci en curso · 2/5` en la franja, una fiesta cuando pasan y el nombre del workflow que ha fallado cuando no. El panel de detalles muestra el pull request de tu rama, su revisión y sus checks.
+Mochi sigue las ejecuciones de GitHub Actions con tu propio `gh`: `ci en curso · 2/5` en la franja, una fiesta cuando pasan y el nombre del workflow que ha fallado cuando no. Entre ejecuciones, la franja muestra el pull request de tu rama, su revisión y sus checks; el panel de detalles lo muestra completo.
 
 </td>
 <td valign="top">
@@ -121,9 +121,9 @@ El Eid, el Año Nuevo Lunar, el Nouruz, Diwali, Chuseok, la temporada de sakura,
 
 El escudo lee cada comando que ejecuta Claude, por Bash o por PowerShell, y cada edición que hace. Antes de cualquier cosa que no se pueda deshacer, se detiene y pregunta: borrar archivos y carpetas para siempre (`rm -rf`, `Remove-Item -Recurse`, `del /s`), borrar un disco entero, reescribir el historial de una rama, tirar los cambios sin commit, eliminar una base de datos, destruir infraestructura o un bucket en la nube, `npm unpublish`, `docker system prune -a`, un script de internet que va directo a la shell, `sudo`.
 
-- **Los force push se juzgan según la rama.** Hacia `main`, `master`, `trunk` o `develop`, pregunta y nombra la rama. Un `--force-with-lease` a tu propia rama solo se lleva una mirada nerviosa.
+- **Los force push se juzgan según la rama.** Hacia `main`, `master`, `trunk` o `develop`, pregunta y nombra la rama. Hacia tu propia rama pregunta con una mirada nerviosa en vez de la alarma, y la nombra; un `--force-with-lease` allí solo se lleva la mirada.
 - **Los secretos no entran en tu historial.** Antes de que Claude escriba, añada con `git add` o haga commit de algo que parezca una clave o un token reales (AWS, GitHub, Anthropic, OpenAI, Slack, Stripe, una clave privada, una contraseña) o de un archivo como `.env` o `id_rsa`, Mochi pregunta y muestra el valor enmascarado: `AKIA••••••LE`. Los marcadores de posición y los valores de prueba evidentes pasan sin preguntar.
-- **Permitir siempre aquí.** La pregunta ofrece **Ejecutar** (o **Escribir**), **Detener** y **Permitir siempre aquí**, que recuerda ese tipo de comando para este repositorio. `/mochi escudo` muestra qué está permitido y dónde; `/mochi escudo restablecer` lo olvida todo.
+- **Permitir siempre aquí.** La pregunta ofrece **Ejecutar** (o **Escribir**), **Detener** y **Permitir siempre aquí**, que recuerda ese tipo de comando para este repositorio. Vale para lo que se queda dentro de él: un comando o una edición que sale de él (`rm -rf ~`, un archivo de tu carpeta personal) vuelve a preguntar. `/mochi escudo` dice si el escudo está activo y muestra qué está permitido y dónde; `/mochi escudo restablecer` lo olvida todo.
 
 Tus propias reglas van en `~/.claude/mochi/shield.json`:
 
@@ -136,7 +136,7 @@ Tus propias reglas van en `~/.claude/mochi/shield.json`:
 
 - `match` es una expresión regular que se prueba con cada comando de Bash y de PowerShell, sin distinguir mayúsculas. `says` es lo que haría ese comando y aparece en la pregunta; si falta, la pregunta dice que coincide con una de tus reglas.
 - `off` enumera los tipos incorporados por los que ya no quieres que pregunte: cualquier clave de `danger` en [`hooks/lang/es.ts`](hooks/lang/es.ts) (`rm`, `forcePush`, `publish`, `sudo`…), `secret` o uno de sus tipos (`secret:aws`, `secret:github`, `secret:apiKey`, `secret:slack`, `secret:stripe`, `secret:privateKey`, `secret:generic`), `secretFile` y `secretEdit`.
-- Mochi vuelve a leer el archivo cada vez que cambia. Lo que no puede usar se omite y lo nombra en un aviso; si el archivo no es JSON válido, ninguna de tus reglas se aplica hasta que lo sea.
+- Mochi vuelve a leer el archivo cada vez que cambia, y lo dice en un aviso. Lo que no puede usar se omite y lo nombra; si el archivo no es JSON válido, ninguna de tus reglas se aplica hasta que lo sea. Antes de que el propio Claude cambie el archivo, el escudo pregunta.
 
 ## 🔍 El panel de detalles
 
@@ -173,9 +173,9 @@ Elige qué ponerle en la sección **Armario** del panel de detalles, o con `/moc
 
 - **`/mochi tarjeta`** dibuja una tarjeta: Mochi con el atuendo de hoy, tu nivel, tu experiencia y tus rachas.
 - **`/mochi resumen`** resume tu mes, en todos tus chats, en una sola imagen: horas, turnos, commits, tu día más activo, tu racha más larga y la carpeta en la que más tiempo pasaste. `/mochi resumen año` hace lo mismo con el año. En la primera semana de cada mes, Mochi te avisa una vez de que el del mes anterior ya está listo.
-- **`/mochi captura`** guarda la franja y el panel de detalles tal como están ahora mismo. Échale un vistazo antes de publicarla: muestra lo mismo que la franja, incluidas tu rama y tus otros chats.
+- **`/mochi captura`** guarda la franja y el panel de detalles tal como están ahora mismo. Échale un vistazo antes de publicarla: muestra lo mismo que la franja, incluida tu rama. Tus otros chats y las líneas de tu última edición se quedan fuera.
 
-Son archivos SVG en `~/.claude/mochi/share/`, pensados para verse bien en páginas claras y oscuras, y no dependen de nada externo.
+Son archivos SVG en `~/.claude/mochi/share/`, pensados para verse bien en páginas claras y oscuras, y no dependen de nada externo. X y Reddit solo aceptan PNG: con `rsvg-convert` o ImageMagick instalado, `/mochi captura` guarda también un PNG de cada uno.
 
 Para poner la tarjeta en tu perfil de GitHub:
 
@@ -199,7 +199,7 @@ La tarjeta es una instantánea: cuando subas de nivel, vuelve a ejecutar `/mochi
 | `/mochi poner [accesorio \| automático \| nada]` | Ponle algo, deja que Mochi se vista solo o quítale todo |
 | `/mochi insignias` | Las insignias que has ganado y cómo conseguir las demás |
 | `/mochi conversaciones` | Todos los chats de esta máquina, primero los que te esperan |
-| `/mochi escudo` | Activa o desactiva el escudo, y muestra qué está siempre permitido y dónde |
+| `/mochi escudo [activar \| desactivar]` | Dice si el escudo está activo y qué está siempre permitido y dónde; `activar` o `desactivar` lo cambia |
 | `/mochi escudo restablecer` | Olvida todo lo que recordó «Permitir siempre aquí» |
 | `/mochi alertas` | Activa o desactiva las notificaciones (y el aviso de que tu resumen está listo) |
 | `/mochi ci` | Activa o desactiva la vigilancia de CI |
@@ -216,11 +216,11 @@ La tarjeta es una instantánea: cuando subas de nivel, vuelve a ejecutar `/mochi
 | `/mochi idioma [código \| automático]` | Muestra o cambia el idioma |
 | `/mochi pequeño` · `/mochi grande` | Una línea o tamaño completo |
 | `/mochi exportar` | Guarda todo lo que conserva Mochi en un solo archivo JSON |
-| `/mochi restablecer [nivel \| historial \| todo]` | Borra la memoria del nivel, el historial o todo, ajustes y `shield.json` incluidos; pregunta antes, y las exportaciones se conservan |
+| `/mochi restablecer [nivel \| historial \| todo]` | Borra la memoria del nivel, el historial o todo, ajustes incluidos; pregunta antes, y las exportaciones y tu `shield.json` se conservan |
 | `/mochi comentarios` | Un enlace a un informe de error, ya relleno con las versiones, tu sistema, la interfaz y el idioma |
 | `/mochi estado` | Lo que Mochi sabe ahora mismo |
 
-Las palabras en inglés siempre funcionan (`/mochi details`, `/mochi wear`, `/mochi lang`…), y cada idioma añade las suyas, como las de esta tabla.
+Las palabras en inglés siempre funcionan (`/mochi details`, `/mochi wear`, `/mochi lang`…), y cada idioma añade las suyas, como las de esta tabla. Un comando que activa o desactiva algo lo cambia cada vez; añade `activar` o `desactivar` para fijarlo: `/mochi consejos desactivar`.
 
 ## 🌍 Idiomas
 
@@ -234,7 +234,7 @@ Todo se queda en tu máquina. Mochi en sí **no hace ninguna petición de red**;
 
 - **git**, en la carpeta del chat y solo para leer: `git status`, `git log`, `git diff --numstat` y `git rev-parse` para la franja y el panel de detalles. Cuando el escudo necesita mirar más de cerca, consulta la rama y la rama por defecto, los archivos que añadiría un `git add` (`git ls-files`) y lo que entraría en un `git commit` (`git diff`).
 - **gh**, solo mientras la vigilancia de CI está activada y con tu propia sesión (Mochi nunca ve tu token): `gh pr view` cuando empieza un chat, cuando abres el panel de detalles y en torno a un push; `gh run list` solo después de un push en este chat, cada 30 segundos hasta que terminan las ejecuciones, media hora como mucho. `/mochi ci` desactiva los dos.
-- **Las herramientas del propio sistema**: notificaciones con `osascript` en macOS, PowerShell en Windows y `notify-send` en Linux. Para el idioma, `defaults read -g AppleLanguages` en macOS y PowerShell en Windows; `uname` distingue macOS de Linux. Los archivos de los chats cerrados, y lo que borra `/mochi restablecer`, se eliminan por nombre con `rm`, o con el `del` de `cmd` en Windows, y solo dentro de `~/.claude/mochi/`.
+- **Las herramientas del propio sistema**: notificaciones con `osascript` en macOS, PowerShell en Windows y `notify-send` en Linux. Para el idioma, `defaults read -g AppleLanguages` en macOS y `reg query` en Windows; `uname` distingue macOS de Linux. Para los PNG de `/mochi captura`, `rsvg-convert` o el `magick` de ImageMagick, si lo tienes. Los archivos de los chats cerrados, y lo que borra `/mochi restablecer`, se eliminan por nombre con `rm`, o con el `del` de `cmd` en Windows, y solo dentro de `~/.claude/mochi/`.
 - **Archivos en `~/.claude/mochi/`**: cómo va cada chat abierto, recuentos diarios, tu nivel y tus insignias, lecturas de uso para el pronóstico, cuántas veces se ha mostrado cada consejo y las instrucciones cortas que repites (nunca prompts enteros), las marcas que le indican a un chat que anuncie el reinicio de un límite, tu `shield.json` si escribes uno, y lo que guardan `/mochi tarjeta`, `resumen`, `captura` y `exportar`. Los ajustes, lo que está siempre permitido y tu cumpleaños se guardan en el almacén que Claude Code reserva a los plugins.
 - **Tu proyecto**: Mochi lee `CLAUDE.md` antes de sugerir una instrucción y solo añade una línea después de que elijas **Añadir**. Solo guarda ahí la tarjeta si le das a `/mochi tarjeta` una ruta dentro del proyecto. Para contar líneas y detectar secretos, lee el archivo que Claude está a punto de sobrescribir y, si un comando añade y hace commit a la vez, los archivos nuevos que añadiría (hasta 20, de menos de 1 MB cada uno). No conserva nada de lo que lee.
 - **Otros plugins** pueden mostrar un estado de ánimo y una frase corta a través de Mochi, firmados con su nombre, cada uno como mucho una vez cada 10 segundos; `/mochi complementos` lo desactiva. `/mochi comentarios` solo muestra un enlace: no se envía nada.
@@ -245,7 +245,7 @@ Tu plugin puede hacer que Mochi reaccione: que aplauda cuando termina un desplie
 
 ## 🤝 Contribuir
 
-Informes de errores, ideas, traducciones, ilustraciones y pull requests: todo es bienvenido. [Abre un issue](https://github.com/oztrkemree/mochi/issues/new/choose) (`/mochi comentarios` te da un informe de error ya relleno) o lee [CONTRIBUTING.md](CONTRIBUTING.md) para meterte con el código: dos comandos lo comprueban todo (`claude plugin validate .` y `claude plugin test .`), y un idioma nuevo es un solo archivo. Los cambios de cada versión están en [CHANGELOG.md](CHANGELOG.md).
+Informes de errores, ideas, traducciones, ilustraciones y pull requests: todo es bienvenido. [Abre un issue](https://github.com/oztrkemree/mochi/issues/new/choose) (`/mochi comentarios` te da un informe de error ya relleno) o lee [CONTRIBUTING.md](CONTRIBUTING.md) para meterte con el código: dos comandos lo comprueban todo (`claude plugin validate .` y `claude plugin test .`), y añadir un idioma es un diccionario y unas pocas líneas. Los cambios de cada versión están en [CHANGELOG.md](CHANGELOG.md).
 
 ## 📄 Licencia
 

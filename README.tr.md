@@ -91,7 +91,7 @@ Bilgisayarındaki bütün sohbetler: önce bu sohbet, ardından seni bekleyenler
 <td valign="top">
 
 **🚦 Push'tan sonra CI**<br>
-Mochi, GitHub Actions çalıştırmalarını senin kendi `gh`'ınla takip eder: bantta `ci çalışıyor · 2/5`, geçince kutlama, kalınca başarısız workflow'un adı. Detay ekranı dalının pull request'ini, incelemesini ve kontrollerini gösterir.
+Mochi, GitHub Actions çalıştırmalarını senin kendi `gh`'ınla takip eder: bantta `ci çalışıyor · 2/5`, geçince kutlama, kalınca başarısız workflow'un adı. Çalıştırma yokken bant dalının pull request'ini, incelemesini ve kontrollerini gösterir; detay ekranında tamamı var.
 
 </td>
 <td valign="top">
@@ -121,9 +121,9 @@ Ramazan ve Kurban Bayramı, Ay Yeni Yılı, Nevruz, Diwali, Chuseok, sakura mevs
 
 Kalkan, Claude'un Bash ya da PowerShell'de çalıştırdığı her komutu ve yaptığı her düzenlemeyi okur. Geri alınamayacak bir şeyden önce durur ve sorar: dosya ve klasörleri kalıcı olarak silmek (`rm -rf`, `Remove-Item -Recurse`, `del /s`), bir sürücüyü baştan sona silmek, bir dalın geçmişini ezmek, commit edilmemiş değişiklikleri çöpe atmak, bir veritabanını silmek, altyapıyı ya da bir bulut bucket'ını yıkmak, `npm unpublish`, `docker system prune -a`, internetten indirilip doğrudan çalıştırılan bir betik, `sudo`.
 
-- **Force push'lar dala göre değerlendirilir.** `main`, `master`, `trunk` ya da `develop`'a yapılacaksa sorar ve dalın adını söyler. Kendi dalına bir `--force-with-lease` ise yalnızca tedirgin bir bakış alır.
+- **Force push'lar dala göre değerlendirilir.** `main`, `master`, `trunk` ya da `develop`'a yapılacaksa sorar ve dalın adını söyler. Kendi dalına yapılacaksa alarm yerine tedirgin bir bakışla sorar ve dalın adını söyler; oraya bir `--force-with-lease` ise yalnızca o bakışı alır.
 - **Gizli bilgiler geçmişine girmez.** Claude canlı bir anahtara ya da token'a benzeyen bir şeyi (AWS, GitHub, Anthropic, OpenAI, Slack, Stripe, özel anahtar, parola) ya da `.env`, `id_rsa` gibi bir dosyayı yazmadan, `git add` etmeden ya da commit etmeden önce Mochi sorar ve değeri maskeli gösterir: `AKIA••••••LE`. Yer tutucular ve belli ki test olan değerler sorulmadan geçer.
-- **Burada hep izin ver.** Soruda **Çalıştır** (ya da **Yaz**), **Durdur** ve **Burada hep izin ver** seçenekleri çıkar; sonuncusu o tür komutu bu depo için hatırlar. `/mochi kalkan` kalkanı açıp kapatırken neyin nerede hep izinli olduğunu da listeler; `/mochi kalkan sıfırla` hepsini unutur.
+- **Burada hep izin ver.** Soruda **Çalıştır** (ya da **Yaz**), **Durdur** ve **Burada hep izin ver** seçenekleri çıkar; sonuncusu o tür komutu bu depo için hatırlar. Bu, deponun içinde kalanlar için geçerlidir: dışarıya uzanan bir komut ya da düzenleme (`rm -rf ~`, ev klasöründe bir dosya) yine sorar. `/mochi kalkan` kalkanın açık olup olmadığını ve neyin nerede hep izinli olduğunu listeler; `/mochi kalkan sıfırla` hepsini unutur.
 
 Kendi kuralların `~/.claude/mochi/shield.json` dosyasına yazılır:
 
@@ -136,7 +136,7 @@ Kendi kuralların `~/.claude/mochi/shield.json` dosyasına yazılır:
 
 - `match`, her Bash ve PowerShell komutunda büyük-küçük harf ayrımı yapılmadan denenen bir düzenli ifadedir. `says`, böyle bir komutun ne yapacağıdır ve soruda gösterilir; yazmazsan soru, komutun kurallarından birine uyduğunu söyler.
 - `off`, artık sorulmasını istemediğin yerleşik türleri listeler: [`hooks/lang/tr.ts`](hooks/lang/tr.ts) içindeki `danger`'ın herhangi bir anahtarı (`rm`, `forcePush`, `publish`, `sudo`…), `secret` ya da onun tek bir türü (`secret:aws`, `secret:github`, `secret:apiKey`, `secret:slack`, `secret:stripe`, `secret:privateKey`, `secret:generic`), `secretFile` ve `secretEdit`.
-- Dosya her değiştiğinde Mochi onu yeniden okur. Kullanamadığı her şeyi atlar ve kısa bir uyarıda adını verir; dosya geçerli bir JSON değilse, düzelene kadar kurallarının hiçbiri uygulanmaz.
+- Dosya her değiştiğinde Mochi onu yeniden okur ve kısa bir uyarıyla söyler. Kullanamadığı her şeyi atlar ve adını verir; dosya geçerli bir JSON değilse, düzelene kadar kurallarının hiçbiri uygulanmaz. Claude bu dosyayı kendisi değiştirmeden önce kalkan sorar.
 
 ## 🔍 Detay ekranı
 
@@ -173,9 +173,9 @@ Ne giyeceğini detay ekranındaki **Gardırop** bölümünden ya da `/mochi akse
 
 - **`/mochi kart`** bir kart çizer: bugünkü kıyafetiyle Mochi, seviyen, deneyimin ve serilerin.
 - **`/mochi özet`** ayını, bütün sohbetlerinle birlikte tek bir resimde özetler: saatler, turlar, commit'ler, en yoğun günün, en uzun serin ve en çok vakit geçirdiğin klasör. `/mochi özet yıl` aynısını yıl için yapar. Ayın ilk haftasında Mochi, geçen ayınkinin hazır olduğunu bir kez söyler.
-- **`/mochi fotoğraf`** bandı ve detay ekranını o anki halleriyle kaydeder. Paylaşmadan önce bir göz at: dalın ve diğer sohbetlerin dahil, bantta ne varsa onu gösterir.
+- **`/mochi fotoğraf`** bandı ve detay ekranını o anki halleriyle kaydeder. Paylaşmadan önce bir göz at: dalın dahil, bantta ne varsa onu gösterir. Diğer sohbetlerin ve son düzenlemenin satırları dışarıda kalır.
 
-Hepsi `~/.claude/mochi/share/` altında SVG dosyalarıdır; açık ve koyu sayfalarda okunacak şekilde çizilir, dışarıdan hiçbir şeye ihtiyaç duymaz.
+Hepsi `~/.claude/mochi/share/` altında SVG dosyalarıdır; açık ve koyu sayfalarda okunacak şekilde çizilir, dışarıdan hiçbir şeye ihtiyaç duymaz. X ve Reddit yalnızca PNG kabul eder: `rsvg-convert` ya da ImageMagick kuruluysa `/mochi fotoğraf` her birinin PNG'sini de kaydeder.
 
 Kartı GitHub profiline koymak için:
 
@@ -199,7 +199,7 @@ Kart bir anlık görüntüdür: seviye atladıktan sonra `/mochi kart`'ı yenide
 | `/mochi aksesuar [ad \| otomatik \| yok]` | Bir şey tak, Mochi kendi giyinsin ya da hepsini çıkar |
 | `/mochi rozetler` | Kazandığın rozetler ve kalanların nasıl kazanılacağı |
 | `/mochi sohbetler` | Bu bilgisayardaki bütün sohbetler, seni bekleyenler önce |
-| `/mochi kalkan` | Kalkanı açar ya da kapatır, neyin nerede hep izinli olduğunu gösterir |
+| `/mochi kalkan [aç \| kapat]` | Kalkanın açık olup olmadığını ve neyin nerede hep izinli olduğunu gösterir; `aç` ya da `kapat` onu öyle yapar |
 | `/mochi kalkan sıfırla` | “Burada hep izin ver” ile hatırlanan her şeyi unutur |
 | `/mochi bildirim` | Bildirimleri açar ya da kapatır (aylık özetinin hazır olduğu notunu da) |
 | `/mochi ci` | CI takibini açar ya da kapatır |
@@ -216,11 +216,11 @@ Kart bir anlık görüntüdür: seviye atladıktan sonra `/mochi kart`'ı yenide
 | `/mochi dil [kod \| otomatik]` | Dili gösterir ya da değiştirir |
 | `/mochi küçük` · `/mochi büyük` | Tek satır ya da tam boy |
 | `/mochi aktar` | Mochi'nin tuttuğu her şeyi tek bir JSON dosyasına kaydeder |
-| `/mochi sıfırla [seviye \| geçmiş \| hepsi]` | Seviye hafızasını, geçmişi ya da ayarlar ve `shield.json` dahil her şeyi siler; önce sorar, dışa aktarılan dosyalar kalır |
+| `/mochi sıfırla [seviye \| geçmiş \| hepsi]` | Seviye hafızasını, geçmişi ya da ayarlar dahil her şeyi siler; önce sorar, dışa aktarılan dosyalar ve `shield.json`'ın kalır |
 | `/mochi geribildirim` | Sürümlerin, sisteminin, arayüzün ve dilin önceden doldurulduğu bir hata bildirimi bağlantısı |
 | `/mochi durum` | Mochi'nin şu an bildikleri |
 
-İngilizce komutlar her zaman çalışır (`/mochi details`, `/mochi wear`, `/mochi lang`…), her dil de kendi sözcüklerini ekler (`/mochi aksesuar`, `/mochi idioma`, `/mochi sprache`…).
+İngilizce komutlar her zaman çalışır (`/mochi details`, `/mochi wear`, `/mochi lang`…), her dil de kendi sözcüklerini ekler (`/mochi aksesuar`, `/mochi idioma`, `/mochi sprache`…). Bir şeyi açıp kapatan komutlar her seferinde onu tersine çevirir; `aç` ya da `kapat` eklersen öyle ayarlar: `/mochi ipucu kapat`.
 
 ## 🌍 Diller
 
@@ -234,7 +234,7 @@ Her şey bilgisayarında kalır. Mochi'nin kendisi **hiçbir ağ isteği yapmaz*
 
 - **git**, sohbetin klasöründe ve yalnızca okumak için: bant ve detay ekranı için `git status`, `git log`, `git diff --numstat` ve `git rev-parse`. Kalkanın daha yakından bakması gerektiğinde dalı ve varsayılan dalı, bir `git add`'in ekleyeceği dosyaları (`git ls-files`) ve bir `git commit`'in commit edeceklerini (`git diff`) sorar.
 - **gh**, yalnızca CI takibi açıkken ve senin kendi oturumunla (Mochi token'ını hiç görmez): bir sohbet başladığında, detay ekranını açtığında ve bir push'un ardından `gh pr view`; `gh run list` ise yalnızca bu sohbette bir push'tan sonra, çalıştırmalar bitene kadar 30 saniyede bir, en fazla yarım saat. `/mochi ci` ikisini de kapatır.
-- **Sistemin kendi araçları**: bildirimler için macOS'te `osascript`, Windows'ta PowerShell, Linux'ta `notify-send`. Dil için macOS'te `defaults read -g AppleLanguages`, Windows'ta PowerShell; macOS ile Linux'u `uname` ayırır. Kapanmış sohbetlerin dosyaları ve `/mochi sıfırla`'nın temizledikleri, yalnızca `~/.claude/mochi/` içinde ve adıyla, `rm` ile (Windows'ta `cmd`'nin `del`'i ile) silinir.
+- **Sistemin kendi araçları**: bildirimler için macOS'te `osascript`, Windows'ta PowerShell, Linux'ta `notify-send`. Dil için macOS'te `defaults read -g AppleLanguages`, Windows'ta `reg query`; macOS ile Linux'u `uname` ayırır. `/mochi fotoğraf`'ın PNG'leri için, kuruluysa `rsvg-convert` ya da ImageMagick'in `magick`'i. Kapanmış sohbetlerin dosyaları ve `/mochi sıfırla`'nın temizledikleri, yalnızca `~/.claude/mochi/` içinde ve adıyla, `rm` ile (Windows'ta `cmd`'nin `del`'i ile) silinir.
 - **`~/.claude/mochi/` altındaki dosyalar**: her açık sohbetin durumu, günlük sayılar, seviyen ve rozetlerin, tahmin için kullanım ölçümleri, her ipucunun kaç kez gösterildiği ve tekrarladığın kısa talimatlar (asla prompt'un tamamı değil), bir limit sıfırlanmasını tek bir sohbetin duyurmasını sağlayan işaretler, yazdıysan `shield.json`'ın ve `/mochi kart`, `özet`, `fotoğraf` ve `aktar`'ın kaydettikleri. Ayarlar, hep izin verilenler ve doğum günün Claude Code'un eklentiler için tuttuğu depoda durur.
 - **Projen**: Mochi bir talimat önermeden önce `CLAUDE.md`'yi okur ve yalnızca sen **Ekle**'yi seçince sonuna tek bir satır ekler. Kartı projene yalnızca `/mochi kart`'a oradaki bir yolu verirsen yazar. Satırları saymak ve gizli bilgileri yakalamak için Claude'un üzerine yazmak üzere olduğu dosyayı, aynı anda ekleyip commit eden bir komut için de ekleyeceği yeni dosyaları (en fazla 20 tane, her biri 1 MB'tan küçük) okur. Okuduğu hiçbir şeyi saklamaz.
 - **Diğer eklentiler** Mochi aracılığıyla bir ruh hali ve kısa bir satır gösterebilir; satır eklentinin adıyla imzalanır, her eklenti için en fazla 10 saniyede bir. `/mochi eklentiler` bunu kapatır. `/mochi geribildirim` yalnızca bir bağlantı yazdırır: hiçbir şey gönderilmez.
@@ -245,7 +245,7 @@ Eklentin Mochi'nin tepki vermesini sağlayabilir: bir deploy bitince sevinsin, b
 
 ## 🤝 Katkı
 
-Hata bildirimleri, fikirler, çeviriler, çizimler ve PR'lar hepsi baş tacı. [Bir issue aç](https://github.com/oztrkemree/mochi/issues/new/choose) (`/mochi geribildirim` sana önceden doldurulmuş bir hata bildirimi verir) ya da koda başlamak için [CONTRIBUTING.md](CONTRIBUTING.md)'yi oku: iki komut her şeyi kontrol eder (`claude plugin validate .` ve `claude plugin test .`), yeni bir dil de tek bir dosyadan ibaret. Her sürümde nelerin değiştiği [CHANGELOG.md](CHANGELOG.md)'de.
+Hata bildirimleri, fikirler, çeviriler, çizimler ve PR'lar hepsi baş tacı. [Bir issue aç](https://github.com/oztrkemree/mochi/issues/new/choose) (`/mochi geribildirim` sana önceden doldurulmuş bir hata bildirimi verir) ya da koda başlamak için [CONTRIBUTING.md](CONTRIBUTING.md)'yi oku: iki komut her şeyi kontrol eder (`claude plugin validate .` ve `claude plugin test .`), yeni bir dil eklemek de bir sözlük ve birkaç satırdan ibaret. Her sürümde nelerin değiştiği [CHANGELOG.md](CHANGELOG.md)'de.
 
 ## 📄 Lisans
 

@@ -108,8 +108,10 @@ export const fr: typeof en = {
     tour: [
       { line: 'bonjour, je suis Mochi', text: 'Bonjour, je suis Mochi. Je vis au-dessus de votre prompt et je montre ce que fait Claude Code : il lit, il exécute, il vous attend.' },
       { line: 'cliquez sur les anneaux · détails', text: 'Les anneaux montrent le contexte et vos limites d’utilisation. Cliquez dessus, ou tapez /mochi détails, pour tout voir.' },
-      { line: '/mochi porter · le bouclier', text: 'Montez de niveau et habillez-moi avec /mochi porter. Le bouclier demande avant une commande irréversible ; /mochi bouclier le désactive.' },
+      { line: '/mochi porter · le bouclier', text: 'Montez de niveau et habillez-moi avec /mochi porter. Le bouclier demande avant une commande irréversible ; pour le désactiver : /mochi bouclier désactiver.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: 'tapez /mochi détails', text: 'Tapez /mochi détails pour voir le contexte, vos limites d’utilisation, les changements et votre historique.' },
     rule: {
       question: rule => `Ajouter « ${rule} » à CLAUDE.md ?`,
       add: 'Ajouter',
@@ -227,6 +229,7 @@ export const fr: typeof en = {
     helm: 'désinstalle la release du cluster',
     unpublish: 'retire le package du registre pour tout le monde',
     pruneAll: 'supprime toutes les images, conteneurs et réseaux inutilisés',
+    shieldRules: 'modifie les règles du bouclier lui-même',
   },
 
   loopAlarm: {
@@ -402,6 +405,7 @@ export const fr: typeof en = {
     cardHow: 'Pour votre profil GitHub, placez-la à côté de README.md dans le dépôt de votre profil et collez :',
     wrappedSaved: (title, path) => `Bilan · ${title} : ${path}`,
     snapSaved: (band, details) => `Bandeau : ${band}\nPanneau de détails : ${details}`,
+    noPng: 'X et Reddit acceptent le PNG, pas le SVG : avec rsvg-convert ou ImageMagick installé, /mochi capture enregistre aussi un PNG.',
     failed: reason => `Enregistrement impossible : ${reason}`,
     ready: month => `votre bilan ${/^[aeiouéèâ]/i.test(month) ? 'd’' : 'de '}${month} est prêt · /mochi bilan`,
   },
@@ -485,6 +489,7 @@ export const fr: typeof en = {
     detailOpened: 'Panneau de détails ouvert.',
     shieldOn: 'Bouclier activé : une confirmation sera demandée avant d’exécuter une commande irréversible et avant d’écrire ou de committer ce qui ressemble à un secret.',
     shieldOff: 'Bouclier désactivé.',
+    shieldHow: isOn => (isOn ? 'Pour le désactiver : /mochi bouclier désactiver' : 'Pour l’activer : /mochi bouclier activer'),
     alertsOn: minutes => `Alertes activées : un son vous préviendra quand un travail de plus de ${pl(minutes, 'minute', 'minutes')} se termine, quand une conversation vous attend, quand une limite se réinitialise et quand la CI échoue.`,
     alertsOff: 'Alertes désactivées.',
     levelLine: (level, xp, toNext) => `Niveau ${level} · ${xp} XP · ${toNext} XP avant le niveau suivant`,
@@ -509,6 +514,8 @@ export const fr: typeof en = {
     contextLine: (ctx, agents, tools) => `Contexte : ${ctx} · agents en cours : ${agents} · outils ce tour : ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `Son : ${sound ? 'activé' : 'désactivé'} · Bouclier : ${shield ? 'activé' : 'désactivé'} · Alertes : ${alerts ? 'activées' : 'désactivées'} · Taille : ${compact ? 'petite' : 'grande'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `Astuces : ${tips ? 'activées' : 'désactivées'} · Pauses : ${breaks ? 'activées' : 'désactivées'} · Réactions des plugins : ${plugins ? 'activées' : 'désactivées'}`,
     peersLine: (level, peers) => `Niveau ${level} · autres conversations : ${peers}`,
     commands: 'Commandes : /mochi (afficher/cacher) | détails | niveau | porter | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue | petit | grand | exporter | réinitialiser | avis | statut',
     langNow: (name, list) => `Langue : ${name}. Disponibles : ${list} · /mochi langue <code> ou auto`,
@@ -516,6 +523,7 @@ export const fr: typeof en = {
     langAuto: name => `La langue suit Claude Code et le système : ${name}.`,
     langUnknown: (code, list) => `Langue inconnue : ${code}. Disponibles : ${list}`,
     words: {
+      on: ['activer'], off: ['désactiver'],
       hide: ['cacher', 'masquer'], show: ['afficher', 'montrer'], small: ['petit'], big: ['grand'], sound: ['son'],
       status: ['statut', 'état', 'etat'], details: ['détails', 'détail', 'detail'], level: ['niveau'], wear: ['porter', 'accessoire'], shield: ['bouclier'],
       alerts: ['alertes', 'alerte'], lang: ['langue'], auto: ['automatique'], none: ['aucun', 'rien'],

@@ -1,7 +1,7 @@
 import type { On, RenderElement } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
 
-import { ciLine, ciOf, ghTrouble, isPushing, prOf } from '../hooks/ci'
+import { ciLine, ciOf, ghTrouble, isPushing, prLine, prOf } from '../hooks/ci'
 import { detailLines, detailSvg } from '../hooks/detail'
 import { setLang } from '../hooks/i18n'
 import { panelSvg } from '../hooks/panel'
@@ -98,6 +98,13 @@ test('the details show the last CI and the pull request; the panel shows runs go
   expect(panelSvg({ panel: { shot: { mood: 'idle', scene: { context: -1, agents: 0 }, at: 1, from: null }, info, infoFrom: null, infoAt: 1 }, now, width: 420 }).svg).not.toContain('ci running')
   const done = panelSvg({ panel: { shot: { mood: 'idle', scene: { context: -1, agents: 0 }, at: 1, from: null }, info: { ...info, ci }, infoFrom: null, infoAt: 1 }, now, width: 900 })
   expect(done.svg).not.toContain('ci running')
+  // With no run going, the band shows the branch's pull request: its review and checks, red with one failing.
+  expect(prLine(pr)).toBe('PR #12 · approved · checks 4/5 · 1 failing')
+  expect(prLine({ ...pr, review: '', passed: 0, failed: 0 })).toBe('PR #12 · Watch CI after a push')
+  const withPr = panelSvg({ panel: { shot: { mood: 'idle', scene: { context: -1, agents: 0 }, at: 1, from: null }, info: { ...info, ci, pr }, infoFrom: null, infoAt: 1 }, now, width: 900 })
+  expect(withPr.svg).toContain('fill="#F0645A">PR #12 · approved · checks 4/5 · 1 failing')
+  // While runs go, they come first.
+  expect(panelSvg({ panel: { shot: { mood: 'idle', scene: { context: -1, agents: 0 }, at: 1, from: null }, info: { ...info, pr }, infoFrom: null, infoAt: 1 }, now, width: 900 }).svg).not.toContain('PR #12')
   setLang('tr')
 })
 

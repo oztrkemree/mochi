@@ -91,7 +91,7 @@ Jeder Chat auf deinem Rechner, dieser hier zuerst und gleich danach die, die auf
 <td valign="top">
 
 **🚦 CI nach dem Push**<br>
-Mochi verfolgt die GitHub-Actions-Läufe über dein eigenes `gh`: `CI läuft · 2/5` in der Leiste, eine kleine Feier, wenn alles grün ist, und der Name des fehlgeschlagenen Workflows, wenn nicht. Die Detailansicht zeigt den Pull Request deines Branches, sein Review und seine Checks.
+Mochi verfolgt die GitHub-Actions-Läufe über dein eigenes `gh`: `CI läuft · 2/5` in der Leiste, eine kleine Feier, wenn alles grün ist, und der Name des fehlgeschlagenen Workflows, wenn nicht. Zwischen den Läufen zeigt die Leiste den Pull Request deines Branches, sein Review und seine Checks; die Detailansicht zeigt ihn vollständig.
 
 </td>
 <td valign="top">
@@ -121,9 +121,9 @@ Zuckerfest und Opferfest, Mondneujahr, Nouruz, Diwali, Chuseok, die Kirschblüte
 
 Der Schild liest jeden Befehl, den Claude über Bash oder PowerShell ausführt, und jede Änderung, die Claude an Dateien macht. Vor allem, was sich nicht rückgängig machen lässt, hält er an und fragt nach: Dateien und Ordner endgültig löschen (`rm -rf`, `Remove-Item -Recurse`, `del /s`), ein Laufwerk plattmachen, die Historie eines Branches überschreiben, nicht committete Änderungen verwerfen, eine Datenbank löschen, Infrastruktur oder einen Cloud-Bucket abreißen, `npm unpublish`, `docker system prune -a`, ein Skript direkt aus dem Internet in die Shell, `sudo`.
 
-- **Force-Pushes werden nach Branch beurteilt.** Auf `main`, `master`, `trunk` oder `develop` fragt er nach und nennt den Branch. Ein `--force-with-lease` auf deinen eigenen Branch bekommt nur einen nervösen Blick.
+- **Force-Pushes werden nach Branch beurteilt.** Auf `main`, `master`, `trunk` oder `develop` fragt er nach und nennt den Branch. Auf deinen eigenen Branch fragt er mit einem nervösen Blick statt mit Alarm und nennt ihn; ein `--force-with-lease` dorthin bekommt nur den Blick.
 - **Geheimnisse bleiben aus deiner Historie draußen.** Bevor Claude etwas schreibt, per `git add` hinzufügt oder committet, das wie ein echter Schlüssel oder Token aussieht (AWS, GitHub, Anthropic, OpenAI, Slack, Stripe, ein privater Schlüssel, ein Passwort), oder eine Datei wie `.env` oder `id_rsa`, fragt Mochi nach und zeigt den Wert maskiert: `AKIA••••••LE`. Platzhalter und offensichtliche Testwerte gehen durch.
-- **Hier immer erlauben.** Die Frage bietet **Ausführen** (oder **Schreiben**), **Abbrechen** und **Hier immer erlauben**; Letzteres merkt sich diese Art von Befehl für dieses Repository. `/mochi schild` zeigt, was wo erlaubt ist; `/mochi schild zurücksetzen` vergisst alles wieder.
+- **Hier immer erlauben.** Die Frage bietet **Ausführen** (oder **Schreiben**), **Abbrechen** und **Hier immer erlauben**; Letzteres merkt sich diese Art von Befehl für dieses Repository. Das gilt für alles, was darin bleibt: Ein Befehl oder eine Änderung, die darüber hinausgreift (`rm -rf ~`, eine Datei in deinem Home-Ordner), fragt wieder. `/mochi schild` zeigt, ob der Schild an ist und was wo erlaubt ist; `/mochi schild zurücksetzen` vergisst alles wieder.
 
 Deine eigenen Regeln kommen in `~/.claude/mochi/shield.json`:
 
@@ -136,7 +136,7 @@ Deine eigenen Regeln kommen in `~/.claude/mochi/shield.json`:
 
 - `match` ist ein regulärer Ausdruck, der auf jeden Bash- und PowerShell-Befehl angewendet wird, ohne auf Groß- und Kleinschreibung zu achten. `says` beschreibt, was so ein Befehl tun würde, und steht in der Frage; fehlt es, sagt die Frage, dass der Befehl zu einer deiner Regeln passt.
 - `off` listet die eingebauten Arten auf, bei denen Mochi nicht mehr nachfragen soll: jeder Schlüssel von `danger` in [`hooks/lang/de.ts`](hooks/lang/de.ts) (`rm`, `forcePush`, `publish`, `sudo`…), `secret` oder eine Art davon (`secret:aws`, `secret:github`, `secret:apiKey`, `secret:slack`, `secret:stripe`, `secret:privateKey`, `secret:generic`), `secretFile` und `secretEdit`.
-- Mochi liest die Datei neu ein, sobald sie sich ändert. Was er nicht verwenden kann, wird übersprungen und in einer Meldung genannt; ist die Datei kein gültiges JSON, gilt keine deiner Regeln, bis sie es wieder ist.
+- Mochi liest die Datei neu ein, sobald sie sich ändert, und sagt es in einer Meldung. Was er nicht verwenden kann, wird übersprungen und genannt; ist die Datei kein gültiges JSON, gilt keine deiner Regeln, bis sie es wieder ist. Bevor Claude selbst die Datei ändert, fragt der Schild.
 
 ## 🔍 Die Detailansicht
 
@@ -173,9 +173,9 @@ Was Mochi trägt, suchst du im Bereich **Kleiderschrank** der Detailansicht aus,
 
 - **`/mochi karte`** zeichnet eine Karte: Mochi im heutigen Outfit, dein Level, deine Erfahrung und deine Serien.
 - **`/mochi rückblick`** fasst deinen Monat über alle Chats hinweg in einem Bild zusammen: Stunden, Runden, Commits, dein aktivster Tag, deine längste Serie und der Ordner, in dem du die meiste Zeit verbracht hast. `/mochi rückblick jahr` macht das fürs ganze Jahr. In der ersten Woche eines Monats sagt Mochi dir einmal, dass der Rückblick auf den letzten Monat fertig ist.
-- **`/mochi foto`** speichert die Leiste und die Detailansicht so, wie sie gerade sind. Schau es dir an, bevor du es postest: Es zeigt, was die Leiste zeigt, deinen Branch und deine anderen Chats eingeschlossen.
+- **`/mochi foto`** speichert die Leiste und die Detailansicht so, wie sie gerade sind. Schau es dir an, bevor du es postest: Es zeigt, was die Leiste zeigt, deinen Branch eingeschlossen. Deine anderen Chats und die Zeilen deiner letzten Änderung bleiben draußen.
 
-Das sind SVG-Dateien unter `~/.claude/mochi/share/`, gemacht für helle und dunkle Seiten, und sie brauchen nichts von außen.
+Das sind SVG-Dateien unter `~/.claude/mochi/share/`, gemacht für helle und dunkle Seiten, und sie brauchen nichts von außen. X und Reddit nehmen nur PNG: Ist `rsvg-convert` oder ImageMagick installiert, speichert `/mochi foto` von jeder auch ein PNG.
 
 So kommt die Karte in dein GitHub-Profil:
 
@@ -199,7 +199,7 @@ Die Karte ist eine Momentaufnahme: Nach einem Level-up führst du `/mochi karte`
 | `/mochi tragen [Teil \| automatisch \| nichts]` | Etwas anziehen, Mochi sich selbst einkleiden lassen oder alles ablegen |
 | `/mochi abzeichen` | Deine Abzeichen, und wie du die übrigen bekommst |
 | `/mochi chats` | Alle Chats auf diesem Rechner, die wartenden zuerst |
-| `/mochi schild` | Schild an- oder ausschalten und sehen, was wo immer erlaubt ist |
+| `/mochi schild [an \| aus]` | Sehen, ob der Schild an ist und was wo immer erlaubt ist; `an` oder `aus` schaltet ihn so |
 | `/mochi schild zurücksetzen` | Alles vergessen, was sich „Hier immer erlauben“ gemerkt hat |
 | `/mochi hinweise` | Benachrichtigungen an- oder ausschalten (samt der Nachricht, dass dein Rückblick fertig ist) |
 | `/mochi ci` | CI-Beobachtung an- oder ausschalten |
@@ -216,11 +216,11 @@ Die Karte ist eine Momentaufnahme: Nach einem Level-up führst du `/mochi karte`
 | `/mochi sprache [Code \| automatisch]` | Sprache anzeigen oder ändern |
 | `/mochi klein` · `/mochi groß` | Eine Zeile oder volle Größe |
 | `/mochi exportieren` | Alles, was Mochi speichert, in einer JSON-Datei sichern |
-| `/mochi zurücksetzen [level \| verlauf \| alles]` | Den Level-Speicher, den Verlauf oder alles löschen, Einstellungen und `shield.json` eingeschlossen; Mochi fragt vorher nach, und Exporte bleiben erhalten |
+| `/mochi zurücksetzen [level \| verlauf \| alles]` | Den Level-Speicher, den Verlauf oder alles löschen, Einstellungen eingeschlossen; Mochi fragt vorher nach, und Exporte und deine `shield.json` bleiben erhalten |
 | `/mochi rückmeldung` | Ein Link zu einem Bugreport, schon ausgefüllt mit den Versionen, deinem System, der Oberfläche und der Sprache |
 | `/mochi status` | Was Mochi gerade weiß |
 
-Die englischen Befehlswörter funktionieren immer (`/mochi wear`, `/mochi badges`, `/mochi lang`…), und jede Sprache bringt ihre eigenen mit.
+Die englischen Befehlswörter funktionieren immer (`/mochi wear`, `/mochi badges`, `/mochi lang`…), und jede Sprache bringt ihre eigenen mit. Ein Befehl, der etwas an- oder ausschaltet, schaltet es jedes Mal um; mit `an` oder `aus` stellst du es fest ein: `/mochi tipps aus`.
 
 ## 🌍 Sprachen
 
@@ -234,7 +234,7 @@ Alles bleibt auf deinem Rechner. Mochi selbst stellt **keinerlei Netzwerkanfrage
 
 - **git**, im Ordner des Chats und nur lesend: `git status`, `git log`, `git diff --numstat` und `git rev-parse` für die Leiste und die Detailansicht. Wenn der Schild genauer hinsehen muss, fragt er den Branch und den Standard-Branch ab, die Dateien, die ein `git add` hinzufügen würde (`git ls-files`), und was ein `git commit` committen würde (`git diff`).
 - **gh**, nur solange die CI-Beobachtung an ist, mit deinem eigenen Login (Mochi sieht dein Token nie): `gh pr view`, wenn ein Chat startet, wenn du die Detailansicht öffnest und rund um einen Push; `gh run list` nur nach einem Push in diesem Chat, alle 30 Sekunden, bis die Läufe fertig sind, höchstens eine halbe Stunde lang. `/mochi ci` schaltet beides aus.
-- **Die Werkzeuge des Systems**: Benachrichtigungen über `osascript` unter macOS, PowerShell unter Windows und `notify-send` unter Linux. Für die Sprache `defaults read -g AppleLanguages` unter macOS und PowerShell unter Windows; `uname` unterscheidet macOS von Linux. Dateien geschlossener Chats und das, was `/mochi zurücksetzen` löscht, werden einzeln beim Namen mit `rm` gelöscht, unter Windows mit `del` aus `cmd`, und nur innerhalb von `~/.claude/mochi/`.
+- **Die Werkzeuge des Systems**: Benachrichtigungen über `osascript` unter macOS, PowerShell unter Windows und `notify-send` unter Linux. Für die Sprache `defaults read -g AppleLanguages` unter macOS und `reg query` unter Windows; `uname` unterscheidet macOS von Linux. Für die PNGs von `/mochi foto` `rsvg-convert` oder `magick` von ImageMagick, falls installiert. Dateien geschlossener Chats und das, was `/mochi zurücksetzen` löscht, werden einzeln beim Namen mit `rm` gelöscht, unter Windows mit `del` aus `cmd`, und nur innerhalb von `~/.claude/mochi/`.
 - **Dateien unter `~/.claude/mochi/`**: der Stand jedes offenen Chats, Tageszählungen, dein Level und deine Abzeichen, Verbrauchswerte für die Prognose, wie oft jeder Tipp gezeigt wurde und die kurzen Anweisungen, die du wiederholst (nie ganze Prompts), die Markierungen, mit denen nur ein Chat ein zurückgesetztes Limit meldet, deine `shield.json`, falls du eine schreibst, und was `/mochi karte`, `rückblick`, `foto` und `exportieren` speichern. Einstellungen, was immer erlaubt ist, und dein Geburtstag liegen im Plugin-Speicher von Claude Code.
 - **Dein Projekt**: Mochi liest die `CLAUDE.md`, bevor er eine Anweisung vorschlägt, und hängt erst dann eine Zeile an, wenn du **Aufnehmen** wählst. Die Karte schreibt er nur dorthin, wenn du `/mochi karte` einen Pfad dorthin gibst. Um Zeilen zu zählen und Geheimnisse zu erkennen, liest er eine Datei, die Claude gleich überschreiben will, und bei einem Befehl, der in einem Rutsch hinzufügt und committet, die neuen Dateien, die dabei hinzukämen (bis zu 20, jeweils unter 1 MB). Nichts davon wird gespeichert.
 - **Andere Plugins** können über Mochi eine Stimmung und eine kurze Zeile zeigen, mit ihrem Namen unterschrieben, jedes höchstens einmal alle 10 Sekunden; `/mochi erweiterungen` schaltet das aus. `/mochi rückmeldung` gibt nur einen Link aus: Gesendet wird nichts.
@@ -245,7 +245,7 @@ Dein Plugin kann Mochi reagieren lassen: jubeln, wenn ein Deploy fertig ist, bes
 
 ## 🤝 Mitmachen
 
-Bugreports, Ideen, Übersetzungen, Artwork und Pull Requests sind herzlich willkommen. [Eröffne ein Issue](https://github.com/oztrkemree/mochi/issues/new/choose) (`/mochi rückmeldung` gibt dir einen schon ausgefüllten Bugreport) oder lies [CONTRIBUTING.md](CONTRIBUTING.md), um mit dem Code loszulegen: Zwei Befehle prüfen alles (`claude plugin validate .` und `claude plugin test .`), und eine neue Sprache ist genau eine Datei. Was sich in welcher Version geändert hat, steht in [CHANGELOG.md](CHANGELOG.md).
+Bugreports, Ideen, Übersetzungen, Artwork und Pull Requests sind herzlich willkommen. [Eröffne ein Issue](https://github.com/oztrkemree/mochi/issues/new/choose) (`/mochi rückmeldung` gibt dir einen schon ausgefüllten Bugreport) oder lies [CONTRIBUTING.md](CONTRIBUTING.md), um mit dem Code loszulegen: Zwei Befehle prüfen alles (`claude plugin validate .` und `claude plugin test .`), und eine neue Sprache braucht ein Wörterbuch und ein paar Zeilen. Was sich in welcher Version geändert hat, steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 📄 Lizenz
 

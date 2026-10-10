@@ -155,6 +155,16 @@ test('/mochi card, wrapped and snap write under ~/.claude/mochi/share; a new mon
     written[plain(e.path)] = e.text
     return { value: undefined }
   })
+  on('fs.exists', ($, e) => ({ value: written[plain(e.path)] !== undefined }) as never)
+  on('session.surfaces', () => ({ value: ['terminal'] as never }))
+  // rsvg-convert, once the machine has it, draws the PNG it is asked for.
+  let hasRsvg = false
+  on('process.run', ($, e) => {
+    if (!hasRsvg || e.argv[0] !== 'rsvg-convert') return { value: { exitCode: 1, stdout: '', stderr: '' } } as never
+    written[plain(e.argv[3] ?? '')] = 'png'
+    return { value: { exitCode: 0, stdout: '', stderr: '' } } as never
+  })
+  on('tool.call', { tool: 'Write' }, () => ({ result: '', text: '' }) as never)
   await clock.set(OCT2)
   await $.session.start({ cwd: '/proj', surface: 'terminal', isInteractive: true } as never)
   await clock.advance(1000)
@@ -176,9 +186,17 @@ test('/mochi card, wrapped and snap write under ~/.claude/mochi/share; a new mon
   const year = await $.command.run({ command: 'mochi', args: 'wrapped year' } as never)
   expect(year.text).toContain('mochi-wrapped-2026.svg')
 
+  // The last edit's lines stay out of a picture to share; its file and counts stay in.
+  await $.tool.call({ tool: 'Write', file_path: '/proj/app.ts', content: 'const marker = 1\n' } as never)
   const snap = await $.command.run({ command: 'mochi', args: 'snap' } as never)
-  expect(snap.text).toBe('Band: /home/me/.claude/mochi/share/mochi-band.svg\nDetails pane: /home/me/.claude/mochi/share/mochi-details.svg')
+  expect(snap.text).toBe('Band: /home/me/.claude/mochi/share/mochi-band.svg\nDetails pane: /home/me/.claude/mochi/share/mochi-details.svg\n'
+    + 'X and Reddit take PNG, not SVG: with rsvg-convert or ImageMagick installed, /mochi snap saves a PNG too.')
   for (const name of ['band', 'details']) expect(isSelfContained(written[`/home/me/.claude/mochi/share/mochi-${name}.svg`] ?? '')).toBe(true)
+  expect(written['/home/me/.claude/mochi/share/mochi-details.svg']).toContain('app.ts')
+  expect(written['/home/me/.claude/mochi/share/mochi-details.svg']).not.toContain('marker')
+  hasRsvg = true
+  expect((await $.command.run({ command: 'mochi', args: 'snap' } as never)).text)
+    .toBe('Band: /home/me/.claude/mochi/share/mochi-band.png\nDetails pane: /home/me/.claude/mochi/share/mochi-details.png')
 
   // Ten minutes on, the history is read again; the offer is not made twice.
   await clock.advance(11 * 60_000)

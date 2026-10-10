@@ -122,18 +122,32 @@ function prFacts(pr: Pr): string[] {
   ]
 }
 
+/** The branch's pull request in one short line for the band: "PR #12 · approved · checks 4/5"; its title when nothing else is known. */
+export function prLine(pr: Pr): string {
+  const facts = prFacts(pr)
+  return t().ci.pr(pr.number, facts.length > 0 ? facts.join(' · ') : clip(pr.title, 28))
+}
+
+/** A pull request's colour: red with a failing check, amber while some run, green once they pass. */
+const prInk = (pr: Pr): string => (pr.failed > 0 ? CI_INK.failed : pr.pending > 0 ? CI_INK.running : pr.passed > 0 ? CI_INK.passed : CI_INK.waiting)
+
 const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 
-/** The desktop panel's CI mark while runs go: a breathing dot and its line, ending at `right` on the baseline `y`; none when wider than `room`. */
-export function ciMark(ci: Ci | null | undefined, right: number, y: number, room: number): { svg: string; width: number } {
-  if (!ci || ci.state !== 'running') return { svg: '', width: 0 }
-  const text = ciLine(ci)
+/**
+ * The desktop panel's CI mark: while runs go, a breathing dot and their line;
+ * otherwise the branch's pull request. It ends at `right` on the baseline `y`;
+ * none when wider than `room`.
+ */
+export function ciMark(ci: Ci | null | undefined, pr: Pr | null | undefined, right: number, y: number, room: number): { svg: string; width: number } {
+  const isRunning = ci?.state === 'running'
+  if (!isRunning && !pr) return { svg: '', width: 0 }
+  const text = ci && isRunning ? ciLine(ci) : pr ? prLine(pr) : ''
   const width = cols(text) * 6 + 12
   if (width > room) return { svg: '', width: 0 }
   const x = right - width
-  const ink = CI_INK.running
+  const ink = isRunning || !pr ? CI_INK.running : prInk(pr)
   return {
-    svg: `<circle cx="${x + 3.5}" cy="${y - 3.8}" r="3" fill="${ink}"><animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/></circle>` +
+    svg: `<circle cx="${x + 3.5}" cy="${y - 3.8}" r="3" fill="${ink}">${isRunning ? '<animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>' : ''}</circle>` +
       `<text class="t" x="${x + 11}" y="${y}" font-size="11" fill="${ink}">${esc(text)}</text>`,
     width,
   }
@@ -162,7 +176,7 @@ export function ciCard(env: Env, now: number): Card | null {
       if (pr) {
         const facts = prFacts(pr)
         const factsW = facts.length > 0 ? cols(facts.join(' · ')) * 6 + 16 : 0
-        const ink = pr.failed > 0 ? CI_INK.failed : pr.pending > 0 ? CI_INK.running : pr.passed > 0 ? CI_INK.passed : CI_INK.waiting
+        const ink = prInk(pr)
         const review = pr.review !== '' ? `<tspan fill="${REVIEW_INK[pr.review]}">${esc(facts[0] ?? '')}</tspan>` : ''
         const rest = facts.slice(pr.review !== '' ? 1 : 0).join(' · ')
         out += dot(ink, pr.pending > 0) +

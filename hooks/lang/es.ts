@@ -107,8 +107,10 @@ export const es: typeof en = {
     tour: [
       { line: 'hola, soy Mochi', text: 'Hola, soy Mochi. Vivo encima de tu prompt y muestro lo que hace Claude Code: leer, ejecutar, esperarte.' },
       { line: 'clic en los anillos · detalles', text: 'Los anillos muestran el contexto y tus límites de uso. Haz clic en ellos, o escribe /mochi detalles, para verlo todo.' },
-      { line: '/mochi poner · el escudo', text: 'Sube de nivel y vísteme con /mochi poner. El escudo pregunta antes de un comando que no se puede deshacer; /mochi escudo lo desactiva.' },
+      { line: '/mochi poner · el escudo', text: 'Sube de nivel y vísteme con /mochi poner. El escudo pregunta antes de un comando que no se puede deshacer; para desactivarlo, /mochi escudo desactivar.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: 'escribe /mochi detalles', text: 'Escribe /mochi detalles para ver el contexto, tus límites de uso, los cambios y tu historial.' },
     rule: {
       question: rule => `¿Añadir «${rule}» a CLAUDE.md?`,
       add: 'Añadir',
@@ -226,6 +228,7 @@ export const es: typeof en = {
     helm: 'desinstala la release del clúster',
     unpublish: 'retira el paquete del registro para todo el mundo',
     pruneAll: 'borra todas las imágenes, contenedores y redes sin usar',
+    shieldRules: 'cambia las reglas del propio escudo',
   },
 
   loopAlarm: {
@@ -402,6 +405,7 @@ export const es: typeof en = {
     cardHow: 'Para tu perfil de GitHub, ponla junto a README.md en el repositorio de tu perfil y pega:',
     wrappedSaved: (title, path) => `Resumen · ${title}: ${path}`,
     snapSaved: (band, details) => `Franja: ${band}\nPanel de detalles: ${details}`,
+    noPng: 'X y Reddit aceptan PNG, no SVG: con rsvg-convert o ImageMagick instalado, /mochi captura guarda también un PNG.',
     failed: reason => `No se pudo guardar: ${reason}`,
     ready: month => `tu resumen de ${month} está listo · /mochi resumen`,
   },
@@ -485,6 +489,7 @@ export const es: typeof en = {
     detailOpened: 'Panel de detalles abierto.',
     shieldOn: 'Escudo activado: se pedirá confirmación antes de ejecutar un comando que no se puede deshacer y antes de escribir o hacer commit de algo que parezca un secreto.',
     shieldOff: 'Escudo desactivado.',
+    shieldHow: isOn => (isOn ? 'Para desactivarlo: /mochi escudo desactivar' : 'Para activarlo: /mochi escudo activar'),
     alertsOn: minutes =>
       `Alertas activadas: oirás un aviso cuando termine un trabajo de más de ${plural(minutes, 'minuto', 'minutos')}, cuando un chat te espere, cuando se reinicie un límite y cuando falle la CI.`,
     alertsOff: 'Alertas desactivadas.',
@@ -510,6 +515,8 @@ export const es: typeof en = {
     contextLine: (ctx, agents, tools) => `Contexto: ${ctx} · agentes en ejecución: ${agents} · herramientas en este turno: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `Sonido: ${sound ? 'sí' : 'no'} · Escudo: ${shield ? 'sí' : 'no'} · Alertas: ${alerts ? 'sí' : 'no'} · Tamaño: ${compact ? 'pequeño' : 'grande'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `Consejos: ${tips ? 'sí' : 'no'} · Pausas: ${breaks ? 'sí' : 'no'} · Reacciones de plugins: ${plugins ? 'sí' : 'no'}`,
     peersLine: (level, peers) => `Nivel ${level} · otros chats: ${peers}`,
     commands: 'Comandos: /mochi (mostrar/ocultar) | detalles | nivel | poner | insignias | conversaciones | escudo | alertas | ci | consejos | pausas | sonido | complementos | tarjeta | resumen | captura | recorrido | novedades | cumpleaños | idioma | pequeño | grande | exportar | restablecer | comentarios | estado',
     langNow: (name, list) => `Idioma: ${name}. Disponibles: ${list} · /mochi idioma <código> o automático`,
@@ -517,6 +524,7 @@ export const es: typeof en = {
     langAuto: name => `El idioma sigue a Claude Code y al sistema: ${name}.`,
     langUnknown: (code, list) => `Idioma desconocido: ${code}. Disponibles: ${list}`,
     words: {
+      on: ['activar', 'encender'], off: ['desactivar', 'apagar'],
       hide: ['ocultar', 'esconder'], show: ['mostrar'], small: ['pequeño', 'pequeno'], big: ['grande'], sound: ['sonido'],
       status: ['estado'], details: ['detalles', 'detalle'], level: ['nivel'], wear: ['poner', 'vestir'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma'], auto: ['automático', 'automatico'], none: ['nada', 'ninguno'],

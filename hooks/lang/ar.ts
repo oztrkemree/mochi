@@ -130,8 +130,10 @@ export const ar: typeof en = {
     tour: [
       { line: 'مرحبًا، أنا Mochi', text: 'مرحبًا، أنا Mochi. أعيش فوق سطر الكتابة وأُريك ما يفعله Claude Code: يقرأ، يشغّل، ينتظرك.' },
       { line: 'انقر الحلقات · التفاصيل', text: 'تعرض الحلقات السياق وحدود استخدامك. انقرها، أو اكتب /mochi تفاصيل، لترى الصورة كاملة.' },
-      { line: '/mochi البس · الدرع', text: 'ارفع مستواك وألبسني عبر /mochi البس. الدرع يسألك قبل أي أمر لا يمكن التراجع عنه، و /mochi درع يوقفه.' },
+      { line: '/mochi البس · الدرع', text: 'ارفع مستواك وألبسني عبر /mochi البس. الدرع يسألك قبل أي أمر لا يمكن التراجع عنه، و /mochi درع إيقاف يوقفه.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: 'اكتب /mochi تفاصيل', text: 'اكتب /mochi تفاصيل لترى السياق وحدود استخدامك والتغييرات وسجلك.' },
     rule: {
       question: rule => `هل أضيف «${rule}» إلى CLAUDE.md؟`,
       add: 'أضف',
@@ -249,6 +251,7 @@ export const ar: typeof en = {
     helm: 'يزيل الإصدار من العنقود',
     unpublish: 'يزيل الحزمة من السجل للجميع',
     pruneAll: 'يحذف كل الصور والحاويات والشبكات غير المستخدمة',
+    shieldRules: 'يغيّر قواعد الدرع نفسه',
   },
 
   loopAlarm: {
@@ -424,6 +427,7 @@ export const ar: typeof en = {
     cardHow: 'لملفك الشخصي على GitHub، ضعها بجانب README.md في مستودع ملفك الشخصي، ثم الصق:',
     wrappedSaved: (title, path) => `حصاد ${title}: ${path}`,
     snapSaved: (band, details) => `الشريط: ${band}\nلوحة التفاصيل: ${details}`,
+    noPng: 'يقبل X وReddit صيغة PNG لا SVG: إذا كان rsvg-convert أو ImageMagick مثبّتًا، يحفظ /mochi لقطة نسخة PNG أيضًا.',
     failed: reason => `تعذّر الحفظ: ${reason}`,
     ready: month => `حصاد ${month} جاهز · /mochi حصاد`,
   },
@@ -510,6 +514,7 @@ export const ar: typeof en = {
     detailOpened: 'فُتحت لوحة التفاصيل.',
     shieldOn: 'الدرع مفعّل: يسأل Mochi قبل تشغيل أي أمر لا يمكن التراجع عنه، وقبل كتابة أو إيداع أي شيء يبدو سرًا.',
     shieldOff: 'الدرع معطّل.',
+    shieldHow: isOn => (isOn ? 'لإيقافه: /mochi درع إيقاف' : 'لتشغيله: /mochi درع تشغيل'),
     alertsOn: minutes =>
       `التنبيهات مفعّلة: ستسمع تنبيهًا حين ينتهي عمل استغرق أكثر من ${count(minutes, ['دقيقة واحدة', 'دقيقتين', 'دقائق', 'دقيقة', 'دقيقة'])}، وحين تنتظرك محادثة، وحين يتجدد حد، وحين يفشل CI.`,
     alertsOff: 'التنبيهات معطّلة.',
@@ -535,6 +540,8 @@ export const ar: typeof en = {
     contextLine: (ctx, agents, tools) => `السياق: ${ctx} · وكلاء يعملون: ${agents} · أدوات هذا الطلب: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `الصوت: ${sound ? 'مفعّل' : 'معطّل'} · الدرع: ${shield ? 'مفعّل' : 'معطّل'} · التنبيهات: ${alerts ? 'مفعّلة' : 'معطّلة'} · الحجم: ${compact ? 'صغير' : 'كبير'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `النصائح: ${tips ? 'مفعّلة' : 'معطّلة'} · الاستراحات: ${breaks ? 'مفعّلة' : 'معطّلة'} · تفاعلات الإضافات: ${plugins ? 'مفعّلة' : 'معطّلة'}`,
     peersLine: (level, peers) => `المستوى ${level} · محادثات أخرى: ${peers}`,
     commands: 'الأوامر: /mochi (إظهار/إخفاء) | تفاصيل | مستوى | البس | شارات | محادثات | درع | تنبيهات | ci | نصائح | استراحة | صوت | إضافات | بطاقة | حصاد | لقطة | جولة | جديد | ميلاد | لغة | صغير | كبير | تصدير | مسح | ملاحظات | حالة',
     langNow: (name, list) => `اللغة: ${name}. المتاح: ${list} · /mochi لغة <رمز> أو تلقائي`,
@@ -542,6 +549,7 @@ export const ar: typeof en = {
     langAuto: name => `اللغة تتبع Claude Code والنظام: ${name}.`,
     langUnknown: (code, list) => `لغة غير معروفة: ${code}. المتاح: ${list}`,
     words: {
+      on: ['تشغيل', 'شغل', 'tashghil'], off: ['إيقاف', 'ايقاف', 'أوقف', 'iqaf'],
       hide: ['إخفاء', 'اخفاء', 'ikhfa'], show: ['إظهار', 'اظهار', 'izhar'], small: ['صغير', 'saghir'], big: ['كبير', 'kabir'], sound: ['صوت', 'الصوت', 'sawt'],
       status: ['حالة', 'الحالة', 'hala'], details: ['تفاصيل', 'التفاصيل', 'tafasil'], level: ['مستوى', 'المستوى', 'mustawa'],
       wear: ['البس', 'إكسسوارات', 'اكسسوارات', 'خزانة', 'ilbas'], shield: ['درع', 'الدرع', 'dir3'],

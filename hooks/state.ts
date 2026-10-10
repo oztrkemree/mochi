@@ -99,6 +99,8 @@ export const chat = {
   lastTurnFailed: false,
   /** Where the band was last drawn: the desktop rebuilds the band on every redraw, so there the details live in the status line. */
   drawnOn: null as 'terminal' | 'remote' | null,
+  /** The band was last drawn where its rings open the details at a click: the desktop app. */
+  canClick: false,
   lastStatus: undefined as string | undefined,
   autoLang: null as Lang | null,
   lastEnv: null as Env | null,
@@ -108,6 +110,10 @@ export const chat = {
   waitTold: 0,
   /** The shield waits on the person's word. */
   isAsking: false,
+  /** Claude Code's permission question on the face: its token, the face it covered and that face's token, and the call it asks about. */
+  perm: null as { token: number; was: number; face: Omit<Face, 'frameAt'>; key: string } | null,
+  /** The prompt said good night: once its reply is done, Mochi goes to sleep. */
+  isGoodNight: false,
   /** This chat's folder and whether git keeps it as a linked worktree, for the board of chats. */
   folder: '',
   isWorktree: false,
@@ -135,6 +141,10 @@ export const chat = {
     retired: [] as TipId[],
     /** This plugin's version, from its plugin.json. */
     version: '',
+    /** What a newer version's first start has to say once someone can see it: the tour, what is new, or only that it was seen. */
+    welcome: '' as '' | 'tour' | 'news' | 'seen',
+    /** The day's greeting, held back by a start that drew nowhere. */
+    greet: false,
   },
   /** The days files this chat counted, by name: one gone means a history reset in some chat. */
   counted: [] as string[],

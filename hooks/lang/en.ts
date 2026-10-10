@@ -113,8 +113,10 @@ export const en = {
     tour: [
       { line: 'hi, I’m Mochi', text: 'Hi, I’m Mochi. I live above your prompt and show what Claude Code is doing: reading, running, waiting for you.' },
       { line: 'click the rings · details', text: 'The rings show the context and your usage limits. Click them, or type /mochi details, for the whole picture.' },
-      { line: '/mochi wear · the shield', text: 'Level up and dress me with /mochi wear. The shield asks before a command that cannot be undone; /mochi shield turns it off.' },
+      { line: '/mochi wear · the shield', text: 'Level up and dress me with /mochi wear. The shield asks before a command that cannot be undone; /mochi shield off turns it off.' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: 'type /mochi details', text: 'Type /mochi details for the context, your usage limits, the changes and your history.' },
     rule: {
       question: (rule: string) => `Add “${rule}” to CLAUDE.md?`,
       add: 'Add',
@@ -241,6 +243,7 @@ export const en = {
     helm: 'uninstalls the release from the cluster',
     unpublish: 'removes the package from the registry for everyone',
     pruneAll: 'deletes all unused images, containers and networks',
+    shieldRules: 'changes the shield’s own rules',
   },
 
   /** The loop watch. */
@@ -426,6 +429,7 @@ export const en = {
     cardHow: 'For your GitHub profile, put it beside README.md in your profile repository and paste:',
     wrappedSaved: (title: string, path: string) => `${title} wrapped: ${path}`,
     snapSaved: (band: string, details: string) => `Band: ${band}\nDetails pane: ${details}`,
+    noPng: 'X and Reddit take PNG, not SVG: with rsvg-convert or ImageMagick installed, /mochi snap saves a PNG too.',
     failed: (reason: string) => `Could not save: ${reason}`,
     ready: (month: string) => `your ${month} wrapped is ready · /mochi wrapped`,
   },
@@ -518,6 +522,7 @@ export const en = {
     detailOpened: 'Details pane opened.',
     shieldOn: 'Shield on: Mochi asks before a command that cannot be undone runs, and before anything that looks like a secret is written or committed.',
     shieldOff: 'Shield off.',
+    shieldHow: (isOn: boolean) => (isOn ? 'To turn it off: /mochi shield off' : 'To turn it on: /mochi shield on'),
     alertsOn: (minutes: number) => `Alerts on: you will hear when work longer than ${minutes} minutes finishes, when a chat waits for you, when a limit resets and when CI fails.`,
     alertsOff: 'Alerts off.',
     levelLine: (level: number, xp: number, toNext: number) => `Level ${level} · ${xp} XP · ${toNext} XP to the next level`,
@@ -542,14 +547,17 @@ export const en = {
     contextLine: (ctx: string, agents: number, tools: number) => `Context: ${ctx} · agents running: ${agents} · tools this turn: ${tools}`,
     prefsLine: (sound: boolean, shield: boolean, alerts: boolean, compact: boolean) =>
       `Sound: ${sound ? 'on' : 'off'} · Shield: ${shield ? 'on' : 'off'} · Alerts: ${alerts ? 'on' : 'off'} · Size: ${compact ? 'small' : 'big'}`,
+    moreLine: (tips: boolean, breaks: boolean, plugins: boolean) =>
+      `Tips: ${tips ? 'on' : 'off'} · Breaks: ${breaks ? 'on' : 'off'} · Plugin reactions: ${plugins ? 'on' : 'off'}`,
     peersLine: (level: number, peers: string) => `Level ${level} · other chats: ${peers}`,
     commands: 'Commands: /mochi (show/hide) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name: string, list: string) => `Language: ${name}. Available: ${list} · /mochi lang <code> or auto`,
     langSet: (name: string) => `Language: ${name}.`,
     langAuto: (name: string) => `Language follows Claude Code and the system: ${name}.`,
     langUnknown: (code: string, list: string) => `Unknown language: ${code}. Available: ${list}`,
-    /** Words this language accepts for each command, besides the English ones. */
+    /** Words this language accepts for each command, besides the English ones; `on` and `off` follow a setting’s command (/mochi tips off). */
     words: {
+      on: [] as string[], off: [] as string[],
       hide: [] as string[], show: [] as string[], small: [] as string[], big: [] as string[], sound: [] as string[],
       status: [] as string[], details: [] as string[], level: [] as string[], wear: [] as string[], shield: [] as string[],
       alerts: [] as string[], lang: [] as string[], auto: [] as string[], none: [] as string[],

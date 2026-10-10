@@ -21,7 +21,7 @@ const slashed = (path: string) => path.replaceAll('\\', '/')
  * What a session's engine answers beneath the plugin, with files in memory
  * (keyed by path, `/` for a separator), the toasts and the questions asked.
  */
-function world(on: On, store: Record<string, unknown>, files: Record<string, string>, answer = 'Add') {
+function world(on: On, store: Record<string, unknown>, files: Record<string, string>, answer = 'Add', surfaces: string[] = ['terminal']) {
   on('store.get', ($, e) => ({ value: store[e.key] }) as never)
   on('store.set', ($, e) => {
     store[e.key] = e.value
@@ -36,7 +36,7 @@ function world(on: On, store: Record<string, unknown>, files: Record<string, str
   on('session.id', () => ({ value: 'c-1' }) as never)
   on('session.root', () => ({ value: '/work/app' }) as never)
   on('session.turns', () => ({ value: 3 }) as never)
-  on('session.surfaces', () => ({ value: ['terminal'] as never }))
+  on('session.surfaces', () => ({ value: surfaces as never }))
   on('command.register', () => ({ value: { command: 'mochi' } }))
   on('ui.status', () => ({ value: undefined }))
   on('ui.toast', ($, e) => {
@@ -126,6 +126,24 @@ test('standing instructions are found in ten languages; requests, complaints and
   for (const text of none) expect([text, rulesOf(text)]).toEqual([text, []])
 })
 
+test('standing instructions are found in the six newer languages too; their complaints and questions are not', () => {
+  const found: [string, string][] = [
+    ['Non aggiungere commenti.', 'non aggiungere commenti'], ['Usa sempre pnpm', 'usa sempre pnpm'],
+    ['Zawsze używaj pnpm', 'zawsze używaj pnpm'], ['Nie dodawaj komentarzy', 'nie dodawaj komentarzy'],
+    ['Завжди використовуй pnpm', 'завжди використовуй pnpm'], ['Не додавай коментарів', 'не додавай коментарів'],
+    ['हमेशा pnpm इस्तेमाल करो।', 'हमेशा pnpm इस्तेमाल करो'], ['टिप्पणियाँ मत जोड़ो', 'टिप्पणियाँ मत जोड़ो'],
+    ['Selalu pakai pnpm', 'selalu pakai pnpm'], ['Tolong jangan tambahkan komentar', 'jangan tambahkan komentar'],
+    ['استخدم pnpm دائما', 'استخدم pnpm دائما'], ['لا تضف تعليقات', 'لا تضف تعليقات'],
+    ['Nie console.log verwenden', 'nie console.log verwenden'],
+  ]
+  for (const [text, rule] of found) expect([text, rulesOf(text)]).toEqual([text, [rule]])
+  const none = [
+    'non funziona più', 'non so cosa fare', 'usa questo file qui', 'nie działa', 'nie wiem co robić', 'не працює взагалі',
+    'बिल्ड फेल हो गया', 'selalu gagal di ci', 'jangan khawatir soal itu', 'لا يعمل البناء', 'لا تستخدم pnpm؟',
+  ]
+  for (const text of none) expect([text, rulesOf(text)]).toEqual([text, []])
+})
+
 test('the third time an instruction is given in a project, Mochi asks; add and never settle it, not now counts again', () => {
   const app = projectKey('C:\\work\\app\\')
   expect(app).toBe('C:/work/app')
@@ -175,7 +193,7 @@ test('a tip waits for its situation, and shows at most once an hour, three times
   log = shownTip(log, 'rewind', now(24), 0)
   expect(pickTip(log, waiting(48, 'rewind'), now(48), 0)).toBe(null)
 
-  const turn: TurnNote = { reason: 'answer', errorRun: 0, isLongFirst: false, hasPlanned: false, hasPick: false }
+  const turn: TurnNote = { reason: 'answer', errorRun: 0, isLongFirst: false, hasPlanned: false, hasPick: false, canClick: true }
   const t0 = NOW
   expect(turnTips(NO_ENV, turn, t0)).toEqual([])
   expect(turnTips(NO_ENV, { ...turn, reason: 'aborted' }, t0)).toEqual(['rewind'])
@@ -192,6 +210,8 @@ test('a tip waits for its situation, and shows at most once an hour, three times
   const history = { days: {}, total: { ...EMPTY_DAY, turns: 25 }, activeDays: 1, streak: 1, bestStreak: 1 }
   expect(turnTips({ ...NO_ENV, history }, turn, t0)).toEqual(['rings', 'wear'])
   expect(turnTips({ ...NO_ENV, history }, { ...turn, hasPick: true }, t0)).toEqual(['rings'])
+  // Where the rings cannot be clicked (the terminal), there is no tip about clicking them.
+  expect(turnTips({ ...NO_ENV, history }, { ...turn, hasPick: true, canClick: false }, t0)).toEqual([])
   // A tip about how things stand waits only while they still do: compacted and committed since, only `rewind` is left.
   const waited = { compact: { at: t0, arg: '' }, commit: { at: t0, arg: '' }, rewind: { at: t0, arg: '' } }
   expect(Object.keys(stillPending(waited, { ...NO_ENV, tokens: 150_000, window: 200_000 }, t0))).toEqual(['compact', 'rewind'])
@@ -268,7 +288,9 @@ test('the first start ever takes the tour, and says nothing of what is new; /moc
   await fresh.clock.set(NOW)
   await $.session.start(START)
   await wait(fresh.clock, 40_000)
-  expect(fresh.toasts.filter(x => x.startsWith('Hi, I’m Mochi') || x.startsWith('The rings') || x.includes('/mochi wear'))).toHaveLength(3)
+  // No band was drawn on the desktop, so the step about the rings points to /mochi details instead.
+  expect(fresh.toasts.filter(x => x.startsWith('Hi, I’m Mochi') || x.startsWith('Type /mochi details') || x.includes('/mochi wear'))).toHaveLength(3)
+  expect(fresh.toasts.some(x => x.startsWith('The rings'))).toBe(false)
   expect(fresh.toasts.some(x => x.includes('/mochi news'))).toBe(false)
   expect(store.version).toBe('0.3.0')
   expect((await $.command.run({ command: 'mochi', args: 'tour' } as never)).text).toBe('The tour starts in a moment: watch Mochi.')
@@ -288,6 +310,25 @@ test('after an update, the new version is told once in a toast, and /mochi news 
   expect(store.version).toBe('0.3.0')
   const news = (await $.command.run({ command: 'mochi', args: 'news' } as never)).text
   expect(news).toBe(newsLines('0.3.0'))
+})
+
+test('a run that draws nowhere uses up nothing said once: the greeting and the news wait for a surface', async ($, on) => {
+  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.3.0' }) }
+  const store: Record<string, unknown> = { prefs: { lang: 'en' }, version: '0.2.0' }
+  const surfaces: string[] = []
+  const w = world(on, store, manifest, 'Add', surfaces)
+  await w.clock.set(NOW)
+  await $.session.start({ cwd: '/tmp', surface: null, isInteractive: false } as never)
+  await wait(w.clock, 20_000)
+  expect(w.toasts.some(x => x.includes('/mochi news'))).toBe(false)
+  expect(store.version).toBe('0.2.0')
+  expect(store.greeted).toBeUndefined()
+  // A surface that attaches later is greeted (Hacktoberfest, this October day) and hears what is new.
+  surfaces.push('desktop')
+  await wait(w.clock, 20_000)
+  expect(store.greeted).toBeDefined()
+  expect(w.toasts.filter(x => x.includes('/mochi news'))).toHaveLength(1)
+  expect(store.version).toBe('0.3.0')
 })
 
 test('someone who used an older version and never changed a preference hears what is new, not the tour', async ($, on) => {

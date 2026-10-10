@@ -7,7 +7,7 @@ import { t } from './i18n'
 import { UNLOCKS, hintFor, itemName, levelOf, unlocked, xpOf } from './level'
 import { KIND_INK, glyph, limitName, sliceInk, tokens, until } from './panel'
 import { duration } from './react'
-import { clip, cols } from './text'
+import { clip, cols, rtlStyle } from './text'
 import { WEAR } from './wear'
 
 // The detail pane: the session in full, in the panel's language (rings,
@@ -300,7 +300,7 @@ function paint(cards: Card[], W: number): string {
     return out
   }).join('')
   const H = y + PAD - 10
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMin meet">${STYLE}${DEFS}${body}</svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMin meet">${STYLE}${rtlStyle()}${DEFS}${body}</svg>`
 }
 
 // ---------- what changed in the files ----------
@@ -488,7 +488,7 @@ export function levelSvg(env: Env, now: number, width: number): string {
   const card = cards[0]
   if (card === undefined) return ''
   const H = card.content + 12
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMin meet">${STYLE}${DEFS}${card.body(2, 6, W - 4)}</svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMin meet">${STYLE}${rtlStyle()}${DEFS}${card.body(2, 6, W - 4)}</svg>`
 }
 
 /** The drawing's height for a width, so the pane can size the image. */

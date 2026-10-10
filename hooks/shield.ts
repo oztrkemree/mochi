@@ -1,6 +1,6 @@
 import { baseName } from './facts'
 import type { Danger, Rule } from './guard'
-import { isOff, rulesNow, sayKey } from './guard'
+import { RULES_FILE, isOff, rulesNow, sayKey } from './guard'
 import { t } from './i18n'
 import type { Dict } from './i18n'
 
@@ -76,18 +76,25 @@ function landsOn(ref: string, current: string): string {
   return name === 'HEAD' || name === '@' ? current : name
 }
 
+/** Whether a command changes folder first, or points git elsewhere: it may act on another repository. */
+const movesAway = (cmd: string): boolean =>
+  /(^|[\s;&|(])(cd|pushd|chdir|set-location|sl|push-location)\s/i.test(cmd) || /\s(-C|--git-dir|--work-tree)[\s=]/.test(cmd)
+
+const RISKS = ['calm', 'own', 'ask'] as const
+
 /**
  * How risky the force pushes in a command are: `loud` when one rewrites a
  * default branch (named), `calm` when each keeps a lease on a branch that is
- * none, `ask` otherwise, and whenever unsure. `current` is the branch checked
- * out, `head` the one the remote names as its default ('' when unknown).
+ * none, `own` when a plain force lands on such a branch (named), `ask`
+ * otherwise, and whenever unsure. `current` is the branch checked out, `head`
+ * the one the remote names as its default ('' when unknown).
  */
-export function pushRisk(cmd: string, current: string, head: string): { risk: 'loud' | 'calm' | 'ask'; branch: string } {
+export function pushRisk(cmd: string, current: string, head: string): { risk: 'loud' | (typeof RISKS)[number]; branch: string } {
   const defaults = head === '' ? DEFAULTS : [...DEFAULTS, head]
   // After a change of folder, or with git pointed elsewhere, the branch checked out may be another repository's.
-  const isElsewhere = /(^|[\s;&|(])(cd|pushd|chdir|set-location|sl|push-location)\s/i.test(cmd) || /\s(-C|--git-dir|--work-tree)[\s=]/.test(cmd)
-  const here = isElsewhere || current === 'HEAD' ? '' : current
-  let risk: 'calm' | 'ask' | null = null
+  const here = movesAway(cmd) || current === 'HEAD' ? '' : current
+  let risk: (typeof RISKS)[number] | null = null
+  const owned: string[] = []
   for (const rest of gitCalls(cmd, 'push')) {
     const flags = rest.filter(w => w.startsWith('-'))
     const refs = rest.filter((w, i) => !w.startsWith('-') && !VALUED.includes(rest[i - 1] ?? '')).slice(1)
@@ -98,23 +105,30 @@ export function pushRisk(cmd: string, current: string, head: string): { risk: 'l
     const lands = refs.length === 0 ? [here] : refs.map(r => landsOn(r, here))
     const hit = lands.find(b => defaults.includes(b))
     if (hit !== undefined) return { risk: 'loud', branch: hit }
-    risk = isForce || lands.includes('') || risk === 'ask' ? 'ask' : 'calm'
+    const next = lands.includes('') ? 'ask' : isForce ? 'own' : 'calm'
+    if (next === 'own') owned.push(...lands)
+    risk = RISKS[Math.max(RISKS.indexOf(next), risk === null ? 0 : RISKS.indexOf(risk))] ?? 'ask'
   }
-  return { risk: risk ?? 'ask', branch: '' }
+  return { risk: risk ?? 'ask', branch: risk === 'own' ? [...new Set(owned)].join(', ') : '' }
 }
 
 /**
  * The dangers found, weighed by the branch a force push rewrites: onto a
  * default branch it asks loudly, under a key of its own (allowing force pushes
- * elsewhere never allows this one); leased onto another branch it does not ask.
+ * elsewhere never allows this one); onto another branch it names the branch,
+ * and with a lease it does not ask.
  */
 export function weigh(found: Danger[], cmd: string, current: string, head: string): Danger[] {
   if (!found.some(x => x.key === 'forcePush')) return found
   const { risk, branch } = pushRisk(cmd, current, head)
   const rest = found.filter(x => x.key !== 'forcePush')
   if (risk === 'calm') return rest
+  if (risk === 'own') return [{ key: 'forcePush', detail: branch }, ...rest]
   return risk === 'ask' ? found : [{ key: `forcePush:${branch}`, detail: '' }, ...rest]
 }
+
+/** Whether the shield's question is the mild one: only force pushes onto the person's own branches, each named. */
+export const isMild = (ask: readonly Danger[]): boolean => ask.length > 0 && ask.every(x => x.key === 'forcePush' && x.detail !== '')
 
 // ---------- always allowed here ----------
 
@@ -132,6 +146,37 @@ export const allow = (all: Record<string, string[]>, root: string, keys: string[
 
 /** A repository's folder as a key: one separator, no trailing one, the drive in capitals, so git's spelling and the session's meet. */
 export const repoKey = (path: string): string => path.replace(/\\/g, '/').replace(/\/+$/, '').replace(/^[a-z]:/, d => d.toUpperCase())
+
+/** A path in the repository at `root` (a key as repoKey makes it): letter case aside on Windows, where Git Bash also writes C: as /c. */
+function isUnder(path: string, root: string): boolean {
+  const isWindows = /^[A-Z]:/.test(root)
+  const fold = (s: string) => (isWindows ? s.toLowerCase() : s)
+  const key = fold(repoKey(isWindows ? path.replace(/^\/([a-zA-Z])\//, '$1:/') : path))
+  return key === fold(root) || key.startsWith(`${fold(root)}/`)
+}
+
+/**
+ * Whether a word of a command, or an edit's file, names a place outside the
+ * repository at `root`: home or another place the environment names, a path
+ * going up, or an absolute path elsewhere. cmd's switches (`/s`, `/q`) and
+ * /dev/null are no place.
+ */
+function isOutside(word: string, root: string): boolean {
+  const w = word.replace(/^["'(]+|["'),;]+$/g, '')
+  if (/^(~|\$env:|%\w+%|\$\{?(HOME|TMPDIR|TEMP|TMP|USERPROFILE)\b)/i.test(w) || /(^|[\\/])\.\.([\\/]|$)/.test(w)) return true
+  if (!/^([a-zA-Z]:)?[\\/]/.test(w) || /^\/[a-zA-Z?]{1,2}(:\S*)?$/.test(w) || w === '/dev/null') return false
+  return !isUnder(w, root)
+}
+
+/**
+ * Whether a call may act outside the repository at `root`, where "always
+ * allow here" does not hold: a command that changes folder, points git
+ * elsewhere or names a place outside; an edit of a file outside.
+ */
+export function leavesRepo(cmd: string, path: string, root: string): boolean {
+  if (path !== '' && isOutside(path, root)) return true
+  return cmd !== '' && (movesAway(cmd) || cmd.split(/\s+/).some(w => isOutside(w, root)))
+}
 
 /** What /mochi shield says beside on or off: what is always allowed where, and the person's own rules. */
 export function shieldLines(all: Record<string, string[]>, d: Dict = t()): string[] {
@@ -154,6 +199,8 @@ const SHAPES: [RegExp, SecretKind][] = [
   [/\bsk-(?:(?:ant|proj|svcacct|admin)-[A-Za-z0-9_-]{20,}|[A-Za-z0-9]{32,})/g, 'apiKey'],
   [/\bxox[abposr]-[A-Za-z0-9-]{10,}/g, 'slack'],
   [/\b[rs]k_live_[A-Za-z0-9]{20,}/g, 'stripe'],
+  // An npm token, as .npmrc writes it after `_authToken=`.
+  [/\bnpm_[A-Za-z0-9]{36}\b/g, 'apiKey'],
 ]
 
 /** A name that holds a secret, as the end of a longer one: API_KEY, clientSecret, db_password, SECRET_KEY_BASE. */
@@ -220,13 +267,15 @@ export function isSecretFile(path: string): boolean {
 const kept = (list: Danger[]): Danger[] => list.filter((x, i) => !isOff(x.key) && list.findIndex(y => y.key === x.key) === i)
 
 /**
- * What a Write, Edit or MultiEdit would add that looks secret; `before` is the
- * file as it stands, null when there is none. A file of secrets is where they
- * belong, so it is not searched; changing one that exists asks instead.
+ * What a Write, Edit or MultiEdit would add that looks secret, and a change to
+ * the shield's own rules; `before` is the file as it stands, null when there
+ * is none. Changing a file of secrets that exists asks as such; a new one is
+ * searched like any file, so a .env of placeholders writes freely.
  */
 export function editSecrets(args: Record<string, unknown> & { tool: string }, before: string | null): Danger[] {
   const path = str(args.file_path)
-  if (isSecretFile(path)) return args.tool === 'Write' && before === null ? [] : kept([{ key: 'secretEdit', detail: '' }])
+  if (RULES_FILE.test(path)) return kept([{ key: 'shieldRules', detail: '' }])
+  if (isSecretFile(path) && !(args.tool === 'Write' && before === null)) return kept([{ key: 'secretEdit', detail: '' }])
   const edits: Record<string, unknown>[] = args.tool === 'Write' ? [{ old_string: before ?? '', new_string: args.content }]
     : args.tool === 'Edit' ? [args]
     : Array.isArray(args.edits) ? (args.edits as Record<string, unknown>[]) : []

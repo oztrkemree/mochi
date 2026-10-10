@@ -104,8 +104,10 @@ export const ja: typeof en = {
     tour: [
       { line: 'こんにちは、Mochiだよ', text: 'こんにちは、Mochiだよ。プロンプトの上にいて、Claude Codeが何をしているか見せる: 読んでる、実行してる、返事待ち。' },
       { line: 'リングをクリック · 詳細', text: 'リングはコンテキストと利用上限を表す。クリックするか /mochi details で全体が見られる。' },
-      { line: '/mochi wear · シールド', text: 'レベルを上げて /mochi wear で着せ替えしよう。シールドは取り消せないコマンドの前に確認する。/mochi shield でオフ。' },
+      { line: '/mochi wear · シールド', text: 'レベルを上げて /mochi wear で着せ替えしよう。シールドは取り消せないコマンドの前に確認する。/mochi shield off でオフ。' },
     ],
+    /** The tour's second step where the rings cannot be clicked (the terminal). */
+    tourDetails: { line: '/mochi details と入力', text: '/mochi details で、コンテキスト、利用上限、変更、履歴が見られる。' },
     rule: {
       question: rule => `「${rule}」をCLAUDE.mdに追加する？`,
       add: '追加',
@@ -223,6 +225,7 @@ export const ja: typeof en = {
     helm: 'クラスターからリリースをアンインストールする',
     unpublish: 'パッケージの公開を全体から取り下げる',
     pruneAll: '未使用のイメージ・コンテナ・ネットワークをすべて削除する',
+    shieldRules: 'シールド自体のルールを変更する',
   },
 
   loopAlarm: {
@@ -398,6 +401,7 @@ export const ja: typeof en = {
     cardHow: 'GitHub プロフィール用: プロフィールリポジトリの README.md の隣に置いて、これを貼り付けて:',
     wrappedSaved: (title, path) => `${title}のまとめ: ${path}`,
     snapSaved: (band, details) => `バー: ${band}\n詳細パネル: ${details}`,
+    noPng: 'XとRedditはSVGではなくPNGを受け付ける。rsvg-convertかImageMagickが入っていれば、/mochi snap がPNGも保存する。',
     failed: reason => `保存できなかった: ${reason}`,
     ready: month => `${month}のまとめができた · /mochi まとめ`,
   },
@@ -481,6 +485,7 @@ export const ja: typeof en = {
     detailOpened: '詳細パネルを開いた。',
     shieldOn: 'シールドON: 取り消せないコマンドは実行前に確認する。秘密情報らしきものを書き込む・コミットする前も確認する。',
     shieldOff: 'シールドOFF。',
+    shieldHow: isOn => (isOn ? 'オフにするには: /mochi shield off' : 'オンにするには: /mochi shield on'),
     alertsOn: minutes => `通知ON: ${minutes}分以上かかる作業が終わったとき、チャットが返事待ちのとき、上限がリセットされたとき、CIが失敗したときに知らせる。`,
     alertsOff: '通知OFF。',
     levelLine: (level, xp, toNext) => `レベル ${level} · ${xp} XP · 次のレベルまで ${toNext} XP`,
@@ -504,6 +509,8 @@ export const ja: typeof en = {
     contextLine: (ctx, agents, tools) => `コンテキスト: ${ctx} · 実行中のエージェント: ${agents} · このターンのツール: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
       `サウンド: ${sound ? 'ON' : 'OFF'} · シールド: ${shield ? 'ON' : 'OFF'} · 通知: ${alerts ? 'ON' : 'OFF'} · サイズ: ${compact ? '小' : '大'}`,
+    moreLine: (tips, breaks, plugins) =>
+      `ヒント: ${tips ? 'ON' : 'OFF'} · 休憩: ${breaks ? 'ON' : 'OFF'} · プラグインのリアクション: ${plugins ? 'ON' : 'OFF'}`,
     peersLine: (level, peers) => `レベル ${level} · 他のチャット: ${peers}`,
     commands: 'コマンド: /mochi (表示/非表示) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name, list) => `言語: ${name}。選択肢: ${list} · /mochi lang <コード> または auto`,
@@ -511,6 +518,7 @@ export const ja: typeof en = {
     langAuto: name => `言語はClaude Codeとシステムに合わせる: ${name}。`,
     langUnknown: (code, list) => `不明な言語: ${code}。選択肢: ${list}`,
     words: {
+      on: ['オン'], off: ['オフ'],
       hide: ['非表示', '隠す'], show: ['表示'], small: ['小さく', '小'], big: ['大きく', '大'], sound: ['サウンド', '音'],
       status: ['状態', 'ステータス'], details: ['詳細'], level: ['レベル'], wear: ['着せ替え', '着る'], shield: ['シールド'],
       alerts: ['通知'], lang: ['言語'], auto: ['自動'], none: ['なし'],

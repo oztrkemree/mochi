@@ -5,7 +5,7 @@ import { t } from './i18n'
 import { EMPTY_DAY, HEAD_RANK, SLOT_ITEMS, addDay, levelOf, xpOf } from './level'
 import type { Slot } from './level'
 import { mascotInner } from './rig'
-import { clip } from './text'
+import { clip, rtlStyle } from './text'
 
 // What Mochi makes to be shown elsewhere: a card for a profile README, a
 // month or a year wrapped up, and the band and details as they stand. Each
@@ -28,7 +28,7 @@ const thousands = (v: number) => Math.round(v).toString().replace(/\B(?=(\d{3})+
 export const BG = '<style>.bg{fill:#1E1B19;stroke:#fff;stroke-opacity:.09}@media (prefers-color-scheme:light){.bg{fill:#FFFCF8;stroke:#000;stroke-opacity:.09}}</style>'
 
 const open = (w: number, h: number, title: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img"><title>${esc(title)}</title>${STYLE}${BG}${DEFS}` +
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img"><title>${esc(title)}</title>${STYLE}${rtlStyle()}${BG}${DEFS}` +
   `<rect class="bg" x="0.5" y="0.5" width="${w - 1}" height="${h - 1}" rx="16"/>`
 
 /** Mochi in a mood and an outfit, its loops running, in a square at (x, y) with a glow behind. */
