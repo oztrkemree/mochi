@@ -100,4 +100,6 @@ export const chat = {
   lastStatus: undefined as string | undefined,
   autoLang: null as Lang | null,
   lastEnv: null as Env | null,
+  /** When the person's shield.json was last changed, as last read (0: there is none; -1: not read yet). */
+  rulesAt: -1,
 }

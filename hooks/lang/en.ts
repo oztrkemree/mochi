@@ -141,6 +141,23 @@ export const en = {
     repoDelete: 'deletes the repository',
     publish: 'publishes the package to everyone',
     sudo: 'runs as administrator',
+    wipe: 'erases a whole drive',
+    registry: 'deletes registry keys',
+    shutdown: 'shuts down or restarts the computer',
+    bucket: 'deletes files in cloud storage for good',
+    cloud: 'deletes a cloud resource',
+    azGroup: 'deletes the resource group and everything in it',
+    firebaseDeploy: 'puts a new version live on Firebase',
+    heroku: 'deletes the Heroku app and its data',
+    rewrite: 'rewrites the repository’s whole history',
+    pushMirror: 'makes the remote an exact copy, deleting what is not here',
+    pushDelete: 'deletes a branch on the remote',
+    pipeShell: 'runs a script straight from the internet',
+    dbWipe: 'erases the database and all its data',
+    namespace: 'deletes the namespace and everything in it',
+    helm: 'uninstalls the release from the cluster',
+    unpublish: 'removes the package from the registry for everyone',
+    pruneAll: 'deletes all unused images, containers and networks',
   },
 
   /** The loop watch. */
@@ -257,6 +274,27 @@ export const en = {
     question: (what: string, cmd: string) => `This command ${what}:\n\n${cmd}\n\nRun it?`,
     run: 'Run',
     stop: 'Stop',
+    always: 'Always allow here',
+    write: 'Write',
+    editQuestion: (what: string, file: string) => `This edit to ${file} ${what}.\n\nWrite it?`,
+  },
+
+  /** The shield's judgement: force pushes by branch, what is always allowed, secrets, the person's own rules. */
+  guard: {
+    forceDefault: (branch: string) => `overwrites the history of ${branch}, the default branch`,
+    allowed: 'always allowed here',
+    allowedIn: (folder: string, list: string) => `Always allowed in ${folder}: ${list}`,
+    forget: 'To forget them all: /mochi shield reset',
+    /** The word after /mochi shield that forgets them, besides the English one. */
+    reset: 'reset',
+    forgot: 'Forgot everything that was always allowed.',
+    rules: (added: number, off: number) => `Your rules (~/.claude/mochi/shield.json): ${added} added · ${off} turned off`,
+    yourRule: 'matches one of your shield rules',
+    badRules: (list: string) => `shield.json: skipped what could not be read · ${list}`,
+    secret: (kind: string) => `adds what looks like ${kind}`,
+    secretFile: 'adds a file of secrets to git',
+    secretEdit: 'changes a file of secrets',
+    kind: { aws: 'an AWS access key', github: 'a GitHub token', apiKey: 'an API key', slack: 'a Slack token', stripe: 'a live Stripe key', privateKey: 'a private key', generic: 'a password or token' },
   },
 
   /** Toasts and notifications. */
