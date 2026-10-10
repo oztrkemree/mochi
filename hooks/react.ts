@@ -148,14 +148,14 @@ export function onPrompt(text: string, wasAsleep: boolean): Reaction {
   const thinking = t().st.thinking
   if (wasAsleep) return { mood: 'shocked', line: t().st.wokeUp, holdMs: 1500 }
   // Thanks and praise, in the languages Mochi speaks.
-  if (/te[sş]ekk[uü]r|sa[gğ]ol|eyvallah|\beyv\b|thanks|thank you|\bthx\b|\btsk\b|harika|s[uü]per|m[uü]kemmel|aferin|bravo|helal|efsane|perfect|awesome|great job|gracias|danke|merci|obrigad|спасибо|谢谢|ありがとう|감사|고마워/.test(low)) {
+  if (/te[sş]ekk[uü]r|sa[gğ]ol|eyvallah|\beyv\b|thanks|thank you|\bthx\b|\btsk\b|harika|s[uü]per|m[uü]kemmel|aferin|bravo|helal|efsane|perfect|awesome|great job|gracias|danke|merci|obrigad|grazie|dzi[eę]kuj[eę]|dzi[eę]ki|terima kasih|makasih|спасибо|дякую|谢谢|ありがとう|감사|고마워|धन्यवाद|शुक्रिया|شكر/.test(low)) {
     return { mood: 'pleased', line: thinking, holdMs: 2500 }
   }
   const letters = said.replace(/[^\p{L}]/gu, '')
   const upper = letters.replace(/[^\p{Lu}]/gu, '')
   if (letters.length >= 8 && upper.length / letters.length > 0.7) return { mood: 'shocked', line: thinking, holdMs: 2000 }
   // Frustration: it still does not work, why, again.
-  if (/[cç]al[ıi][sş]m[ıi]yor|bozuk|olmad[ıi]|olmam[ıi][sş]|\bneden\b|\bniye\b|\bwtf\b|\byine\b|(^|\s)h[aâ]l[aâ](\s|$|[.,!?])|sa[cç]ma|yanl[ıi][sş]|\baq\b|\?\?|doesn'?t work|not working|\bbroken\b|\bstill\b|\bwhy\b|\bagain\b|no funciona|funktioniert nicht|ne marche pas|não funciona|не работает|不行|动不了|動かない|안 돼|안돼/.test(low)) {
+  if (/[cç]al[ıi][sş]m[ıi]yor|bozuk|olmad[ıi]|olmam[ıi][sş]|\bneden\b|\bniye\b|\bwtf\b|\byine\b|(^|\s)h[aâ]l[aâ](\s|$|[.,!?])|sa[cç]ma|yanl[ıi][sş]|\baq\b|\?\?|doesn'?t work|not working|\bbroken\b|\bstill\b|\bwhy\b|\bagain\b|no funciona|funktioniert nicht|ne marche pas|não funciona|non funziona|nie dzia[lł]a|tidak berfungsi|не работает|не працює|不行|动不了|動かない|안 돼|안돼|काम नहीं कर|لا يعمل/.test(low)) {
     return { mood: 'nervous', line: thinking, holdMs: 2500 }
   }
   return { mood: 'thinking', line: thinking, holdMs: 0 }

@@ -123,12 +123,12 @@ export function firstDayOf(known: string, today: string, chats: readonly Record<
 
 // ---------- surprises ----------
 
-/** Mochi's name as people write it: in Latin letters, Cyrillic, katakana, Hangul or Chinese. */
-const NAME = /(?<![a-z])mochi(?![a-z])|(?<![а-яё])(моти|мочи)(?![а-яё])|モチ(?![ァ-ヺー])|모찌|모치|麻糬/iu
-const GOOD_NIGHT = /good ?night|iyi geceler|iyi uykular|buenas noches|gute nacht|bonne nuit|boa noite|спокойной ночи|доброй ночи|晚安|おやすみ|잘 ?자(요)?(?!\p{L})|안녕히 주무세요/iu
+/** Mochi's name as people write it: in Latin letters, Cyrillic, katakana, Hangul, Chinese, Devanagari or Arabic. */
+const NAME = /(?<![a-z])mochi(?![a-z])|(?<![а-яёіїєґ])(моти|мочи|моті|мочі)(?![а-яёіїєґ])|モチ(?![ァ-ヺー])|모찌|모치|麻糬|मोची|موتشي/iu
+const GOOD_NIGHT = /good ?night|iyi geceler|iyi uykular|buenas noches|gute nacht|bonne nuit|boa noite|buona ?notte|dobranoc|selamat tidur|спокойной ночи|доброй ночи|(на )?добраніч|晚安|おやすみ|잘 ?자(요)?(?!\p{L})|안녕히 주무세요|शुभ ?रात्रि|تصبح(ين)? على خير|ليلة سعيدة/iu
 // Not "te quiero preguntar" (I want to ask you), nor "не люблю" (I do not like).
-const LOVE = /love (you|u)\b(?! to\b)|seni seviyorum|seviyorum seni|te quiero(?! +\p{L}+[aei]r(?!\p{L}))|te amo|amo voc[eê]|ich liebe dich|hab dich lieb|je t['’]aime|люблю тебя|тебя люблю|爱你|愛你|愛してる|大好き|사랑해/iu
-const HELLO = /(?<!\p{L})(hi|hello|hey|hiya|merhaba|selam|hola|hallo|salut|bonjour|ol[aá]|oi|привет|здравствуй)(?!\p{L})|你好|こんにちは|안녕/iu
+const LOVE = /love (you|u)\b(?! to\b)|seni seviyorum|seviyorum seni|te quiero(?! +\p{L}+[aei]r(?!\p{L}))|te amo|amo voc[eê]|ich liebe dich|hab dich lieb|je t['’]aime|ti amo|ti voglio bene|kocham ci[eę]|(sayang|cinta) (kamu|kau)|люблю тебя|тебя люблю|кохаю тебе|тебе кохаю|люблю тебе|тебе люблю|爱你|愛你|愛してる|大好き|사랑해|(तुमसे|आपसे) प्यार|[أا]حبك|بحبك/iu
+const HELLO = /(?<!\p{L})(hi|hello|hey|hiya|merhaba|selam|hola|hallo|salut|bonjour|ol[aá]|oi|ciao|cze[sś][cć]|halo|привет|здравствуй|привіт)(?!\p{L})|你好|こんにちは|안녕|नमस्ते|नमस्कार|مرحب|[أا]هلا|السلام عليكم/iu
 
 /** A short prompt that says good night, or loves, thanks or greets Mochi by name: a moment of its own; null otherwise. */
 export function promptEgg(text: string): Reaction | null {

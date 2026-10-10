@@ -554,7 +554,13 @@ test('every language has every word, and the language is picked from names and c
   expect(pickLang('zh_CN.UTF-8')).toBe('zh')
   expect(pickLang('japanese')).toBe('ja')
   expect(pickLang('Türkçe')).toBe('tr')
-  expect(pickLang('it-IT')).toBe(null)
+  expect(pickLang('it-IT')).toBe('it')
+  expect(pickLang('uk_UA.UTF-8')).toBe('uk')
+  expect(pickLang('Polski')).toBe('pl')
+  expect(pickLang('हिन्दी')).toBe('hi')
+  expect(pickLang('Bahasa Indonesia')).toBe('id')
+  expect(pickLang('arabic')).toBe('ar')
+  expect(pickLang('nl-NL')).toBe(null)
 })
 
 test('a new install speaks the system’s language; /mochi lang changes it and English words always work', async ($, on) => {
@@ -648,9 +654,12 @@ test('each system is asked its own way, and no word is spliced into a script', a
   expect(langCommand('linux')).toBe(null)
 })
 
-test('wide characters clip by the room they take', async () => {
+test('wide characters clip by the room they take, and marks on a letter take none', async () => {
   expect(cols('読み込み中')).toBe(10)
   expect(cols('reading')).toBe(7)
   expect(clip('読み込み中です', 9)).toBe('読み込み…')
   expect(clip('reading', 9)).toBe('reading')
+  expect(cols('नमस्ते')).toBe(4)
+  expect(cols('مَرْحَبًا')).toBe(5)
+  expect(clip('नमस्ते दुनिया', 5)).toBe('नमस्ते…')
 })

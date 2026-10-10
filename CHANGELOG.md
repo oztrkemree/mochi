@@ -53,6 +53,7 @@ Needs Claude Code 2.1.293 or later.
 
 ### Everywhere
 
+- Six more languages: Italian, Polish, Ukrainian, Hindi, Indonesian and Arabic. Mochi now speaks 16.
 - Runs the same on Windows, Linux and macOS: notifications, the system's language, the home folder and deleting old files each the system's own way.
 - Item ids are English now; what older versions saved carries over.
 - A lighter timer while Mochi dozes.
