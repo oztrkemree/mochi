@@ -16,6 +16,18 @@ export const pt: typeof en = {
   days: ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'],
   months: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
 
+  news: {
+    '0.3.0': {
+      headline: 'dicas, um tour no primeiro uso e sugestões para o CLAUDE.md',
+      notes: [
+        'Dicas: de vez em quando, com o Mochi parado, uma dica curta sobre o Claude Code. /mochi dicas desliga.',
+        'CLAUDE.md: dê a mesma instrução pela terceira vez e o Mochi oferece adicioná-la ao CLAUDE.md do projeto.',
+        'Um tour curto no primeiro uso; /mochi tour mostra de novo.',
+        'Novidades depois de cada atualização: /mochi novidades.',
+      ],
+    },
+  },
+
   mood: {
     idle: 'ocioso', wave: 'acenando', listening: 'ouvindo você', thinking: 'pensando', talking: 'escrevendo a resposta',
     reading: 'lendo', searching: 'buscando', writing: 'escrevendo código', running: 'rodando um comando', waiting: 'esperando',
@@ -74,6 +86,38 @@ export const pt: typeof en = {
   },
 
   word: { file: 'arquivo', agent: 'agente', chat: 'chat' },
+
+  coach: {
+    tip: 'dica',
+    off: '/mochi dicas desliga as dicas',
+    tips: {
+      rewind: { line: 'Esc Esc · voltar', text: 'Foi pelo caminho errado? Aperte Esc duas vezes, ou digite /rewind, para voltar a uma mensagem anterior e tentar outro prompt.' },
+      permissions: { line: '/permissions · liberar de vez', text: what => `O Claude continua pedindo permissão para usar ${what}. Com /permissions você libera de vez.` },
+      compact: { line: '/compact o que manter', text: 'O contexto está enchendo. /compact com algumas palavras sobre o que importa, como “/compact mantenha as decisões da API”, guarda o essencial.' },
+      mcp: { line: '/mcp · servidores sem uso', text: 'As ferramentas MCP ocupam a maior parte do seu contexto. /mcp lista os servidores; desligar os que você não usa libera espaço.' },
+      plan: { line: 'Shift+Tab · plano primeiro', text: 'Para uma tarefa grande, aperte Shift+Tab até ativar o modo plano: o Claude planeja primeiro e não muda nada até você aprovar.' },
+      commit: { line: 'peça um commit ao Claude', text: n => `${pl(n, 'arquivo mudou', 'arquivos mudaram')} desde o último commit. Peça ao Claude para fazer o commit: ele escreve a mensagem também.` },
+      rings: { line: 'clique nos anéis · detalhes', text: 'Clique nos anéis do Mochi, ou digite /mochi detalhes, para ver o contexto, seus limites, as mudanças e seu histórico.' },
+      wear: { line: '/mochi vestir', text: 'Você tem acessórios para usar. /mochi vestir lista todos; no Guarda-roupa do painel de detalhes você os coloca no Mochi.' },
+    },
+    tour: [
+      { line: 'oi, eu sou o Mochi', text: 'Oi, eu sou o Mochi. Moro acima do seu prompt e mostro o que o Claude Code está fazendo: lendo, rodando, esperando você.' },
+      { line: 'clique nos anéis · detalhes', text: 'Os anéis mostram o contexto e seus limites de uso. Clique neles, ou digite /mochi detalhes, para ver tudo.' },
+      { line: '/mochi vestir · o escudo', text: 'Suba de nível e me vista com /mochi vestir. O escudo pergunta antes de um comando que não pode ser desfeito; /mochi escudo desliga.' },
+    ],
+    rule: {
+      question: rule => `Adicionar “${rule}” ao CLAUDE.md?`,
+      add: 'Adicionar',
+      later: 'Agora não',
+      never: 'Nunca para isso',
+      added: 'adicionado ao CLAUDE.md',
+    },
+    tipsOn: 'Dicas ligadas: de vez em quando, com o Mochi parado, uma dica curta; e a oferta de adicionar ao CLAUDE.md uma instrução que você repete.',
+    tipsOff: 'Dicas desligadas.',
+    tourStarts: 'O tour começa em instantes: olhe o Mochi.',
+    newsToast: (version, headline) => `Mochi ${version}: ${headline} · /mochi novidades`,
+    noNews: version => `Sem notas para o Mochi ${version}.`,
+  },
 
   limit: {
     short: { five_hour: 'sessão', seven_day: 'semana', spend_limit: 'gasto' },
@@ -345,6 +389,7 @@ export const pt: typeof en = {
       status: [], details: ['detalhes'], level: ['nível', 'nivel'], wear: ['vestir', 'usar'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma', 'língua', 'lingua'], auto: ['automático', 'automatico'], none: ['nenhum', 'nada'],
       card: ['cartão'], wrapped: ['retrospectiva', 'resumo'], snap: ['captura', 'foto'], year: ['ano'],
+      tips: ['dicas', 'dica'], tour: ['apresentação'], news: ['novidades'],
     },
   },
 }

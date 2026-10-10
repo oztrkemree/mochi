@@ -195,6 +195,8 @@ export type Prefs = {
   lang: string
   /** Follow the CI of a push made in this chat, and show the branch's pull request, through gh. */
   hasCi: boolean
+  /** Tips while Mochi is idle, and the offer to add an instruction given again and again to CLAUDE.md. */
+  hasTips: boolean
 }
 
 /** One slice of the context window, coloured as /context colours it. */

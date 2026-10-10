@@ -13,6 +13,18 @@ export const zh: typeof en = {
   days: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
   months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
 
+  news: {
+    '0.3.0': {
+      headline: '提示、首次导览和 CLAUDE.md 建议',
+      notes: [
+        '提示：Mochi 空闲时，偶尔给一条关于 Claude Code 的简短提示。/mochi tips 可关闭。',
+        'CLAUDE.md：同一条指示说到第三次时，Mochi 会提议把它加入项目的 CLAUDE.md。',
+        '首次启动时有简短导览；/mochi tour 可重新播放。',
+        '每次更新后的新内容：/mochi news。',
+      ],
+    },
+  },
+
   mood: {
     idle: '空闲', wave: '挥手', listening: '听你说', thinking: '思考中', talking: '写回复',
     reading: '读取中', searching: '搜索中', writing: '写代码', running: '运行命令', waiting: '等待中',
@@ -71,6 +83,38 @@ export const zh: typeof en = {
   },
 
   word: { file: '文件', agent: 'agent', chat: '对话' },
+
+  coach: {
+    tip: '提示',
+    off: '/mochi tips 可关闭',
+    tips: {
+      rewind: { line: 'Esc Esc · 回退', text: '走错方向了？按两次 Esc（或输入 /rewind）回到之前的某条消息，换个提示词再试。' },
+      permissions: { line: '/permissions · 永久允许', text: what => `Claude 一直在请求使用 ${what} 的权限。用 /permissions 可以永久允许。` },
+      compact: { line: '/compact 要保留的内容', text: '上下文快满了。在 /compact 后写上要点，例如“/compact 保留 API 的决定”，摘要会保留这些。' },
+      mcp: { line: '/mcp · 未用的服务器', text: 'MCP 工具占了上下文的最大部分。/mcp 列出服务器；关掉不用的就能腾出空间。' },
+      plan: { line: 'Shift+Tab · 先规划', text: '大任务先按 Shift+Tab 切到计划模式：Claude 先做计划，你同意前不会改动任何东西。' },
+      commit: { line: '让 Claude 提交', text: n => `上次提交后已有 ${n} 个文件改动。让 Claude 提交吧：提交信息它也会写。` },
+      rings: { line: '点击圆环 · 详情', text: '点击 Mochi 的圆环，或输入 /mochi details，查看上下文、用量限制、改动和历史。' },
+      wear: { line: '/mochi wear', text: '你有可以穿戴的配饰了。/mochi wear 列出它们；在详情面板的衣橱里给 Mochi 戴上。' },
+    },
+    tour: [
+      { line: '你好，我是 Mochi', text: '你好，我是 Mochi。我住在输入框上方，显示 Claude Code 正在做什么：读取、运行、等你回复。' },
+      { line: '点击圆环 · 详情', text: '圆环显示上下文和用量限制。点击它们，或输入 /mochi details，查看全部。' },
+      { line: '/mochi wear · 护盾', text: '升级后用 /mochi wear 给我打扮。护盾会在无法撤销的命令运行前询问；/mochi shield 可关闭。' },
+    ],
+    rule: {
+      question: rule => `把“${rule}”加入 CLAUDE.md？`,
+      add: '加入',
+      later: '以后再说',
+      never: '此条不再询问',
+      added: '已加入 CLAUDE.md',
+    },
+    tipsOn: '提示已开启：Mochi 空闲时偶尔给一条简短提示；你反复给出的指示，会提议加入 CLAUDE.md。',
+    tipsOff: '提示已关闭。',
+    tourStarts: '导览马上开始：看 Mochi。',
+    newsToast: (version, headline) => `Mochi ${version}：${headline} · /mochi news`,
+    noNews: version => `Mochi ${version} 没有更新说明。`,
+  },
 
   limit: {
     short: { five_hour: '会话', seven_day: '每周', spend_limit: '花费' },
@@ -341,6 +385,7 @@ export const zh: typeof en = {
       status: ['状态'], details: ['详情'], level: ['等级'], wear: ['穿戴', '配饰'], shield: ['护盾'],
       alerts: ['提醒', '通知'], lang: ['语言'], auto: ['自动'], none: ['无', '不戴'],
       card: ['卡片'], wrapped: ['回顾'], snap: ['快照'], year: ['年'],
+      tips: ['提示', '技巧'], tour: ['导览'], news: ['新功能', '更新'],
     },
   },
 }

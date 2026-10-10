@@ -17,6 +17,19 @@ export const en = {
   days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 
+  /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
+  news: {
+    '0.3.0': {
+      headline: 'tips, a first-run tour and CLAUDE.md suggestions',
+      notes: [
+        'Tips: now and then, while Mochi is idle, one short tip about Claude Code. /mochi tips turns them off.',
+        'CLAUDE.md: give the same instruction a third time and Mochi offers to add it to the project’s CLAUDE.md.',
+        'A short tour on the very first start; /mochi tour shows it again.',
+        'What’s new after each update: /mochi news.',
+      ],
+    },
+  },
+
   /** What the drawing shows, in a few words, for each mood. */
   mood: {
     idle: 'idle', wave: 'waving', listening: 'listening to you', thinking: 'thinking', talking: 'writing a reply',
@@ -78,6 +91,39 @@ export const en = {
 
   /** Fallback words. */
   word: { file: 'file', agent: 'agent', chat: 'chat' },
+
+  /** The coach: tips while Mochi is idle, the first-run tour, CLAUDE.md suggestions. */
+  coach: {
+    tip: 'tip',
+    off: '/mochi tips turns these off',
+    tips: {
+      rewind: { line: 'Esc Esc · rewind', text: 'Went the wrong way? Press Esc twice, or type /rewind, to go back to an earlier message and try a different prompt.' },
+      permissions: { line: '/permissions · allow for good', text: (what: string) => `Claude keeps asking before it uses ${what}. /permissions can allow it for good.` },
+      compact: { line: '/compact what to keep', text: 'Context is filling up. /compact with a few words on what matters, like “/compact keep the API decisions”, keeps that gist.' },
+      mcp: { line: '/mcp · unused servers', text: 'MCP tools take the most room in your context. /mcp lists the servers; turning off the ones you do not use frees it.' },
+      plan: { line: 'Shift+Tab · plan first', text: 'For a big task, press Shift+Tab until plan mode is on: Claude plans first and changes nothing until you agree.' },
+      commit: { line: 'ask Claude to commit', text: (n: number) => `${plural(n, 'file', 'files')} changed since the last commit. Ask Claude to commit them: it writes the message too.` },
+      rings: { line: 'click the rings · details', text: 'Click Mochi’s rings, or type /mochi details, for the context, your limits, the changes and your history.' },
+      wear: { line: '/mochi wear', text: 'You have things to wear. /mochi wear lists them; the Wardrobe in the details pane puts them on Mochi.' },
+    },
+    tour: [
+      { line: 'hi, I’m Mochi', text: 'Hi, I’m Mochi. I live above your prompt and show what Claude Code is doing: reading, running, waiting for you.' },
+      { line: 'click the rings · details', text: 'The rings show the context and your usage limits. Click them, or type /mochi details, for the whole picture.' },
+      { line: '/mochi wear · the shield', text: 'Level up and dress me with /mochi wear. The shield asks before a command that cannot be undone; /mochi shield turns it off.' },
+    ],
+    rule: {
+      question: (rule: string) => `Add “${rule}” to CLAUDE.md?`,
+      add: 'Add',
+      later: 'Not now',
+      never: 'Never for this',
+      added: 'added to CLAUDE.md',
+    },
+    tipsOn: 'Tips on: now and then, while Mochi is idle, a short tip; and an offer to add an instruction you keep giving to CLAUDE.md.',
+    tipsOff: 'Tips off.',
+    tourStarts: 'The tour starts in a moment: watch Mochi.',
+    newsToast: (version: string, headline: string) => `Mochi ${version}: ${headline} · /mochi news`,
+    noNews: (version: string) => `No notes for Mochi ${version}.`,
+  },
 
   /** Usage windows. */
   limit: {
@@ -371,6 +417,7 @@ export const en = {
       status: [] as string[], details: [] as string[], level: [] as string[], wear: [] as string[], shield: [] as string[],
       alerts: [] as string[], lang: [] as string[], auto: [] as string[], none: [] as string[],
       card: [] as string[], wrapped: [] as string[], snap: [] as string[], year: [] as string[],
+      tips: [] as string[], tour: [] as string[], news: [] as string[],
     },
   },
 }
