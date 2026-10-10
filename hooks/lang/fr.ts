@@ -19,12 +19,15 @@ export const fr: typeof en = {
 
   news: {
     '0.3.0': {
-      headline: 'des astuces, une visite au premier lancement et des suggestions pour CLAUDE.md',
+      headline: 'un bouclier plus malin, la CI après un push, toutes les conversations sur un même tableau, des insignes et plus encore',
       notes: [
-        'Astuces : de temps en temps, quand Mochi est au repos, une courte astuce sur Claude Code. /mochi astuces les désactive.',
-        'CLAUDE.md : donnez la même consigne une troisième fois et Mochi propose de l’ajouter au CLAUDE.md du projet.',
-        'Une courte visite au tout premier lancement ; /mochi visite la rejoue.',
-        'Les nouveautés après chaque mise à jour : /mochi nouveautés.',
+        'Bouclier : plus de commandes irréversibles (celles de Windows aussi), les force push jugés selon la branche, une protection des secrets, « Toujours autoriser ici » et vos propres règles.',
+        'CI : après un push, Mochi suit les exécutions via votre propre gh. /mochi ci désactive ce suivi.',
+        'Conversations : toutes celles de cette machine sur un même tableau, /mochi conversations. Mochi vous prévient aussi quand votre limite se réinitialise.',
+        'Des astuces quand Mochi est au repos, et la proposition d’ajouter à CLAUDE.md une consigne que vous répétez. /mochi astuces les désactive.',
+        'Des insignes pour le vrai travail, des jours spéciaux avec de quoi s’habiller, de petites surprises et un étirement après deux heures : /mochi insignes.',
+        'À partager : /mochi carte pour votre profil GitHub, /mochi bilan et /mochi capture.',
+        'Vos données : /mochi exporter, /mochi réinitialiser et /mochi avis.',
       ],
     },
   },
@@ -475,14 +478,14 @@ export const fr: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi : afficher/cacher, détails, niveau, porter, bouclier, alertes, son, langue',
-    hint: '[détails | niveau | porter [nom] | bouclier | alertes | son | langue [code] | cacher | afficher | petit | grand | statut]',
+    description: 'Mochi : afficher/cacher, détails, niveau, porter, insignes, conversations, bouclier, alertes, CI, astuces, pauses, son, extensions, carte, bilan, capture, visite, nouveautés, anniversaire, langue, petit/grand, exporter, réinitialiser, avis, statut',
+    hint: '[détails | niveau | porter [nom] | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue [code] | petit | grand | cacher | afficher | exporter | réinitialiser | avis | statut]',
     small: 'Mochi sur une ligne.',
     big: 'Mochi en grand.',
     detailOpened: 'Panneau de détails ouvert.',
-    shieldOn: 'Bouclier activé : les commandes irréversibles demanderont confirmation avant de s’exécuter.',
+    shieldOn: 'Bouclier activé : une confirmation sera demandée avant d’exécuter une commande irréversible et avant d’écrire ou de committer ce qui ressemble à un secret.',
     shieldOff: 'Bouclier désactivé.',
-    alertsOn: minutes => `Alertes activées : un son vous préviendra quand un travail de plus de ${pl(minutes, 'minute', 'minutes')} se termine, et quand une longue tâche attend votre approbation.`,
+    alertsOn: minutes => `Alertes activées : un son vous préviendra quand un travail de plus de ${pl(minutes, 'minute', 'minutes')} se termine, quand une conversation vous attend, quand une limite se réinitialise et quand la CI échoue.`,
     alertsOff: 'Alertes désactivées.',
     levelLine: (level, xp, toNext) => `Niveau ${level} · ${xp} XP · ${toNext} XP avant le niveau suivant`,
     statsLine: (turns, edits, commits, days, streak) =>
@@ -507,7 +510,7 @@ export const fr: typeof en = {
     prefsLine: (sound, shield, alerts, compact) =>
       `Son : ${sound ? 'activé' : 'désactivé'} · Bouclier : ${shield ? 'activé' : 'désactivé'} · Alertes : ${alerts ? 'activées' : 'désactivées'} · Taille : ${compact ? 'petite' : 'grande'}`,
     peersLine: (level, peers) => `Niveau ${level} · autres conversations : ${peers}`,
-    commands: 'Commandes : /mochi (afficher/cacher) | détails | niveau | porter | bouclier | alertes | son | langue | petit | grand | statut',
+    commands: 'Commandes : /mochi (afficher/cacher) | détails | niveau | porter | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue | petit | grand | exporter | réinitialiser | avis | statut',
     langNow: (name, list) => `Langue : ${name}. Disponibles : ${list} · /mochi langue <code> ou auto`,
     langSet: name => `Langue : ${name}.`,
     langAuto: name => `La langue suit Claude Code et le système : ${name}.`,

@@ -1,6 +1,6 @@
 # Adding something for Mochi to wear
 
-Mochi's wardrobe is 36 items in five slots. A new one touches a handful of places, and a test checks that none is missed: an item without a slot, art, a place on the drawing, a way to get it or a name in every language fails `claude plugin test .`.
+Mochi's wardrobe is 46 items in five slots. A new one touches a handful of places, and a test checks that none is missed: an item without a slot, art, a place on the drawing, a way to get it or a name in every language fails `claude plugin test .`.
 
 Have an idea but no art? Open an **Outfit idea** issue instead; someone may draw it.
 
@@ -13,19 +13,21 @@ Add the id to the `Item` type in `types/index.d.ts`, on the line of its slot, an
 
 ## 2. Art
 
-Every item has a picture in `WEAR` in `hooks/wear.ts`: `{ w, h, uri }`, a WebP data URI and its size in pixels. The drawing and the wardrobe's buttons both use it.
+Every item has a picture in `WEAR` in `hooks/wear.ts`, lines in `VECTOR_WEAR` in `hooks/rig.ts`, or both.
+
+A picture is `{ w, h, uri }`, a WebP data URI and its size in pixels. The drawing and the wardrobe's buttons both use it.
 
 - Transparent background, cropped tight, 40 to 90 pixels on its longer side.
 - The look of the rest: soft clay, lit from the top left, a dark brown edge (`#2B1B17`) rather than black, no text, no logos, no brands.
 - To make the data URI from a PNG: `cwebp -q 90 -alpha_q 100 item.png -o item.webp`, then `base64 -w0 item.webp` (on macOS `base64 -i item.webp`), and put `data:image/webp;base64,` before it.
 
-Thin things that vanish as a picture at band size (a wire frame, a chain) can be drawn as lines instead, in `VECTOR_WEAR` in `hooks/rig.ts`:
+Thin things that vanish as a picture at band size (a wire frame, a chain), and simple shapes in the same clay look (the sakura sprig, the cake), are drawn as lines instead, in `VECTOR_WEAR`:
 
 - `svg`: the markup, in the drawing's own 100×100 coordinates (see below). Give any `id` inside it a prefix of the item's id (`scarfP`), so it never clashes.
 - `box`: `[x, y, width, height]`, the part of the drawing the wardrobe button shows.
 - `onSkin: true` when it reads only on Mochi's clay (glasses): the button puts a patch of clay behind it.
 
-A vector item keeps its `WEAR` picture too; the details pane shows it beside the next unlock.
+An item with both is drawn as lines, and its picture shows in the details pane beside the next unlock.
 
 ## 3. Where it sits
 
@@ -53,16 +55,18 @@ Look at your neighbours in the same slot: a new hat starts from `beanie` or `cow
 
 ## 4. How to get it
 
-Exactly one of:
+At least one of:
 
-- **Earned**: an entry in `UNLOCKS` in `hooks/level.ts`, by `level` or by a habit: `turns`, `days` (active days), `streak` (days in a row), `commits`, `edits` or `night` (turns between midnight and 5 am). Keep levels spread out: two items per level at most.
-- **Seasonal**: an entry in `SEASONAL`, worn by the date alone. `season()` in the same file decides the dates; a new season needs its dates there and its hint (`item.hint`) in every language.
+- **Earned**: one entry in `UNLOCKS` in `hooks/level.ts`, by `level` or by a habit: `turns`, `days` (active days), `streak` (days in a row), `commits`, `edits` or `night` (turns between midnight and 5 am). Keep levels spread out: two items per level at most.
+- **Worn on a day**: the item under its occasion in `DRESS` in the same file (`halloween: { head: 'witchhat', ground: 'pumpkin' }`), worn by the date alone. The occasions and their dates are `RULES` in `hooks/fun.ts`; a new one needs its dates there, and its greeting (`fun.greet`) and hint (`item.hint`) in every language.
+
+An item can be both: the party hat is earned with 50 commits and also worn on a birthday and at New Year.
 
 To have Mochi put it on by itself once earned (as it does the best hat), add it to `HEAD_RANK` or `NECK_RANK` there. Otherwise people choose it in the wardrobe or with `/mochi wear <name>`.
 
 ## 5. Names in every language
 
-Every file in `hooks/lang/` has the item under `item.name` (its full name, lower case: `cowboy hat`) and `item.short` (one word for the wardrobe's buttons: `cowboy`). All ten languages: `en tr es de fr pt ru zh ja ko`. Keep Chinese, Japanese and Korean names short: each character takes two columns. If you do not speak one of them, write your best guess and say so in the pull request.
+Every file in `hooks/lang/` has the item under `item.name` (its full name, lower case: `cowboy hat`) and `item.short` (one word for the wardrobe's buttons: `cowboy`). Every language needs both. Keep Chinese, Japanese and Korean names short: each character takes two columns. If you do not speak one of them, write your best guess and say so in the pull request.
 
 ## 6. In the terminal
 

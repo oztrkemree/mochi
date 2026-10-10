@@ -15,12 +15,15 @@ export const ko: typeof en = {
 
   news: {
     '0.3.0': {
-      headline: '팁, 첫 실행 안내, CLAUDE.md 제안',
+      headline: '더 똑똑해진 보호막, 푸시 후 CI, 모든 채팅 한눈에 보기, 배지 등',
       notes: [
-        '팁: Mochi가 쉬고 있을 때 가끔 Claude Code에 관한 짧은 팁을 보여 줍니다. /mochi tips로 끌 수 있습니다.',
-        'CLAUDE.md: 같은 지시를 세 번째로 하면 Mochi가 프로젝트의 CLAUDE.md에 추가할지 묻습니다.',
-        '처음 실행할 때 짧은 안내가 나옵니다. /mochi tour로 다시 볼 수 있습니다.',
-        '업데이트마다 새로운 점: /mochi news.',
+        '보호막: 되돌릴 수 없는 명령을 더 많이 알아봅니다(Windows 명령 포함). 강제 푸시는 브랜치를 보고 판단하고, 비밀 정보를 지키며, “여기서는 항상 허용”과 직접 만든 규칙도 지원합니다.',
+        'CI: 푸시 후 Mochi가 내 gh로 실행을 따라갑니다. /mochi ci로 끌 수 있습니다.',
+        '채팅: 이 컴퓨터의 모든 채팅을 한눈에, /mochi chats. 한도가 초기화되면 Mochi가 알려 줍니다.',
+        'Mochi가 쉬고 있을 때 보여 주는 팁, 그리고 반복하는 지시를 CLAUDE.md에 추가하자는 제안. /mochi tips로 끌 수 있습니다.',
+        '실제 작업으로 얻는 배지, 입을 거리가 생기는 특별한 날, 소소한 깜짝 반응, 두 시간 뒤 기지개 제안: /mochi badges.',
+        '공유: GitHub 프로필용 /mochi card, /mochi wrapped, /mochi snap.',
+        '내 데이터: /mochi export, /mochi reset, /mochi feedback.',
       ],
     },
   },
@@ -471,14 +474,14 @@ export const ko: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: 표시/숨기기, 상세, 레벨, 착용, 보호막, 알림, 소리, 언어',
-    hint: '[details | level | wear [아이템] | shield | alerts | sound | lang [코드] | hide | show | small | big | status]',
+    description: 'Mochi: 표시/숨기기, 상세, 레벨, 착용, 배지, 채팅, 보호막, 알림, CI, 팁, 휴식, 소리, 플러그인, 카드, 결산, 스냅샷, 둘러보기, 새소식, 생일, 언어, 크기, 내보내기, 초기화, 피드백, 상태',
+    hint: '[details | level | wear [아이템] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [코드] | small | big | hide | show | export | reset | feedback | status]',
     small: 'Mochi를 한 줄로.',
     big: 'Mochi를 전체 크기로.',
     detailOpened: '상세 패널을 열었습니다.',
-    shieldOn: '보호막 켜짐: 되돌릴 수 없는 명령은 실행 전에 확인합니다.',
+    shieldOn: '보호막 켜짐: 되돌릴 수 없는 명령은 실행 전에 확인하고, 비밀 정보로 보이는 내용을 쓰거나 커밋하기 전에도 확인합니다.',
     shieldOff: '보호막 꺼짐.',
-    alertsOn: minutes => `알림 켜짐: ${minutes}분 넘게 걸린 작업이 끝나거나, 긴 작업이 승인을 기다리면 알려 드립니다.`,
+    alertsOn: minutes => `알림 켜짐: ${minutes}분 넘게 걸린 작업이 끝나거나, 채팅이 응답을 기다리거나, 한도가 초기화되거나, CI가 실패하면 알려 드립니다.`,
     alertsOff: '알림 꺼짐.',
     levelLine: (level, xp, toNext) => `레벨 ${level} · ${xp} XP · 다음 레벨까지 ${toNext} XP`,
     statsLine: (turns, edits, commits, days, streak) => `${turns}턴 · 수정 ${edits}건 · 커밋 ${commits}개 · ${days}일 · ${streak}일 연속`,
@@ -502,7 +505,7 @@ export const ko: typeof en = {
     prefsLine: (sound, shield, alerts, compact) =>
       `소리: ${sound ? '켜짐' : '꺼짐'} · 보호막: ${shield ? '켜짐' : '꺼짐'} · 알림: ${alerts ? '켜짐' : '꺼짐'} · 크기: ${compact ? '작게' : '크게'}`,
     peersLine: (level, peers) => `레벨 ${level} · 다른 채팅: ${peers}`,
-    commands: '명령: /mochi (표시/숨기기) | details | level | wear | shield | alerts | sound | lang | small | big | status',
+    commands: '명령: /mochi (표시/숨기기) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name, list) => `언어: ${name}. 사용 가능: ${list} · /mochi lang <코드> 또는 auto`,
     langSet: name => `언어: ${name}.`,
     langAuto: name => `언어는 Claude Code와 시스템 설정을 따릅니다: ${name}.`,

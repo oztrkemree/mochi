@@ -20,12 +20,15 @@ export const en = {
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
     '0.3.0': {
-      headline: 'tips, a first-run tour and CLAUDE.md suggestions',
+      headline: 'a smarter shield, CI after a push, every chat on one board, badges and more',
       notes: [
-        'Tips: now and then, while Mochi is idle, one short tip about Claude Code. /mochi tips turns them off.',
-        'CLAUDE.md: give the same instruction a third time and Mochi offers to add it to the project’s CLAUDE.md.',
-        'A short tour on the very first start; /mochi tour shows it again.',
-        'What’s new after each update: /mochi news.',
+        'Shield: more commands that cannot be undone (Windows ones too), force pushes judged by branch, a secret guard, “Always allow here” and your own rules.',
+        'CI: after a push, Mochi follows the runs through your own gh. /mochi ci turns it off.',
+        'Chats: every chat on this machine on one board, /mochi chats. Mochi also tells you when your limit is back.',
+        'Tips while Mochi is idle, and an offer to add an instruction you keep giving to CLAUDE.md. /mochi tips turns them off.',
+        'Badges for real work, special days with something to wear, small surprises and a stretch after two hours: /mochi badges.',
+        'To share: /mochi card for your GitHub profile, /mochi wrapped and /mochi snap.',
+        'Your data: /mochi export, /mochi reset and /mochi feedback.',
       ],
     },
   },
@@ -508,14 +511,14 @@ export const en = {
 
   /** /mochi and its answers. */
   cmd: {
-    description: 'Mochi: show/hide, details, level, wear, shield, alerts, sound, language',
-    hint: '[details | level | wear [item] | shield | alerts | sound | lang [code] | hide | show | small | big | status]',
+    description: 'Mochi: show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, status',
+    hint: '[details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | status]',
     small: 'Mochi on one line.',
     big: 'Mochi full size.',
     detailOpened: 'Details pane opened.',
-    shieldOn: 'Shield on: commands that cannot be undone will ask before they run.',
+    shieldOn: 'Shield on: Mochi asks before a command that cannot be undone runs, and before anything that looks like a secret is written or committed.',
     shieldOff: 'Shield off.',
-    alertsOn: (minutes: number) => `Alerts on: you will hear when work longer than ${minutes} minutes finishes, and when a long job waits for your approval.`,
+    alertsOn: (minutes: number) => `Alerts on: you will hear when work longer than ${minutes} minutes finishes, when a chat waits for you, when a limit resets and when CI fails.`,
     alertsOff: 'Alerts off.',
     levelLine: (level: number, xp: number, toNext: number) => `Level ${level} · ${xp} XP · ${toNext} XP to the next level`,
     statsLine: (turns: number, edits: number, commits: number, days: number, streak: number) =>
@@ -540,7 +543,7 @@ export const en = {
     prefsLine: (sound: boolean, shield: boolean, alerts: boolean, compact: boolean) =>
       `Sound: ${sound ? 'on' : 'off'} · Shield: ${shield ? 'on' : 'off'} · Alerts: ${alerts ? 'on' : 'off'} · Size: ${compact ? 'small' : 'big'}`,
     peersLine: (level: number, peers: string) => `Level ${level} · other chats: ${peers}`,
-    commands: 'Commands: /mochi (show/hide) | details | level | wear | shield | alerts | sound | lang | small | big | status',
+    commands: 'Commands: /mochi (show/hide) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name: string, list: string) => `Language: ${name}. Available: ${list} · /mochi lang <code> or auto`,
     langSet: (name: string) => `Language: ${name}.`,
     langAuto: (name: string) => `Language follows Claude Code and the system: ${name}.`,

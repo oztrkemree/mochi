@@ -18,12 +18,15 @@ export const pt: typeof en = {
 
   news: {
     '0.3.0': {
-      headline: 'dicas, um tour no primeiro uso e sugestões para o CLAUDE.md',
+      headline: 'um escudo mais esperto, CI depois do push, todos os chats num só quadro, conquistas e mais',
       notes: [
-        'Dicas: de vez em quando, com o Mochi parado, uma dica curta sobre o Claude Code. /mochi dicas desliga.',
-        'CLAUDE.md: dê a mesma instrução pela terceira vez e o Mochi oferece adicioná-la ao CLAUDE.md do projeto.',
-        'Um tour curto no primeiro uso; /mochi tour mostra de novo.',
-        'Novidades depois de cada atualização: /mochi novidades.',
+        'Escudo: mais comandos que não podem ser desfeitos (os do Windows também), force push avaliado pela branch, uma proteção para segredos, “Sempre permitir aqui” e suas próprias regras.',
+        'CI: depois de um push, o Mochi acompanha as execuções pelo seu próprio gh. /mochi ci desliga.',
+        'Conversas: todos os chats desta máquina num só quadro, /mochi conversas. O Mochi também avisa quando seu limite é reiniciado.',
+        'Dicas com o Mochi parado, e a oferta de adicionar ao CLAUDE.md uma instrução que você repete. /mochi dicas desliga.',
+        'Conquistas por trabalho de verdade, dias especiais com algo para vestir, pequenas surpresas e um alongamento depois de duas horas: /mochi conquistas.',
+        'Para compartilhar: /mochi cartão para o seu perfil do GitHub, /mochi retrospectiva e /mochi captura.',
+        'Seus dados: /mochi exportar, /mochi redefinir e /mochi relatar.',
       ],
     },
   },
@@ -474,14 +477,14 @@ export const pt: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: mostrar/esconder, detalhes, nível, vestir, escudo, alertas, som, idioma',
-    hint: '[detalhes | nível | vestir [item] | escudo | alertas | som | idioma [código] | esconder | mostrar | pequeno | grande | status]',
+    description: 'Mochi: mostrar/esconder, detalhes, nível, vestir, conquistas, conversas, escudo, alertas, CI, dicas, pausas, som, extensões, cartão, retrospectiva, captura, apresentação, novidades, aniversário, idioma, pequeno/grande, exportar, redefinir, relatar, status',
+    hint: '[detalhes | nível | vestir [item] | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma [código] | pequeno | grande | esconder | mostrar | exportar | redefinir | relatar | status]',
     small: 'Mochi em uma linha.',
     big: 'Mochi em tamanho completo.',
     detailOpened: 'Painel de detalhes aberto.',
-    shieldOn: 'Escudo ligado: comandos que não podem ser desfeitos vão pedir confirmação antes de rodar.',
+    shieldOn: 'Escudo ligado: o Mochi vai pedir confirmação antes de rodar um comando que não pode ser desfeito e antes de gravar ou fazer commit de algo que pareça um segredo.',
     shieldOff: 'Escudo desligado.',
-    alertsOn: minutes => `Alertas ligados: você vai ouvir um aviso quando um trabalho de mais de ${pl(minutes, 'minuto', 'minutos')} terminar e quando uma tarefa longa estiver esperando sua aprovação.`,
+    alertsOn: minutes => `Alertas ligados: você vai ouvir um aviso quando um trabalho de mais de ${pl(minutes, 'minuto', 'minutos')} terminar, quando um chat estiver esperando você, quando um limite for reiniciado e quando a CI falhar.`,
     alertsOff: 'Alertas desligados.',
     levelLine: (level, xp, toNext) => `Nível ${level} · ${xp} XP · ${toNext} XP para o próximo nível`,
     statsLine: (turns, edits, commits, days, streak) =>
@@ -506,7 +509,7 @@ export const pt: typeof en = {
     prefsLine: (sound, shield, alerts, compact) =>
       `Som: ${sound ? 'ligado' : 'desligado'} · Escudo: ${shield ? 'ligado' : 'desligado'} · Alertas: ${alerts ? 'ligados' : 'desligados'} · Tamanho: ${compact ? 'pequeno' : 'grande'}`,
     peersLine: (level, peers) => `Nível ${level} · outros chats: ${peers}`,
-    commands: 'Comandos: /mochi (mostrar/esconder) | detalhes | nível | vestir | escudo | alertas | som | idioma | pequeno | grande | status',
+    commands: 'Comandos: /mochi (mostrar/esconder) | detalhes | nível | vestir | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma | pequeno | grande | exportar | redefinir | relatar | status',
     langNow: (name, list) => `Idioma: ${name}. Disponíveis: ${list} · /mochi idioma <código> ou automático`,
     langSet: name => `Idioma: ${name}.`,
     langAuto: name => `O idioma segue o Claude Code e o sistema: ${name}.`,

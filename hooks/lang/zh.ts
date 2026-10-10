@@ -15,12 +15,15 @@ export const zh: typeof en = {
 
   news: {
     '0.3.0': {
-      headline: '提示、首次导览和 CLAUDE.md 建议',
+      headline: '更聪明的护盾、push 后的 CI、所有对话一览、徽章等',
       notes: [
-        '提示：Mochi 空闲时，偶尔给一条关于 Claude Code 的简短提示。/mochi tips 可关闭。',
-        'CLAUDE.md：同一条指示说到第三次时，Mochi 会提议把它加入项目的 CLAUDE.md。',
-        '首次启动时有简短导览；/mochi tour 可重新播放。',
-        '每次更新后的新内容：/mochi news。',
+        '护盾：认得更多无法撤销的命令（包括 Windows 的），按分支判断强制推送，防护密钥，“此处始终允许”，以及你自己的规则。',
+        'CI：push 之后，Mochi 通过你自己的 gh 跟踪运行。/mochi ci 可关闭。',
+        '对话：本机所有对话一览，/mochi chats。限额重置时，Mochi 也会告诉你。',
+        'Mochi 空闲时的提示，以及把你反复给出的指示加入 CLAUDE.md 的提议。/mochi tips 可关闭。',
+        '靠真实工作赢得的徽章、有特别装扮的节日、小惊喜，以及连续工作两小时后的伸展提醒：/mochi badges。',
+        '分享：用于 GitHub 个人主页的 /mochi card，还有 /mochi wrapped 和 /mochi snap。',
+        '你的数据：/mochi export、/mochi reset 和 /mochi feedback。',
       ],
     },
   },
@@ -471,14 +474,14 @@ export const zh: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi：显示/隐藏、详情、等级、穿戴、护盾、提醒、声音、语言',
-    hint: '[details | level | wear [物品] | shield | alerts | sound | lang [代码] | hide | show | small | big | status]',
+    description: 'Mochi：显示/隐藏、详情、等级、穿戴、徽章、对话、护盾、提醒、CI、提示、休息、声音、插件、卡片、回顾、快照、导览、新功能、生日、语言、大小、导出、重置、反馈、状态',
+    hint: '[details | level | wear [物品] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [代码] | small | big | hide | show | export | reset | feedback | status]',
     small: 'Mochi 单行显示。',
     big: 'Mochi 全尺寸显示。',
     detailOpened: '详情面板已打开。',
-    shieldOn: '护盾已开启：无法撤销的命令运行前会先询问。',
+    shieldOn: '护盾已开启：无法撤销的命令运行前会先询问；写入或提交疑似密钥的内容前也会询问。',
     shieldOff: '护盾已关闭。',
-    alertsOn: minutes => `提醒已开启：超过 ${minutes} 分钟的任务完成时，或长任务等你批准时，会提醒你。`,
+    alertsOn: minutes => `提醒已开启：超过 ${minutes} 分钟的任务完成、有对话在等你、限额重置或 CI 失败时，会提醒你。`,
     alertsOff: '提醒已关闭。',
     levelLine: (level, xp, toNext) => `等级 ${level} · ${xp} XP · 距下一级 ${toNext} XP`,
     statsLine: (turns, edits, commits, days, streak) => `${turns} 轮 · ${edits} 次编辑 · ${commits} 次 commit · ${days} 天 · 连续 ${streak} 天`,
@@ -502,7 +505,7 @@ export const zh: typeof en = {
     prefsLine: (sound, shield, alerts, compact) =>
       `声音：${sound ? '开' : '关'} · 护盾：${shield ? '开' : '关'} · 提醒：${alerts ? '开' : '关'} · 尺寸：${compact ? '小' : '大'}`,
     peersLine: (level, peers) => `等级 ${level} · 其他对话：${peers}`,
-    commands: '命令：/mochi（显示/隐藏）| details | level | wear | shield | alerts | sound | lang | small | big | status',
+    commands: '命令：/mochi（显示/隐藏）| details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name, list) => `语言：${name}。可选：${list} · /mochi lang <代码> 或 auto`,
     langSet: name => `语言：${name}。`,
     langAuto: name => `语言跟随 Claude Code 和系统：${name}。`,

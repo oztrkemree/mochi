@@ -10,8 +10,8 @@ and keeps the numbers you keep checking in plain sight.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=flat-square)](#-install)
-[![10 languages](https://img.shields.io/badge/languages-10-7AA2F7?style=flat-square)](#-languages)
-[![36 accessories](https://img.shields.io/badge/wardrobe-36_items-B794F6?style=flat-square)](#-a-wardrobe-that-grows-with-you)
+[![16 languages](https://img.shields.io/badge/languages-16-7AA2F7?style=flat-square)](#-languages)
+[![46 accessories](https://img.shields.io/badge/wardrobe-46_items-B794F6?style=flat-square)](#-a-wardrobe-that-grows-with-you)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 **English** · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -19,6 +19,10 @@ and keeps the numbers you keep checking in plain sight.
 </div>
 
 <br>
+
+<p align="center">
+  <img src="docs/demo.svg" width="744" alt="Mochi's band going through its moods and outfits: waving, reading, editing, running a command, proud, waiting for you, celebrating and asleep">
+</p>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/band-en-dark.png">
@@ -36,7 +40,7 @@ and keeps the numbers you keep checking in plain sight.
 Type it in any Claude Code chat, answer `y` to add the marketplace and pick the **user** scope. Mochi appears at once, and in every chat you open after that.
 
 > [!NOTE]
-> Mochi is built on Claude Code's hooks modules (function hooks), so it needs a Claude Code build that supports them.
+> Mochi is built on Claude Code's hooks modules (function hooks) and needs **Claude Code 2.1.293 or later** (`claude --version` tells you yours). Older builds, such as 2.1.286, do not load the module at all, so Mochi never appears.
 
 ## 🧡 What Mochi notices
 
@@ -44,14 +48,14 @@ Type it in any Claude Code chat, answer `y` to add the marketplace and pick the 
 <tr>
 <td width="50%" valign="top">
 
-**🎭 27 moods, no jump cuts**<br>
+**🎭 30 moods, no jump cuts**<br>
 Thinking, reading, typing, running a command, waiting for you, celebrating a green test run, dizzy after three errors in a row, asleep when you are away. Every pose eases out of the last.
 
 </td>
 <td width="50%" valign="top">
 
 **📊 Your limits, with a forecast**<br>
-Rings for the context window, the 5‑hour session and the week. If you are burning through a window faster than it resets, Mochi tells you *when* it will run out.
+Rings for the context window, the 5‑hour session and the week. If you are burning through a window faster than it resets, Mochi tells you *when* it will run out. When a limit you had nearly used up resets, it tells you that too.
 
 </td>
 </tr>
@@ -59,7 +63,7 @@ Rings for the context window, the 5‑hour session and the week. If you are burn
 <td valign="top">
 
 **🛡️ A shield for the scary commands**<br>
-`rm -rf`, `git push --force`, `git reset --hard`, `DROP TABLE`, `npm publish`, `sudo`… they stop and ask first, saying in plain words what they would destroy.
+`rm -rf`, `Remove-Item -Recurse`, a force push to `main`, `git reset --hard`, `DROP TABLE`, a script piped from the internet… they stop and ask first, saying in plain words what they would destroy. So does a key or token about to be written or committed.
 
 </td>
 <td valign="top">
@@ -72,29 +76,78 @@ The same command failing three times, the same error coming back, the same call 
 <tr>
 <td valign="top">
 
-**🔔 Long-job alerts**<br>
-A system notification (macOS, Windows or Linux) when a turn longer than two minutes ends, or when a long job stops to wait for your approval. Go make tea.
+**🔔 Alerts while you are away**<br>
+A system notification (macOS, Windows or Linux) when a turn longer than two minutes ends, when a long job stops to wait for you, when your limit resets or when CI fails. Go make tea.
 
 </td>
 <td valign="top">
 
-**💬 Your other chats**<br>
-Every chat on your machine running Mochi shares where it stands, so this one can tell you that another is waiting for you or has finished.
+**💬 Every chat on one board**<br>
+Every chat on your machine, this one first and the ones waiting for you next, with its branch (worktrees marked), what it is doing and for how long. A chat that has waited five minutes for you sends one more notification.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**🚦 CI after a push**<br>
+Mochi follows the GitHub Actions runs through your own `gh`: `ci running · 2/5` in the band, a party when they pass, the failed workflow's name when they do not. The details pane shows your branch's pull request, its review and its checks.
+
+</td>
+<td valign="top">
+
+**💡 Tips that fit the moment**<br>
+Now and then, while Mochi is idle, one short Claude Code tip about what just happened: Esc Esc after a stopped turn, `/compact` as the context fills. Give the same instruction a third time and Mochi offers to add it to `CLAUDE.md`; it writes only if you say Add.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**🏅 Badges for real work**<br>
+Twelve of them, each celebrated once: a first green test run, a comeback in a single turn, a tidy day that removes more than it adds, night owl, early bird, polyglot, a marathon turn, a hundred commits…
+
+</td>
+<td valign="top">
+
+**🎉 Special days, small surprises**<br>
+Eid, Lunar New Year, Nowruz, Diwali, Chuseok, sakura season, Hacktoberfest, Halloween, Christmas and your birthday each bring something to wear. Say good night to Mochi, or thank it. After two hours without a break, it suggests a stretch.
 
 </td>
 </tr>
 </table>
 
+## 🛡️ The shield
+
+The shield reads every command Claude runs, through Bash or PowerShell, and every edit it makes. Before anything that cannot be undone it stops and asks: deleting files and folders for good (`rm -rf`, `Remove-Item -Recurse`, `del /s`), wiping a drive, overwriting a branch's history, throwing away uncommitted changes, dropping a database, tearing down infrastructure or a cloud bucket, `npm unpublish`, `docker system prune -a`, a script piped from the internet, `sudo`.
+
+- **Force pushes are judged by branch.** Onto `main`, `master`, `trunk` or `develop` it asks and names the branch. A `--force-with-lease` to your own branch only gets a nervous look.
+- **Secrets stay out of your history.** Before Claude writes, `git add`s or commits something that looks like a live key or token (AWS, GitHub, Anthropic, OpenAI, Slack, Stripe, a private key, a password) or a file like `.env` or `id_rsa`, Mochi asks and shows the value masked: `AKIA••••••LE`. Placeholders and obvious test values go through.
+- **Always allow here.** The question offers **Run** (or **Write**), **Stop** and **Always allow here**, which remembers that kind of command for this repository. `/mochi shield` lists what is allowed where; `/mochi shield reset` forgets it all.
+
+Your own rules go in `~/.claude/mochi/shield.json`:
+
+```json
+{
+  "add": [{ "match": "terraform\\s+apply", "says": "changes the live infrastructure" }],
+  "off": ["publish", "sudo"]
+}
+```
+
+- `match` is a regular expression tried on every Bash and PowerShell command, case ignored. `says` is what such a command would do, shown in the question; without it the question says it matches one of your rules.
+- `off` lists built-in kinds to stop asking about: any key of `danger` in [`hooks/lang/en.ts`](hooks/lang/en.ts) (`rm`, `forcePush`, `publish`, `sudo`…), `secret` or one kind of it (`secret:aws`, `secret:github`, `secret:apiKey`, `secret:slack`, `secret:stripe`, `secret:privateKey`, `secret:generic`), `secretFile` and `secretEdit`.
+- Mochi reads the file again whenever it changes. Whatever it cannot use is skipped and named in a toast; if the file is not valid JSON, none of your rules apply until it is.
+
 ## 🔍 The details pane
 
-Click the rings and everything opens up: this session at a glance, your other chats, and **every changed file with the lines added and removed**, the ones Claude touched in this chat first, and the last edit itself, red and green.
+Click the rings and everything opens up: this session at a glance, every chat on your machine, your CI and pull request, and **every changed file with the lines added and removed**, the ones Claude touched in this chat first, and the last edit itself, red and green.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/details-en-dark.png">
   <img src="docs/details-en-light.png" width="720" alt="The details pane: rings for context and limits with a forecast, this session's numbers, other chats, and a list of changed files with line counts and the last edit">
 </picture>
 
-Further down: the context by category, your recent turns, and a calendar of every chat's days.
+Further down: the context by category, your recent turns, a calendar of every chat's days, and your level, wardrobe and badges.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/history-en-dark.png">
@@ -103,7 +156,7 @@ Further down: the context by category, your recent turns, and a calendar of ever
 
 ## 👒 A wardrobe that grows with you
 
-Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **36 items** across head, face, neck, hand and the spot beside Mochi. Some arrive with the season (a witch hat in late October, a Santa hat in December), some with the hour (coffee in the morning, a night cap after midnight).
+Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **46 items** across head, face, neck, hand and the spot beside Mochi. Some arrive with the day (a witch hat in late October, a red envelope at Lunar New Year, a diya at Diwali, a party hat and a cake on your birthday), some with the hour (coffee in the morning, a night cap after midnight).
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Twelve Mochis in different outfits: a beanie with coffee, a cowboy with a mustache, a wizard, a party hat, a crown with a monocle and a cat, a night cap with a scarf, and more">
@@ -114,42 +167,85 @@ Every turn, edit, commit and working day earns experience. Levels unlock things 
   <img src="docs/level-en-light.png" width="640" alt="Mochi's level: a ring of experience, the experience to the next level and the next item to unlock">
 </picture>
 
-Pick what to wear in the **Wardrobe** section of the details pane, or with `/mochi wear glasses`.
+Pick what to wear in the **Wardrobe** section of the details pane, or with `/mochi wear glasses`. Tell Mochi your birthday with `/mochi birthday 04-23`; it stays on your machine. Have an idea for something new to wear? [docs/OUTFITS.md](docs/OUTFITS.md) shows how to add it.
+
+## 📸 Share it
+
+- **`/mochi card`** draws a card: Mochi in today's outfit, your level, experience and streaks.
+- **`/mochi wrapped`** sums up your month across every chat in one picture: hours, turns, commits, your busiest day, your longest streak and the folder you spent most time in. `/mochi wrapped year` does the year. In the first week of a month, Mochi tells you once that last month's is ready.
+- **`/mochi snap`** saves the band and the details pane as they are right now. Have a look before you post it: it shows what the band shows, your branch and other chats included.
+
+They are SVG files under `~/.claude/mochi/share/`, made to read on light and dark pages and needing nothing outside themselves.
+
+To put the card on your GitHub profile:
+
+1. Clone your profile repository, the one named after your username (`you/you`).
+2. Run `/mochi card ~/code/you` with the path to that folder; the card lands there as `mochi-card.svg`.
+3. Paste the line Mochi gives you into the repository's `README.md`, then commit and push:
+
+   ```md
+   [![Mochi for Claude Code](mochi-card.svg)](https://github.com/oztrkemree/mochi)
+   ```
+
+The card is a snapshot: run `/mochi card` again after a level-up and push the new one.
 
 ## ⌨️ Commands
 
 | Command | What it does |
 | --- | --- |
-| `/mochi` | Hide or show the band |
+| `/mochi` | Hide or show the band (`/mochi hide` · `/mochi show` say which) |
 | `/mochi details` | Open the details pane |
 | `/mochi level` | Your level, experience and what is still locked |
 | `/mochi wear [item \| auto \| none]` | Put something on, let Mochi dress itself, or take everything off |
-| `/mochi shield` | Turn the shield on or off |
-| `/mochi alerts` | Turn long-job notifications on or off |
+| `/mochi badges` | The badges you have earned, and how to earn the rest |
+| `/mochi chats` | Every chat on this machine, the ones waiting for you first |
+| `/mochi shield` | Turn the shield on or off, and see what is always allowed where |
+| `/mochi shield reset` | Forget everything “Always allow here” remembered |
+| `/mochi alerts` | Turn the notifications on or off (and the note that your wrapped is ready) |
+| `/mochi ci` | Turn the CI watch on or off |
+| `/mochi tips` | Turn tips, `CLAUDE.md` suggestions and the what's-new note on or off |
+| `/mochi breaks` | Turn the stretch suggestion on or off |
 | `/mochi sound` | Turn the sounds on or off |
+| `/mochi plugins` | Turn reactions from other plugins on or off |
+| `/mochi card [path]` | Save a card for your GitHub profile |
+| `/mochi wrapped [year]` | Save your month, or your year, in one picture |
+| `/mochi snap` | Save the band and the details pane as pictures |
+| `/mochi tour` | Watch the first-run tour again |
+| `/mochi news` | What this version brought |
+| `/mochi birthday [MM-DD \| none]` | Tell Mochi your birthday, see it, or forget it |
 | `/mochi lang [code \| auto]` | Show or change the language |
 | `/mochi small` · `/mochi big` | One line or full size |
+| `/mochi export` | Save everything Mochi keeps in one JSON file |
+| `/mochi reset [level \| history \| all]` | Clear the level's memory, the history, or everything, settings and `shield.json` included; it asks first, and exports stay |
+| `/mochi feedback` | A link to a bug report, filled in with the versions, your system, the surface and the language |
 | `/mochi status` | What Mochi knows right now |
 
 English command words always work, and each language adds its own (`/mochi aksesuar`, `/mochi idioma`, `/mochi sprache`…).
 
 ## 🌍 Languages
 
-English · Türkçe · Español · Deutsch · Français · Português · Русский · 中文 · 日本語 · 한국어
+English · Türkçe · Español · Deutsch · Français · Português · Русский · 中文 · 日本語 · 한국어 · Italiano · Polski · Українська · हिन्दी · Bahasa Indonesia · العربية
 
 Mochi speaks Claude Code's `language` setting when it is one of these; otherwise your system's preferred language, then `LANG`; otherwise English. `/mochi lang ja` picks one yourself, `/mochi lang auto` goes back to automatic.
 
 ## 🔒 What it touches
 
-Everything stays on your machine. Mochi makes **no network requests**.
+Everything stays on your machine. Mochi itself makes **no network requests**; the one thing that talks to the internet is your own `gh`, for the CI watch.
 
-- It reads `git status`, `git log` and `git diff --numstat` in the chat's folder.
-- For notifications it runs the system's own tool: `osascript` on macOS, PowerShell on Windows, `notify-send` on Linux. For the language, `defaults read -g AppleLanguages` on macOS and PowerShell on Windows; `uname` tells macOS from Linux.
-- It writes small JSON files under `~/.claude/mochi/`: where each open chat stands, daily counts, your level, and usage readings for the forecast.
+- **git**, in the chat's folder, only to read: `git status`, `git log`, `git diff --numstat` and `git rev-parse` for the band and the details pane. When the shield has to look closer, it asks for the branch and the default branch, the files a `git add` would add (`git ls-files`) and what a `git commit` would commit (`git diff`).
+- **gh**, only while the CI watch is on, with your own login (Mochi never sees your token): `gh pr view` when a chat starts, when you open the details pane and around a push; `gh run list` only after a push in this chat, every 30 seconds until the runs end, half an hour at most. `/mochi ci` turns both off.
+- **The system's own tools**: notifications through `osascript` on macOS, PowerShell on Windows and `notify-send` on Linux. For the language, `defaults read -g AppleLanguages` on macOS and PowerShell on Windows; `uname` tells macOS from Linux. Files of closed chats, and what `/mochi reset` clears, are deleted by name with `rm`, or `cmd`'s `del` on Windows, only inside `~/.claude/mochi/`.
+- **Files under `~/.claude/mochi/`**: where each open chat stands, daily counts, your level and badges, usage readings for the forecast, how often each tip was shown and the short instructions you repeat (never whole prompts), the markers that tell one chat to announce a limit reset, your `shield.json` if you write one, and what `/mochi card`, `wrapped`, `snap` and `export` save. Settings, what is always allowed and your birthday live in Claude Code's store for plugins.
+- **Your project**: Mochi reads `CLAUDE.md` before it suggests an instruction and appends one line only after you pick **Add**. It writes the card there only if you give `/mochi card` a path there. To count lines and spot secrets it reads a file Claude is about to overwrite, and for a command that adds and commits at once, the new files it would add (up to 20, under 1 MB each). Nothing it reads is kept.
+- **Other plugins** can show a mood and a short line through Mochi, signed with their name, each at most once every 10 seconds; `/mochi plugins` turns that off. `/mochi feedback` only prints a link: nothing is sent.
+
+## 🧩 For plugin authors
+
+Your plugin can make Mochi react: cheer when a deploy finishes, look worried when a check fails. List `mochi` under `dependencies` and call `$.mochi.react({ mood, line })` or `$.mochi.celebrate({ line })`. [docs/API.md](docs/API.md) has the calls, the limits and a whole example plugin.
 
 ## 🤝 Contributing
 
-Bug reports, ideas, translations, art and pull requests are all welcome. [Open an issue](https://github.com/oztrkemree/mochi/issues/new/choose), or read [CONTRIBUTING.md](CONTRIBUTING.md) to start on the code: two commands check everything (`claude plugin validate .` and `claude plugin test .`), and a new language is one file.
+Bug reports, ideas, translations, art and pull requests are all welcome. [Open an issue](https://github.com/oztrkemree/mochi/issues/new/choose) (`/mochi feedback` gives you a bug report already filled in), or read [CONTRIBUTING.md](CONTRIBUTING.md) to start on the code: two commands check everything (`claude plugin validate .` and `claude plugin test .`), and a new language is one file. What changed in each version is in [CHANGELOG.md](CHANGELOG.md).
 
 ## 📄 License
 

@@ -15,12 +15,15 @@ export const tr: typeof en = {
 
   news: {
     '0.3.0': {
-      headline: 'ipuçları, ilk açılış tanıtımı ve CLAUDE.md önerileri',
+      headline: 'daha akıllı bir kalkan, push sonrası CI, bütün sohbetler tek panoda, rozetler ve dahası',
       notes: [
-        'İpuçları: Mochi boştayken arada bir Claude Code hakkında kısa bir ipucu. /mochi ipucu kapatır.',
-        'CLAUDE.md: aynı talimatı üçüncü kez verince Mochi onu projenin CLAUDE.md dosyasına eklemeyi önerir.',
-        'İlk açılışta kısa bir tanıtım; /mochi tanıtım yeniden gösterir.',
-        'Her güncellemeden sonra yenilikler: /mochi yenilikler.',
+        'Kalkan: geri alınamayan daha çok komut (Windows’takiler de), dala göre değerlendirilen force push’lar, gizli bilgi koruması, “Burada hep izin ver” ve kendi kuralların.',
+        'CI: push’tan sonra Mochi, GitHub Actions çalıştırmalarını senin gh’ınla izler. /mochi ci kapatır.',
+        'Sohbetler: bu makinedeki bütün sohbetler tek panoda, /mochi sohbetler. Limitin sıfırlanınca da Mochi haber verir.',
+        'Mochi boştayken ipuçları, bir de sürekli verdiğin bir talimatı CLAUDE.md’ye ekleme önerisi. /mochi ipucu kapatır.',
+        'Gerçek işle kazanılan rozetler, giyecek bir şeyle gelen özel günler, küçük sürprizler ve iki saat aralıksız çalışınca gerinme önerisi: /mochi rozetler.',
+        'Paylaşmak için /mochi kart (GitHub profiline), /mochi özet ve /mochi fotoğraf.',
+        'Verilerin: /mochi aktar, /mochi sıfırla ve /mochi geribildirim.',
       ],
     },
   },
@@ -471,14 +474,14 @@ export const tr: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: göster/gizle, detay, seviye, aksesuar, kalkan, bildirim, ses, dil',
-    hint: '[detay | seviye | aksesuar [ad] | kalkan | bildirim | ses | dil [kod] | gizle | göster | küçük | büyük | durum]',
+    description: 'Mochi: göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, aktar, sıfırla, geribildirim, durum',
+    hint: '[detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | aktar | sıfırla | geribildirim | durum]',
     small: 'Mochi tek satır.',
     big: 'Mochi tam boy.',
     detailOpened: 'Detay paneli açıldı.',
-    shieldOn: 'Kalkan açık: geri alınamayan komutlar çalışmadan önce sorulacak.',
+    shieldOn: 'Kalkan açık: geri alınamayan komutlar çalışmadan önce sorulacak; gizli bilgiye benzeyen bir şey yazılmadan ya da commit edilmeden önce de.',
     shieldOff: 'Kalkan kapalı.',
-    alertsOn: minutes => `Bildirim açık: ${minutes} dakikadan uzun işler bitince ve uzun bir işin ortasında onay beklerken haber verilecek.`,
+    alertsOn: minutes => `Bildirim açık: ${minutes} dakikadan uzun işler bitince, bir sohbet seni beklerken, bir limit sıfırlanınca ve CI başarısız olunca haber verilecek.`,
     alertsOff: 'Bildirim kapalı.',
     levelLine: (level, xp, toNext) => `Seviye ${level} · ${xp} XP · sonraki seviyeye ${toNext} XP`,
     statsLine: (turns, edits, commits, days, streak) => `${turns} tur · ${edits} düzenleme · ${commits} commit · ${days} gün · seri ${streak} gün`,
@@ -502,7 +505,7 @@ export const tr: typeof en = {
     prefsLine: (sound, shield, alerts, compact) =>
       `Ses: ${sound ? 'açık' : 'kapalı'} · Kalkan: ${shield ? 'açık' : 'kapalı'} · Bildirim: ${alerts ? 'açık' : 'kapalı'} · Boyut: ${compact ? 'küçük' : 'büyük'}`,
     peersLine: (level, peers) => `Seviye ${level} · diğer sohbetler: ${peers}`,
-    commands: 'Komutlar: /mochi (göster/gizle) | detay | seviye | aksesuar | kalkan | bildirim | ses | dil | küçük | büyük | durum',
+    commands: 'Komutlar: /mochi (göster/gizle) | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | durum',
     langNow: (name, list) => `Dil: ${name}. Seçenekler: ${list} · /mochi dil <kod> ya da otomatik`,
     langSet: name => `Dil: ${name}.`,
     langAuto: name => `Dil Claude Code’a ve sisteme göre seçiliyor: ${name}.`,

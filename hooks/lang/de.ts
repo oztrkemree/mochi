@@ -16,12 +16,15 @@ export const de: typeof en = {
 
   news: {
     '0.3.0': {
-      headline: 'Tipps, ein Rundgang zum Start und Vorschläge für die CLAUDE.md',
+      headline: 'ein klügerer Schild, CI nach dem Push, alle Chats in einer Übersicht, Abzeichen und mehr',
       notes: [
-        'Tipps: ab und zu, während Mochi Pause hat, ein kurzer Tipp zu Claude Code. /mochi tipps schaltet sie aus.',
-        'CLAUDE.md: Gibst du dieselbe Anweisung zum dritten Mal, bietet Mochi an, sie in die CLAUDE.md des Projekts aufzunehmen.',
-        'Ein kurzer Rundgang beim allerersten Start; /mochi rundgang zeigt ihn noch einmal.',
-        'Neues nach jedem Update: /mochi neuigkeiten.',
+        'Schild: mehr Befehle, die sich nicht rückgängig machen lassen (auch unter Windows), Force-Pushes je nach Branch beurteilt, ein Schutz für Geheimnisse, „Hier immer erlauben“ und eigene Regeln.',
+        'CI: Nach einem Push verfolgt Mochi die Läufe über dein eigenes gh. /mochi ci schaltet das aus.',
+        'Chats: alle Chats auf diesem Rechner in einer Übersicht, /mochi chats. Mochi sagt dir auch, wenn dein Limit wieder frei ist.',
+        'Tipps, während Mochi Pause hat, und das Angebot, eine Anweisung, die du immer wieder gibst, in die CLAUDE.md aufzunehmen. /mochi tipps schaltet sie aus.',
+        'Abzeichen für echte Arbeit, besondere Tage mit etwas zum Anziehen, kleine Überraschungen und nach zwei Stunden der Vorschlag, dich zu strecken: /mochi abzeichen.',
+        'Zum Teilen: /mochi karte für dein GitHub-Profil, /mochi rückblick und /mochi foto.',
+        'Deine Daten: /mochi exportieren, /mochi zurücksetzen und /mochi rückmeldung.',
       ],
     },
   },
@@ -473,15 +476,15 @@ export const de: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: zeigen/verstecken, details, level, tragen, schild, hinweise, ton, sprache',
-    hint: '[details | level | tragen [Teil] | schild | hinweise | ton | sprache [Code] | verstecken | zeigen | klein | groß | status]',
+    description: 'Mochi: zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, status',
+    hint: '[details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | status]',
     small: 'Mochi in einer Zeile.',
     big: 'Mochi in voller Größe.',
     detailOpened: 'Detailansicht geöffnet.',
-    shieldOn: 'Schild an: Befehle, die sich nicht rückgängig machen lassen, fragen vor dem Ausführen nach.',
+    shieldOn: 'Schild an: Mochi fragt nach, bevor ein Befehl läuft, der sich nicht rückgängig machen lässt, und bevor etwas, das wie ein Geheimnis aussieht, geschrieben oder committet wird.',
     shieldOff: 'Schild aus.',
     alertsOn: minutes =>
-      `Hinweise an: Du hörst es, wenn Arbeit von über ${pl(minutes, 'Minute', 'Minuten')} fertig ist und wenn ein langer Job auf deine Freigabe wartet.`,
+      `Hinweise an: Du hörst es, wenn Arbeit von über ${pl(minutes, 'Minute', 'Minuten')} fertig ist, wenn ein Chat auf dich wartet, wenn ein Limit zurückgesetzt wird und wenn die CI fehlschlägt.`,
     alertsOff: 'Hinweise aus.',
     levelLine: (level, xp, toNext) => `Level ${level} · ${xp} XP · ${toNext} XP bis zum nächsten Level`,
     statsLine: (turns, edits, commits, days, streak) =>
@@ -506,7 +509,7 @@ export const de: typeof en = {
     prefsLine: (sound, shield, alerts, compact) =>
       `Ton: ${sound ? 'an' : 'aus'} · Schild: ${shield ? 'an' : 'aus'} · Hinweise: ${alerts ? 'an' : 'aus'} · Größe: ${compact ? 'klein' : 'groß'}`,
     peersLine: (level, peers) => `Level ${level} · andere Chats: ${peers}`,
-    commands: 'Befehle: /mochi (zeigen/verstecken) | details | level | tragen | schild | hinweise | ton | sprache | klein | groß | status',
+    commands: 'Befehle: /mochi (zeigen/verstecken) | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | status',
     langNow: (name, list) => `Sprache: ${name}. Verfügbar: ${list} · /mochi sprache <Code> oder automatisch`,
     langSet: name => `Sprache: ${name}.`,
     langAuto: name => `Sprache folgt Claude Code und dem System: ${name}.`,

@@ -15,12 +15,15 @@ export const ja: typeof en = {
 
   news: {
     '0.3.0': {
-      headline: 'ヒント、初回ツアー、CLAUDE.mdの提案',
+      headline: '賢くなったシールド、push後のCI、全チャットの一覧、バッジなど',
       notes: [
-        'ヒント: Mochiが待機中のとき、たまにClaude Codeの短いヒントを出す。/mochi tips でオフ。',
-        'CLAUDE.md: 同じ指示を3回目に出すと、プロジェクトのCLAUDE.mdに追加するか聞く。',
-        '初回起動時に短いツアー。/mochi tour でもう一度見られる。',
-        'アップデートごとの新機能: /mochi news。',
+        'シールド: 取り消せないコマンドをさらに多く見分ける（Windowsも）。force pushはブランチを見て判断。秘密情報ガード、「ここでは常に許可」、自分のルールも。',
+        'CI: push後、自分のghで実行を追う。/mochi ci でオフ。',
+        'チャット: このマシンの全チャットを一覧に。/mochi chats。上限がリセットされたときも知らせる。',
+        'Mochiが待機中のときのヒントと、何度も出す指示をCLAUDE.mdに追加する提案。/mochi tips でオフ。',
+        '実際の作業で手に入るバッジ、衣装つきの特別な日、小さなサプライズ、2時間続けたら伸びの提案: /mochi badges。',
+        'シェア用: GitHubプロフィール向けの /mochi card、/mochi wrapped、/mochi snap。',
+        'データ: /mochi export、/mochi reset、/mochi feedback。',
       ],
     },
   },
@@ -471,14 +474,14 @@ export const ja: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: 表示/非表示、詳細、レベル、着せ替え、シールド、通知、サウンド、言語',
-    hint: '[details | level | wear [アイテム] | shield | alerts | sound | lang [コード] | hide | show | small | big | status]',
+    description: 'Mochi: 表示/非表示、詳細、レベル、着せ替え、バッジ、チャット、シールド、通知、CI、ヒント、休憩、サウンド、プラグイン、カード、まとめ、スナップ、ツアー、新機能、誕生日、言語、サイズ、エクスポート、リセット、フィードバック、状態',
+    hint: '[details | level | wear [アイテム] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [コード] | small | big | hide | show | export | reset | feedback | status]',
     small: 'Mochiを1行表示に。',
     big: 'Mochiをフルサイズに。',
     detailOpened: '詳細パネルを開いた。',
-    shieldOn: 'シールドON: 取り消せないコマンドは実行前に確認する。',
+    shieldOn: 'シールドON: 取り消せないコマンドは実行前に確認する。秘密情報らしきものを書き込む・コミットする前も確認する。',
     shieldOff: 'シールドOFF。',
-    alertsOn: minutes => `通知ON: ${minutes}分以上かかる作業が終わったときと、長い作業が承認待ちになったときに知らせる。`,
+    alertsOn: minutes => `通知ON: ${minutes}分以上かかる作業が終わったとき、チャットが返事待ちのとき、上限がリセットされたとき、CIが失敗したときに知らせる。`,
     alertsOff: '通知OFF。',
     levelLine: (level, xp, toNext) => `レベル ${level} · ${xp} XP · 次のレベルまで ${toNext} XP`,
     statsLine: (turns, edits, commits, days, streak) => `${turns}ターン · 編集${edits}回 · ${commits}コミット · ${days}日 · ${streak}日連続`,
@@ -502,7 +505,7 @@ export const ja: typeof en = {
     prefsLine: (sound, shield, alerts, compact) =>
       `サウンド: ${sound ? 'ON' : 'OFF'} · シールド: ${shield ? 'ON' : 'OFF'} · 通知: ${alerts ? 'ON' : 'OFF'} · サイズ: ${compact ? '小' : '大'}`,
     peersLine: (level, peers) => `レベル ${level} · 他のチャット: ${peers}`,
-    commands: 'コマンド: /mochi (表示/非表示) | details | level | wear | shield | alerts | sound | lang | small | big | status',
+    commands: 'コマンド: /mochi (表示/非表示) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
     langNow: (name, list) => `言語: ${name}。選択肢: ${list} · /mochi lang <コード> または auto`,
     langSet: name => `言語: ${name}。`,
     langAuto: name => `言語はClaude Codeとシステムに合わせる: ${name}。`,
