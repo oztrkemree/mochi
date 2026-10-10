@@ -249,6 +249,28 @@ export const zh: typeof en = {
     lineLastEdit: (file, ago) => `最近编辑：${file} · ${ago}`,
   },
 
+  share: {
+    tagline: '适用于 Claude Code 的 Mochi',
+    wrapped: 'MOCHI 回顾',
+    commits: '提交',
+    activeDays: '活跃天数',
+    hours: '小时',
+    longest: '最长连续',
+    months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    month: (month, year) => `${year}年${month}`,
+    year: year => `${year}年`,
+    date: (month, day) => `${month}${day}日`,
+    busiest: (date, turns) => `最忙的一天 · ${date} · ${turns} 轮`,
+    most: label => `用时最多：${label}`,
+    quiet: '这段时间很安静：还没有轮次',
+    cardSaved: path => `卡片已保存：${path}`,
+    cardHow: '用于 GitHub 个人主页：把它放在个人主页仓库的 README.md 旁边，然后粘贴：',
+    wrappedSaved: (title, path) => `${title}回顾：${path}`,
+    snapSaved: (band, details) => `状态栏：${band}\n详情面板：${details}`,
+    failed: reason => `无法保存：${reason}`,
+    ready: month => `你的${month}回顾已就绪 · /mochi 回顾`,
+  },
+
   ui: {
     levelTitle: '等级',
     wardrobeTitle: '衣橱',
@@ -318,6 +340,7 @@ export const zh: typeof en = {
       hide: ['隐藏'], show: ['显示'], small: ['小', '缩小'], big: ['大', '放大'], sound: ['声音', '音效'],
       status: ['状态'], details: ['详情'], level: ['等级'], wear: ['穿戴', '配饰'], shield: ['护盾'],
       alerts: ['提醒', '通知'], lang: ['语言'], auto: ['自动'], none: ['无', '不戴'],
+      card: ['卡片'], wrapped: ['回顾'], snap: ['快照'], year: ['年'],
     },
   },
 }

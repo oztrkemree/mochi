@@ -249,6 +249,28 @@ export const ja: typeof en = {
     lineLastEdit: (file, ago) => `最終編集: ${file} · ${ago}`,
   },
 
+  share: {
+    tagline: 'Claude Code のための Mochi',
+    wrapped: 'MOCHI まとめ',
+    commits: 'コミット',
+    activeDays: '活動日数',
+    hours: '時間',
+    longest: '最長連続',
+    months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    month: (month, year) => `${year}年${month}`,
+    year: year => `${year}年`,
+    date: (month, day) => `${month}${day}日`,
+    busiest: (date, turns) => `いちばん忙しかった日 · ${date} · ${turns}ターン`,
+    most: label => `いちばん長く作業したのは ${label}`,
+    quiet: '静かな期間: まだターンなし',
+    cardSaved: path => `カードを保存: ${path}`,
+    cardHow: 'GitHub プロフィール用: プロフィールリポジトリの README.md の隣に置いて、これを貼り付けて:',
+    wrappedSaved: (title, path) => `${title}のまとめ: ${path}`,
+    snapSaved: (band, details) => `バー: ${band}\n詳細パネル: ${details}`,
+    failed: reason => `保存できなかった: ${reason}`,
+    ready: month => `${month}のまとめができた · /mochi まとめ`,
+  },
+
   ui: {
     levelTitle: 'レベル',
     wardrobeTitle: '着せ替え',
@@ -318,6 +340,7 @@ export const ja: typeof en = {
       hide: ['非表示', '隠す'], show: ['表示'], small: ['小さく', '小'], big: ['大きく', '大'], sound: ['サウンド', '音'],
       status: ['状態', 'ステータス'], details: ['詳細'], level: ['レベル'], wear: ['着せ替え', '着る'], shield: ['シールド'],
       alerts: ['通知'], lang: ['言語'], auto: ['自動'], none: ['なし'],
+      card: ['カード'], wrapped: ['まとめ'], snap: ['スナップ'], year: ['年'],
     },
   },
 }
