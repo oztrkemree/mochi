@@ -7,7 +7,7 @@ import { afterTool, beforeTool, duration, isCommit, isTest, onPrompt, onTurnEnd,
 import type { Reaction, SoundName } from './react'
 import { BADGES, TEAM_AT, badgeHint, badgeName, badgesOf, commandBadges, isEarly, langBit, provenBy, turnBadges } from './badges'
 import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
-import { dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, workFrom } from './fun'
+import { BREAK_AFTER, birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, workFrom } from './fun'
 import { NEW_WATCH, danger, dangerKey, isShell, watchCall } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
@@ -625,7 +625,7 @@ async function tick($: Dollar) {
     await show($, { mood: 'asking', line: t().st.commitNudge(git.changed, git.lastCommit > 0 ? t().st.lastCommit(ago(now - git.lastCommit)) : t().st.noCommits), holdMs: 9000 })
     return
   }
-  if (await restMoments($, p, f, now)) return
+  if (await restMoments($, p, f, v.tz, now)) return
 
   if (f.until > 0) {
     if (now > f.until) await rest($)
@@ -846,18 +846,27 @@ async function keepFirstDay($: Dollar) {
   if (first !== p.firstDay) await setPrefs($, x => ({ ...x, firstDay: first }))
 }
 
+/** Awards one after another: two at once (three agents starting together, say) would both celebrate. */
+function award($: Dollar, fresh: Badge[]): Promise<void> {
+  const done = chat.awards.then(() => awardNow($, fresh))
+  chat.awards = done.catch(() => undefined)
+  return done
+}
+
 /**
  * Badges earned since the last look (`fresh` from what just happened, the
  * rest proven by the history) are kept and celebrated once, in whichever chat
  * sees them first. The very first look records quietly what the history
  * already proves.
  */
-async function award($: Dollar, fresh: Badge[]) {
+async function awardNow($: Dollar, fresh: Badge[]) {
   if (chat.dataDir === '') return
   const v = await read($, env)
   if (fresh.length > 0 && fresh.every(b => v.badges.includes(b))) return
   const path = `${chat.dataDir}/badges.json`
   const text = await $.fs.read(path).catch(() => null)
+  // There but unread (locked a moment): never overwritten with less.
+  if (text === null && (await $.fs.exists(path).catch(() => true))) return
   let saved: Badge[] | null = null
   if (text !== null) {
     try {
@@ -901,15 +910,21 @@ async function noteTurn($: Dollar, reason: string, seconds: number, now: number)
  * a break (at most every two hours), and a wink at 13:37 once a day. True
  * when one of them took the face.
  */
-async function restMoments($: Dollar, p: Prefs, f: Face, now: number): Promise<boolean> {
+async function restMoments($: Dollar, p: Prefs, f: Face, tz: number, now: number): Promise<boolean> {
   chat.workFrom = workFrom(chat.workFrom, chat.lastActivity, now)
   if (chat.isBusy || f.until !== 0 || f.mood !== 'idle' || now - chat.lastActivity < 20_000) return false
   if (p.hasBreaks && isBreakDue(chat.workFrom, chat.lastStretch, now)) {
     chat.lastStretch = now
-    await show($, { mood: 'stretch', line: t().fun.breakLine(duration((now - chat.workFrom) / 1000)), holdMs: 10_000 })
-    return true
+    // One suggestion for all the chats on this machine.
+    const last = await $.store.get('stretchAt').catch(() => undefined)
+    if (typeof last === 'number' && now - last < BREAK_AFTER) {
+      chat.lastStretch = last
+    } else {
+      await $.store.set('stretchAt', now).catch(() => undefined)
+      await show($, { mood: 'stretch', line: t().fun.breakLine(duration((now - chat.workFrom) / 1000)), holdMs: 10_000 })
+      return true
+    }
   }
-  const tz = (await read($, env)).tz
   if (!isLeet(now, tz) || chat.winkDay === dayKey(now, tz)) return false
   chat.winkDay = dayKey(now, tz)
   await show($, { mood: 'wink', line: t().fun.leet, holdMs: 2500 })
@@ -935,7 +950,7 @@ async function birthday($: Dollar, arg: string): Promise<string> {
   const f = t().fun
   if (arg === '') {
     const day = (await read($, prefs)).birthday
-    return day === '' ? f.birthdayNone : f.birthdayNow(day)
+    return day === '' ? f.birthdayNone : f.birthdayNow(birthdayName(day))
   }
   if (names(arg, 'none', 'none', 'off')) {
     await setPrefs($, v => ({ ...v, birthday: '' }))
@@ -946,7 +961,7 @@ async function birthday($: Dollar, arg: string): Promise<string> {
   const next = await setPrefs($, v => ({ ...v, birthday: day }))
   const hello = await greetToday($, next)
   if (hello !== null) await show($, hello)
-  return f.birthdaySet(day)
+  return f.birthdaySet(birthdayName(day))
 }
 
 export const register: Register = on => {
@@ -994,7 +1009,7 @@ export const register: Register = on => {
     const wasAsleep = await wake($)
     const now = await $.clock.now()
     chat.stream = null
-    await show($, (wasAsleep ? null : promptEgg(text)) ?? onPrompt(text, wasAsleep), now)
+    await show($, promptEgg(text) ?? onPrompt(text, wasAsleep), now)
 
     return next(e)
   }).catch(($, e, next) => next(e))
@@ -1045,7 +1060,7 @@ export const register: Register = on => {
       if (waitsOnPerson(e.tool) && chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, beforeTool(args).line)
     }
     if (isAgent) await setEnv($, v => ({ ...v, agents: v.agents + 1 }))
-    if (isAgent && (await read($, env)).agents >= TEAM_AT) await award($, ['team'])
+    if (isAgent && (await read($, env)).agents >= TEAM_AT) void award($, ['team']).catch(() => undefined)
     chat.callId += 1
     const id = chat.callId
     const path = typeof args.file_path === 'string' ? args.file_path : typeof args.notebook_path === 'string' ? args.notebook_path : ''

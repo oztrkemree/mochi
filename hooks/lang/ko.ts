@@ -19,7 +19,7 @@ export const ko: typeof en = {
     web: '웹 탐색 중', agent: '에이전트 실행 중', asking: '응답 대기 중', success: '완료', proud: '완료', party: '축하 중',
     error: '오류 발생', dizzy: '연속 오류', scared: '위험한 명령', denied: '거부됨', shocked: '깜짝 놀람',
     nervous: '긴장', pleased: '흐뭇함', tired: '피곤함', sleepy: '졸림', sleeping: '자는 중', squeezed: '압축 중',
-    stretch: '기지개', love: '사랑 가득', wink: '윙크',
+    stretch: '기지개 켜는 중', love: '사랑 가득', wink: '윙크',
   },
 
   st: {
@@ -160,7 +160,7 @@ export const ko: typeof en = {
     hello: '안녕하세요',
     welcome: '천만에요',
     leet: '13:37',
-    breakLine: span => `${span} 쉬지 않음 · 기지개 한번?`,
+    breakLine: span => `쉬지 않고 ${span} · 기지개 한번?`,
     badgesTitle: '배지',
     badges: '배지',
     earned: (a, b) => `${a}/${b} 획득`,

@@ -1,6 +1,6 @@
 import type { Mood } from '../types'
 import { local, shiftDay } from './facts'
-import { t } from './i18n'
+import { lang, t } from './i18n'
 import { onPrompt } from './react'
 import type { Reaction } from './react'
 
@@ -111,6 +111,10 @@ export function parseBirthday(text: string): string | null {
   return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+/** A birthday ("04-23") in words in the language in use ("April 23", "23 Nisan"): a day typed the other way round shows. */
+export const birthdayName = (mmdd: string): string =>
+  new Date(`2024-${mmdd}T12:00:00Z`).toLocaleDateString(lang(), { month: 'long', day: 'numeric', timeZone: 'UTC' })
+
 /** The first day Mochi ran here: the one recorded, or an earlier day a chat's file knows; today when there is none. */
 export function firstDayOf(known: string, today: string, chats: readonly Record<string, unknown>[]): string {
   const days = chats.flatMap(c => Object.keys(c)).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
@@ -121,8 +125,9 @@ export function firstDayOf(known: string, today: string, chats: readonly Record<
 
 /** Mochi's name as people write it: in Latin letters, Cyrillic, katakana, Hangul or Chinese. */
 const NAME = /(?<![a-z])mochi(?![a-z])|(?<![а-яё])(моти|мочи)(?![а-яё])|モチ(?![ァ-ヺー])|모찌|모치|麻糬/iu
-const GOOD_NIGHT = /good ?night|iyi geceler|iyi uykular|buenas noches|gute nacht|bonne nuit|boa noite|спокойной ночи|доброй ночи|晚安|おやすみ|잘 ?자|안녕히 주무세요/iu
-const LOVE = /love (you|u)\b|seni seviyorum|seviyorum seni|te quiero|te amo|amo voc[eê]|ich liebe dich|hab dich lieb|je t['’]aime|люблю|爱你|愛你|愛してる|大好き|사랑해/iu
+const GOOD_NIGHT = /good ?night|iyi geceler|iyi uykular|buenas noches|gute nacht|bonne nuit|boa noite|спокойной ночи|доброй ночи|晚安|おやすみ|잘 ?자(요)?(?!\p{L})|안녕히 주무세요/iu
+// Not "te quiero preguntar" (I want to ask you), nor "не люблю" (I do not like).
+const LOVE = /love (you|u)\b(?! to\b)|seni seviyorum|seviyorum seni|te quiero(?! +\p{L}+[aei]r(?!\p{L}))|te amo|amo voc[eê]|ich liebe dich|hab dich lieb|je t['’]aime|люблю тебя|тебя люблю|爱你|愛你|愛してる|大好き|사랑해/iu
 const HELLO = /(?<!\p{L})(hi|hello|hey|hiya|merhaba|selam|hola|hallo|salut|bonjour|ol[aá]|oi|привет|здравствуй)(?!\p{L})|你好|こんにちは|안녕/iu
 
 /** A short prompt that says good night, or loves, thanks or greets Mochi by name: a moment of its own; null otherwise. */

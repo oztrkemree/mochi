@@ -109,4 +109,6 @@ export const chat = {
   lastStretch: 0,
   /** The day of the last 13:37 wink. */
   winkDay: '',
+  /** The badge awards in line, run one at a time. */
+  awards: Promise.resolve() as Promise<void>,
 }

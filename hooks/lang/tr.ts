@@ -173,7 +173,7 @@ export const tr: typeof en = {
       },
       hint: {
         green: 'geçen bir test koşusu', push: 'bir git push', steady: 'üst üste 10 hatasız tur',
-        comeback: 'kalan testleri aynı turda geçirmek', tidy: 'eklediğinden çok satır silinen bir gün', team: 'aynı anda 3 ajan',
+        comeback: 'kırmızı testleri aynı turda yeşile çevirmek', tidy: 'eklediğinden çok satır silinen bir gün', team: 'aynı anda 3 ajan',
         owl: '5 gün gece yarısından sonra çalışmak', bird: '5 gün saat 7’den önce çalışmak', polyglot: 'bir haftada 5 dilde düzenleme',
         marathon: 'iyi biten 30 dakikalık bir tur', week: '7 gün seri', hundred: '100 commit',
       },

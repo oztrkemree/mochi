@@ -2,7 +2,7 @@ import type { On, RenderElement } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
 
 import { BADGES, badgesOf, badgeSvg, commandBadges, isEarly, langBit, provenBy, turnBadges } from '../hooks/badges'
-import { dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, occasions, parseBirthday, promptEgg, workFrom } from '../hooks/fun'
+import { birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, occasions, parseBirthday, promptEgg, workFrom } from '../hooks/fun'
 import { ASCII_HAT, addDay, EMPTY_DAY, hintFor, outfitFor, summarize, wearable } from '../hooks/level'
 import { DICTS, LANGS, setLang } from '../hooks/i18n'
 import { LOOKS, asciiRows } from '../hooks/looks'
@@ -47,15 +47,18 @@ function engine(on: On, store: Record<string, unknown> = { prefs: { lang: 'en' }
 /**
  * Mochi's files, in memory by their folder and name ("mochi/badges.json"):
  * the engine writes a path with the separators of the system the test runs on.
+ * A `locked` one is there but cannot be read.
  */
-function memoryFiles(on: On): Record<string, string> {
+function memoryFiles(on: On, locked = new Set<string>()): Record<string, string> {
   const files: Record<string, string> = {}
   const key = (path: string) => path.split(/[\\/]/).slice(-2).join('/')
   on('fs.read', ($, e) => {
     const text = files[key(e.path)]
     if (text === undefined) throw new Error(`no such file: ${e.path}`)
+    if (locked.has(key(e.path))) throw new Error(`busy: ${e.path}`)
     return { value: text } as never
   })
+  on('fs.exists', ($, e) => ({ value: files[key(e.path)] !== undefined }) as never)
   on('fs.write', ($, e) => {
     files[key(e.path)] = e.text
     return { value: undefined } as never
@@ -109,6 +112,8 @@ test('each occasion is greeted once, however many days it spans', async () => {
   expect(parseBirthday('4-23')).toBe('04-23')
   expect(parseBirthday('04/23')).toBe('04-23')
   expect(parseBirthday('02-29')).toBe('02-29')
+  // Said back in words, so that a day typed the other way round shows.
+  expect(birthdayName('05-04')).toBe('May 4')
   for (const bad of ['02-30', '13-01', '00-10', '23.04', 'tomorrow', '']) expect(parseBirthday(bad)).toBe(null)
   expect(firstDayOf('', '2026-10-10', [{ '2026-09-01': {}, x: 1 }, {}])).toBe('2026-09-01')
   expect(firstDayOf('2026-08-01', '2026-10-10', [{ '2026-09-01': {} }])).toBe('2026-08-01')
@@ -209,6 +214,12 @@ test('a few words to Mochi get a moment of their own', async () => {
   expect(promptEgg('merhaba mochi')?.mood).toBe('wave')
   expect(promptEgg('hi')).toBe(null)
   expect(promptEgg('mochila de viaje')).toBe(null)
+  expect(promptEgg('te quiero mucho, mochi')?.mood).toBe('love')
+  expect(promptEgg('mochi, te quiero preguntar algo')).toBe(null)
+  expect(promptEgg('моти, я тебя люблю')?.mood).toBe('love')
+  expect(promptEgg('моти, я не люблю такой код')).toBe(null)
+  expect(promptEgg('잘 자요')?.mood).toBe('stretch')
+  expect(promptEgg('이 문자열을 잘 자르는 함수')).toBe(null)
   expect(promptEgg('hi mochi, please refactor the whole parser and add tests for every case')).toBe(null)
   expect(isLeet(Date.UTC(2026, 0, 1, 10, 37), 180)).toBe(true)
   expect(isLeet(Date.UTC(2026, 0, 1, 10, 38), 180)).toBe(false)
@@ -254,7 +265,7 @@ test('/mochi birthday, breaks and badges', async ($, on) => {
   await $.session.start(START)
   const run = async (args: string) => (await $.command.run({ command: 'mochi', args } as never)).text ?? ''
   expect(await run('birthday')).toBe('No birthday set. To add it: /mochi birthday MM-DD (it stays on this machine)')
-  expect(await run('birthday 7-1')).toBe('Birthday set: 07-01. It stays on this machine.')
+  expect(await run('birthday 7-1')).toBe('Birthday set: July 1. It stays on this machine.')
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect(await ui.find({ text: 'happy birthday!' })).toBeDefined()
   await ui.unmount()
@@ -266,7 +277,7 @@ test('/mochi birthday, breaks and badges', async ($, on) => {
   expect(await pane.find({ key: 'badge:green' })).toBeDefined()
   expect(await pane.find({ type: 'Text', text: '0/12 earned' })).toBeDefined()
   await pane.unmount()
-  expect(await run('birthday')).toBe('Birthday: 07-01. To change it: /mochi birthday MM-DD · none')
+  expect(await run('birthday')).toBe('Birthday: July 1. To change it: /mochi birthday MM-DD · none')
   expect(await run('birthday 02-30')).toBe('Not a date: 02-30. Use MM-DD, e.g. /mochi birthday 04-23')
   expect(await run('birthday off')).toBe('Birthday removed.')
   expect(await run('breaks')).toBe('Breaks off.')
@@ -275,7 +286,7 @@ test('/mochi birthday, breaks and badges', async ($, on) => {
   // The words of the language in use work too.
   await run('lang tr')
   expect(await run('mola')).toBe('Mola hatırlatması kapalı.')
-  expect(await run('doğumgünü 04-23')).toBe('Doğum günü kaydedildi: 04-23. Yalnızca bu bilgisayarda kalır.')
+  expect(await run('doğumgünü 04-23')).toBe('Doğum günü kaydedildi: 23 Nisan. Yalnızca bu bilgisayarda kalır.')
   setLang('en')
 })
 
@@ -307,6 +318,34 @@ test('badges are earned from real work, kept in a file of Mochi’s own, and cel
   expect(((await $.command.run({ command: 'mochi', args: 'badges' } as never)).text ?? '').split('\n')[0]).toBe('Badges 3/12: first green, comeback, first push')
 })
 
+test('awards at once celebrate a badge once, and a file that cannot be read a moment is never overwritten', async ($, on) => {
+  const toasts: string[] = []
+  const clock = engine(on, { prefs: { lang: 'en' } }, toasts)
+  mock.env(on, { HOME: '/home/me' })
+  on('session.id', () => ({ value: 'chat-3' }) as never)
+  const locked = new Set(['mochi/badges.json'])
+  const files = memoryFiles(on, locked)
+  files['mochi/badges.json'] = '["push"]'
+  on('tool.call', { tool: 'Bash' }, () => ({ result: { stdout: '', stderr: '', interrupted: false }, text: '' }) as never)
+  on('tool.call', { tool: 'Agent' }, async () => {
+    await clock.sleep(60_000)
+    return { result: 'ok', text: 'ok' } as never
+  })
+  await clock.set(at(2026, 7, 1, 12))
+  await $.session.start(START)
+  await clock.settle()
+  await $.tool.call({ tool: 'Bash', command: 'npm test' })
+  expect(files['mochi/badges.json']).toBe('["push"]')
+  locked.clear()
+  // Five agents started together: the third, fourth and fifth each find three or more running.
+  const agents = [1, 2, 3, 4, 5].map(() => $.tool.call({ tool: 'Agent', description: 'look', prompt: 'look' } as never))
+  await clock.settle()
+  await clock.advance(60_000)
+  await Promise.all(agents)
+  expect(JSON.parse(files['mochi/badges.json'] ?? '')).toEqual(['push', 'team'])
+  expect(toasts.filter(x => x.includes('badge'))).toEqual(['Mochi: new badge: team lead · /mochi badges'])
+})
+
 test('a turn of half an hour that ends well is a marathon', async ($, on) => {
   const toasts: string[] = []
   const clock = engine(on, { prefs: { lang: 'en', hasAlert: false } }, toasts)
@@ -325,10 +364,12 @@ test('a turn of half an hour that ends well is a marathon', async ($, on) => {
 })
 
 // Two hours of the timer's beats take a few seconds.
-test('after two hours of work an idle Mochi suggests a stretch', { timeoutMs: 30_000 }, async ($, on) => {
-  const clock = engine(on)
+test('after two hours of work an idle Mochi suggests a stretch, one for all the chats', { timeoutMs: 30_000 }, async ($, on) => {
+  const start = at(2026, 7, 1, 9)
+  // Another chat suggested one a minute in.
+  const clock = engine(on, { prefs: { lang: 'en' }, stretchAt: start + 60_000 })
   on('tool.call', () => ({ result: 'ok', text: 'ok' }) as never)
-  await clock.set(at(2026, 7, 1, 9))
+  await clock.set(start)
   await $.session.start(START)
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   for (let i = 0; i < 12; i++) {
@@ -337,7 +378,10 @@ test('after two hours of work an idle Mochi suggests a stretch', { timeoutMs: 30
   }
   await $.tool.call({ tool: 'Read', file_path: '/r/app.ts' } as never)
   await clock.advance(30_000)
-  expect(await ui.find({ text: '2h without a break · a stretch?' })).toBeDefined()
+  expect(await ui.find({ text: /without a break/ })).toBeUndefined()
+  await $.tool.call({ tool: 'Read', file_path: '/r/app.ts' } as never)
+  await clock.advance(35_000)
+  expect(await ui.find({ text: '2h 1m without a break · a stretch?' })).toBeDefined()
   await ui.unmount()
 })
 
@@ -353,11 +397,12 @@ test('at 13:37 an idle Mochi winks, once', async ($, on) => {
   await ui.unmount()
 })
 
-test('good night to Mochi gets a yawn and a stretch', async ($, on) => {
+test('good night to Mochi gets a yawn and a stretch, even from its sleep', async ($, on) => {
   const clock = engine(on)
   on('prompt.submit', ($, e) => ({ text: e.text }))
   await clock.set(at(2026, 7, 1, 23))
   await $.session.start(START)
+  await clock.advance(5 * 60_000)
   await $.prompt.submit({ text: 'good night mochi' } as never)
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect(await ui.find({ text: 'good night' })).toBeDefined()
