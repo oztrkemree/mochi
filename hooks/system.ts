@@ -72,3 +72,10 @@ export const pngCommands = (svg: string, png: string): string[][] => [
   ['rsvg-convert', '--zoom=2', '-o', png, svg],
   ['magick', '-density', '192', '-background', 'none', svg, png],
 ]
+
+/** The command that opens a file, a folder or a web link with the app the system picks for it; Windows's explorer reads no shell syntax. */
+export function openCommand(platform: Platform, target: string): string[] {
+  if (platform === 'mac') return ['open', target]
+  if (platform === 'windows') return ['explorer.exe', /^https?:\/\//.test(target) ? target : target.replaceAll('/', '\\')]
+  return ['xdg-open', target]
+}

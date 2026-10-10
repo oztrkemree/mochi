@@ -210,7 +210,8 @@ const NAME = String.raw`[\w.-]*(?:api[_-]?key|secret|token|passw(?:or)?d|access[
  * Such a name given a quoted value, in code or config; or a bare one on a line
  * of its own, as .env, shells and YAML write it (no brackets or commas: that is code).
  */
-const QUOTED = new RegExp(String.raw`\b(?<name>${NAME})["']?\s*[:=]\s*(?<q>["'\x60])(?<value>[^"'\x60\s]{16,200})\k<q>`, 'gi')
+// A name starts where its run of word characters, dots and dashes does: one start per run keeps a long `a-b-c…` linear.
+const QUOTED = new RegExp(String.raw`(?<![\w.-])(?<name>${NAME})["']?\s*[:=]\s*(?<q>["'\x60])(?<value>[^"'\x60\s]{16,200})\k<q>`, 'gi')
 const BARE = new RegExp(String.raw`^\s*(?:export\s+)?(?<name>${NAME})\s*[:=]\s*(?<value>[^\s"'#(),;{}<>\[\]]{16,200})\s*$`, 'gim')
 
 /** Values that are plainly no real secret: placeholders, templates, links and paths, the environment, examples, runs of one character. */

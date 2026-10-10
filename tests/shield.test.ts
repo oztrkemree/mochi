@@ -424,3 +424,14 @@ test('shield.json adds rules and turns built-in ones off, read again when it cha
   chat.rulesAt = -1
   setLang('tr')
 })
+
+test('git options before the subcommand hide nothing, and a long dashed run is read at once', () => {
+  setLang('en')
+  for (const cmd of ['git -C ../app push --force origin main', 'git -c core.x=y reset --hard', 'git --no-pager clean -fd', 'git.exe branch -D old', 'git -C /repo stash drop'])
+    expect([cmd, keys(cmd).length > 0]).toEqual([cmd, true])
+  expect(keys('git -C ../app status')).toEqual([])
+  const started = performance.now()
+  secretsIn('a-'.repeat(20_000))
+  expect(performance.now() - started < 500).toBe(true)
+  setLang('tr')
+})

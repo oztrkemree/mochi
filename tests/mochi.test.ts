@@ -9,7 +9,7 @@ import { itemOf, levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/
 import { peerLabel, peerNews, peersLine } from '../hooks/live'
 import { DICTS, LANGS, pickLang, setLang } from '../hooks/i18n'
 import { NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
-import { alertCommand, langCodes, langCommand, removeCommand } from '../hooks/system'
+import { alertCommand, langCodes, langCommand, openCommand, removeCommand } from '../hooks/system'
 import { clip, cols } from '../hooks/text'
 
 // Most of these read the Turkish lines; one test below speaks English.
@@ -474,6 +474,8 @@ test('what an older version saved under the Turkish item ids carries over', asyn
   await $.session.start(START)
   expect((await $.command.run({ command: 'mochi', args: 'wear' } as never)).text).toContain('Face: glasses\n')
   expect((await $.command.run({ command: 'mochi', args: 'wear bere' } as never)).text).toBe('beanie put on.')
+  // An exact name wins over a longer one it begins: the tea glass, not the teardrop.
+  expect((await $.command.run({ command: 'mochi', args: 'wear tea' } as never)).text).toBe('tea glass put on.')
   setLang('tr')
 })
 
@@ -583,6 +585,7 @@ test('every language has every word, and the language is picked from names and c
     expect(DICTS[l].unit(5, 'm').length > 0).toBe(true)
   }
   expect(pickLang('tr-TR')).toBe('tr')
+  expect(pickLang('constructor')).toBe(null)
   expect(pickLang('zh_CN.UTF-8')).toBe('zh')
   expect(pickLang('japanese')).toBe('ja')
   expect(pickLang('Türkçe')).toBe('tr')
@@ -709,6 +712,9 @@ test('each system is asked its own way, and no word is spliced into a script', a
   expect(langCodes('HKEY_CURRENT_USER\\Control Panel\\Desktop\r\n    PreferredUILanguages    REG_MULTI_SZ    tr-TR\r\n\r\nHKEY_CURRENT_USER\\Control Panel\\Desktop\\MuiCached\r\n    MachinePreferredUILanguages    REG_MULTI_SZ    en-US\r\n'))
     .toEqual(['tr-TR', 'en-US'])
   expect(langCodes('(\n    "de-DE",\n    "en-US"\n)')).toEqual(['de-DE', 'en-US'])
+  // What the pane made is opened by the system's own app; explorer reads no shell syntax.
+  expect(openCommand('windows', 'C:/Users/Ada Lovelace/x.svg')).toEqual(['explorer.exe', 'C:\\Users\\Ada Lovelace\\x.svg'])
+  expect(openCommand('mac', 'https://github.com/x')).toEqual(['open', 'https://github.com/x'])
 })
 
 test('wide characters clip by the room they take, and marks on a letter take none', async () => {

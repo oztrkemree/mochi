@@ -26,8 +26,11 @@ const move = (ids: string[], from: number, to: number) => {
  * as `{ order }` or `{ hide }`; the pane draws it back.
  */
 const Arrange: ClientModule<Props, State> = (props, surface) => {
-  const s: State = surface.state ?? { drag: null, sent: null, sel: 0 }
   const given = props.rows.map(r => r.id)
+  const kept: State = surface.state ?? { drag: null, sent: null, sel: 0 }
+  // Once the pane draws anything but the order a change replaced, the change has landed: forget it, or "Default order" would bring it back.
+  const s: State = kept.sent !== null && kept.sent.over !== given.join() ? { ...kept, sent: null } : kept
+  if (s !== kept) surface.setState(s)
   // What was sent stands while the pane still draws the order it replaced, so a drop never flashes back.
   const base = s.sent !== null && s.sent.over === given.join() ? s.sent.ids : given
   const ids = s.drag ? move(base, s.drag.from, s.drag.to) : base

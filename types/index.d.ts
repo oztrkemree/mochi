@@ -353,8 +353,8 @@ declare module 'claude-code' {
       sec: number
       env: Env
       prefs: Prefs
-      /** What the last of the details pane's actions answered, and the part of it worth copying. */
-      said: { text: string; copy: string }
+      /** What the last of the details pane's actions answered, the part of it worth copying, and the file, folder or link it opens (absent from an older version). */
+      said: { text: string; copy: string; open?: string }
     }
   }
 }

@@ -22,10 +22,8 @@ export const slotName = (s: Slot): string => t().item.slot[s]
 export const SLOT_ITEMS: Record<Slot, Item[]> = {
   head: ['beanie', 'hardhat', 'gradcap', 'chefhat', 'cowboy', 'crown', 'pirate', 'viking', 'wizard', 'partyhat', 'propeller', 'fez', 'nightcap', 'witchhat', 'santahat', 'sakura',
     'bandana', 'sailorhat', 'strawhat', 'daisyhat', 'leaf', 'catears', 'bunnyears', 'flowercrown', 'beret', 'tophat', 'jester', 'nursecap', 'sombrero', 'antlers', 'farmer', 'sunflowercrown', 'bee', 'halo', 'unicorn', 'shortcake', 'rainbow', 'dragon', 'astronaut',
-    ,
     'bowler', 'flatcap', 'explorer', 'baseballcap'],
   face: ['glasses', 'sunglasses', 'mustache', 'monocle',
-    ,
     'heartglasses', 'eyepatch', 'beard', 'goggles', 'starglasses', 'cinema3d', 'nerdglasses', 'visor',
     'clownnose', 'catwhiskers', 'plaster', 'freckles', 'bushybrows', 'eyelashes', 'fangs', 'teardrop'],
   neck: ['bowtie', 'necktie', 'scarf', 'evileye', 'medal', 'pin', 'rosette',
@@ -60,7 +58,7 @@ export function itemOf(v: unknown): Item | null {
 type Need = { level?: number; commits?: number; night?: number; edits?: number; streak?: number; turns?: number; days?: number }
 
 /** What unlocks each item that can be earned: a level, or a habit. */
-export const UNLOCKS: ({ item: Item } & Need)[] = [
+export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'beanie', level: 1 }, { item: 'glasses', level: 1 }, { item: 'mug', level: 1 }, { item: 'tea', level: 1 },
   { item: 'bowtie', level: 2 }, { item: 'sunglasses', level: 2 },
   { item: 'pencil', level: 3 },
@@ -153,7 +151,8 @@ export const UNLOCKS: ({ item: Item } & Need)[] = [
   { item: 'pinwheel', turns: 500 },
   { item: 'compass', days: 60 },
   { item: 'key', night: 50 },
-]
+// By level, the habits after them, so the first one still locked is the next to come.
+] satisfies ({ item: Item } & Need)[]).sort((a, b) => (a.level ?? Infinity) - (b.level ?? Infinity))
 
 type Dressed = Exclude<Occasion, 'piDay' | 'friday13'>
 

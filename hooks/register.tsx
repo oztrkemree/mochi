@@ -11,7 +11,7 @@ import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, duration, flowEnd, flowLine, isCommit, isTest, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
 import { boardLines, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from './chats'
-import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
+import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, ruleAsWritten, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
 import type { TipId } from './coach'
 import { detailHeight, detailSvg } from './detail'
 import { addSample, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
@@ -30,7 +30,7 @@ import { SNAP_W, bestOutfit, cardMarkdown, cardPath, cardSvg, framed, monthName,
 import type { ChatDays } from './share'
 import { clip } from './sound'
 import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
-import { alertCommand, langCodes, langCommand, pngCommands, removeCommand } from './system'
+import { alertCommand, langCodes, langCommand, openCommand, pngCommands, removeCommand } from './system'
 import type { Platform } from './system'
 
 // Everything that acts through `$` lives in this file: the engine follows `$`
@@ -138,6 +138,7 @@ async function pressed($: Dollar, element: string, surface?: RenderSurface) {
   if (tab !== undefined) await setPrefs($, p => ({ ...p, tab }))
   if (block !== undefined && verb === 'hide') await hideBlock($, block)
   if (element === 'said:close') await update($, said, () => NO_SAID)
+  if (element === 'said:open') await openIt($, (await read($, said)).open ?? '')
   if (element === 'said:copy') {
     const { copy } = await read($, said)
     if (copy !== '') await $.ui.copy({ text: copy, surface }).catch(() => undefined)
@@ -372,7 +373,8 @@ async function refreshGit($: Dollar) {
   chat.gitAt = await $.clock.now()
   chat.isGitWanted = false
   const run = (args: string[]) => $.process.run(args, { timeoutMs: 5000 }).catch(() => undefined)
-  const status = await run(['git', 'status', '--porcelain=v1', '-b', '-uall'])
+  // Without the index lock, so Claude's own git add or commit never finds it taken; names as they are, not octal escapes.
+  const status = await run(['git', '--no-optional-locks', '-c', 'core.quotePath=false', 'status', '--porcelain=v1', '-b', '-uall'])
   const log = status?.exitCode === 0 ? await run(['git', 'log', '-1', '--format=%ct']) : undefined
   const base = status?.exitCode === 0 ? parseGit(status.stdout, log?.exitCode === 0 ? log.stdout : '') : null
   if (base === null) {
@@ -382,7 +384,7 @@ async function refreshGit($: Dollar) {
   const top = await run(['git', 'rev-parse', '--show-toplevel'])
   const root = top?.exitCode === 0 ? top.stdout.trim() : ''
   // Lines added and removed against the last commit, staged or not; before the first commit, what is staged.
-  const diff = await run(['git', 'diff', ...(base.lastCommit > 0 ? ['HEAD'] : ['--cached']), '--numstat', '--no-renames'])
+  const diff = await run(['git', '-c', 'core.quotePath=false', 'diff', ...(base.lastCommit > 0 ? ['HEAD'] : ['--cached']), '--numstat', '--no-renames'])
   // A new file not yet added counts as all added: its lines, for the first twenty (none for one that cannot be read).
   const fresh = root === '' ? [] : base.files.filter(f => f.code === '??' && !f.path.endsWith('/')).slice(0, 20)
   const counts: Record<string, number> = {}
@@ -558,7 +560,7 @@ async function checkLevel($: Dollar) {
   if (saved !== null && (saved.level ?? 1) >= level && fresh.length === 0) return
   await $.fs.write(path, JSON.stringify({ level, items })).catch(() => undefined)
   if (saved === null) return
-  const parts = [...((saved.level ?? 1) < level ? [t().st.level(level)] : []), ...(fresh.length > 0 ? [t().st.newItems(fresh.map(itemName).join(', '))] : [])]
+  const parts = [...((saved.level ?? 1) < level ? [t().st.level(level)] : []), ...(fresh.length > 0 ? [t().st.newItems([...fresh.slice(0, 4).map(itemName), ...(fresh.length > 4 ? [`+${fresh.length - 4}`] : [])].join(', '))] : [])]
   if (mayCelebrate(await read($, face), await $.clock.now())) await show($, { mood: 'party', line: parts.join(' · '), holdMs: 8000, sound: 'party' })
   $.ui.toast(`Mochi: ${parts.join(' · ')}${fresh.length > 0 ? t().note.seeWardrobe : ''}`, { timeoutMs: 8000 })
 }
@@ -578,7 +580,9 @@ async function saveSamples($: Dollar) {
   const now = chat.samplesAt
   const v = await update($, env, x => {
     const all = [...theirs, ...x.samples].filter(s => now - s.at < 48 * 60 * 60_000).sort((a, b) => a.at - b.at)
-    const merged = all.filter((s, i) => i === 0 || s.at !== all[i - 1]?.at || s.kind !== all[i - 1]?.kind).slice(-400)
+    // Each reading once, however many times the chats' copies hold it.
+    const seen = new Set<string>()
+    const merged = all.filter(s => !seen.has(`${s.kind}@${s.at}`) && seen.add(`${s.kind}@${s.at}`)).slice(-400)
     return { ...x, samples: merged }
   })
   await $.fs.write(path, JSON.stringify(v.samples)).catch(() => undefined)
@@ -683,8 +687,12 @@ async function openDetail($: Dollar) {
 }
 
 async function setPrefs($: Dollar, change: (p: Prefs) => Prefs) {
+  const before = await read($, prefs)
   const next = await update($, prefs, change)
-  await $.store.set('prefs', next)
+  // The store is every chat's: only what this change altered goes in, over what the other chats saved since this one started.
+  const changed = Object.fromEntries(Object.entries(next).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(before[k as keyof Prefs])))
+  const stored = (await $.store.get('prefs').catch(() => undefined)) as Partial<Prefs> | undefined
+  await $.store.set('prefs', stored === undefined ? next : { ...stored, ...changed })
   await refreshStatus($)
   // Shown, the drawing catches up with what the timer left alone while hidden.
   if (!next.isHidden) {
@@ -1015,7 +1023,9 @@ async function wear($: Dollar, arg: string, p: Prefs): Promise<string> {
   }
   // An item by its id (an older version's too), or its name in the language in use or in English.
   const byId = itemOf(arg)
-  const item = ALL_ITEMS.find(i => i === byId || [itemName(i), itemShort(i), DICTS.en.item.name[i], DICTS.en.item.short[i]].some(n => plain(n) === arg || plain(n).startsWith(arg)))
+  // An exact name wins over one that only starts with the word: "tea" is the tea glass, not the teardrop.
+  const keys = (i: Item) => [itemName(i), itemShort(i), DICTS.en.item.name[i], DICTS.en.item.short[i]].map(plain)
+  const item = ALL_ITEMS.find(i => i === byId) ?? ALL_ITEMS.find(i => keys(i).includes(arg)) ?? ALL_ITEMS.find(i => keys(i).some(n => n.startsWith(arg)))
   if (item === undefined) return d.noSuchItem(arg)
   if (!ok.includes(item)) return d.itemLocked(itemName(item), hintFor(item))
   await setPrefs($, x => ({ ...x, pick: { ...x.pick, [SLOT[item]]: item } }))
@@ -1046,12 +1056,29 @@ async function turn($: Dollar, key: string) {
   if (key === 'plugins') await togglePlugins($, '')
 }
 
-/** What is worth copying from an action's answer: the card's line for a profile, else a path or link it ends with; '' when there is none. */
+/** A line's path or link, from where it starts, so a folder with a space, or a label before a full-width colon, is not cut in; '' when none. */
+const pathIn = (line: string): string => /(?:~[\\/]|[A-Za-z]:[\\/]|\/|https?:\/\/).*$/.exec(line.trim())?.[0] ?? ''
+
+/** What is worth copying from an action's answer: the card's line for a profile, the bug report's link; '' when there is none. */
 function copyOf(verb: string, text: string): string {
   const lines = text.split('\n')
   if (verb === 'card') return lines.length > 1 ? (lines.at(-1) ?? '') : ''
-  const last = text.trim().split(/\s+/).at(-1) ?? ''
-  return /[\\/]/.test(last) ? last : ''
+  return verb === 'feedback' ? pathIn(lines.at(-1) ?? '') : ''
+}
+
+/** What an action's answer opens: the card or the wrapped itself, the folder of the snapshots, the bug report's form; '' when nothing. */
+function openOf(verb: string, text: string): string {
+  const lines = text.split('\n')
+  const first = pathIn(lines[0] ?? '')
+  if (verb === 'card' || verb === 'wrapped' || verb === 'year') return first
+  if (verb === 'snap') return first.replace(/[\\/][^\\/]*$/, '')
+  return verb === 'feedback' ? pathIn(lines.at(-1) ?? '') : ''
+}
+
+/** Opens a file, a folder or a link with the app the system picks for it; a file that is not there is left alone. */
+async function openIt($: Dollar, target: string) {
+  if (!/^https?:\/\//.test(target) && !(await $.fs.exists(target.replaceAll('\\', '/')).catch(() => false))) return
+  void $.process.run(openCommand(chat.platform, target), { timeoutMs: 10_000 }).catch(() => undefined)
 }
 
 /** One of /mochi's actions run from the details pane (`reset:history` and the like); its answer is kept for the pane to show. */
@@ -1067,7 +1094,11 @@ async function act($: Dollar, what: string) {
     : verb === 'export' ? await exportAll($)
     : verb === 'reset' ? await reset($, scope)
     : ''
-  if (text !== '') await update($, said, () => ({ text, copy: copyOf(verb, text) }))
+  if (text === '') return
+  // What was made is shown at once, not only named.
+  const open = openOf(verb, text)
+  await update($, said, () => ({ text, copy: copyOf(verb, text), open }))
+  if (open !== '') await openIt($, open)
 }
 
 /** What /mochi says to a word none of the subcommands knows: where Mochi stands. */
@@ -1255,9 +1286,12 @@ async function ciDone($: Dollar, ci: Ci) {
 
 async function toggleCi($: Dollar, arg: string): Promise<string> {
   const next = await setPrefs($, v => ({ ...v, hasCi: wanted(arg, v.hasCi) }))
-  chat.ciSha = ''
+  // A push being followed is let go only when CI is turned off.
   if (next.hasCi) void refreshPr($).catch(() => undefined)
-  else await setEnv($, v => ({ ...v, ci: null, pr: null }))
+  else {
+    chat.ciSha = ''
+    await setEnv($, v => ({ ...v, ci: null, pr: null }))
+  }
   return next.hasCi ? t().ci.on : t().ci.off
 }
 
@@ -1328,8 +1362,8 @@ async function snap($: Dollar): Promise<string> {
   try {
     const a = await saveShare($, 'mochi-band.svg', framed(band.svg, band.width, PANEL_H))
     const b = await saveShare($, 'mochi-details.svg', framed(details, SNAP_W, detailHeight(details)))
-    const pngs = [await toPng($, a), await toPng($, b)]
-    return pngs[0] !== null && pngs[1] !== null ? t().share.snapSaved(pngs[0], pngs[1]) : `${t().share.snapSaved(a, b)}\n${t().share.noPng}`
+    const [pa, pb] = [await toPng($, a), await toPng($, b)]
+    return pa !== null && pb !== null ? t().share.snapSaved(pa, pb) : `${t().share.snapSaved(a, b)}\n${t().share.noPng}`
   } catch (e) {
     return failed(e)
   }
@@ -1413,7 +1447,10 @@ async function notePrompt($: Dollar, text: string, isPerson: boolean) {
   if (rules.length === 0 || chat.dataDir === '' || !(await read($, prefs)).hasTips) return
   const counted = countRules(readLog(await $.fs.read(coachFile()).catch(() => '')), projectKey(await $.session.root()), rules)
   await $.fs.write(coachFile(), JSON.stringify(counted.log))
-  if (counted.ask !== null) chat.coach.rule = counted.ask
+  if (counted.ask !== null) {
+    chat.coach.rule = counted.ask
+    chat.coach.ruleText = ruleAsWritten(text, counted.ask)
+  }
 }
 
 /** The same permission asked a third time this chat calls for /permissions. */
@@ -1483,6 +1520,7 @@ async function tourStep($: Dollar) {
  */
 async function askRule($: Dollar) {
   const rule = chat.coach.rule
+  const written = chat.coach.ruleText || rule
   chat.coach.rule = ''
   if ((await $.session.surfaces()).length === 0) return
   // Nothing else is said while the question is open, nor for a minute after.
@@ -1493,9 +1531,9 @@ async function askRule($: Dollar) {
     const readMd = async () => ((await $.fs.exists(path)) ? await $.fs.read(path) : '')
     const d = t().coach.rule
     // Already there, it counts as settled.
-    const answer = hasRule(await readMd(), rule) ? d.never : await $.ui.ask(d.question(rule), { header: 'Mochi', options: [d.add, d.later, d.never] }).catch(() => d.later)
+    const answer = hasRule(await readMd(), rule) ? d.never : await $.ui.ask(d.question(written), { header: 'Mochi', options: [d.add, d.later, d.never] }).catch(() => d.later)
     if (answer === d.add) {
-      await $.fs.write(path, withRule(await readMd(), rule))
+      await $.fs.write(path, withRule(await readMd(), written))
       await show($, { mood: 'proud', line: d.added, holdMs: 5000 })
     }
     const log = readLog(await $.fs.read(coachFile()).catch(() => ''))
@@ -1631,8 +1669,10 @@ async function reset($: Dollar, arg: string): Promise<string> {
 
 /** A link to a new bug report, its form filled with the versions, the system, the surface and the language alone. */
 async function feedback($: Dollar): Promise<string> {
-  const claude = await $.session.version().then(v => v.version, () => '')
-  const surfaces = await $.session.surfaces().catch(() => [])
+  // The link waits two seconds at most for what it carries, so the button never hangs the pane.
+  const late = <T,>(fallback: T) => $.clock.sleep(2000).then(() => fallback)
+  const claude = await Promise.race([$.session.version().then(v => v.version, () => ''), late('')])
+  const surfaces = await Promise.race([$.session.surfaces().catch(() => []), late([] as string[])])
   return t().data.feedback(feedbackUrl({ mochi: await mochiVersion($), claude, platform: chat.platform, surface: surfaces[0] ?? '', lang: t().name }))
 }
 
@@ -2196,9 +2236,18 @@ export const register: Register = on => {
   }).catch(($, e, next) => next(e))
 
   on('session.compact', async ($, e, next) => {
+    // A summary made ahead of time, or a subagent's own transcript, leaves this conversation as it is.
+    if (e.trigger === 'precompute' || e.agentId !== undefined) return next(e)
     const now = await $.clock.now()
     await show($, { mood: 'squeezed', line: t().st.compacting, holdMs: 0 }, now)
-    const done = await next(e)
+    const done = await next(e).catch(async (err: unknown) => {
+      await rest($)
+      throw err
+    })
+    if (done.skip !== undefined) {
+      await rest($)
+      return done
+    }
     chat.warned = 0
     chat.pendingWarn = 0
     await show($, { mood: 'success', line: t().st.compacted, holdMs: 4000 })

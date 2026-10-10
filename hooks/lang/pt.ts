@@ -17,6 +17,15 @@ export const pt: typeof en = {
   months: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
 
   news: {
+    '0.4.0': {
+      headline: 'o painel de detalhes em quatro abas, com todos os ajustes e ações',
+      notes: [
+        'O painel de detalhes em quatro abas: Agora, Histórico, Mochi e Ajustes. Todo ajuste e toda ação do /mochi está a um clique dali.',
+        'Organize cada aba do seu jeito: ⠿ a transforma em uma lista em que você move as partes e as oculta.',
+        'Oitenta e nove itens novos para usar: para a cabeça, o rosto e o pescoço, para segurar e para ficar ao lado do Mochi, até o nível 56.',
+        'Ultracode: o Mochi acompanha os agentes de um workflow e comemora quando o último termina.',
+      ],
+    },
     '0.3.0': {
       headline: 'um escudo mais esperto, CI depois do push, todos os chats num só quadro, conquistas e mais',
       notes: [
@@ -512,6 +521,7 @@ export const pt: typeof en = {
     resetHistory: 'Redefinir histórico',
     resetAll: 'Redefinir tudo',
     copy: 'Copiar',
+    open: 'Abrir',
     dismiss: 'Fechar',
     moreGist: 'cartão · retrospectiva · captura · apresentação · exportar · redefinir',
     tabs: { now: 'Agora', past: 'Histórico', mochi: 'Mochi', settings: 'Ajustes' },

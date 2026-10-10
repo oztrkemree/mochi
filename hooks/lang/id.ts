@@ -15,6 +15,15 @@ export const id: typeof en = {
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
 
   news: {
+    '0.4.0': {
+      headline: 'panel detail dalam empat tab, lengkap dengan semua pengaturan dan aksi',
+      notes: [
+        'Panel detail dalam empat tab: Sekarang, Riwayat, Mochi, dan Pengaturan. Semua pengaturan dan aksi /mochi ada di sana, cukup satu klik.',
+        'Atur tiap tab sesukamu: ⠿ mengubahnya jadi daftar tempat kamu memindahkan dan menyembunyikan bagian.',
+        'Delapan puluh sembilan barang baru untuk dipakai: untuk kepala, wajah, leher, untuk dipegang, dan untuk berdiri di samping Mochi, sampai level 56.',
+        'Ultracode: Mochi mengikuti agen sebuah workflow dan merayakan saat yang terakhir selesai.',
+      ],
+    },
     '0.3.0': {
       headline: 'perisai yang lebih pintar, CI setelah push, semua chat di satu papan, lencana, dan lainnya',
       notes: [
@@ -510,6 +519,7 @@ export const id: typeof en = {
     resetHistory: 'Reset riwayat',
     resetAll: 'Reset semua',
     copy: 'Salin',
+    open: 'Buka',
     dismiss: 'Tutup',
     moreGist: 'kartu · rekap · jepretan · tur · ekspor · reset',
     tabs: { now: 'Sekarang', past: 'Riwayat', mochi: 'Mochi', settings: 'Pengaturan' },

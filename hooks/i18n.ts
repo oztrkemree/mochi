@@ -48,7 +48,7 @@ export function pickLang(value: string | undefined | null): Lang | null {
   if (!value) return null
   const v = value.trim().toLowerCase()
   if (v === '') return null
-  const named = NAMES[v]
+  const named = Object.hasOwn(NAMES, v) ? NAMES[v] : undefined
   if (named) return named
   const code = v.split(/[-_.@]/)[0] ?? ''
   return (LANGS as string[]).includes(code) ? (code as Lang) : null

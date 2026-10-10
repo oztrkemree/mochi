@@ -14,7 +14,7 @@ import { WEAR } from './wear'
 // quiet cards, one type scale), as one drawing so nothing reflows.
 
 const n = (v: number) => String(Math.round(v * 100) / 100)
-const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+const esc = (s: string) => s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 
 const GIT_INK: Record<string, string> = { M: '#F2B84B', A: '#4CC38A', D: '#F0645A', R: '#7AA2F7', '?': '#A59D96', U: '#F0645A' }
 

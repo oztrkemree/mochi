@@ -81,7 +81,7 @@ export function boardLines(me: Peer | undefined, peers: readonly Peer[], now: nu
 }
 
 const n = (v: number) => String(Math.round(v * 100) / 100)
-const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+const esc = (s: string) => s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 
 /** The details pane's card of every chat, when there are others: a row each, as on the board. */
 export function chatsCard(env: Env, now: number): Card | null {

@@ -14,6 +14,15 @@ export const tr: typeof en = {
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
   news: {
+    '0.4.0': {
+      headline: 'dört sekmeli detay ekranı, her ayar ve eylemle birlikte',
+      notes: [
+        'Dört sekmeli detay ekranı: Şimdi, Geçmiş, Mochi ve Ayarlar. /mochi’nin her ayarı ve eylemi orada bir tık uzakta.',
+        'Her sekmeyi kendine göre diz: ⠿ onu, parçaları taşıyıp gizleyebildiğin bir listeye çevirir.',
+        'Takmak için seksen dokuz yeni şey: baş, yüz ve boyun için, elde tutmak ve Mochi’nin yanında durmak için, 56. seviyeye kadar.',
+        'Ultracode: Mochi bir workflow’un ajanlarını izler, sonuncusu bitince kutlar.',
+      ],
+    },
     '0.3.0': {
       headline: 'daha akıllı bir kalkan, push sonrası CI, bütün sohbetler tek panoda, rozetler ve dahası',
       notes: [
@@ -509,6 +518,7 @@ export const tr: typeof en = {
     resetHistory: 'Geçmişi sıfırla',
     resetAll: 'Her şeyi sıfırla',
     copy: 'Kopyala',
+    open: 'Aç',
     dismiss: 'Kapat',
     moreGist: 'kart · özet · ekran görüntüsü · tanıtım · dışa aktar · sıfırla',
     tabs: { now: 'Şimdi', past: 'Geçmiş', mochi: 'Mochi', settings: 'Ayarlar' },

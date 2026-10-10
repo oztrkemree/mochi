@@ -18,6 +18,15 @@ export const fr: typeof en = {
   months: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'],
 
   news: {
+    '0.4.0': {
+      headline: 'le panneau de détails en quatre onglets, avec chaque réglage et chaque action',
+      notes: [
+        'Le panneau de détails en quatre onglets : Maintenant, Historique, Mochi et Réglages. Chaque réglage et chaque action de /mochi y est à un clic.',
+        'Organisez chaque onglet à votre façon : ⠿ le transforme en liste où vous déplacez les éléments et les masquez.',
+        'Quatre-vingt-neuf nouveautés à porter, pour la tête, le visage, le cou, à tenir ou à placer à côté de Mochi, jusqu’au niveau 56.',
+        'Ultracode : Mochi suit les agents d’un workflow et fête la fin du dernier.',
+      ],
+    },
     '0.3.0': {
       headline: 'un bouclier plus malin, la CI après un push, toutes les conversations sur un même tableau, des insignes et plus encore',
       notes: [
@@ -513,6 +522,7 @@ export const fr: typeof en = {
     resetHistory: 'Réinitialiser l’historique',
     resetAll: 'Tout réinitialiser',
     copy: 'Copier',
+    open: 'Ouvrir',
     dismiss: 'Fermer',
     moreGist: 'carte · bilan · capture · visite · exporter · réinitialiser',
     tabs: { now: 'Maintenant', past: 'Historique', mochi: 'Mochi', settings: 'Réglages' },

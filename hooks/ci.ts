@@ -131,7 +131,7 @@ export function prLine(pr: Pr): string {
 /** A pull request's colour: red with a failing check, amber while some run, green once they pass. */
 const prInk = (pr: Pr): string => (pr.failed > 0 ? CI_INK.failed : pr.pending > 0 ? CI_INK.running : pr.passed > 0 ? CI_INK.passed : CI_INK.waiting)
 
-const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+const esc = (s: string) => s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 
 /**
  * The desktop panel's CI mark: while runs go, a breathing dot and their line;

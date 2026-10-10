@@ -19,6 +19,15 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.4.0': {
+      headline: 'the details pane in four tabs, with every setting and action',
+      notes: [
+        'The details pane in four tabs: Now, History, Mochi and Settings. Every setting and action of /mochi is a click away there.',
+        'Arrange each tab your way: ⠿ turns it into a list where you move parts and hide them.',
+        'Eighty-nine new things to wear, for the head, the face, the neck, to hold and to stand beside Mochi, up to level 56.',
+        'Ultracode: Mochi follows a workflow’s agents and celebrates when the last one ends.',
+      ],
+    },
     '0.3.0': {
       headline: 'a smarter shield, CI after a push, every chat on one board, badges and more',
       notes: [
@@ -540,6 +549,7 @@ export const en = {
     resetHistory: 'Reset history',
     resetAll: 'Reset everything',
     copy: 'Copy',
+    open: 'Open',
     dismiss: 'Dismiss',
     moreGist: 'card · wrapped · snapshot · tour · export · reset',
     tabs: { now: 'Now', past: 'History', mochi: 'Mochi', settings: 'Settings' },
@@ -628,7 +638,7 @@ export const en = {
     detailOpened: 'Details pane opened.',
     shieldOn: 'Shield on: Mochi asks before a command that cannot be undone runs, and before anything that looks like a secret is written or committed.',
     shieldOff: 'Shield off.',
-    shieldHow: (isOn: boolean) => (isOn ? 'To turn it off: /mochi shield off' : 'To turn it on: /mochi shield on'),
+    shieldHow: (isOn: boolean): string => (isOn ? 'To turn it off: /mochi shield off' : 'To turn it on: /mochi shield on'),
     alertsOn: (minutes: number) => `Alerts on: you will hear when work longer than ${minutes} minutes finishes, when a chat waits for you, when a limit resets and when CI fails.`,
     alertsOff: 'Alerts off.',
     levelLine: (level: number, xp: number, toNext: number) => `Level ${level} · ${xp} XP · ${toNext} XP to the next level`,

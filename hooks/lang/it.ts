@@ -19,6 +19,15 @@ export const it: typeof en = {
   months: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'],
 
   news: {
+    '0.4.0': {
+      headline: 'il pannello dei dettagli in quattro schede, con ogni impostazione e azione',
+      notes: [
+        'Il pannello dei dettagli in quattro schede: Ora, Cronologia, Mochi e Impostazioni. Ogni impostazione e azione di /mochi è lì a un clic.',
+        'Disponi ogni scheda a modo tuo: ⠿ la trasforma in un elenco dove sposti le parti e le nascondi.',
+        'Ottantanove novità da indossare: per la testa, il viso e il collo, da tenere in mano e da mettere accanto a Mochi, fino al livello 56.',
+        'Ultracode: Mochi segue gli agenti di un workflow e festeggia quando finisce l’ultimo.',
+      ],
+    },
     '0.3.0': {
       headline: 'uno scudo più furbo, la CI dopo un push, tutte le chat in un’unica bacheca, badge e altro ancora',
       notes: [
@@ -514,6 +523,7 @@ export const it: typeof en = {
     resetHistory: 'Azzera cronologia',
     resetAll: 'Azzera tutto',
     copy: 'Copia',
+    open: 'Apri',
     dismiss: 'Chiudi',
     moreGist: 'scheda · riepilogo · istantanea · giro · esporta · azzera',
     tabs: { now: 'Ora', past: 'Cronologia', mochi: 'Mochi', settings: 'Impostazioni' },

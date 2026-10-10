@@ -72,7 +72,7 @@ export function sliceInk(name: string): string {
 }
 
 const n = (v: number) => String(Math.round(v * 100) / 100)
-const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+const esc = (s: string) => s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 
 /** 273000 → "273k", 1000000 → "1M". */
 export function tokens(v: number): string {
@@ -173,7 +173,8 @@ function gauges(info: Info, was: Info, now: number): Gauge[] {
 /** The last tool calls as a row of small squares: new ones arrive, a running one breathes, a failed one is red. */
 function timeline(recent: Recent[], seen: Set<number>, x: number, cy: number, room: number): { svg: string; width: number } {
   const step = 12
-  const list = recent.slice(-Math.max(0, Math.floor(room / step)))
+  const fits = Math.floor(room / step)
+  const list = fits > 0 ? recent.slice(-fits) : []
   const svg = list.map((r, i) => {
     const px = x + i * step
     const fill = r.state === 'fail' ? '#F0645A' : KIND_INK[r.kind]

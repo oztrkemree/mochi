@@ -308,9 +308,8 @@ test('the details pane: tabs, rows that fold, switches for every setting and eve
   await pane.post({}, { in: 'tap:set:shield' })
   expect(await run('shield')).toContain('Shield off.')
   await pane.post({}, { in: 'tap:set:shield' })
-  await pane.press({ key: 'size:small' })
-  expect(await run('status')).toContain('Size: small')
-  await pane.press({ key: 'size:big' })
+  // The size is the terminal band's alone: the desktop pane does not offer it.
+  expect(await pane.find({ key: 'size:small' })).toBeUndefined()
   // The birthday field and the language picker.
   await pane.input({ key: 'bday', text: '07-01', kind: 'submit' })
   expect(await run('birthday')).toBe('Birthday: July 1. To change it: /mochi birthday MM-DD · none')
@@ -327,6 +326,7 @@ test('the details pane: tabs, rows that fold, switches for every setting and eve
   expect(await pane.find({ type: 'Text', text: 'The tour starts in a moment: watch Mochi.' })).toBeUndefined()
   await pane.press({ key: 'do:feedback' })
   expect(await pane.find({ type: 'Link' })).toBeDefined()
+  expect(await pane.find({ key: 'said:open' })).toBeDefined()
   await pane.press({ key: 'said:copy' })
   expect(copied[0]).toMatch(/^https:\/\/github\.com\//)
   // A reset still asks first.

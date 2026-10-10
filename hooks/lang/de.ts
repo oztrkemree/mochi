@@ -15,6 +15,15 @@ export const de: typeof en = {
   months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 
   news: {
+    '0.4.0': {
+      headline: 'die Detailansicht in vier Tabs, mit jeder Einstellung und Aktion',
+      notes: [
+        'Die Detailansicht in vier Tabs: Jetzt, Verlauf, Mochi und Einstellungen. Jede Einstellung und Aktion von /mochi ist dort einen Klick entfernt.',
+        'Ordne jeden Tab, wie du willst: ⠿ macht daraus eine Liste, in der du Teile verschiebst und ausblendest.',
+        'Neunundachtzig neue Sachen zum Anziehen, für Kopf, Gesicht und Hals, zum Halten und als Begleiter neben Mochi, bis Level 56.',
+        'Ultracode: Mochi verfolgt die Agenten eines Workflows und feiert, wenn der letzte fertig ist.',
+      ],
+    },
     '0.3.0': {
       headline: 'ein klügerer Schild, CI nach dem Push, alle Chats in einer Übersicht, Abzeichen und mehr',
       notes: [
@@ -511,6 +520,7 @@ export const de: typeof en = {
     resetHistory: 'Verlauf zurücksetzen',
     resetAll: 'Alles zurücksetzen',
     copy: 'Kopieren',
+    open: 'Öffnen',
     dismiss: 'Schließen',
     moreGist: 'karte · rückblick · schnappschuss · rundgang · exportieren · zurücksetzen',
     tabs: { now: 'Jetzt', past: 'Verlauf', mochi: 'Mochi', settings: 'Einstellungen' },

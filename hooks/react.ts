@@ -15,7 +15,7 @@ const base = (path: unknown): string => (typeof path === 'string' ? baseName(pat
 
 const host = (url: unknown): string => {
   if (typeof url !== 'string') return 'web'
-  const m = /^[a-z]+:\/\/([^/]+)/i.exec(url)
+  const m = /^[a-z]+:\/\/(?:[^/@]*@)?([^/]+)/i.exec(url)
   return m?.[1] ?? short(url, 30)
 }
 

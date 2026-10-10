@@ -176,11 +176,20 @@ export function normalRule(s: string): string {
   return trim(trim(s.toLowerCase().replace(/̇/g, '').replace(/[’‘`´]/g, "'").replace(/\s+/g, ' ')).replace(PLEASE, ''))
 }
 
+const PARTS = /\n+|(?<=[.!?।])\s+|(?<=[。！？；;؟])/
+
+/** An instruction of the prompt as the person wrote it, its letter case kept (`NODE_ENV`, `README.md`); its kept form when not found. */
+export function ruleAsWritten(text: string, rule: string): string {
+  const trim = (x: string) => x.replace(/^[\s\-*•>"“”«»(]+|[\s"“”«».!;:,)。！…、،।]+$/g, '')
+  const part = text.split(PARTS).find(p => normalRule(p) === rule)
+  return part === undefined ? rule : trim(trim(part.replace(/[’‘`´]/g, "'").replace(/\s+/g, ' ')).replace(new RegExp(PLEASE.source, 'gi'), ''))
+}
+
 /** The standing instructions in a prompt ("use pnpm", "yorum ekleme"), normalized; three at most, none from a long paste. */
 export function rulesOf(text: string): string[] {
   if (text.length > 2000) return []
   const found = new Set<string>()
-  for (const part of text.split(/\n+|(?<=[.!?।])\s+|(?<=[。！？；;؟])/)) {
+  for (const part of text.split(PARTS)) {
     if (/[?？؟]/.test(part)) continue
     const s = normalRule(part)
     const words = s.split(' ').length

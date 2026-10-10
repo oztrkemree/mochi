@@ -100,7 +100,7 @@ export const NO_INFO: Info = {
 }
 export const NO_PANEL: Panel = { shot: FIRST_SHOT, info: NO_INFO, infoFrom: null, infoAt: 0 }
 /** What the last of the details pane's actions answered, and the part of it worth copying; '' when there is none to show. */
-export const NO_SAID = { text: '', copy: '' }
+export const NO_SAID = { text: '', copy: '', open: '' }
 
 /**
  * Per-load bookkeeping (a reload starts it over); what the drawing reads lives
@@ -184,6 +184,8 @@ export const chat = {
     at: 0,
     tour: -1,
     rule: '',
+    /** That instruction as the person wrote it, letter case kept, for the question and CLAUDE.md. */
+    ruleText: '',
     /** Permission questions this chat, by program or tool. */
     asks: {} as Record<string, number>,
     isLongFirst: false,

@@ -240,12 +240,6 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
           const isWarn = key === 'ci' && ciTrouble !== ''
           return row(key, s.name, isWarn ? ciTrouble : s.about, toggle(key, p[pref], s.name), isWarn, `set:${key}`)
         })}
-        {row('size', d.size.name, d.size.about, (
-          <Box flexDirection="row" gap={1}>
-            <Button key="size:big" variant={p.isCompact ? 'secondary' : 'primary'} onPress={pressed}>{d.big}</Button>
-            <Button key="size:small" variant={p.isCompact ? 'primary' : 'secondary'} onPress={pressed}>{d.small}</Button>
-          </Box>
-        ))}
         {row('visible', d.visible.name, d.visible.about, <Button key="visible" variant="secondary" onPress={pressed}>{p.isHidden ? d.show : d.hide}</Button>)}
         {row('lang', d.language.name, d.language.about, Select
           ? <Box width={24}><Select key="lang" options={langOptions()} value={p.lang} onSelect={picked} /></Box>
@@ -267,7 +261,8 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
               ? <Link key={`said:${i}`} href={line} label={cut(line.replace(/^https:\/\//, ''), 60)} />
               : <Text key={`said:${i}`} wrap="wrap">{line}</Text>)}
             <Box flexDirection="row" gap={1}>
-              {answer.copy !== '' ? <Button key="said:copy" variant="primary" onPress={pressed}>{d.copy}</Button> : null}
+              {answer.open ? <Button key="said:open" variant="primary" onPress={pressed}>{d.open}</Button> : null}
+              {answer.copy !== '' ? <Button key="said:copy" variant={answer.open ? 'secondary' : 'primary'} onPress={pressed}>{d.copy}</Button> : null}
               <Button key="said:close" variant="secondary" onPress={pressed}>{d.dismiss}</Button>
             </Box>
           </Box>
@@ -381,7 +376,8 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
   const { Box, Button, Text } = ui
   const Select = 'Select' in ui ? ui.Select : null
   const Input = 'Input' in ui ? ui.Input : null
-  const dressed = outfitNow(p, v, (await read($, face)).mood, now)
+  // As at rest, like the desktop's wardrobe and the press that toggles it.
+  const dressed = outfitNow(p, v, 'idle', now)
   const ok = wearable(v.history, now, v.tz, p)
   const lines = partLines(v, now)
   const head = (id: Section, title: string, gist: string) => (
@@ -469,6 +465,8 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       {p.open.more ? (
         <Box flexDirection="column">
           {answer.text !== '' ? answer.text.split('\n').map((line, i) => <Text key={`said:${i}`} color="claude" wrap="wrap">{line}</Text>) : null}
+          {answer.text !== '' && answer.open ? <Button key="said:open" onPress={pressed}>{d.open}</Button> : null}
+          {answer.text !== '' && answer.copy !== '' ? <Button key="said:copy" onPress={pressed}>{d.copy}</Button> : null}
           {answer.text !== '' ? <Button key="said:close" onPress={pressed}>{d.dismiss}</Button> : null}
           {actionGroups().map(([key, label, actions]) => (
             <Box key={`grp:${key}`} flexDirection="row" flexWrap="wrap" columnGap={1}>

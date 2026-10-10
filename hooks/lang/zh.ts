@@ -14,6 +14,15 @@ export const zh: typeof en = {
   months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
 
   news: {
+    '0.4.0': {
+      headline: '详情面板分成四个标签页，含所有设置和操作',
+      notes: [
+        '详情面板分成四个标签页：当前、历史、Mochi 和设置。/mochi 的所有设置和操作，点一下就能找到。',
+        '每个标签页都能按你的方式排列：⠿ 把它变成列表，可以移动和隐藏各部分。',
+        '新增 89 件可穿戴的物品：头部、脸部、颈部、手持的，还有站在 Mochi 身边的，最高到 56 级。',
+        'Ultracode：Mochi 会跟踪 workflow 的各个 agent，最后一个结束时为它庆祝。',
+      ],
+    },
     '0.3.0': {
       headline: '更聪明的护盾、push 后的 CI、所有对话一览、徽章等',
       notes: [
@@ -509,6 +518,7 @@ export const zh: typeof en = {
     resetHistory: '重置历史',
     resetAll: '全部重置',
     copy: '复制',
+    open: '打开',
     dismiss: '关闭',
     moreGist: '卡片 · 回顾 · 快照 · 导览 · 导出 · 重置',
     tabs: { now: '当前', past: '历史', mochi: 'Mochi', settings: '设置' },

@@ -8,6 +8,9 @@ import { t } from './i18n'
 /** The person's own rules: a command or an edit that writes them could turn the shield off unseen. */
 export const RULES_FILE = /\.claude[\\/]+mochi[\\/]+shield\.json/i
 
+/** A git subcommand, after any of git's own options before it (`git -C ../app`, `git -c x=y`, `git --no-pager`, `git.exe`). */
+const git = (sub: string): RegExp => new RegExp(String.raw`\bgit(?:\.exe)?(?:\s+(?:-[Cc]\s+\S+|--?[\w-]+(?:=\S+)?))*\s+` + sub)
+
 /** Commands that cannot be undone, each with what it would do, in plain words. */
 const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [/:\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}/, 'forkBomb'],
@@ -18,15 +21,15 @@ const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [/(^|[\s;&|("'])(?<!\b(?:s3|gsutil(?:\s+-m)?|storage)\s+)(remove-item|ri|rm|rmdir|rd|del|erase)\b[^|;&\n]*\s(-r(e(c(u(r(se?)?)?)?)?)?|\/s)(?=[\s:]|$)/i, 'rm'],
   [/\bfind\b[^|;&]*\s-delete\b/, 'findDelete'],
   [/\s-r(e(c(u(r(se?)?)?)?)?)?\b[^;&\n]*\|\s*(remove-item|ri|rm|del|erase)\b/i, 'findDelete'],
-  [/\bgit\s+push\b[^|;&]*(\s--force\b|\s-[a-zA-Z]*f[a-zA-Z]*\b|\s--force-with-lease\b|\s\+\S)/, 'forcePush'],
-  [/\bgit\s+push\b[^|;&\n]*\s--mirror\b/, 'pushMirror'],
-  [/\bgit\s+push\b[^|;&\n]*(\s--delete\b|\s-d\b|\s\+?:[^\s:]+)/, 'pushDelete'],
-  [/\bgit\s+filter-(branch|repo)\b/, 'rewrite'],
-  [/\bgit\s+reset\s+[^|;&]*--hard\b/, 'resetHard'],
-  [/\bgit\s+clean\s+-[a-z]*f/, 'clean'],
-  [/\bgit\s+(checkout|restore)\s+(--\s+)?\.(\s|$)/, 'checkoutDot'],
-  [/\bgit\s+branch\s+(-D|--delete\s+--force)\b/, 'branchDelete'],
-  [/\bgit\s+stash\s+(drop|clear)\b/, 'stashDrop'],
+  [git(String.raw`push\b[^|;&]*(\s--force\b|\s-[a-zA-Z]*f[a-zA-Z]*\b|\s--force-with-lease\b|\s\+\S)`), 'forcePush'],
+  [git(String.raw`push\b[^|;&\n]*\s--mirror\b`), 'pushMirror'],
+  [git(String.raw`push\b[^|;&\n]*(\s--delete\b|\s-d\b|\s\+?:[^\s:]+)`), 'pushDelete'],
+  [git(String.raw`filter-(branch|repo)\b`), 'rewrite'],
+  [git(String.raw`reset\s+[^|;&]*--hard\b`), 'resetHard'],
+  [git(String.raw`clean\s+-[a-z]*f`), 'clean'],
+  [git(String.raw`(checkout|restore)\s+(--\s+)?\.(\s|$)`), 'checkoutDot'],
+  [git(String.raw`branch\s+(-D|--delete\s+--force)\b`), 'branchDelete'],
+  [git(String.raw`stash\s+(drop|clear)\b`), 'stashDrop'],
   [/\b(drop\s+(table|database|schema)|truncate\s+table)\b/i, 'dropTable'],
   [/\bdelete\s+from\s+\w+\s*(;|$|")/i, 'deleteAll'],
   [/\b(rails|rake)\s+db:(drop|reset|purge|migrate:reset)\b|\bprisma\s+(migrate\s+reset|db\s+push\b[^|;&\n]*--force-reset)\b|\bsupabase\s+db\s+reset\b|\bredis-cli\b[^|;&\n]*\bflush(all|db)\b|\bdropDatabase\s*\(|(^|[\s;&|(])dropdb\s|\bmanage\.py\s+(flush|reset_db)\b|\bheroku\s+pg:reset\b/i, 'dbWipe'],

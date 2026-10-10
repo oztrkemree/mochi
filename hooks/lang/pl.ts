@@ -34,6 +34,15 @@ export const pl: typeof en = {
   months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
 
   news: {
+    '0.4.0': {
+      headline: 'panel szczegółów w czterech zakładkach, z każdym ustawieniem i działaniem',
+      notes: [
+        'Panel szczegółów w czterech zakładkach: Teraz, Historia, Mochi i Ustawienia. Każde ustawienie i działanie /mochi jest tam o jedno kliknięcie stąd.',
+        'Ułóż każdą zakładkę po swojemu: ⠿ zamienia ją w listę, na której przesuwasz części i je ukrywasz.',
+        'Osiemdziesiąt dziewięć nowych rzeczy: na głowę, twarz i szyję, do trzymania i do postawienia obok Mochi, aż do poziomu 56.',
+        'Ultracode: Mochi śledzi agentów workflow i świętuje, gdy skończy ostatni.',
+      ],
+    },
     '0.3.0': {
       headline: 'mądrzejsza tarcza, CI po pushu, wszystkie czaty na jednej tablicy, odznaki i nie tylko',
       notes: [
@@ -529,6 +538,7 @@ export const pl: typeof en = {
     resetHistory: 'Resetuj historię',
     resetAll: 'Resetuj wszystko',
     copy: 'Kopiuj',
+    open: 'Otwórz',
     dismiss: 'Zamknij',
     moreGist: 'karta · podsumowanie · zrzut · wprowadzenie · eksport · reset',
     tabs: { now: 'Teraz', past: 'Historia', mochi: 'Mochi', settings: 'Ustawienia' },
