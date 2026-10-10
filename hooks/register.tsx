@@ -5,7 +5,7 @@ import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, R
 import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
-import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, rulesOf, settleRule, shownTip, tipLines, turnTips, withRule } from './coach'
+import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
 import type { TipId } from './coach'
 import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
 import { NEW_WATCH, danger, dangerKey, isShell, watchCall } from './guard'
@@ -840,8 +840,9 @@ function wantTip(id: TipId, now: number, arg = '') {
 }
 
 /**
- * On the very first start ever (no preferences, no version seen), the tour; on
- * the first start of a newer version, a word on what is new, once.
+ * On the very first start ever (no preferences, no version seen, no day
+ * recorded), the tour; on the first start of a newer version, a word on what
+ * is new, once.
  */
 async function welcome($: Dollar, hasPrefs: boolean) {
   const seen = await $.store.get('version')
@@ -850,7 +851,8 @@ async function welcome($: Dollar, hasPrefs: boolean) {
   chat.coach.version = version
   if (seen === version) return
   await $.store.set('version', version)
-  if (!hasPrefs && seen === undefined) {
+  // Someone who used an older version, preferences untouched, has days on record.
+  if (!hasPrefs && seen === undefined && (await $.fs.list(`${chat.dataDir}/days`).catch(() => [])).length === 0) {
     chat.coach.tour = 0
     return
   }
@@ -896,8 +898,9 @@ async function coach($: Dollar, now: number, f: Face) {
   const p = await read($, prefs)
   if (chat.dataDir === '' || p.isHidden || !p.hasTips) return
   if (chat.coach.rule !== '') return await askRule($)
-  if (freshTips(chat.coach.pending, now).length === 0) return
   const v = await read($, env)
+  chat.coach.pending = stillPending(chat.coach.pending, v, now)
+  if (freshTips(chat.coach.pending, now).length === 0) return
   const log = readLog(await $.fs.read(coachFile()).catch(() => ''))
   const id = pickTip(log, chat.coach.pending, now, v.tz)
   if (id === null) {

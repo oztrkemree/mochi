@@ -60,11 +60,17 @@ export const freshTips = (pending: Pending, now: number): TipId[] => TIPS.filter
   return p !== undefined && now - p.at <= FRESH_MS
 })
 
-/** The tip to show now: one an hour, three a day, each twice ever; null when none may. */
+/**
+ * The tip to show now: one an hour, three a day, each twice ever; null when
+ * none may. A tip seen before comes back only on a day no tip has shown yet.
+ */
 export function pickTip(log: CoachLog, pending: Pending, now: number, tz: number): TipId | null {
-  if (now - log.at < HOUR) return null
-  if (log.day === dayKey(now, tz) && log.today >= PER_DAY) return null
-  return freshTips(pending, now).find(id => (log.shown[id] ?? 0) < MAX_SHOWN) ?? null
+  const isNewDay = log.day !== dayKey(now, tz)
+  if (now - log.at < HOUR || (!isNewDay && log.today >= PER_DAY)) return null
+  return freshTips(pending, now).find(id => {
+    const n = log.shown[id] ?? 0
+    return n === 0 || (n < MAX_SHOWN && isNewDay)
+  }) ?? null
 }
 
 export function shownTip(log: CoachLog, id: TipId, now: number, tz: number): CoachLog {
@@ -84,7 +90,11 @@ export function tipLines(id: TipId, arg: string): { line: string; text: string }
 
 /** What a permission was asked for, as the person would allow it: a command's program, an MCP server, or the tool. */
 export function permKey(tool: string, input: Record<string, unknown>): string {
-  if (isShell(tool) && typeof input.command === 'string') return input.command.trim().split(/\s+/)[0] || tool
+  if (isShell(tool) && typeof input.command === 'string') {
+    // `cd app && npm test` asks about npm.
+    const run = input.command.split(/&&|\|\||[;|]/).map(s => s.trim()).find(s => s !== '' && !/^cd(\s|$)/i.test(s)) ?? ''
+    return run.split(/\s+/)[0] || tool
+  }
   if (tool.startsWith('mcp__')) return tool.split('__')[1] || tool
   return tool
 }
@@ -110,6 +120,12 @@ export function turnTips(v: Env, turn: TurnNote, now: number): TipId[] {
   })
 }
 
+/** The tips still waiting, less those about how things stood that no longer do: a /compact or a commit since answers them. */
+export function stillPending(pending: Pending, v: Env, now: number): Pending {
+  const holds = turnTips(v, { reason: '', errorRun: 0, isLongFirst: false, hasPlanned: true, hasPick: true }, now)
+  return Object.fromEntries(Object.entries(pending).filter(([id]) => !['compact', 'mcp', 'commit'].includes(id) || holds.includes(id as TipId)))
+}
+
 /** The tour's moods, step by step. */
 export const TOUR_MOODS: Mood[] = ['wave', 'pleased', 'proud']
 
@@ -125,10 +141,10 @@ export const ASK_AT = 3
  * negatives want a verb that asks.
  */
 const RULES: RegExp[] = [
-  /^((always|never|use|prefer|avoid|don't|do not|dont) (?!(know|understand|get|think|see|care|worry|work)( |$))|no (?!(worries|thanks)( |$))\S{2,}s( |$))/,
+  /^((always|never|use|prefer|avoid|don't|do not|dont) (?!(know|understand|get|think|see|care|worry|work|mind)( |$))|no (?!(worries|thanks)( |$))\S{2,}s( |$))/,
   /^(siempre|nunca|usa|utiliza|evita|prefiere|no (?!es )\S+[ae]s) /,
-  /^(immer|nie|niemals|verwende|benutze|nutze|vermeide|bevorzuge|kein|keine) (?!ahnung)/,
-  /^(toujours|jamais|utilise|utilisez|évite|évitez|privilégie|pas de (?!souci|problème)|(ne |n')(?!est|marche|fonctionne|sais|peux|comprends|vois|va )\S+ (pas|jamais)( |$))/,
+  /^(immer|nie|niemals|verwende|benutze|nutze|vermeide|bevorzuge|kein|keine) (?!(noch|ahnung|problem)( |$))/,
+  /^(toujours (?!(pas|rien|pareil|le même|la même|les mêmes)( |$))|jamais|utilise|utilisez|évite|évitez|privilégie|pas de (?!souci|problème)|(ne |n')(?!est|marche|fonctionne|sais|peux|comprends|vois|va )\S+ (pas|jamais)( |$))/,
   /^(sempre|nunca|use|usa|utilize|evite|prefira|não (?!pode|funciona|consegue|entende)\S+[ea]) /,
   /^(всегда|никогда|используй|используйте|избегай|не \S+(й|йте|и|ите|ь|ьте)) /,
   /(^| )(her zaman|asla|hiçbir zaman|daima) (?!.*(yor|d[ıiuü])$)/,
@@ -140,7 +156,7 @@ const RULES: RegExp[] = [
 
 /** Words that point at this chat (this, here, again), not at how the project works. */
 const HERE = / (this|that|it|these|those|here|there|again|now|bunu|şunu|onu|bunları|bu|şu|burada|şimdi|yine|tekrar|esto|eso|esta|este|aquí|ahora|dies|diese|hier|jetzt|wieder|ça|cela|ceci|ici|maintenant|encore|isso|isto|esse|essa|aqui|agora|это|этот|эту|эти|тут|здесь|сейчас|снова|опять|이거|그거|이것|그것|여기|지금|다시) /
-const HERE_CJK = /这|那|これ|それ|ここ|今|また/
+const HERE_CJK = /这|那|これ|それ|ここ|今(?!後)|また/
 /** Han and kana: words without spaces between them. */
 const UNSPACED = /[぀-ヿ㐀-鿿]/
 const PLEASE = /^((please|pls|lütfen|por favor|bitte|s'il (te|vous) pla[iî]t|пожалуйста) |请)|,? (please|lütfen|por favor|bitte|s'il (te|vous) pla[iî]t|пожалуйста)$|(ください|下さい)$/g
@@ -198,8 +214,11 @@ export function settleRule(log: CoachLog, project: string, rule: string, isForGo
 /** Whether a CLAUDE.md already says it, letter case and spacing aside. */
 export const hasRule = (md: string, rule: string): boolean => normalRule(md).replace(/\s+/g, ' ').includes(rule)
 
-/** CLAUDE.md with the instruction added as its last bullet. */
-export const withRule = (md: string, rule: string): string => `${md}${md === '' || md.endsWith('\n') ? '' : '\n'}- ${rule}\n`
+/** CLAUDE.md with the instruction added as its last bullet, in the file's own line endings. */
+export function withRule(md: string, rule: string): string {
+  const nl = md.includes('\r\n') ? '\r\n' : '\n'
+  return `${md}${md === '' || md.endsWith('\n') ? '' : nl}- ${rule}${nl}`
+}
 
 // ---------- what is new ----------
 

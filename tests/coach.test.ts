@@ -1,10 +1,10 @@
-import type { EngineInterface, On } from 'claude-code'
+import type { On } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
-import type { MockClock } from 'claude-code/testing'
+import type { Engine, MockClock } from 'claude-code/testing'
 
 import type { Env } from '../types'
-import { NO_LOG, countRules, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, rulesOf, settleRule, shownTip, tipLines, turnTips, withRule } from '../hooks/coach'
-import type { TurnNote } from '../hooks/coach'
+import { NO_LOG, countRules, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from '../hooks/coach'
+import type { TipId, TurnNote } from '../hooks/coach'
 import { LANGS, setLang } from '../hooks/i18n'
 import { EMPTY_DAY } from '../hooks/level'
 import { NO_ENV } from '../hooks/state'
@@ -44,7 +44,12 @@ function world(on: On, store: Record<string, unknown>, files: Record<string, str
     return { value: undefined }
   })
   on('process.run', () => ({ value: { exitCode: 1, stdout: '', stderr: '' } }) as never)
-  on('fs.list', () => ({ value: [] }))
+  // A folder lists the files kept under it, matched by the end of its path as `find` matches files.
+  on('fs.list', ($, e) => {
+    const dir = `${slashed(e.path)}/`
+    const names = Object.keys(files).filter(k => dir.endsWith(k.slice(0, k.lastIndexOf('/') + 1))).map(k => k.slice(k.lastIndexOf('/') + 1))
+    return { value: names.map(name => ({ name, kind: 'file' as const, size: 1, mtimeMs: 0, isLink: false })) }
+  })
   on('fs.exists', ($, e) => ({ value: find(e.path) !== undefined }))
   on('fs.read', ($, e) => {
     const key = find(e.path)
@@ -73,14 +78,14 @@ async function wait(clock: MockClock, ms: number) {
 }
 
 /** A turn that ends for `reason`, then a quiet while. */
-async function answer($: EngineInterface, clock: MockClock, reason: 'answer' | 'aborted') {
+async function answer($: Engine, clock: MockClock, reason: 'answer' | 'aborted') {
   await $.turn.start({ text: 'go', turnId: 't' })
   await $.turn.complete({ answer: '', durationMs: 1000, isAborted: reason === 'aborted', turnId: 't', reason })
   await wait(clock, 15_000)
 }
 
 /** A prompt from `kind` and the turn it starts, then a quiet while. */
-async function turn($: EngineInterface, clock: MockClock, text: string, kind = 'composer') {
+async function turn($: Engine, clock: MockClock, text: string, kind = 'composer') {
   await $.prompt.submit({ text, origin: { kind } } as never)
   await answer($, clock, 'answer')
 }
@@ -95,7 +100,7 @@ test('standing instructions are found in ten languages; requests, complaints and
     pt: ['Não adicione comentários', 'Sempre rode os testes'],
     ru: ['Не добавляй комментарии', 'Используй pnpm'],
     zh: ['不要添加注释', '使用 pnpm'],
-    ja: ['コメントを追加しないで', '常にpnpmを使ってください'],
+    ja: ['コメントを追加しないで', '常にpnpmを使ってください', '今後はpnpmを使って'],
     ko: ['항상 pnpm 사용해', '주석 달지 마세요'],
   }
   expect(Object.values(found).map(list => list.map(rulesOf))).toEqual([
@@ -107,13 +112,14 @@ test('standing instructions are found in ten languages; requests, complaints and
     [['não adicione comentários'], ['sempre rode os testes']],
     [['не добавляй комментарии'], ['используй pnpm']],
     [['不要添加注释'], ['使用 pnpm']],
-    [['コメントを追加しないで'], ['常にpnpmを使って']],
+    [['コメントを追加しないで'], ['常にpnpmを使って'], ['今後はpnpmを使って']],
     [['항상 pnpm 사용해'], ['주석 달지 마세요']],
   ])
   const none = [
     'use this helper here', "I don't know why it fails", "don't know", 'why do you never use pnpm?', 'no worries', 'never',
     'fix the failing test in auth.ts', 'always use the new parser for every file in the src folder from now on',
-    'bunu kullan', 'testler hâlâ çalışmıyor', 'her zaman böyle oluyordu', 'no es correcto', 'keine Ahnung', 'ça ne marche pas',
+    'never mind', 'bunu kullan', 'testler hâlâ çalışmıyor', 'her zaman böyle oluyordu', 'no es correcto',
+    'keine Ahnung', 'kein Problem', 'immer noch kaputt', 'ça ne marche pas', 'toujours pas', 'toujours la même erreur',
     'não funciona', 'не работает', '这个不要改', '用户登录失败', '为什么不能用？', 'これを使って', 'テストが失敗した', '이거 고쳐줘',
     `use pnpm\n${'x'.repeat(2000)}`,
   ]
@@ -147,22 +153,27 @@ test('the third time an instruction is given in a project, Mochi asks; add and n
   expect(withRule('', 'use pnpm')).toBe('- use pnpm\n')
   expect(withRule('# App', 'use pnpm')).toBe('# App\n- use pnpm\n')
   expect(withRule('# App\n', 'use pnpm')).toBe('# App\n- use pnpm\n')
+  expect(withRule('# App\r\n', 'use pnpm')).toBe('# App\r\n- use pnpm\r\n')
 })
 
-test('a tip waits for its situation, and shows at most once an hour, three times a day and twice ever', () => {
+test('a tip waits for its situation, and shows at most once an hour, three times a day and twice ever, never twice in a day', () => {
+  setLang('en')
   const at = Date.UTC(2026, 9, 10, 8, 0)
   const now = (hours: number) => at + hours * 60 * MIN
-  expect(pickTip(NO_LOG, { wear: { at, arg: '' }, rewind: { at, arg: '' } }, at, 0)).toBe('rewind')
-  expect(pickTip(NO_LOG, { rewind: { at, arg: '' } }, at + 31 * MIN, 0)).toBe(null)
+  const waiting = (hours: number, ...ids: TipId[]) => Object.fromEntries(ids.map(id => [id, { at: now(hours), arg: '' }]))
+  expect(pickTip(NO_LOG, waiting(0, 'wear', 'rewind'), at, 0)).toBe('rewind')
+  expect(pickTip(NO_LOG, waiting(0, 'rewind'), at + 31 * MIN, 0)).toBe(null)
   let log = shownTip(NO_LOG, 'rewind', at, 0)
-  expect(pickTip(log, { rewind: { at: now(0.5), arg: '' } }, now(0.5), 0)).toBe(null)
-  expect(pickTip(log, { rewind: { at: now(1.1), arg: '' } }, now(1.1), 0)).toBe('rewind')
-  log = shownTip(log, 'rewind', now(1.1), 0)
-  expect(pickTip(log, { rewind: { at: now(3), arg: '' } }, now(3), 0)).toBe(null)
-  log = shownTip(log, 'compact', now(3), 0)
+  expect(pickTip(log, waiting(0.5, 'compact'), now(0.5), 0)).toBe(null)
+  // Seen today, a tip waits for another day; one not seen yet may come.
+  expect(pickTip(log, waiting(1.1, 'rewind'), now(1.1), 0)).toBe(null)
+  expect(pickTip(log, waiting(1.1, 'rewind', 'compact'), now(1.1), 0)).toBe('compact')
+  log = shownTip(shownTip(log, 'compact', now(1.1), 0), 'mcp', now(3), 0)
   expect(log.today).toBe(3)
-  expect(pickTip(log, { mcp: { at: now(5), arg: '' } }, now(5), 0)).toBe(null)
-  expect(pickTip(log, { mcp: { at: now(24), arg: '' } }, now(24), 0)).toBe('mcp')
+  expect(pickTip(log, waiting(5, 'plan'), now(5), 0)).toBe(null)
+  expect(pickTip(log, waiting(24, 'rewind'), now(24), 0)).toBe('rewind')
+  log = shownTip(log, 'rewind', now(24), 0)
+  expect(pickTip(log, waiting(48, 'rewind'), now(48), 0)).toBe(null)
 
   const turn: TurnNote = { reason: 'answer', errorRun: 0, isLongFirst: false, hasPlanned: false, hasPick: false }
   const t0 = NOW
@@ -181,8 +192,13 @@ test('a tip waits for its situation, and shows at most once an hour, three times
   const history = { days: {}, total: { ...EMPTY_DAY, turns: 25 }, activeDays: 1, streak: 1, bestStreak: 1 }
   expect(turnTips({ ...NO_ENV, history }, turn, t0)).toEqual(['rings', 'wear'])
   expect(turnTips({ ...NO_ENV, history }, { ...turn, hasPick: true }, t0)).toEqual(['rings'])
+  // A tip about how things stand waits only while they still do: compacted and committed since, only `rewind` is left.
+  const waited = { compact: { at: t0, arg: '' }, commit: { at: t0, arg: '' }, rewind: { at: t0, arg: '' } }
+  expect(Object.keys(stillPending(waited, { ...NO_ENV, tokens: 150_000, window: 200_000 }, t0))).toEqual(['compact', 'rewind'])
+  expect(Object.keys(stillPending(waited, { ...NO_ENV, tokens: 20_000, window: 200_000, git: git(0, t0) }, t0))).toEqual(['rewind'])
 
   expect(permKey('Bash', { command: '  npm install left-pad' })).toBe('npm')
+  expect(permKey('Bash', { command: 'cd app && npm test' })).toBe('npm')
   expect(permKey('PowerShell', { command: 'Remove-Item build -Recurse' })).toBe('Remove-Item')
   expect(permKey('mcp__github__create_issue', {})).toBe('github')
   expect(permKey('WebFetch', { url: 'https://example.com' })).toBe('WebFetch')
@@ -272,6 +288,19 @@ test('after an update, the new version is told once in a toast, and /mochi news 
   expect(store.version).toBe('0.3.0')
   const news = (await $.command.run({ command: 'mochi', args: 'news' } as never)).text
   expect(news).toBe(newsLines('0.3.0'))
+})
+
+test('someone who used an older version and never changed a preference hears what is new, not the tour', async ($, on) => {
+  const files = {
+    '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.3.0' }),
+    '/home/me/.claude/mochi/days/old.json': JSON.stringify({ id: 'old', days: {} }),
+  }
+  const w = world(on, {}, files)
+  await w.clock.set(NOW)
+  await $.session.start(START)
+  await wait(w.clock, 40_000)
+  expect(w.toasts.filter(x => x.includes('/mochi news'))).toHaveLength(1)
+  expect(w.toasts.some(x => x.startsWith('Hi, I’m Mochi'))).toBe(false)
 })
 
 test('a stopped turn calls for the rewind tip once Mochi is idle, in a toast that says how to turn tips off', async ($, on) => {
