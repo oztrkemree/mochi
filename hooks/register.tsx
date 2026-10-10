@@ -1066,12 +1066,11 @@ function copyOf(verb: string, text: string): string {
   return verb === 'feedback' ? pathIn(lines.at(-1) ?? '') : ''
 }
 
-/** What an action's answer opens: the card or the wrapped itself, the folder of the snapshots, the bug report's form; '' when nothing. */
+/** What an action's answer opens: the card, the wrapped or the snapshot's band itself, the bug report's form; '' when nothing. */
 function openOf(verb: string, text: string): string {
   const lines = text.split('\n')
   const first = pathIn(lines[0] ?? '')
-  if (verb === 'card' || verb === 'wrapped' || verb === 'year') return first
-  if (verb === 'snap') return first.replace(/[\\/][^\\/]*$/, '')
+  if (verb === 'card' || verb === 'wrapped' || verb === 'year' || verb === 'snap') return first
   return verb === 'feedback' ? pathIn(lines.at(-1) ?? '') : ''
 }
 
