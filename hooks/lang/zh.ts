@@ -270,7 +270,7 @@ export const zh: typeof en = {
     rules: (added, off) => `你的规则（~/.claude/mochi/shield.json）：新增 ${added} · 关闭 ${off}`,
     yourRule: '匹配你的一条护盾规则',
     badRules: list => `shield.json：已跳过无法读取的内容 · ${list}`,
-    secret: kind => `加入疑似密钥的内容：${kind}`,
+    secret: kind => `加入疑似密钥（${kind}）`,
     secretFile: '把含密钥的文件加入 git',
     secretEdit: '修改含密钥的文件',
     kind: { aws: 'AWS 访问密钥', github: 'GitHub 令牌', apiKey: 'API 密钥', slack: 'Slack 令牌', stripe: 'Stripe 正式密钥', privateKey: '私钥', generic: '密码或令牌' },

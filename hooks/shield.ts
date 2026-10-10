@@ -58,7 +58,7 @@ const DEFAULTS = ['main', 'master', 'trunk', 'develop']
 const VALUED = ['-o', '--push-option', '--repo', '--receive-pack', '--exec']
 
 /** The words after `git <sub>` in each part of a command line, quotes taken off and git's own options skipped. */
-export function gitCalls(cmd: string, sub: string): string[][] {
+function gitCalls(cmd: string, sub: string): string[][] {
   const calls: string[][] = []
   for (const part of cmd.split(/&&|\|\||[;|\n]/)) {
     const w = part.trim().split(/\s+/).map(x => x.replace(/^["']+|["']+$/g, ''))
@@ -70,10 +70,10 @@ export function gitCalls(cmd: string, sub: string): string[][] {
   return calls
 }
 
-/** Where one refspec of a push lands: `+main` and `HEAD:main` on main, `HEAD` on the branch checked out. */
+/** Where one refspec of a push lands: `+main` and `HEAD:main` on main, `HEAD` (or `@`) on the branch checked out. */
 function landsOn(ref: string, current: string): string {
   const name = (ref.replace(/^\+/, '').split(':').pop() ?? '').replace(/^refs\/heads\//, '')
-  return name === 'HEAD' ? current : name
+  return name === 'HEAD' || name === '@' ? current : name
 }
 
 /**
@@ -84,8 +84,9 @@ function landsOn(ref: string, current: string): string {
  */
 export function pushRisk(cmd: string, current: string, head: string): { risk: 'loud' | 'calm' | 'ask'; branch: string } {
   const defaults = head === '' ? DEFAULTS : [...DEFAULTS, head]
-  // After a change of folder the branch checked out may be another repository's.
-  const here = /(^|[\s;&|(])(cd|pushd|chdir|set-location|sl)\s/i.test(cmd) || current === 'HEAD' ? '' : current
+  // After a change of folder, or with git pointed elsewhere, the branch checked out may be another repository's.
+  const isElsewhere = /(^|[\s;&|(])(cd|pushd|chdir|set-location|sl|push-location)\s/i.test(cmd) || /\s(-C|--git-dir|--work-tree)[\s=]/.test(cmd)
+  const here = isElsewhere || current === 'HEAD' ? '' : current
   let risk: 'calm' | 'ask' | null = null
   for (const rest of gitCalls(cmd, 'push')) {
     const flags = rest.filter(w => w.startsWith('-'))
@@ -143,7 +144,7 @@ export function shieldLines(all: Record<string, string[]>, d: Dict = t()): strin
 
 // ---------- secrets ----------
 
-export type SecretKind = keyof Dict['guard']['kind']
+type SecretKind = keyof Dict['guard']['kind']
 
 /** Secrets known by their shape. A private key counts with its body only, so code that looks for the header is no key. */
 const SHAPES: [RegExp, SecretKind][] = [

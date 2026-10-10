@@ -98,6 +98,8 @@ test('a force push is weighed by the branch it rewrites', async () => {
   expect(pushRisk('git push -f origin feature', 'feature', '').risk).toBe('ask')
   expect(pushRisk('git push --force-with-lease', 'HEAD', '').risk).toBe('ask')
   expect(pushRisk('cd ../other && git push --force-with-lease', 'feature', '').risk).toBe('ask')
+  expect(pushRisk('git -C ../other push --force-with-lease', 'feature', '').risk).toBe('ask')
+  expect(pushRisk('git push --force-with-lease origin @', 'main', '')).toEqual({ risk: 'loud', branch: 'main' })
 
   const loud = weigh(dangers('git push --force origin main'), 'git push --force origin main', 'feature', '')
   expect(loud.map(x => x.key)).toEqual(['forcePush:main'])
@@ -276,10 +278,16 @@ test('the shield offers to always allow a kind here, remembers it for the reposi
   expect(said.asked.length).toBe(2)
   const off = await $.command.run({ command: 'mochi', args: 'shield' } as never)
   expect(off.text).toBe('Shield off.\nAlways allowed in C:/r/app: deletes files and folders for good\nTo forget them all: /mochi shield reset')
+  // Off, it asks about nothing: no command, no secret.
+  await $.tool.call({ tool: 'Bash', command: 'sudo ls' } as never)
+  await $.tool.call({ tool: 'Write', file_path: '/r/app/src/config.ts', content: `export const KEY = '${AWS}'\n` } as never)
+  expect(said.asked.length).toBe(2)
   expect((await $.command.run({ command: 'mochi', args: 'shield' } as never)).text).toContain('Shield on:')
   expect((await $.command.run({ command: 'mochi', args: 'shield reset' } as never)).text).toBe('Forgot everything that was always allowed.')
-  await $.tool.call({ tool: 'Bash', command: 'rm -rf build' } as never)
+  // The question names every kind that "always allow here" would remember.
+  await $.tool.call({ tool: 'Bash', command: 'sudo rm -rf build' } as never)
   expect(said.asked.length).toBe(3)
+  expect(said.asked[2]?.question).toContain('This command deletes files and folders for good · runs as administrator:')
   await $.command.run({ command: 'mochi', args: 'lang tr' } as never)
   expect((await $.command.run({ command: 'mochi', args: 'kalkan sıfırla' } as never)).text).toBe('Hep izin verilenlerin hepsi unutuldu.')
   setLang('tr')

@@ -673,7 +673,9 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
   const shown = cmd.length > 300 ? `${cmd.slice(0, 299)}…` : cmd
   const d = t().shield
   const go = cmd === '' ? d.write : d.run
-  const question = cmd === '' ? d.editQuestion(what, subject(args)) : d.question(what, shown)
+  // The question names every kind found, since "always allow here" remembers them all.
+  const all = v.ask.map(x => say(x)).join(' · ')
+  const question = cmd === '' ? d.editQuestion(all, subject(args)) : d.question(all, shown)
   const answer = await $.ui.ask(question, { header: 'Mochi', options: v.root === '' ? [go, d.stop] : [go, d.stop, d.always] }).catch(() => d.stop)
   if (answer === d.always) await allowHere($, v.root, v.ask.map(x => x.key))
   else if (answer !== go) {
@@ -729,6 +731,7 @@ async function toggleShield($: Dollar, arg: string): Promise<string> {
     return t().guard.forgot
   }
   const next = await setPrefs($, v => ({ ...v, hasShield: !v.hasShield }))
+  await loadRules($).catch(() => undefined)
   return [next.hasShield ? t().cmd.shieldOn : t().cmd.shieldOff, ...shieldLines(allowedOf(await $.store.get('allowed')))].join('\n')
 }
 
