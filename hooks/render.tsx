@@ -1,7 +1,8 @@
 import { atom, read } from 'claude-code'
 import type { MatchedHook } from 'claude-code'
 
-import type { Item } from '../types'
+import type { Badge, Item } from '../types'
+import { BADGES, badgeHint, badgeName, badgeSvg } from './badges'
 import { ciLine } from './ci'
 import { detailHeight, detailLines, detailSvg, levelSummary, levelSvg } from './detail'
 import { clockAt, forecasts } from './facts'
@@ -16,9 +17,9 @@ import { ALL_ITEMS, DEFAULT_PREFS, NO_ENV, NO_FACE, NO_PANEL, chat } from './sta
 import { WEAR } from './wear'
 
 // What Mochi draws: the band above the prompt (the mascot and its line in the
-// terminal, the panel on the desktop) and the details pane, with its level
-// and wardrobe. It only reads the values register.tsx keeps, named here again
-// because the engine reads the state a file uses from that file's own consts.
+// terminal, the panel on the desktop) and the details pane, with its level,
+// wardrobe and badges. It only reads the values register.tsx keeps, named here
+// again because the engine reads the state a file uses from that file's own consts.
 
 const face = atom({ plugin: 'mochi', key: 'face' } as const, NO_FACE)
 const panel = atom({ plugin: 'mochi', key: 'panel' } as const, NO_PANEL)
@@ -44,6 +45,7 @@ function iconSvg(item: Item, isOpen: boolean): string {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="100%" height="100%"><g opacity="${isOpen ? 1 : 0.38}">${skin}${vector.svg}</g></svg>`
   }
   const a = WEAR[item]
+  if (a === undefined) return ''
   const scale = Math.min(44 / a.w, 30 / a.h)
   const w = a.w * scale
   const h = a.h * scale
@@ -69,7 +71,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     const { Button, Text } = $.ui.resolve(e)
     const p = await read($, prefs)
     const dressed = outfitNow(p, v, (await read($, face)).mood, now)
-    const ok = wearable(v.history, now, v.tz)
+    const ok = wearable(v.history, now, v.tz, p)
     const svg = detailSvg(v, now, width)
     const isAuto = SLOTS.every(slot => p.pick[slot] === undefined)
     // The wardrobe: every item with its picture; a press puts it on or takes it off.
@@ -85,10 +87,23 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         </Box>
       )
     }
+    // The badges: each medal with how it is earned, in colour once it is.
+    const medal = (b: Badge) => {
+      const isEarned = v.badges.includes(b)
+      return (
+        <Box key={`badge:${b}`} flexDirection="row" alignItems="center" gap={1} width={40}>
+          <Svg source={badgeSvg(b, isEarned)} alt={badgeName(b)} width={26} height={26} />
+          <Box flexDirection="column" flexShrink={1}>
+            <Text bold={isEarned} dimColor={!isEarned} wrap="truncate">{badgeName(b)}</Text>
+            <Text dimColor wrap="truncate">{badgeHint(b)}</Text>
+          </Box>
+        </Box>
+      )
+    }
     const worn = SLOTS.map(slot => dressed[slot]).filter((x): x is Item => x !== null).map(itemShort)
     const levelWidth = Math.max(280, width - 56)
     const level = p.open.level ? levelSvg(v, now, levelWidth) : ''
-    // Two folding sections under the drawing, folded by default: a heading
+    // Folding sections under the drawing, folded by default: a heading
     // with the gist, the rest only when opened. Which are open is kept.
     return (
       <Box flexDirection="column">
@@ -121,6 +136,15 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
               </Box>
             )) : null}
           </Box>
+          <Box key="sec:badges" flexDirection="column" borderStyle="round" borderColor="inactive" borderDimColor paddingX={1} gap={1}>
+            <Box flexDirection="row" alignItems="center" gap={2}>
+              <Text bold dimColor>{t().fun.badgesTitle}</Text>
+              <Text wrap="truncate">{t().fun.earned(v.badges.length, BADGES.length)}</Text>
+              <Box flexGrow={1} />
+              <Button key="fold:badges" variant="secondary" onPress={pressed}>{p.open.badges ? t().ui.close : t().ui.open}</Button>
+            </Box>
+            {p.open.badges ? <Box flexDirection="row" flexWrap="wrap" columnGap={2} rowGap={1}>{BADGES.map(medal)}</Box> : null}
+          </Box>
         </Box>
       </Box>
     )
@@ -128,7 +152,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
   const { Box, Button, Text } = $.ui.resolve(e)
   const p = await read($, prefs)
   const dressed = outfitNow(p, v, (await read($, face)).mood, now)
-  const ok = wearable(v.history, now, v.tz)
+  const ok = wearable(v.history, now, v.tz, p)
   return (
     <Box flexDirection="column">
       {detailLines(v, now).map(line => <Text wrap="truncate">{line}</Text>)}
@@ -153,6 +177,13 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
           <Button key="wear:none" onPress={pressed}>{t().ui.takeAllOff}</Button>
         </Box>
       ) : null}
+      <Box flexDirection="row" gap={1}>
+        <Text bold>{`${t().fun.badges} · ${t().fun.earned(v.badges.length, BADGES.length)}`}</Text>
+        <Button key="fold:badges" onPress={pressed}>{p.open.badges ? t().ui.close : t().ui.open}</Button>
+      </Box>
+      {p.open.badges ? BADGES.map(b => (
+        <Text key={`badge:${b}`} dimColor={!v.badges.includes(b)} wrap="truncate">{`${v.badges.includes(b) ? '★' : '☆'} ${badgeName(b)} · ${badgeHint(b)}`}</Text>
+      )) : null}
     </Box>
   )
 }

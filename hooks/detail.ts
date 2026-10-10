@@ -474,12 +474,13 @@ export function levelSvg(env: Env, now: number, width: number): string {
         const tx = x + 100
         const room = Math.floor((w - 100) / 6.2)
         const barW = Math.min(320, w - 100)
+        const pic = next ? WEAR[next.item] : undefined
         return badge +
           `<text class="t fg" x="${tx}" y="${y + 16}" font-size="14" font-weight="650">${esc(t().detail.levelN(lv.level))}</text>` +
           `<rect class="trackf" x="${tx}" y="${y + 26}" width="${n(barW)}" height="6" rx="3"/><rect x="${tx}" y="${y + 26}" width="${n((barW * progress) / 100)}" height="6" rx="3" fill="#E08A6A"/>` +
           `<text class="t faint" x="${tx}" y="${y + 48}" font-size="11">${esc(clip(`${t().detail.toNext(thousands(lv.next - xp))}${total ? ` · ${t().detail.totals(thousands(total.turns), thousands(total.edits), total.commits)}` : ''}`, room))}</text>` +
           `<text class="t faint" x="${tx}" y="${y + 66}" font-size="11">${esc(clip(`${t().detail.wardrobeCount(open.length)}${next ? ` · ${t().detail.next(itemName(next.item), hintFor(next.item))}` : ''}`, room))}</text>` +
-          (next ? `<image href="${WEAR[next.item].uri}" x="${n(x + w - 26)}" y="${y + 52}" width="${n(Math.min(26, (20 * WEAR[next.item].w) / WEAR[next.item].h))}" height="20" opacity="0.35"/>` : '')
+          (pic ? `<image href="${pic.uri}" x="${n(x + w - 26)}" y="${y + 52}" width="${n(Math.min(26, (20 * pic.w) / pic.h))}" height="20" opacity="0.35"/>` : '')
       },
     })
   }

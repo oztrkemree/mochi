@@ -1,11 +1,14 @@
 import type { DayRec, Env, History, Item, Mood, Outfit, Prefs } from '../types'
-import { local, shiftDay } from './facts'
+import { dayKey, local, shiftDay } from './facts'
+import { NO_OWN, occasions } from './fun'
+import type { Occasion, Own } from './fun'
 import { t } from './i18n'
 import { POSES } from './rig'
 
 // Mochi grows with the work done in every chat: experience from turns,
 // edits, commits and days, levels from experience, and things to wear that
-// the levels (and a few habits) unlock. The season and the hour dress it too.
+// the levels (and a few habits) unlock. The days it celebrates (see
+// hooks/fun.ts) and the hour dress it too.
 
 /** An item's name, and its one-word form for the wardrobe's buttons, in the language in use. */
 export const itemName = (i: Item): string => t().item.name[i]
@@ -17,11 +20,11 @@ export const slotName = (s: Slot): string => t().item.slot[s]
 
 /** Each slot's items, in the order the wardrobe shows them (roughly the order they unlock). */
 export const SLOT_ITEMS: Record<Slot, Item[]> = {
-  head: ['beanie', 'headphones', 'hardhat', 'gradcap', 'chefhat', 'cowboy', 'crown', 'pirate', 'viking', 'wizard', 'partyhat', 'propeller', 'fez', 'nightcap', 'witchhat', 'santahat'],
+  head: ['beanie', 'headphones', 'hardhat', 'gradcap', 'chefhat', 'cowboy', 'crown', 'pirate', 'viking', 'wizard', 'partyhat', 'propeller', 'fez', 'nightcap', 'witchhat', 'santahat', 'sakura'],
   face: ['glasses', 'sunglasses', 'mustache', 'monocle'],
-  neck: ['bowtie', 'necktie', 'scarf', 'evileye', 'medal'],
-  held: ['mug', 'tea', 'pencil', 'simit', 'wrench', 'balloon'],
-  ground: ['cactus', 'duck', 'cat', 'gift', 'pumpkin'],
+  neck: ['bowtie', 'necktie', 'scarf', 'evileye', 'medal', 'pin', 'rosette'],
+  held: ['mug', 'tea', 'pencil', 'simit', 'wrench', 'balloon', 'candy', 'lantern', 'envelope'],
+  ground: ['cactus', 'duck', 'cat', 'gift', 'pumpkin', 'diya', 'sprouts', 'songpyeon', 'cake'],
 }
 
 export const SLOT: Record<Item, Slot> = Object.fromEntries(
@@ -71,12 +74,28 @@ export const UNLOCKS: ({ item: Item } & Need)[] = [
   { item: 'nightcap', night: 20 },
 ]
 
-/** Worn by the date alone, never unlocked. */
-export const SEASONAL: { item: Item; season: 'halloween' | 'xmas' }[] = [
-  { item: 'witchhat', season: 'halloween' },
-  { item: 'pumpkin', season: 'halloween' },
-  { item: 'santahat', season: 'xmas' },
-]
+type Dressed = Exclude<Occasion, 'piDay' | 'friday13'>
+
+/** What each occasion puts on by the date alone (see hooks/fun.ts). */
+const DRESS: Record<Dressed, Partial<Outfit>> = {
+  birthday: { head: 'partyhat', ground: 'cake' },
+  anniversary: { neck: 'rosette' },
+  newYear: { head: 'partyhat' },
+  lunarNewYear: { held: 'envelope' },
+  eidFitr: { held: 'candy' },
+  eidAdha: { held: 'lantern' },
+  nowruz: { ground: 'sprouts' },
+  hanami: { head: 'sakura' },
+  chuseok: { ground: 'songpyeon' },
+  diwali: { ground: 'diya' },
+  halloween: { head: 'witchhat', ground: 'pumpkin' },
+  hacktoberfest: { neck: 'pin' },
+  xmas: { head: 'santahat' },
+}
+
+/** Worn by the date alone, with the occasion that brings each. */
+export const SEASONAL: { item: Item; season: Dressed }[] = (Object.entries(DRESS) as [Dressed, Partial<Outfit>][])
+  .flatMap(([season, wear]) => Object.values(wear).filter((item): item is Item => typeof item === 'string').map(item => ({ item, season })))
 
 /** What it takes, in a few words: "level 5", "50 commits". */
 export function hintFor(item: Item): string {
@@ -95,13 +114,13 @@ export function hintFor(item: Item): string {
   return h.night(u.night ?? 0)
 }
 
-export const EMPTY_DAY: DayRec = { turns: 0, tools: 0, edits: 0, errors: 0, commits: 0, cost: 0, secs: 0, night: 0 }
+export const EMPTY_DAY: DayRec = { turns: 0, tools: 0, edits: 0, errors: 0, commits: 0, cost: 0, secs: 0, night: 0, add: 0, del: 0, early: 0, langs: 0 }
 
-export function addDay(a: DayRec, b: Partial<DayRec>): DayRec {
-  return {
-    turns: a.turns + (b.turns ?? 0), tools: a.tools + (b.tools ?? 0), edits: a.edits + (b.edits ?? 0), errors: a.errors + (b.errors ?? 0),
-    commits: a.commits + (b.commits ?? 0), cost: a.cost + (b.cost ?? 0), secs: a.secs + (b.secs ?? 0), night: a.night + (b.night ?? 0),
-  }
+/** Two days' records added, field by field (the languages joined); a field an older record lacks counts as 0. */
+export function addDay(a: Partial<DayRec>, b: Partial<DayRec>): DayRec {
+  const out = { ...EMPTY_DAY }
+  for (const k of Object.keys(EMPTY_DAY) as (keyof DayRec)[]) out[k] = k === 'langs' ? (a.langs ?? 0) | (b.langs ?? 0) : (a[k] ?? 0) + (b[k] ?? 0)
+  return out
 }
 
 /** Every chat's days added into one history, as of `today`. */
@@ -161,25 +180,21 @@ export function unlocked(h: History | null): Item[] {
   return UNLOCKS.filter(isMet).map(u => u.item)
 }
 
-/** What can be put on now: the items earned and those in season. */
-export function wearable(h: History | null, now: number, tz: number): Item[] {
-  const s = season(now, tz)
-  return [...unlocked(h), ...SEASONAL.filter(x => x.item === s.head || x.item === s.ground).map(x => x.item)]
+/** What can be put on now: the items earned and those of the day's occasions. */
+export function wearable(h: History | null, now: number, tz: number, own: Own = NO_OWN): Item[] {
+  const on = occasions(dayKey(now, tz), own).map(o => o.name)
+  return [...new Set([...unlocked(h), ...SEASONAL.filter(x => on.includes(x.season)).map(x => x.item)])]
 }
 
-/** What the date and hour put on by themselves. */
-export function season(now: number, tz: number): Partial<Outfit> & { isNight: boolean; isMorning: boolean } {
-  const { month, day, hour } = local(now, tz)
-  const isHalloween = (month === 10 && day >= 24) || (month === 11 && day === 1)
-  const isXmas = month === 12 && day >= 18 && day <= 30
-  const isNewYear = (month === 12 && day === 31) || (month === 1 && day === 1)
-  const head: Item | undefined = isHalloween ? 'witchhat' : isXmas ? 'santahat' : isNewYear ? 'partyhat' : undefined
-  return {
-    ...(head ? { head } : {}),
-    ...(isHalloween ? { ground: 'pumpkin' as const } : {}),
-    isNight: hour < 5,
-    isMorning: hour >= 6 && hour < 11,
+/** What the date and hour put on by themselves: the day's occasions, slot by slot, the first one's where two meet. */
+export function season(now: number, tz: number, own: Own = NO_OWN): Partial<Outfit> & { isNight: boolean; isMorning: boolean } {
+  const { hour } = local(now, tz)
+  const dress: Partial<Outfit> = {}
+  for (const o of occasions(dayKey(now, tz), own)) {
+    const wear: Partial<Outfit> = (DRESS as Partial<Record<Occasion, Partial<Outfit>>>)[o.name] ?? {}
+    for (const slot of SLOTS) dress[slot] ??= wear[slot]
   }
+  return { ...dress, isNight: hour < 5, isMorning: hour >= 6 && hour < 11 }
 }
 
 /** Items worn by themselves when nothing is chosen, from the most to the least earned. */
@@ -189,16 +204,17 @@ const MUG_MOODS: ReadonlySet<Mood> = new Set(['idle', 'listening', 'pleased', 's
 
 /**
  * What Mochi has on, slot by slot: the person's choice where there is one
- * (null for nothing); elsewhere the season, then sleep and the night (a night
- * cap), then the best item earned; coffee in the morning, a pumpkin at
- * Halloween. A held item only while the pose leaves the hand free.
+ * (null for nothing); elsewhere the day's occasion (a pumpkin at Halloween, a
+ * cake on the person's birthday), then sleep and the night (a night cap),
+ * then the best item earned; coffee in the morning. A held item only while
+ * the pose leaves the hand free.
  */
-export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood, canHold: boolean): Outfit {
-  const s = season(now, tz)
+export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood, canHold: boolean, own: Own = NO_OWN): Outfit {
+  const s = season(now, tz, own)
   const isAsleep = mood === 'sleeping' || mood === 'sleepy'
   const head = pick.head !== undefined ? pick.head : s.head ?? (isAsleep || s.isNight ? 'nightcap' : HEAD_RANK.find(i => items.includes(i)) ?? null)
-  const neck = pick.neck !== undefined ? pick.neck : NECK_RANK.find(i => items.includes(i)) ?? null
-  const held = pick.held !== undefined ? pick.held : s.isMorning && MUG_MOODS.has(mood) ? 'mug' : null
+  const neck = pick.neck !== undefined ? pick.neck : s.neck ?? NECK_RANK.find(i => items.includes(i)) ?? null
+  const held = pick.held !== undefined ? pick.held : s.held ?? (s.isMorning && MUG_MOODS.has(mood) ? 'mug' : null)
   return {
     head,
     face: pick.face ?? null,
@@ -213,17 +229,18 @@ const canHold = (mood: Mood) => POSES[mood].held === undefined && POSES[mood].ar
 
 /** What Mochi has on now: the person's choice (while it can still be worn), what it earned, the season and the hour. */
 export function outfitNow(p: Prefs, v: Env, mood: Mood, now: number): Outfit {
-  const ok = wearable(v.history, now, v.tz)
+  const ok = wearable(v.history, now, v.tz, p)
   const pick: Partial<Outfit> = {}
   for (const slot of SLOTS) {
     const chosen = p.pick[slot]
     if (chosen === null || (chosen !== undefined && ok.includes(chosen))) pick[slot] = chosen
   }
-  return outfitFor(pick, unlocked(v.history), now, v.tz, mood, canHold(mood))
+  return outfitFor(pick, unlocked(v.history), now, v.tz, mood, canHold(mood), p)
 }
 
 /** The terminal's hat row (five cells) for a head item. */
 export const ASCII_HAT: Partial<Record<Item, string>> = {
   hardhat: ' ▄█▄ ', crown: ' ╻╻╻ ', partyhat: '  ▲  ', witchhat: ' ▁▲▁ ', santahat: ' ▄▀° ', nightcap: ' ▄▀° ', headphones: ' ╭─╮ ', gradcap: ' ▀▀▀ ',
   cowboy: '▁▄█▄▁', pirate: ' ▀▄▀ ', chefhat: ' ▐█▌ ', viking: '╯▄█▄╰', wizard: '  ▲* ', fez: '  ▆  ', propeller: ' ─┼─ ', beanie: '  ▄° ',
+  sakura: ' ✿ ✿ ',
 }

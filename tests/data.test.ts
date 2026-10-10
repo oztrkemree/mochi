@@ -8,7 +8,7 @@ import { exportOf, feedbackUrl, isCleared, isExported } from '../hooks/data'
 import { DICTS, LANGS, setLang } from '../hooks/i18n'
 import { ASCII_HAT, SEASONAL, SLOT, SLOTS, SLOT_ITEMS, UNLOCKS, hintFor } from '../hooks/level'
 import { VECTOR_WEAR, WEAR_AT } from '../hooks/rig'
-import { ALL_ITEMS } from '../hooks/state'
+import { ALL_ITEMS, DEFAULT_PREFS } from '../hooks/state'
 import { cols } from '../hooks/text'
 import { WEAR } from '../hooks/wear'
 
@@ -191,7 +191,7 @@ test('/mochi export writes one file beside the rest; reset asks first, then clea
   const exported = JSON.parse(files[`${DIR}/export-2026-07-01.json`] ?? '{}') as { mochi: string; store: { prefs: { hasSound: boolean } }; files: Record<string, unknown> }
   expect(exported.mochi).toBe('0.2.0')
   expect(exported.store.prefs.hasSound).toBe(true)
-  expect(Object.keys(exported.files).sort()).toEqual(['days/chat-1.json', 'days/other-chat.json', 'level.json', 'usage.json'])
+  expect(Object.keys(exported.files).sort()).toEqual(['badges.json', 'days/chat-1.json', 'days/other-chat.json', 'level.json', 'usage.json'])
   expect((exported.files['days/other-chat.json'] as { days: Record<string, unknown> }).days['2026-06-30']).toEqual(day)
 
   expect(await say($, 'mochi', 'reset')).toBe('Clear what? /mochi reset level · history · all')
@@ -224,7 +224,8 @@ test('/mochi export writes one file beside the rest; reset asks first, then clea
   expect(files[`${DIR}/export-2026-07-01.json`]).toBeDefined()
   expect(files[`${DIR}/live/other-chat.json`]).toBeUndefined()
   expect(await say($, 'mochi', 'status')).toContain('Sound: off')
-  expect(store).toEqual({})
+  // All but the first day, recorded again for the anniversary.
+  expect(store).toEqual({ prefs: { ...DEFAULT_PREFS, firstDay: '2026-07-01' } })
 })
 
 test('a history cleared in another chat is neither counted nor written back by this one', async ($, on) => {
@@ -282,22 +283,23 @@ test('every item has art, a place, a slot, a way to get it and a name in every l
   const items = Object.keys(WEAR_AT)
   expect(new Set(ALL_ITEMS).size).toBe(ALL_ITEMS.length)
   expect([...ALL_ITEMS].sort()).toEqual([...items].sort())
-  expect(Object.keys(WEAR).sort()).toEqual([...items].sort())
+  expect(Object.keys(WEAR).every(x => items.includes(x))).toBe(true)
   for (const l of LANGS) expect(Object.keys(DICTS[l].item.name).sort()).toEqual([...items].sort())
   for (const item of ALL_ITEMS) {
     const where = `${item}: `
     expect(where + SLOTS.filter(s => SLOT_ITEMS[s].includes(item)).length).toBe(`${where}1`)
     expect(where + SLOTS.includes(SLOT[item])).toBe(`${where}true`)
-    // A picture (a WebP the wardrobe shows too) and, where it is drawn as lines, the lines inside the 100×100 frame.
+    // A picture (a WebP the wardrobe shows too), lines inside the 100×100 frame, or both.
     const art = WEAR[item]
-    expect(where + (art.uri.startsWith('data:image/') && art.w > 0 && art.h > 0)).toBe(`${where}true`)
+    if (art) expect(where + (art.uri.startsWith('data:image/') && art.w > 0 && art.h > 0)).toBe(`${where}true`)
     const vector = VECTOR_WEAR[item]
     if (vector) expect(where + (vector.svg.length > 0 && vector.box.every(v => v >= 0 && v <= 100))).toBe(`${where}true`)
+    expect(where + (art !== undefined || vector !== undefined)).toBe(`${where}true`)
     const at = WEAR_AT[item]
     expect(where + [at.x, at.y].every(v => v >= 0 && v <= 100) + (at.w > 0 && at.w <= 100)).toBe(`${where}truetrue`)
-    // Earned one way, or worn by the season: never both, never neither.
-    const ways = UNLOCKS.filter(u => u.item === item).length + SEASONAL.filter(s => s.item === item).length
-    expect(where + ways).toBe(`${where}1`)
+    // Earned one way at most, or worn by the date (the party hat both): never neither.
+    const earned = UNLOCKS.filter(u => u.item === item).length
+    expect(where + (earned <= 1 && earned + SEASONAL.filter(s => s.item === item).length >= 1)).toBe(`${where}true`)
     for (const l of LANGS) {
       const d = DICTS[l].item
       expect(`${where}${l} ` + (d.name[item].trim() !== '' && d.short[item].trim() !== '')).toBe(`${where}${l} true`)

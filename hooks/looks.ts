@@ -132,6 +132,18 @@ export const LOOKS: Record<Mood, Look> = {
     color: 'planMode',
     eyes: ['> <'], mouth: [' ε '], hat: ['>   <', ' > < '], arms: ['    '], isShaking: true,
   },
+  stretch: {
+    color: 'claude',
+    eyes: ['- -', '- -', '> <'], mouth: [' o ', ' O ', ' O ', ' o '], hat: ['     '], arms: ['\\/  ', '||  '],
+  },
+  love: {
+    color: 'claude',
+    eyes: ['♥ ♥', '♥ ♥', '^ ^'], mouth: [' ‿ '], hat: ['  ♥  ', ' ♥ ♥ ', '♥   ♥'], arms: ['    '],
+  },
+  wink: {
+    color: 'claude',
+    eyes: ['^ ~'], mouth: [' ‿ '], hat: ['     '], arms: ['    '],
+  },
 }
 
 const pick = <T>(list: readonly T[], frame: number): T => list[frame % list.length] as T
