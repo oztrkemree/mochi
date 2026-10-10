@@ -124,11 +124,12 @@ function prFacts(pr: Pr): string[] {
 
 const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 
-/** The desktop panel's CI mark while runs go: a breathing dot and its line, ending at `right` on the baseline `y`. */
-export function ciMark(ci: Ci | null | undefined, right: number, y: number): { svg: string; width: number } {
+/** The desktop panel's CI mark while runs go: a breathing dot and its line, ending at `right` on the baseline `y`; none when wider than `room`. */
+export function ciMark(ci: Ci | null | undefined, right: number, y: number, room: number): { svg: string; width: number } {
   if (!ci || ci.state !== 'running') return { svg: '', width: 0 }
   const text = ciLine(ci)
   const width = cols(text) * 6 + 12
+  if (width > room) return { svg: '', width: 0 }
   const x = right - width
   const ink = CI_INK.running
   return {

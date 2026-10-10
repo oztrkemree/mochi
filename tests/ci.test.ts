@@ -94,6 +94,8 @@ test('the details show the last CI and the pull request; the panel shows runs go
   const drawn = panelSvg({ panel: { shot: { mood: 'idle', scene: { context: -1, agents: 0 }, at: 1, from: null }, info, infoFrom: null, infoAt: 1 }, now, width: 900 })
   expect(drawn.svg).toContain('ci running · 1/2')
   expect(drawn.svg).toContain('fill="#F2B84B">ci running')
+  // Where it would crowd out the branch, it stays out.
+  expect(panelSvg({ panel: { shot: { mood: 'idle', scene: { context: -1, agents: 0 }, at: 1, from: null }, info, infoFrom: null, infoAt: 1 }, now, width: 420 }).svg).not.toContain('ci running')
   const done = panelSvg({ panel: { shot: { mood: 'idle', scene: { context: -1, agents: 0 }, at: 1, from: null }, info: { ...info, ci }, infoFrom: null, infoAt: 1 }, now, width: 900 })
   expect(done.svg).not.toContain('ci running')
   setLang('tr')
@@ -108,7 +110,10 @@ const START = { cwd: '/tmp', surface: 'terminal', isInteractive: true } as never
 /** Just before the runs above were created. */
 const PUSH = Date.UTC(2026, 9, 9, 9, 59, 30)
 
-/** The engine beneath the plugin, the person's gh and git included: `gh.runs` is what `gh run list` prints next, an Error when gh is missing. */
+/**
+ * The engine beneath the plugin, the person's gh and git included: `gh.runs` is what `gh run list` prints next, an Error when gh is missing;
+ * `gh.pr` what `gh pr view` prints, '' for no pull request, 'slow' for a call cut off at its time limit.
+ */
 function machine(on: On, gh: { runs: string | Error; pr: string }) {
   const ran: string[][] = []
   mock.store(on, { prefs: { lang: 'en' } })
@@ -124,11 +129,15 @@ function machine(on: On, gh: { runs: string | Error; pr: string }) {
   })
   on('tool.call', { tool: 'Bash' }, () => ({ result: { stdout: '', stderr: '', interrupted: false }, text: '' }) as never)
   const prints = (stdout: string, exitCode = 0, stderr = '') => ({ value: { exitCode, stdout, stderr } }) as never
-  on('process.run', ($, e) => {
+  on('process.run', async ($, e) => {
     ran.push([...e.argv])
     const [cmd, sub] = e.argv
     if (cmd === 'git' && sub === 'rev-parse') return prints(`${SHA}\n`)
     if (cmd === 'gh' && gh.runs instanceof Error) throw gh.runs
+    if (cmd === 'gh' && sub === 'pr' && gh.pr === 'slow') {
+      await clock.sleep(20_000)
+      throw new Error('timed out')
+    }
     if (cmd === 'gh' && sub === 'run') return prints(gh.runs as string)
     if (cmd === 'gh' && sub === 'pr') return gh.pr === '' ? prints('', 1, 'no pull requests found for branch "main"') : prints(gh.pr)
     return prints('', 1)
@@ -158,6 +167,9 @@ test('after a push the band follows the runs, and a pass ends in a party', async
   expect(String((await desktop.find({ type: 'Svg' }))?.props.source)).toContain('ci running · 1/2')
   await desktop.unmount()
 
+  // Pushed again a while on, already up to date: the commit keeps its watch and its runs.
+  for (let i = 0; i < 200; i++) await clock.advance(450)
+  await $.tool.call({ tool: 'Bash', command: 'git push' })
   gh.runs = runs(run('completed', 'success', 'build'), run('completed', 'success', 'test', '2026-10-09T10:00:00Z', '2026-10-09T10:02:30Z'))
   const asked = ran.filter(a => a[1] === 'run').length
   expect(await until(clock, ui, /ci passed · 2 checks · 3m/)).toBeDefined()
@@ -206,5 +218,32 @@ test('/mochi ci turns it all off and on; without gh Mochi stays quiet and the st
   expect(ran.some(a => a[0] === 'gh' && a[1] === 'run')).toBe(false)
   expect((await $.command.run({ command: 'mochi', args: 'status' } as never)).text).toContain('CI: on · gh is not installed')
   await ui.unmount()
+  setLang('tr')
+})
+
+test('a question held open keeps its face; the news of the CI comes as a notification', async ($, on) => {
+  const gh = { runs: runs(run('completed', 'failure', 'test')), pr: '' }
+  const { clock, ran } = machine(on, gh)
+  on('classic.PermissionRequest', () => ({}) as never)
+  await clock.set(PUSH)
+  await $.session.start(START)
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  await $.tool.call({ tool: 'Bash', command: 'git push' })
+  await $.classic.PermissionRequest({ tool_name: 'Bash', tool_input: { command: 'make deploy' } } as never)
+  for (let i = 0; i < 60 && !ran.some(a => a[0] === 'notify-send'); i++) await clock.advance(450)
+  expect(ran.find(a => a[0] === 'notify-send')?.at(-1)).toBe('ci failed · test')
+  expect(await ui.find({ text: /awaiting approval/ })).toBeDefined()
+  await ui.unmount()
+  setLang('tr')
+})
+
+test('a gh cut off at its time limit met a slow network: gh is not called missing', async ($, on) => {
+  const { clock } = machine(on, { runs: '[]', pr: 'slow' })
+  await clock.set(PUSH)
+  await $.session.start(START)
+  for (let i = 0; i < 50; i++) await clock.advance(450)
+  const status = (await $.command.run({ command: 'mochi', args: 'status' } as never)).text
+  expect(status).toContain('CI: on')
+  expect(status).not.toContain('gh is not installed')
   setLang('tr')
 })

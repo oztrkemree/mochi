@@ -529,12 +529,12 @@ export function detailLines(env: Env, now: number): string[] {
     out.push(`${d.lineGit(g.branch, g.changed)} · +${add} −${del}${g.ahead ? ` · ↑${g.ahead}` : ''}${g.behind ? ` · ↓${g.behind}` : ''}`)
     for (const f of g.files.slice(0, 8)) out.push(`  ${changeKind(f.code).sign} ${f.path}${f.add !== undefined ? `  +${f.add} −${f.del ?? 0}` : ''}`)
   }
+  out.push(...ciLines(env, now))
   if (env.lastEdit) {
     const h = env.lastEdit
     out.push(`${d.lineLastEdit(baseName(h.path), ago(now - h.at))} · +${h.add} −${h.del}`)
     for (const line of h.old) out.push(`  − ${line}`)
     for (const line of h.new) out.push(`  + ${line}`)
   }
-  out.push(...ciLines(env, now))
   return out
 }

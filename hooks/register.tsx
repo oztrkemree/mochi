@@ -833,12 +833,13 @@ const CI_FOR_MS = 30 * 60_000
 const CI_NONE_MS = 2 * 60_000
 /** GitHub takes a few seconds to start the runs: the first look comes this long after the push. */
 const CI_FIRST_MS = 8000
-/** gh with no prompt and no update check of its own. */
+/** gh with no prompt and no update check of its own, cut off after this long. */
 const GH_ENV = { GH_PROMPT_DISABLED: '1', GH_NO_UPDATE_NOTIFIER: '1' }
+const GH_MS = 20_000
 
 /** The person's own gh, in the session's folder; null when it cannot start or does not answer in time. */
 async function gh($: Dollar, args: string[]) {
-  return $.process.run(['gh', ...args], { env: GH_ENV, timeoutMs: 20_000 }).catch(() => null)
+  return $.process.run(['gh', ...args], { env: GH_ENV, timeoutMs: GH_MS }).catch(() => null)
 }
 
 /** The branch's open pull request and its checks; on the way, whether gh answers here at all. */
@@ -847,7 +848,10 @@ async function refreshPr($: Dollar) {
   chat.isPrAsking = true
   try {
     if (!(await read($, prefs)).hasCi) return
+    const askedAt = await $.clock.now()
     const out = await gh($, ['pr', 'view', '--json', PR_FIELDS])
+    // A gh that cannot start fails at once; one cut off at the time limit met a slow network, and what was known stays.
+    if (out === null && (await $.clock.now()) - askedAt >= GH_MS) return
     chat.ghTrouble = out === null ? 'missing' : out.exitCode === 0 ? null : ghTrouble(out.exitCode, out.stderr)
     // Offline or a hiccup: what was known stays; turned off meanwhile, nothing is shown.
     if (out !== null && out.exitCode !== 0 && chat.ghTrouble === null && !/no pull requests found/i.test(out.stderr)) return
@@ -875,7 +879,8 @@ async function startCi($: Dollar) {
   const head = await $.process.run(['git', 'rev-parse', 'HEAD'], { timeoutMs: 5000 }).catch(() => undefined)
   const sha = head?.exitCode === 0 ? head.stdout.trim() : ''
   await refreshPr($)
-  if (!/^[0-9a-f]{40,64}$/.test(sha) || chat.ghTrouble !== null) return
+  // Turned off meanwhile, or pushed again while its runs go: nothing new to follow.
+  if (!/^[0-9a-f]{40,64}$/.test(sha) || chat.ghTrouble !== null || sha === chat.ciSha || !(await read($, prefs)).hasCi) return
   const now = await $.clock.now()
   chat.ciSha = sha
   chat.ciSince = now
@@ -912,12 +917,17 @@ async function pollCi($: Dollar) {
 /** How the pushed commit's CI ended: a party, the failed workflow, or a plain line. */
 async function ciDone($: Dollar, ci: Ci) {
   const line = ciLine(ci)
-  if (ci.state === 'passed') await show($, { mood: 'party', line, holdMs: 8000, sound: 'party' })
-  else if (ci.state === 'failed') await show($, { mood: 'error', line, holdMs: 10_000, sound: 'oops' })
-  else await show($, { mood: 'idle', line, holdMs: 6000 })
+  const f = await read($, face)
+  // A question held open keeps its face: the news goes to a toast instead.
+  const isAsking = f.mood === 'asking' && f.until === 0
+  if (!isAsking) {
+    await show($, ci.state === 'passed' ? { mood: 'party', line, holdMs: 8000, sound: 'party' }
+      : ci.state === 'failed' ? { mood: 'error', line, holdMs: 10_000, sound: 'oops' }
+      : { mood: 'idle', line, holdMs: 6000 })
+  }
   // Mid-turn the face moves on with the work, so a toast keeps the news; a failure reaches someone away as a notification.
   if (ci.state === 'failed' && !chat.isBusy) await notify($, line)
-  else if (chat.isBusy) $.ui.toast(`Mochi: ${line}`, { timeoutMs: 8000 })
+  else if (chat.isBusy || isAsking) $.ui.toast(`Mochi: ${line}`, { timeoutMs: 8000 })
   void refreshPr($).catch(() => undefined)
 }
 

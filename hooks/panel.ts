@@ -249,8 +249,8 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const room3 = sepX - metaX - 12
   const peerText = others ? clip(others, Math.max(4, Math.floor((room3 * 0.55 - 12) / 6))) : ''
   const peerW = others ? cols(peerText) * 6 + 12 : 0
-  // A push's CI while its runs go, just before the other chats.
-  const ci = ciMark(info.ci, sepX - 12 - (peerW > 0 ? peerW + 10 : 0), 67)
+  // A push's CI while its runs go, just before the other chats, where it leaves the branch some room.
+  const ci = ciMark(info.ci, sepX - 12 - (peerW > 0 ? peerW + 10 : 0), 67, room3 - (peerW > 0 ? peerW + 10 : 0) - 40)
   const peerSvg = others && lead
     ? `<circle cx="${n(sepX - 12 - peerW + 3.5)}" cy="63.2" r="3" fill="${PEER_INK[lead.state]}">${lead.state === 'asking' ? '<animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>' : ''}</circle>` +
       `<text class="t" x="${n(sepX - 12 - peerW + 11)}" y="67" font-size="11" fill="${lead.state === 'busy' ? '#A59D96' : PEER_INK[lead.state]}">${esc(peerText)}</text>`
