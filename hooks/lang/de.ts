@@ -221,6 +221,28 @@ export const de: typeof en = {
     lineLastEdit: (file, ago) => `Letzte Bearbeitung: ${file} · ${ago}`,
   },
 
+  share: {
+    tagline: 'Mochi für Claude Code',
+    wrapped: 'MOCHI-RÜCKBLICK',
+    commits: 'Commits',
+    activeDays: 'aktive Tage',
+    hours: 'Stunden',
+    longest: 'längste Serie',
+    months: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+    month: (month, year) => `${month} ${year}`,
+    year: year => `${year}`,
+    date: (month, day) => `${day}. ${month}`,
+    busiest: (date, turns) => `aktivster Tag · ${date} · ${pl(turns, 'Runde', 'Runden')}`,
+    most: label => `die meiste Zeit in ${label}`,
+    quiet: 'eine ruhige Zeit: noch keine Runden',
+    cardSaved: path => `Karte gespeichert: ${path}`,
+    cardHow: 'Für dein GitHub-Profil: lege sie neben README.md in dein Profil-Repository und füge ein:',
+    wrappedSaved: (title, path) => `Rückblick ${title}: ${path}`,
+    snapSaved: (band, details) => `Leiste: ${band}\nDetailansicht: ${details}`,
+    failed: reason => `Speichern fehlgeschlagen: ${reason}`,
+    ready: month => `dein Rückblick auf den ${month} ist fertig · /mochi rückblick`,
+  },
+
   ui: {
     levelTitle: 'LEVEL',
     wardrobeTitle: 'KLEIDERSCHRANK',
@@ -292,6 +314,7 @@ export const de: typeof en = {
       hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'],
       status: [], details: [], level: [], wear: ['tragen', 'anziehen'], shield: ['schild', 'schutz'],
       alerts: ['hinweise', 'benachrichtigungen', 'meldungen'], lang: ['sprache'], auto: ['automatisch'], none: ['nichts', 'keins'],
+      card: ['karte'], wrapped: ['rückblick'], snap: ['schnappschuss', 'foto'], month: ['monat'], year: ['jahr'],
     },
   },
 }

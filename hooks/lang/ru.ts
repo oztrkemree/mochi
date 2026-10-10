@@ -241,6 +241,28 @@ export const ru: typeof en = {
     lineLastEdit: (file, ago) => `Последняя правка: ${file} · ${ago}`,
   },
 
+  share: {
+    tagline: 'Mochi для Claude Code',
+    wrapped: 'ИТОГИ MOCHI',
+    commits: 'коммиты',
+    activeDays: 'активные дни',
+    hours: 'часы',
+    longest: 'лучшая серия',
+    months: ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'],
+    month: (month, year) => `${month.charAt(0).toUpperCase()}${month.slice(1)} ${year}`,
+    year: year => `${year}`,
+    date: (month, day) => `${day} ${month}`,
+    busiest: (date, turns) => `самый активный день · ${date} · ${turnsN(turns)}`,
+    most: label => `больше всего времени в ${label}`,
+    quiet: 'тихий период: запросов пока нет',
+    cardSaved: path => `Карточка сохранена: ${path}`,
+    cardHow: 'Для профиля GitHub положи её рядом с README.md в репозитории профиля и вставь:',
+    wrappedSaved: (title, path) => `Итоги · ${title}: ${path}`,
+    snapSaved: (band, details) => `Полоска: ${band}\nПанель деталей: ${details}`,
+    failed: reason => `Не удалось сохранить: ${reason}`,
+    ready: month => `итоги за ${month} готовы · /mochi итоги`,
+  },
+
   ui: {
     levelTitle: 'УРОВЕНЬ',
     wardrobeTitle: 'ГАРДЕРОБ',
@@ -312,6 +334,7 @@ export const ru: typeof en = {
       hide: ['скрыть', 'спрятать'], show: ['показать'], small: ['маленький', 'мини'], big: ['большой'], sound: ['звук'],
       status: ['статус', 'состояние'], details: ['детали', 'подробно'], level: ['уровень'], wear: ['надеть', 'аксессуары', 'гардероб'], shield: ['щит', 'защита'],
       alerts: ['уведомления', 'оповещения'], lang: ['язык'], auto: ['авто', 'автоматически'], none: ['ничего', 'нет'],
+      card: ['карточка'], wrapped: ['итоги'], snap: ['снимок'], month: ['месяц'], year: ['год'],
     },
   },
 }

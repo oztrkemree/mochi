@@ -5,15 +5,18 @@ import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, R
 import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
-import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
+import { detailHeight, detailSvg } from './detail'
+import { addSample, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
 import { NEW_WATCH, danger, dangerKey, isShell, watchCall } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
 import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, wearable, xpOf } from './level'
 import { peerLabel, peerNews, peerOf } from './live'
-import { toolKind } from './panel'
+import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
 import { paramsAt } from './rig'
+import { SNAP_W, bestOutfit, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
+import type { ChatDays } from './share'
 import { clip } from './sound'
 import { ALL_ITEMS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, chat, rest0, restorePrefs } from './state'
 import { alertCommand, langCommand, removeCommand } from './system'
@@ -410,6 +413,7 @@ async function refreshHistory($: Dollar) {
   }
   chat.otherDays = others
   await recount($)
+  await offerWrapped($)
 }
 
 /** The history from the other chats as last read and this one as it stands; a new level is celebrated. */
@@ -685,8 +689,8 @@ type Word = keyof Dict['cmd']['words']
 /** Whether `value` names the command: its English words, or the words of the language in use. */
 const names = (value: string, key: Word, ...english: string[]) => english.includes(value) || t().cmd.words[key].some(w => plain(w) === value)
 
-/** A subcommand: the key of its words in each language, the English words it answers to, and what it does with the rest of the line. */
-type Command = { name: Word; english: string[]; run: (arg: string) => Promise<string> }
+/** A subcommand: the key of its words in each language, the English words it answers to, and what it does with the rest of the line (folded, and as typed). */
+type Command = { name: Word; english: string[]; run: (arg: string, raw: string) => Promise<string> }
 
 /** The subcommands of /mochi, tried in this order. */
 function commands($: Dollar, p: Prefs): Command[] {
@@ -702,6 +706,9 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'sound', english: ['sound'], run: () => toggleSound($) },
     { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
+    { name: 'card', english: ['card'], run: (_, raw) => card($, raw) },
+    { name: 'wrapped', english: ['wrapped', 'wrap'], run: arg => wrapped($, arg) },
+    { name: 'snap', english: ['snap', 'snapshot'], run: () => snap($) },
   ]
 }
 
@@ -815,6 +822,83 @@ async function statusLines($: Dollar, p: Prefs): Promise<string> {
     d.peersLine(levelOf(xpOf(v.history)).level, v.peers.length === 0 ? d.none : v.peers.map(x => x.label).join(', ')),
     d.commands,
   ].join('\n')
+}
+
+// ---------- share ----------
+
+/** Every chat's days with its name, read file by file, this chat's own from memory. */
+async function readChats($: Dollar): Promise<ChatDays[]> {
+  const out: ChatDays[] = [{ label: chat.label, days: chat.myDays }]
+  if (chat.dataDir === '') return out
+  const dir = `${chat.dataDir}/days`
+  for (const entry of await $.fs.list(dir).catch(() => [])) {
+    if (!entry.name.endsWith('.json')) continue
+    try {
+      const file = JSON.parse(await $.fs.read(`${dir}/${entry.name}`)) as { id?: unknown; label?: unknown; days?: unknown }
+      if (typeof file.id !== 'string' || file.id === chat.sessionId || typeof file.days !== 'object' || file.days === null) continue
+      out.push({ label: typeof file.label === 'string' ? file.label : '', days: file.days as ChatDays['days'] })
+    } catch {
+      // A file caught mid-write counts next time.
+    }
+  }
+  return out
+}
+
+/** Writes a drawing (to ~/.claude/mochi/share, unless the person named a place) and says where, as the system writes paths. */
+async function saveShare($: Dollar, name: string, svg: string, path = ''): Promise<string> {
+  const to = path !== '' ? path : chat.dataDir === '' ? '' : `${chat.dataDir}/share/${name}`
+  if (to === '') throw new Error('~/.claude/mochi')
+  await $.fs.write(to, svg)
+  return chat.platform === 'windows' ? to.replaceAll('/', '\\') : to
+}
+
+const failed = (e: unknown) => t().share.failed(e instanceof Error ? e.message : String(e))
+
+/** The card for a profile README, and the line that shows it there. */
+async function card($: Dollar, raw: string): Promise<string> {
+  const now = await $.clock.now()
+  const v = await read($, env)
+  const path = raw === '' ? '' : cardPath(raw, await $.session.cwd(), chat.dataDir.replace(/\/\.claude\/mochi$/, ''))
+  try {
+    const shown = await saveShare($, 'mochi-card.svg', cardSvg(v.history, outfitNow(await read($, prefs), v, 'idle', now)), path)
+    return [t().share.cardSaved(shown), t().share.cardHow, cardMarkdown(baseName(shown))].join('\n')
+  } catch (e) {
+    return failed(e)
+  }
+}
+
+/** The month (or the year) wrapped up from every chat's days. */
+async function wrapped($: Dollar, arg: string): Promise<string> {
+  const v = await read($, env)
+  const w = wrappedOf(await readChats($), names(arg, 'year', 'year') ? 'year' : 'month', dayKey(await $.clock.now(), v.tz))
+  try {
+    return t().share.wrappedSaved(periodTitle(w.key), await saveShare($, `mochi-wrapped-${w.key}.svg`, wrappedSvg(w, bestOutfit(unlocked(v.history)))))
+  } catch (e) {
+    return failed(e)
+  }
+}
+
+/** The band as the desktop draws it and the details pane, as they stand now. */
+async function snap($: Dollar): Promise<string> {
+  const now = await $.clock.now()
+  const band = panelSvg({ panel: { shot: await read($, shot), info: await infoNow($), infoFrom: null, infoAt: now }, now, width: SNAP_W })
+  const details = detailSvg(await read($, env), now, SNAP_W)
+  try {
+    const a = await saveShare($, 'mochi-band.svg', framed(band.svg, band.width, PANEL_H))
+    return t().share.snapSaved(a, await saveShare($, 'mochi-details.svg', framed(details, SNAP_W, detailHeight(details))))
+  } catch (e) {
+    return failed(e)
+  }
+}
+
+/** In a new month's first week, says once (in whichever chat looks first) that the month just ended can be wrapped; not while alerts are off. */
+async function offerWrapped($: Dollar) {
+  const v = await read($, env)
+  if (v.history === null || !(await read($, prefs)).hasAlert) return
+  const key = monthToOffer(dayKey(await $.clock.now(), v.tz), v.history.days, await $.store.get('wrapped'))
+  if (key === null) return
+  await $.store.set('wrapped', key)
+  $.ui.toast(`Mochi: ${t().share.ready(monthName(key))}`, { timeoutMs: 10_000 })
 }
 
 export const register: Register = on => {
@@ -1086,7 +1170,7 @@ export const register: Register = on => {
     const list = commands($, p)
     // Alone, /mochi hides Mochi or brings it back; a word no subcommand knows shows the status.
     const command = word === '' ? list.find(c => c.name === (p.isHidden ? 'show' : 'hide')) : list.find(c => names(word, c.name, ...c.english))
-    return { text: command ? await command.run(arg) : await statusLines($, p) }
+    return { text: command ? await command.run(arg, more.join(' ')) : await statusLines($, p) }
   })
 
   // Should the click region ever fail to load or draw, say so once instead of

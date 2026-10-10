@@ -183,7 +183,7 @@ export function season(now: number, tz: number): Partial<Outfit> & { isNight: bo
 }
 
 /** Items worn by themselves when nothing is chosen, from the most to the least earned. */
-const HEAD_RANK: Item[] = ['crown', 'wizard', 'viking', 'pirate', 'cowboy', 'chefhat', 'gradcap', 'hardhat', 'headphones']
+export const HEAD_RANK: Item[] = ['crown', 'wizard', 'viking', 'pirate', 'cowboy', 'chefhat', 'gradcap', 'hardhat', 'headphones']
 const NECK_RANK: Item[] = ['medal', 'evileye', 'bowtie']
 const MUG_MOODS: ReadonlySet<Mood> = new Set(['idle', 'listening', 'pleased', 'sleepy'])
 

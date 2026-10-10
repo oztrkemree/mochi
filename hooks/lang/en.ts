@@ -236,6 +236,32 @@ export const en = {
     lineLastEdit: (file: string, ago: string) => `Last edit: ${file} · ${ago}`,
   },
 
+  /** What Mochi draws to be shown elsewhere: the card, the wrapped and the snapshot. */
+  share: {
+    tagline: 'Mochi for Claude Code',
+    wrapped: 'MOCHI WRAPPED',
+    commits: 'commits',
+    activeDays: 'active days',
+    hours: 'hours',
+    longest: 'longest streak',
+    /** Month names in full, January first. */
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    /** A month and its year: "September 2026". */
+    month: (month: string, year: number) => `${month} ${year}`,
+    year: (year: number) => `${year}`,
+    /** A day, with the month's short name: "Sep 14". */
+    date: (month: string, day: number) => `${month} ${day}`,
+    busiest: (date: string, turns: number) => `busiest day · ${date} · ${plural(turns, 'turn', 'turns')}`,
+    most: (label: string) => `most time in ${label}`,
+    quiet: 'a quiet one: no turns yet',
+    cardSaved: (path: string) => `Card saved: ${path}`,
+    cardHow: 'For your GitHub profile, put it beside README.md in your profile repository and paste:',
+    wrappedSaved: (title: string, path: string) => `${title} wrapped: ${path}`,
+    snapSaved: (band: string, details: string) => `Band: ${band}\nDetails pane: ${details}`,
+    failed: (reason: string) => `Could not save: ${reason}`,
+    ready: (month: string) => `your ${month} wrapped is ready · /mochi wrapped`,
+  },
+
   /** The wardrobe and level sections. */
   ui: {
     levelTitle: 'LEVEL',
@@ -311,6 +337,7 @@ export const en = {
       hide: [] as string[], show: [] as string[], small: [] as string[], big: [] as string[], sound: [] as string[],
       status: [] as string[], details: [] as string[], level: [] as string[], wear: [] as string[], shield: [] as string[],
       alerts: [] as string[], lang: [] as string[], auto: [] as string[], none: [] as string[],
+      card: [] as string[], wrapped: [] as string[], snap: [] as string[], month: [] as string[], year: [] as string[],
     },
   },
 }

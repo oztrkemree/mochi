@@ -219,6 +219,28 @@ export const tr: typeof en = {
     lineLastEdit: (file, ago) => `Son düzenleme: ${file} · ${ago}`,
   },
 
+  share: {
+    tagline: 'Claude Code için Mochi',
+    wrapped: 'MOCHI ÖZETİ',
+    commits: 'commit',
+    activeDays: 'aktif gün',
+    hours: 'saat',
+    longest: 'en uzun seri',
+    months: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+    month: (month, year) => `${month} ${year}`,
+    year: year => `${year}`,
+    date: (month, day) => `${day} ${month}`,
+    busiest: (date, turns) => `en yoğun gün · ${date} · ${turns} tur`,
+    most: label => `en çok vakit: ${label}`,
+    quiet: 'sakin bir dönem: henüz tur yok',
+    cardSaved: path => `Kart kaydedildi: ${path}`,
+    cardHow: 'GitHub profilin için dosyayı profil deposunda README.md’nin yanına koy ve şunu yapıştır:',
+    wrappedSaved: (title, path) => `${title} özeti: ${path}`,
+    snapSaved: (band, details) => `Bant: ${band}\nDetay paneli: ${details}`,
+    failed: reason => `Kaydedilemedi: ${reason}`,
+    ready: month => `${month} özetin hazır · /mochi özet`,
+  },
+
   ui: {
     levelTitle: 'SEVİYE',
     wardrobeTitle: 'GARDIROP',
@@ -288,6 +310,7 @@ export const tr: typeof en = {
       hide: ['gizle'], show: ['göster', 'goster'], small: ['küçük', 'kucuk'], big: ['büyük', 'buyuk'], sound: ['ses'],
       status: ['durum'], details: ['detay'], level: ['seviye'], wear: ['aksesuar', 'giy'], shield: ['kalkan'],
       alerts: ['bildirim'], lang: ['dil'], auto: ['otomatik'], none: ['yok', 'hiçbiri', 'hicbiri'],
+      card: ['kart'], wrapped: ['özet'], snap: ['fotoğraf', 'anlık'], month: ['ay'], year: ['yıl', 'sene'],
     },
   },
 }

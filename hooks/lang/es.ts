@@ -223,6 +223,28 @@ export const es: typeof en = {
     lineLastEdit: (file, ago) => `Última edición: ${file} · ${ago}`,
   },
 
+  share: {
+    tagline: 'Mochi para Claude Code',
+    wrapped: 'RESUMEN DE MOCHI',
+    commits: 'commits',
+    activeDays: 'días activos',
+    hours: 'horas',
+    longest: 'mejor racha',
+    months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+    month: (month, year) => `${month.charAt(0).toUpperCase()}${month.slice(1)} de ${year}`,
+    year: year => `${year}`,
+    date: (month, day) => `${day} ${month}`,
+    busiest: (date, turns) => `día más activo · ${date} · ${plural(turns, 'turno', 'turnos')}`,
+    most: label => `más tiempo en ${label}`,
+    quiet: 'un periodo tranquilo: aún sin turnos',
+    cardSaved: path => `Tarjeta guardada: ${path}`,
+    cardHow: 'Para tu perfil de GitHub, ponla junto a README.md en el repositorio de tu perfil y pega:',
+    wrappedSaved: (title, path) => `Resumen · ${title}: ${path}`,
+    snapSaved: (band, details) => `Franja: ${band}\nPanel de detalles: ${details}`,
+    failed: reason => `No se pudo guardar: ${reason}`,
+    ready: month => `tu resumen de ${month} está listo · /mochi resumen`,
+  },
+
   ui: {
     levelTitle: 'NIVEL',
     wardrobeTitle: 'ARMARIO',
@@ -294,6 +316,7 @@ export const es: typeof en = {
       hide: ['ocultar', 'esconder'], show: ['mostrar'], small: ['pequeño', 'pequeno'], big: ['grande'], sound: ['sonido'],
       status: ['estado'], details: ['detalles', 'detalle'], level: ['nivel'], wear: ['poner', 'vestir'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma'], auto: ['automático', 'automatico'], none: ['nada', 'ninguno'],
+      card: ['tarjeta'], wrapped: ['resumen'], snap: ['captura'], month: ['mes'], year: ['año'],
     },
   },
 }

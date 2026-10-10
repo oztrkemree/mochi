@@ -219,6 +219,28 @@ export const ko: typeof en = {
     lineLastEdit: (file, ago) => `마지막 수정: ${file} · ${ago}`,
   },
 
+  share: {
+    tagline: 'Claude Code를 위한 Mochi',
+    wrapped: 'MOCHI 결산',
+    commits: '커밋',
+    activeDays: '활동한 날',
+    hours: '시간',
+    longest: '최장 연속',
+    months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+    month: (month, year) => `${year}년 ${month}`,
+    year: year => `${year}년`,
+    date: (month, day) => `${month} ${day}일`,
+    busiest: (date, turns) => `가장 바빴던 날 · ${date} · ${turns}턴`,
+    most: label => `가장 오래 머문 곳: ${label}`,
+    quiet: '조용한 기간: 아직 턴 없음',
+    cardSaved: path => `카드를 저장했습니다: ${path}`,
+    cardHow: 'GitHub 프로필용: 프로필 저장소의 README.md 옆에 두고 아래 줄을 붙여 넣으세요:',
+    wrappedSaved: (title, path) => `${title} 결산: ${path}`,
+    snapSaved: (band, details) => `밴드: ${band}\n상세 패널: ${details}`,
+    failed: reason => `저장하지 못했습니다: ${reason}`,
+    ready: month => `${month} 결산이 준비되었습니다 · /mochi 결산`,
+  },
+
   ui: {
     levelTitle: '레벨',
     wardrobeTitle: '옷장',
@@ -288,6 +310,7 @@ export const ko: typeof en = {
       hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'],
       status: ['상태'], details: ['상세', '자세히'], level: ['레벨'], wear: ['착용', '입기'], shield: ['보호막', '실드'],
       alerts: ['알림'], lang: ['언어'], auto: ['자동'], none: ['없음', '벗기'],
+      card: ['카드'], wrapped: ['결산'], snap: ['스냅샷'], month: ['월', '달'], year: ['년', '연간'],
     },
   },
 }

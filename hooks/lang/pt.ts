@@ -222,6 +222,28 @@ export const pt: typeof en = {
     lineLastEdit: (file, ago) => `Última edição: ${file} · ${ago}`,
   },
 
+  share: {
+    tagline: 'Mochi para Claude Code',
+    wrapped: 'RETROSPECTIVA DO MOCHI',
+    commits: 'commits',
+    activeDays: 'dias ativos',
+    hours: 'horas',
+    longest: 'maior sequência',
+    months: ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'],
+    month: (month, year) => `${month.charAt(0).toUpperCase()}${month.slice(1)} de ${year}`,
+    year: year => `${year}`,
+    date: (month, day) => `${day} ${month}`,
+    busiest: (date, turns) => `dia mais ativo · ${date} · ${pl(turns, 'turno', 'turnos')}`,
+    most: label => `mais tempo em ${label}`,
+    quiet: 'um período tranquilo: nenhum turno ainda',
+    cardSaved: path => `Cartão salvo: ${path}`,
+    cardHow: 'Para o seu perfil do GitHub, coloque-o ao lado do README.md no repositório do seu perfil e cole:',
+    wrappedSaved: (title, path) => `Retrospectiva · ${title}: ${path}`,
+    snapSaved: (band, details) => `Faixa: ${band}\nPainel de detalhes: ${details}`,
+    failed: reason => `Não foi possível salvar: ${reason}`,
+    ready: month => `sua retrospectiva de ${month} está pronta · /mochi retrospectiva`,
+  },
+
   ui: {
     levelTitle: 'NÍVEL',
     wardrobeTitle: 'GUARDA-ROUPA',
@@ -292,6 +314,7 @@ export const pt: typeof en = {
       hide: ['esconder', 'ocultar'], show: ['mostrar'], small: ['pequeno'], big: ['grande'], sound: ['som'],
       status: [], details: ['detalhes'], level: ['nível', 'nivel'], wear: ['vestir', 'usar'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma', 'língua', 'lingua'], auto: ['automático', 'automatico'], none: ['nenhum', 'nada'],
+      card: ['cartão'], wrapped: ['retrospectiva', 'resumo'], snap: ['captura', 'foto'], month: ['mês'], year: ['ano'],
     },
   },
 }

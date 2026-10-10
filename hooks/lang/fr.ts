@@ -223,6 +223,28 @@ export const fr: typeof en = {
     lineLastEdit: (file, ago) => `Dernière modification : ${file} · ${ago}`,
   },
 
+  share: {
+    tagline: 'Mochi pour Claude Code',
+    wrapped: 'LE BILAN DE MOCHI',
+    commits: 'commits',
+    activeDays: 'jours actifs',
+    hours: 'heures',
+    longest: 'meilleure série',
+    months: ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
+    month: (month, year) => `${month.charAt(0).toUpperCase()}${month.slice(1)} ${year}`,
+    year: year => `${year}`,
+    date: (month, day) => `${day} ${month}`,
+    busiest: (date, turns) => `jour le plus actif · ${date} · ${pl(turns, 'tour', 'tours')}`,
+    most: label => `le plus de temps dans ${label}`,
+    quiet: 'une période calme : aucun tour pour l’instant',
+    cardSaved: path => `Carte enregistrée : ${path}`,
+    cardHow: 'Pour votre profil GitHub, placez-la à côté de README.md dans le dépôt de votre profil et collez :',
+    wrappedSaved: (title, path) => `Bilan · ${title} : ${path}`,
+    snapSaved: (band, details) => `Bandeau : ${band}\nPanneau de détails : ${details}`,
+    failed: reason => `Enregistrement impossible : ${reason}`,
+    ready: month => `votre bilan ${/^[aeiouéèâ]/i.test(month) ? 'd’' : 'de '}${month} est prêt · /mochi bilan`,
+  },
+
   ui: {
     levelTitle: 'NIVEAU',
     wardrobeTitle: 'GARDE-ROBE',
@@ -293,6 +315,7 @@ export const fr: typeof en = {
       hide: ['cacher', 'masquer'], show: ['afficher', 'montrer'], small: ['petit'], big: ['grand'], sound: ['son'],
       status: ['statut', 'état', 'etat'], details: ['détails', 'détail', 'detail'], level: ['niveau'], wear: ['porter', 'accessoire'], shield: ['bouclier'],
       alerts: ['alertes', 'alerte'], lang: ['langue'], auto: ['automatique'], none: ['aucun', 'rien'],
+      card: ['carte'], wrapped: ['bilan'], snap: ['capture'], month: ['mois'], year: ['année', 'an'],
     },
   },
 }
