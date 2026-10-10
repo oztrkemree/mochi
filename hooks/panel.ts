@@ -1,4 +1,5 @@
 import type { Info, Limit, Mood, Panel, Recent } from '../types'
+import { ciMark } from './ci'
 import { clockAt } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { isShell } from './guard'
@@ -122,6 +123,7 @@ function whole(info: Partial<Info> | undefined): Info {
     forecast: info?.forecast ?? {},
     tz: info?.tz ?? 0,
     peers: info?.peers ?? [],
+    ci: info?.ci ?? null,
   }
 }
 
@@ -247,12 +249,14 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const room3 = sepX - metaX - 12
   const peerText = others ? clip(others, Math.max(4, Math.floor((room3 * 0.55 - 12) / 6))) : ''
   const peerW = others ? cols(peerText) * 6 + 12 : 0
+  // A push's CI while its runs go, just before the other chats, where it leaves the branch some room.
+  const ci = ciMark(info.ci, sepX - 12 - (peerW > 0 ? peerW + 10 : 0), 67, room3 - (peerW > 0 ? peerW + 10 : 0) - 40)
   const peerSvg = others && lead
     ? `<circle cx="${n(sepX - 12 - peerW + 3.5)}" cy="63.2" r="3" fill="${PEER_INK[lead.state]}">${lead.state === 'asking' ? '<animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>' : ''}</circle>` +
       `<text class="t" x="${n(sepX - 12 - peerW + 11)}" y="67" font-size="11" fill="${lead.state === 'busy' ? '#A59D96' : PEER_INK[lead.state]}">${esc(peerText)}</text>`
     : ''
   const third = (git ? BRANCH(x0, 67) : '') +
-    `<text class="t faint" x="${metaX}" y="67" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (peerW > 0 ? peerW + 14 : 0)) / 6.3))))}</text>` + peerSvg
+    `<text class="t faint" x="${metaX}" y="67" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (peerW > 0 ? peerW + 14 : 0) - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + peerSvg + ci.svg
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
     STYLE + DEFS + glow + mascot +

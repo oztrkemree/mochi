@@ -1,5 +1,6 @@
 import type { Env, Recent } from '../types'
 import { boardLines, chatsCard } from './chats'
+import { ciCard, ciLines } from './ci'
 import { age, ago, baseName, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, warnLevel } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { t } from './i18n'
@@ -103,6 +104,8 @@ export function detailSvg(env: Env, now: number, width: number): string {
   // ---- what changed in the files ----
   const changes = changesCard(env, now, innerW)
   if (changes) cards.push(changes)
+  const ci = ciCard(env, now)
+  if (ci) cards.push(ci)
 
   // ---- context, as /context draws it ----
   const all = env.allSlices.length > 0 ? env.allSlices : env.slices.map(s => ({ ...s, kind: 'used' }))
@@ -509,6 +512,7 @@ export function detailLines(env: Env, now: number): string[] {
     out.push(`${d.lineGit(g.branch, g.changed)} · +${add} −${del}${g.ahead ? ` · ↑${g.ahead}` : ''}${g.behind ? ` · ↓${g.behind}` : ''}`)
     for (const f of g.files.slice(0, 8)) out.push(`  ${changeKind(f.code).sign} ${f.path}${f.add !== undefined ? `  +${f.add} −${f.del ?? 0}` : ''}`)
   }
+  out.push(...ciLines(env, now))
   if (env.lastEdit) {
     const h = env.lastEdit
     out.push(`${d.lineLastEdit(baseName(h.path), ago(now - h.at))} · +${h.add} −${h.del}`)

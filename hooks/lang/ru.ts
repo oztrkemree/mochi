@@ -122,6 +122,25 @@ export const ru: typeof en = {
     contextUnknown: 'неизвестно',
   },
 
+  ci: {
+    title: 'CI',
+    waiting: 'CI ждёт запусков',
+    running: (done, total) => `CI идёт · ${done}/${total}`,
+    passed: (n, span) => `CI прошёл · ${pn(n, 'проверка', 'проверки', 'проверок')} · ${span}`,
+    failed: name => `CI упал · ${name}`,
+    cancelled: 'CI отменён',
+    pr: (n, title) => `PR #${n} · ${title}`,
+    review: { approved: 'одобрен', changes: 'нужны правки', required: 'ждёт ревью' },
+    checks: (passed, total) => `проверки ${passed}/${total}`,
+    failing: n => `${n} ${pl(n, 'упала', 'упали', 'упали')}`,
+    status: (isOn, why) => `CI: ${isOn ? 'вкл' : 'выкл'}${why === '' ? '' : ` · ${why}`}`,
+    missing: 'gh не установлен',
+    auth: 'в gh не выполнен вход (gh auth login)',
+    notGithub: 'эта папка — не репозиторий GitHub',
+    on: 'Слежение за CI включено: после push Mochi следит за запусками GitHub Actions через gh.',
+    off: 'Слежение за CI выключено.',
+  },
+
   peer: {
     state: { busy: 'работает', asking: 'ждёт тебя', idle: 'без дела', error: 'ошибка' },
     waiting: label => `«${label}» ждёт тебя`,

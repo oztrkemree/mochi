@@ -127,7 +127,30 @@ export type Env = {
   lastEdit: Hunk | null
   /** This chat as the others see it, for the board of chats; absent until first written. */
   me?: Peer
+  /** The last push's CI and the branch's open pull request, as gh last told them. */
+  ci?: Ci | null
+  pr?: Pr | null
 }
+
+/** A pushed commit's CI on GitHub: its workflow runs, as the person's own gh reports them. */
+export type Ci = {
+  sha: string
+  /** Epoch ms of the push. */
+  pushedAt: number
+  /** `waiting` until the first run shows, `running` while one is queued or going, then how they ended. */
+  state: 'waiting' | 'running' | 'passed' | 'failed' | 'cancelled'
+  /** The commit's runs, and how many have finished. */
+  total: number
+  done: number
+  /** The failed workflows' names. */
+  failed: string[]
+  /** Epoch ms the first run was created and, once all have ended, the last one ended; 0 otherwise. */
+  startedAt: number
+  endedAt: number
+}
+
+/** The branch's open pull request: its review decision and its checks by outcome. */
+export type Pr = { number: number; title: string; review: 'approved' | 'changes' | 'required' | ''; passed: number; failed: number; pending: number }
 
 /** One reading of a usage window. */
 export type Sample = { kind: string; at: number; p: number }
@@ -170,6 +193,8 @@ export type Prefs = {
   open: { level: boolean; wardrobe: boolean }
   /** `auto` follows Claude Code's language setting and the system; otherwise a language code (en, tr, de…). */
   lang: string
+  /** Follow the CI of a push made in this chat, and show the branch's pull request, through gh. */
+  hasCi: boolean
 }
 
 /** One slice of the context window, coloured as /context colours it. */
@@ -225,6 +250,7 @@ export type Info = {
   forecast?: Record<string, number>
   tz?: number
   peers?: Peer[]
+  ci?: Ci | null
 }
 
 /** The desktop band: one drawing of the mascot and the panel, redrawn together. */

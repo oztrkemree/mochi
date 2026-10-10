@@ -1,4 +1,5 @@
 import type { DayRec, Env, Face, Info, Outfit, Panel, Peer, Prefs, Shot } from '../types'
+import type { GhTrouble } from './ci'
 import { NEW_WATCH } from './guard'
 import type { Watch } from './guard'
 import { pickLang, t } from './i18n'
@@ -9,7 +10,7 @@ import type { Platform } from './system'
 // What register.tsx and render.tsx share: the defaults of the values kept in
 // $.state, and this load's own bookkeeping.
 
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false }, lang: 'auto' }
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false }, lang: 'auto', hasCi: true }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**
@@ -39,7 +40,7 @@ export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | unde
 }
 export const NO_ENV: Env = {
   context: -1, agents: 0, turnTools: 0, tokens: 0, window: 0, slices: [], limits: [], cost: 0, recent: [], last: '', compactAt: 0, allSlices: [], git: null, turns: [], files: [], kinds: {}, startedAt: 0,
-  samples: [], peers: [], history: null, tz: 0, lastEdit: null,
+  samples: [], peers: [], history: null, tz: 0, lastEdit: null, ci: null, pr: null,
 }
 /** The face at rest, in the language in use. */
 export const rest0 = (): Omit<Face, 'frameAt'> => ({ mood: 'idle', line: t().st.ready, until: 0, since: 0 })
@@ -111,4 +112,12 @@ export const chat = {
   isWorktree: false,
   /** The timer's last look at the usage windows' resets. */
   resetsSeenAt: 0,
+  /** The pushed commit whose CI Mochi follows, '' when none; when it was pushed and when gh was last asked. */
+  ciSha: '',
+  ciSince: 0,
+  ciAt: 0,
+  isCiAsking: false,
+  isPrAsking: false,
+  /** Why gh stays silent, once a call has said; null when it answers or before it is asked. */
+  ghTrouble: null as GhTrouble | null,
 }

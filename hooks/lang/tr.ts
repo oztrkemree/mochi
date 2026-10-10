@@ -100,6 +100,25 @@ export const tr: typeof en = {
     contextUnknown: 'bilinmiyor',
   },
 
+  ci: {
+    title: 'CI',
+    waiting: 'ci çalıştırmaları bekliyor',
+    running: (done, total) => `ci çalışıyor · ${done}/${total}`,
+    passed: (n, span) => `ci geçti · ${n} kontrol · ${span}`,
+    failed: name => `ci kaldı · ${name}`,
+    cancelled: 'ci iptal edildi',
+    pr: (n, title) => `PR #${n} · ${title}`,
+    review: { approved: 'onaylandı', changes: 'değişiklik istendi', required: 'inceleme bekliyor' },
+    checks: (passed, total) => `kontroller ${passed}/${total}`,
+    failing: n => `${n} başarısız`,
+    status: (isOn, why) => `CI: ${isOn ? 'açık' : 'kapalı'}${why === '' ? '' : ` · ${why}`}`,
+    missing: 'gh kurulu değil',
+    auth: 'gh’de oturum açılmamış (gh auth login)',
+    notGithub: 'bu klasör bir GitHub deposu değil',
+    on: 'CI takibi açık: push’tan sonra Mochi, GitHub Actions çalıştırmalarını gh ile izler.',
+    off: 'CI takibi kapalı.',
+  },
+
   peer: {
     state: { busy: 'çalışıyor', asking: 'seni bekliyor', idle: 'boşta', error: 'hata' },
     waiting: label => `‘${label}’ seni bekliyor`,
