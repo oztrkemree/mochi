@@ -238,6 +238,30 @@ export const fr: typeof en = {
     wardrobe: 'Garde-robe',
   },
 
+  data: {
+    exported: path => `Tout ce que Mochi conserve est dans un seul fichier : ${path}`,
+    exportFailed: reason => `L’export n’a pas pu être écrit : ${reason}`,
+    resetHow: 'Effacer quoi ? /mochi réinitialiser niveau · historique · tout',
+    resetAsk: {
+      level: 'Le niveau est calculé à partir de l’historique ; ceci efface seulement ce que Mochi en retient (level.json). L’effacer ?',
+      history: 'Ceci efface l’historique de toutes les conversations, et le niveau repart de zéro. L’effacer ?',
+      all: 'Ceci efface tout ce que Mochi conserve : historique, niveau, relevés d’utilisation et réglages (les exports restent). Tout effacer ?',
+    },
+    clear: 'Effacer',
+    keep: 'Garder',
+    kept: 'Rien n’a été effacé.',
+    cleared: {
+      level: 'Mémoire du niveau effacée. Le niveau est calculé à partir de l’historique : /mochi réinitialiser historique le remet à zéro.',
+      history: 'Historique effacé dans toutes les conversations ; le niveau repart de zéro.',
+      all: 'Tout ce que Mochi conservait est effacé, et ses réglages sont revenus par défaut.',
+    },
+    notCleared: files => `Ces fichiers n’ont pas pu être supprimés : ${files}`,
+    feedback: url => `Pour signaler un bug, ouvrez ce lien. Le formulaire ne contient que les versions, le système, l’interface et la langue :\n${url}`,
+    pluginsOn: 'Réactions des autres plugins activées.',
+    pluginsOff: 'Réactions des autres plugins désactivées.',
+    words: { export: ['exporter'], reset: ['réinitialiser'], feedback: ['avis', 'signaler'], plugins: ['extensions'], history: ['historique'], all: ['tout'] },
+  },
+
   shield: {
     question: (what, cmd) => `Cette commande ${what} :\n\n${cmd}\n\nL’exécuter ?`,
     run: 'Exécuter',

@@ -1,0 +1,54 @@
+name: Outfit idea
+description: Something new for Mochi to wear
+labels: [outfit]
+body:
+  - type: markdown
+    attributes:
+      value: Want to add it yourself? [docs/OUTFITS.md](https://github.com/oztrkemree/mochi/blob/main/docs/OUTFITS.md) walks through it.
+  - type: input
+    id: item
+    attributes:
+      label: The item
+      description: What it is, in a few words.
+      placeholder: a red beret
+    validations:
+      required: true
+  - type: dropdown
+    id: slot
+    attributes:
+      label: Where it goes
+      options:
+        - Head
+        - Face
+        - Neck
+        - In the hand
+        - Beside Mochi
+    validations:
+      required: true
+  - type: dropdown
+    id: unlock
+    attributes:
+      label: How Mochi gets it
+      options:
+        - At a level
+        - For a habit (turns, active days, a streak, commits, edits, late nights)
+        - By the date (a holiday or a season)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it fits
+      description: When should Mochi wear it, and what would it say about the work done?
+  - type: textarea
+    id: art
+    attributes:
+      label: Art or sketch
+      description: A drawing, a sketch or a picture of the idea. Final art has a transparent background and the soft clay look of the other items.
+  - type: checkboxes
+    id: license
+    attributes:
+      label: Art
+      options:
+        - label: Any art I attach is my own, or I may share it under the project's MIT license.

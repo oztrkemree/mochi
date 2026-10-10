@@ -237,6 +237,30 @@ export const pt: typeof en = {
     wardrobe: 'Guarda-roupa',
   },
 
+  data: {
+    exported: path => `Tudo o que o Mochi guarda está em um só arquivo: ${path}`,
+    exportFailed: reason => `Não foi possível gravar a exportação: ${reason}`,
+    resetHow: 'Apagar o quê? /mochi redefinir nível · histórico · tudo',
+    resetAsk: {
+      level: 'O nível é calculado a partir do histórico; isto apaga só o que o Mochi lembra dele (level.json). Apagar?',
+      history: 'Isto apaga o histórico de todas as conversas, e o nível recomeça do zero. Apagar?',
+      all: 'Isto apaga tudo o que o Mochi guarda: histórico, nível, leituras de uso e configurações (as exportações ficam). Apagar tudo?',
+    },
+    clear: 'Apagar',
+    keep: 'Manter',
+    kept: 'Nada foi apagado.',
+    cleared: {
+      level: 'Memória do nível apagada. O nível é calculado a partir do histórico: /mochi redefinir histórico o recomeça.',
+      history: 'Histórico apagado em todas as conversas; o nível recomeça do zero.',
+      all: 'Tudo o que o Mochi guardava foi apagado, e as configurações voltaram ao padrão.',
+    },
+    notCleared: files => `Não foi possível remover estes arquivos: ${files}`,
+    feedback: url => `Para relatar um bug, abra este link. O formulário leva só as versões, o sistema, a interface e o idioma:\n${url}`,
+    pluginsOn: 'Reações de outros plugins ligadas.',
+    pluginsOff: 'Reações de outros plugins desligadas.',
+    words: { export: ['exportar'], reset: ['redefinir', 'zerar'], feedback: ['relatar', 'erro'], plugins: ['extensões'], history: ['histórico'], all: ['tudo'] },
+  },
+
   shield: {
     question: (what, cmd) => `Este comando ${what}:\n\n${cmd}\n\nExecutar?`,
     run: 'Executar',

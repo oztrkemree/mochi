@@ -234,6 +234,30 @@ export const tr: typeof en = {
     wardrobe: 'Gardırop',
   },
 
+  data: {
+    exported: path => `Mochi’nin tuttuğu her şey tek dosyada: ${path}`,
+    exportFailed: reason => `Dışa aktarma dosyası yazılamadı: ${reason}`,
+    resetHow: 'Neyi sileyim? /mochi sıfırla seviye · geçmiş · hepsi',
+    resetAsk: {
+      level: 'Seviye geçmişten hesaplanır; bu yalnızca Mochi’nin seviye hafızasını (level.json) siler. Silinsin mi?',
+      history: 'Bu, bütün sohbetlerin geçmişini siler; seviye de baştan başlar. Silinsin mi?',
+      all: 'Bu, Mochi’nin tuttuğu her şeyi siler: geçmiş, seviye, kullanım ölçümleri ve ayarlar (dışa aktarılan dosyalar kalır). Silinsin mi?',
+    },
+    clear: 'Sil',
+    keep: 'Kalsın',
+    kept: 'Hiçbir şey silinmedi.',
+    cleared: {
+      level: 'Seviye hafızası silindi. Seviye geçmişten hesaplanır: baştan başlatmak için /mochi sıfırla geçmiş',
+      history: 'Bütün sohbetlerin geçmişi silindi; seviye baştan başlıyor.',
+      all: 'Mochi’nin tuttuğu her şey silindi, ayarlar varsayılana döndü.',
+    },
+    notCleared: files => `Şu dosyalar silinemedi: ${files}`,
+    feedback: url => `Hata bildirmek için bu bağlantıyı aç. Form yalnızca sürümleri, sistemi, arayüzü ve dili taşır:\n${url}`,
+    pluginsOn: 'Diğer eklentilerin tepkileri açık.',
+    pluginsOff: 'Diğer eklentilerin tepkileri kapalı.',
+    words: { export: ['aktar', 'dışaaktar'], reset: ['sıfırla'], feedback: ['geribildirim', 'hata'], plugins: ['eklentiler', 'eklenti'], history: ['geçmiş'], all: ['hepsi', 'tümü'] },
+  },
+
   shield: {
     question: (what, cmd) => `Bu komut ${what}:\n\n${cmd}\n\nÇalışsın mı?`,
     run: 'Çalıştır',

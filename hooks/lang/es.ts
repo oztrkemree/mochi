@@ -238,6 +238,30 @@ export const es: typeof en = {
     wardrobe: 'Armario',
   },
 
+  data: {
+    exported: path => `Todo lo que guarda Mochi está en un solo archivo: ${path}`,
+    exportFailed: reason => `No se pudo escribir la exportación: ${reason}`,
+    resetHow: '¿Borrar qué? /mochi restablecer nivel · historial · todo',
+    resetAsk: {
+      level: 'El nivel se calcula a partir del historial; esto solo borra lo que Mochi recuerda de él (level.json). ¿Borrarlo?',
+      history: 'Esto borra el historial de todos los chats, y el nivel vuelve a empezar. ¿Borrarlo?',
+      all: 'Esto borra todo lo que guarda Mochi: historial, nivel, lecturas de uso y ajustes (las exportaciones se quedan). ¿Borrarlo todo?',
+    },
+    clear: 'Borrar',
+    keep: 'Conservar',
+    kept: 'No se borró nada.',
+    cleared: {
+      level: 'Memoria del nivel borrada. El nivel se calcula a partir del historial: /mochi restablecer historial lo reinicia.',
+      history: 'Historial borrado en todos los chats; el nivel vuelve a empezar.',
+      all: 'Todo lo que guardaba Mochi está borrado, y sus ajustes vuelven a los valores por defecto.',
+    },
+    notCleared: files => `No se pudieron eliminar estos archivos: ${files}`,
+    feedback: url => `Para informar de un error, abre este enlace. El formulario solo lleva las versiones, el sistema, la interfaz y el idioma:\n${url}`,
+    pluginsOn: 'Reacciones de otros plugins activadas.',
+    pluginsOff: 'Reacciones de otros plugins desactivadas.',
+    words: { export: ['exportar'], reset: ['restablecer', 'reiniciar'], feedback: ['comentarios', 'error'], plugins: ['complementos'], history: ['historial'], all: ['todo'] },
+  },
+
   shield: {
     question: (what, cmd) => `Este comando ${what}:\n\n${cmd}\n\n¿Ejecutarlo?`,
     run: 'Ejecutar',

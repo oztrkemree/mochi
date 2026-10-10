@@ -161,6 +161,8 @@ export type Prefs = {
   open: { level: boolean; wardrobe: boolean }
   /** `auto` follows Claude Code's language setting and the system; otherwise a language code (en, tr, de…). */
   lang: string
+  /** Other plugins may make Mochi react, through `$.mochi`. */
+  hasPlugins: boolean
 }
 
 /** One slice of the context window, coloured as /context colours it. */
@@ -227,7 +229,38 @@ export type Panel = {
   infoAt: number
 }
 
+/** A mood another plugin may put on Mochi: none that says it waits on the person or that a command is dangerous. */
+export type MochiMood = 'wave' | 'pleased' | 'success' | 'proud' | 'party' | 'nervous' | 'error' | 'shocked'
+
+/** What another plugin asks Mochi to show (docs/API.md). */
+export type MochiReaction = {
+  mood: MochiMood
+  /** What happened, in a few plain words; cut to 60 columns, the plugin's name shown after it. */
+  line: string
+  /** How long it stays, in ms: 1000 to 15000, 5000 when left out. */
+  holdMs?: number
+}
+
+/** A celebration: the party mood and sound, with a line. */
+export type MochiCheer = { line: string }
+
+/**
+ * Whether Mochi shows it; when not, why: the person turned reactions off, the
+ * input is not one, the plugin's last reaction was under 10 s ago, or the face
+ * holds something the person should not miss.
+ */
+export type MochiAnswer = { isShown: boolean; reason?: 'off' | 'invalid' | 'often' | 'busy' }
+
+/** What Mochi adds to `$` for the plugins that list it under `dependencies`. */
+export type Mochi = {
+  react: (reaction: MochiReaction) => Promise<MochiAnswer>
+  celebrate: (cheer: MochiCheer) => Promise<MochiAnswer>
+}
+
 declare module 'claude-code' {
+  interface EngineInterface {
+    mochi: Mochi
+  }
   interface PluginState {
     mochi: {
       face: Face

@@ -1,0 +1,10 @@
+{
+  "name": "mochi-deploy-cheer",
+  "version": "0.1.0",
+  "description": "Mochi cheers when a deploy command finishes, and frets when one fails",
+  "author": {
+    "name": "Emre Öztürk"
+  },
+  "license": "MIT",
+  "dependencies": ["mochi"]
+}
