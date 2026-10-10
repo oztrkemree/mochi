@@ -100,8 +100,8 @@ export const chat = {
   lastStatus: undefined as string | undefined,
   autoLang: null as Lang | null,
   lastEnv: null as Env | null,
-  /** Whether this chat's days file was written: its going away then means a history reset in some chat. */
-  isDaysSaved: false,
+  /** The days files this chat counted, by name: one gone means a history reset in some chat. */
+  counted: [] as string[],
   /** When each other plugin last made Mochi react, by its name. */
   reactedAt: {} as Record<string, number>,
 }

@@ -400,11 +400,18 @@ async function refreshHistory($: Dollar) {
   if (chat.dataDir === '') return
   chat.historyAt = await $.clock.now()
   const dir = `${chat.dataDir}/days`
+  const list = await $.fs.list(dir).catch(() => null)
+  const names = (list ?? []).map(f => f.name).filter(n => n.endsWith('.json'))
+  if (list !== null) {
+    // This chat's file counted before and gone now: a history reset in some chat took its days too.
+    const own = `${chat.sessionId}.json`
+    if (chat.counted.includes(own) && !names.includes(own)) chat.myDays = {}
+    chat.counted = names
+  }
   const others: Record<string, DayRec>[] = []
-  for (const entry of await $.fs.list(dir).catch(() => [])) {
-    if (!entry.name.endsWith('.json')) continue
+  for (const name of names) {
     try {
-      const file = JSON.parse(await $.fs.read(`${dir}/${entry.name}`)) as { id?: unknown; days?: unknown }
+      const file = JSON.parse(await $.fs.read(`${dir}/${name}`)) as { id?: unknown; days?: unknown }
       if (typeof file.id !== 'string' || file.id === chat.sessionId || typeof file.days !== 'object' || file.days === null) continue
       others.push(file.days as Record<string, DayRec>)
     } catch {
@@ -426,7 +433,10 @@ async function recount($: Dollar) {
 
 async function saveDays($: Dollar) {
   if (chat.dataDir === '' || chat.sessionId === '') return
-  await $.fs.write(`${chat.dataDir}/days/${chat.sessionId}.json`, `${JSON.stringify({ id: chat.sessionId, label: chat.label, days: chat.myDays })}\n`).then(() => { chat.isDaysSaved = true }, () => undefined)
+  await forgetIfReset($)
+  const name = `${chat.sessionId}.json`
+  await $.fs.write(`${chat.dataDir}/days/${name}`, `${JSON.stringify({ id: chat.sessionId, label: chat.label, days: chat.myDays })}\n`)
+    .then(() => { if (!chat.counted.includes(name)) chat.counted = [...chat.counted, name] }, () => undefined)
 }
 
 async function addToday($: Dollar, rec: Partial<DayRec>) {
@@ -537,10 +547,11 @@ async function startShared($: Dollar) {
   if (chat.isLabelFromPrompt) void firstPromptLabel($).catch(() => undefined)
   if (chat.dataDir === '' || chat.sessionId === '') return
   chat.myDays = {}
+  chat.counted = []
   try {
     const file = JSON.parse(await $.fs.read(`${chat.dataDir}/days/${chat.sessionId}.json`)) as { days?: Record<string, DayRec> }
     if (file.days) chat.myDays = file.days
-    chat.isDaysSaved = true
+    chat.counted = [`${chat.sessionId}.json`]
   } catch {
     // A new chat has no file yet.
   }
@@ -845,11 +856,11 @@ async function togglePlugins($: Dollar): Promise<string> {
   return next.hasPlugins ? t().data.pluginsOn : t().data.pluginsOff
 }
 
-/** A history reset in any chat took this chat's file too: what this chat remembered goes with it. */
+/** A days file this chat counted is gone, so a history reset in some chat: every chat's days are read again before this one counts or writes its own. */
 async function forgetIfReset($: Dollar) {
-  if (!chat.isDaysSaved || (await $.fs.exists(`${chat.dataDir}/days/${chat.sessionId}.json`).catch(() => true))) return
-  chat.myDays = {}
-  chat.isDaysSaved = false
+  if (chat.counted.length === 0) return
+  const list = await $.fs.list(`${chat.dataDir}/days`).catch(() => null)
+  if (list !== null && chat.counted.some(n => !list.some(f => f.name === n))) await refreshHistory($)
 }
 
 /** Mochi's version, from its manifest; '' when it cannot be read. */
@@ -926,9 +937,7 @@ async function reset($: Dollar, arg: string): Promise<string> {
   }
   if (scope !== 'level') {
     chat.myDays = {}
-    chat.otherDays = []
-    chat.isDaysSaved = false
-    await recount($)
+    await refreshHistory($)
   }
   return left.length > 0 ? t().data.notCleared(left.join(', ')) : t().data.cleared[scope]
 }

@@ -12,12 +12,16 @@ const isExport = (dir: string, name: string) => dir === '' && name.startsWith('e
 /** Whether an export takes this file: every JSON file Mochi keeps but the other chats' presence and earlier exports. */
 export const isExported = (dir: string, name: string): boolean => name.endsWith('.json') && dir !== 'live' && !isExport(dir, name)
 
-/** Whether a reset of `scope` removes this file. Exports stay: they are the person's own copies. */
+/**
+ * Whether a reset of `scope` removes this file. The level's memory goes with
+ * the history it was counted from, so the levels earned again are celebrated
+ * again. Exports stay: they are the person's own copies.
+ */
 export function isCleared(scope: Scope, dir: string, name: string): boolean {
   if (!name.endsWith('.json') || isExport(dir, name)) return false
-  if (scope === 'level') return dir === '' && name === 'level.json'
+  if (dir === '' && name === 'level.json') return true
   if (scope === 'history') return dir === 'days'
-  return true
+  return scope === 'all'
 }
 
 /** One file of everything Mochi keeps: its store, and each file by its path, as JSON where it parses. */

@@ -12,7 +12,7 @@ export const API_MOODS: readonly MochiMood[] = ['wave', 'pleased', 'success', 'p
 export const API_GAP_MS = 10_000
 
 /** Control characters and the marks that turn text around. */
-const UNSEEN = /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g
+const UNSEEN = /[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/g
 
 /** A reaction as asked, made safe: a known mood, one plain line cut to 60 columns, a hold of 1 to 15 seconds; null when it is none. */
 export function reactionOf(input: unknown): Required<MochiReaction> | null {

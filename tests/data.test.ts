@@ -114,8 +114,9 @@ test('another plugin’s reaction is checked, cut, signed and spaced out', async
   for (const mood of API_MOODS) expect(reactionOf({ mood, line: 'x' })?.mood).toBe(mood)
   for (const bad of [null, 'wave', [], { mood: 'wave' }, { mood: 'wave', line: 7 }, { mood: 'wave', line: ' \n\t ' }]) expect(reactionOf(bad)).toBe(null)
   // One plain line: no control characters, no direction marks, at most 60 columns.
-  const r = reactionOf({ mood: 'success', line: `built\n\u001b[31m ok\u202e${'x'.repeat(100)}`, holdMs: 99_999 })
+  const r = reactionOf({ mood: 'success', line: `built\n\u001b[31m ok\u202e\u061c${'x'.repeat(100)}`, holdMs: 99_999 })
   expect(r?.line.startsWith('built [31m ok ')).toBe(true)
+  expect(/[؜‮]/.test(r?.line ?? '')).toBe(false)
   expect(cols(r?.line ?? '')).toBe(60)
   expect(r?.holdMs).toBe(15_000)
   expect(reactionOf({ mood: 'wave', line: 'x', holdMs: -5 })?.holdMs).toBe(1000)
@@ -160,7 +161,7 @@ test('a plugin that depends on Mochi makes it react, now and then, and the perso
 
 test('an export takes every file Mochi keeps; each reset clears its own and keeps the exports', async () => {
   const take = (dir: string, name: string) => [isExported(dir, name), isCleared('level', dir, name), isCleared('history', dir, name), isCleared('all', dir, name)]
-  expect(take('', 'level.json')).toEqual([true, true, false, true])
+  expect(take('', 'level.json')).toEqual([true, true, true, true])
   expect(take('days', 'abc-1.json')).toEqual([true, false, true, true])
   expect(take('', 'usage.json')).toEqual([true, false, false, true])
   expect(take('live', 'abc-2.json')).toEqual([false, false, false, true])
@@ -211,6 +212,9 @@ test('/mochi export writes one file beside the rest; reset asks first, then clea
   expect(last?.argv.slice(3).toSorted()).toEqual(['chat-1.json', 'other-chat.json'])
   expect(files[`${DIR}/days/other-chat.json`]).toBeUndefined()
   expect(files[`${DIR}/usage.json`]).toBeDefined()
+  // The level's memory starts over with the history, so the levels earned again are celebrated again.
+  expect(await say($, 'mochi', 'level')).toContain('Level 1 ·')
+  expect((JSON.parse(files[`${DIR}/level.json`] ?? '{}') as { level?: number }).level).toBe(1)
 
   expect(await say($, 'mochi', 'reset all')).toBe('Everything Mochi kept is cleared, and its settings are back to their defaults.')
   // Nothing outside Mochi's folder, and no export, is touched.
@@ -223,17 +227,32 @@ test('/mochi export writes one file beside the rest; reset asks first, then clea
   expect(store).toEqual({})
 })
 
-test('a history cleared in another chat is not written back by this one', async ($, on) => {
+test('a history cleared in another chat is neither counted nor written back by this one', async ($, on) => {
   const day = { turns: 4, tools: 9, edits: 2, errors: 0, commits: 1, cost: 0.5, secs: 300, night: 0 }
-  const { clock, files } = machine(on, { [`${DIR}/days/chat-1.json`]: JSON.stringify({ id: 'chat-1', label: 'web', days: { '2026-06-30': day } }) })
+  const { clock, files } = machine(on, {
+    [`${DIR}/days/chat-1.json`]: JSON.stringify({ id: 'chat-1', label: 'web', days: { '2026-06-30': day } }),
+    [`${DIR}/days/other-chat.json`]: JSON.stringify({ id: 'other-chat', label: 'api', days: { '2026-06-29': { ...day, turns: 100 } } }),
+  })
   on('turn.complete', () => ({ text: '' }))
+  on('session.end', () => ({ sessionId: 'chat-1' }) as never)
   await clock.set(NOON)
   await $.session.start(START)
+  expect(await say($, 'mochi', 'level')).toContain('Level 4 ·')
+  // Another chat clears the history: every chat's days go, and its level's memory starts over.
   delete files[`${DIR}/days/chat-1.json`]
+  delete files[`${DIR}/days/other-chat.json`]
+  files[`${DIR}/level.json`] = '{"level":1,"items":[]}'
   await $.turn.complete({ reason: 'answer', answer: '', durationMs: 1000, isAborted: false, turnId: 't1' } as never)
   const kept = JSON.parse(files[`${DIR}/days/chat-1.json`] ?? '{}') as { days: Record<string, { turns: number }> }
   expect(Object.keys(kept.days)).toEqual(['2026-07-01'])
   expect(kept.days['2026-07-01']?.turns).toBe(1)
+  // The other chat's old days are not counted either, so no old level is celebrated as new.
+  expect(await say($, 'mochi', 'level')).toContain('Level 1 ·')
+  expect((JSON.parse(files[`${DIR}/level.json`] ?? '{}') as { level?: number }).level).toBe(1)
+  // Cleared again, the chat's last save on its way out writes nothing back.
+  delete files[`${DIR}/days/chat-1.json`]
+  await $.session.end({ reason: 'exit', sessionId: 'chat-1' } as never)
+  expect((JSON.parse(files[`${DIR}/days/chat-1.json`] ?? '{}') as { days?: object }).days).toEqual({})
 })
 
 test('the feedback link carries versions, system, surface and language alone', async ($, on) => {
