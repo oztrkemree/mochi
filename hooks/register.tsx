@@ -14,13 +14,15 @@ import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor
 import type { TipId } from './coach'
 import { detailHeight, detailSvg } from './detail'
 import { addSample, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
-import { NEW_WATCH, danger, dangerKey, isShell, watchCall } from './guard'
+import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
+import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
 import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, wearable, xpOf } from './level'
 import { peerLabel, peerNews, peerOf } from './live'
 import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
+import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdds, parseRules, repoKey, shellSecrets, shieldLines, weigh } from './shield'
 import { paramsAt } from './rig'
 import { SNAP_W, bestOutfit, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
 import type { ChatDays } from './share'
@@ -694,24 +696,31 @@ async function wake($: Dollar): Promise<boolean> {
 // ---------- the shield ----------
 
 /**
- * A command that cannot be undone (`what` it would do) waits for the person's
- * word: what to tell the model when they stop it; null when it may run.
+ * A command that cannot be undone, or an edit that adds a secret (`cmd` ''),
+ * waits for the person's word: run, stop, or always allow its kinds here.
+ * What to tell the model when they stop it; null when it may run.
  */
-async function shield($: Dollar, args: Record<string, unknown> & { tool: string }, cmd: string, what: string, startedAt: number): Promise<{ deny: string } | null> {
-  if (!(await read($, prefs)).hasShield || (await $.session.surfaces()).length === 0) return null
+async function shield($: Dollar, args: Record<string, unknown> & { tool: string }, cmd: string, v: Verdict, startedAt: number): Promise<{ deny: string } | null> {
+  const first = v.ask[0]
+  if (first === undefined || (await $.session.surfaces()).length === 0) return null
+  const what = say(first)
   const line = `${t().st.awaitingApproval} · ${what}`
   await show($, { mood: 'scared', line, holdMs: 0, sound: 'alarm' })
   if (chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
   const shown = cmd.length > 300 ? `${cmd.slice(0, 299)}…` : cmd
   const d = t().shield
+  const go = cmd === '' ? d.write : d.run
+  // The question names every kind found, since "always allow here" remembers them all.
+  const all = v.ask.map(x => say(x)).join(' · ')
+  const question = cmd === '' ? d.editQuestion(all, subject(args)) : d.question(all, shown)
   chat.isAsking = true
-  const answer = await $.ui.ask(d.question(what, shown), { header: 'Mochi', options: [d.run, d.stop] }).catch(() => d.stop)
+  const answer = await $.ui.ask(question, { header: 'Mochi', options: v.root === '' ? [go, d.stop] : [go, d.stop, d.always] }).catch(() => d.stop)
   chat.isAsking = false
-  if (answer !== d.run) {
+  if (answer === d.always) await allowHere($, v.root, v.ask.map(x => x.key))
+  else if (answer !== go) {
     await show($, { mood: 'denied', line: `${t().st.halted} · ${what}`, holdMs: 5000 })
-    const key = dangerKey(cmd)
     // Said to the model, so always in English.
-    return { deny: `The user stopped this command at Mochi's prompt (it ${key ? DICTS.en.danger[key] : 'cannot be undone'}). Do not retry it; ask the user how to proceed if it is needed.` }
+    return { deny: `The user stopped this ${cmd === '' ? 'edit' : 'command'} at Mochi's prompt (it ${say(first, DICTS.en)}). Do not retry it; ask the user how to proceed if it is needed.` }
   }
   await show($, { mood: 'nervous', line: `${t().st.approved} · ${subject(args)}`, holdMs: 0 }, startedAt)
   return null
@@ -738,7 +747,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'small', english: ['small', 'compact'], run: () => resize($, true) },
     { name: 'big', english: ['big', 'full'], run: () => resize($, false) },
     { name: 'details', english: ['details', 'detail'], run: () => details($) },
-    { name: 'shield', english: ['shield'], run: () => toggleShield($) },
+    { name: 'shield', english: ['shield'], run: arg => toggleShield($, arg) },
     { name: 'alerts', english: ['alerts', 'alert', 'notifications'], run: () => toggleAlerts($) },
     { name: 'ci', english: ['ci'], run: () => toggleCi($) },
     { name: 'lang', english: ['lang', 'language'], run: arg => language($, arg) },
@@ -771,9 +780,15 @@ async function details($: Dollar): Promise<string> {
   return t().cmd.detailOpened
 }
 
-async function toggleShield($: Dollar): Promise<string> {
+/** Turns the shield on or off and says what is always allowed where; `reset` forgets all of that instead. */
+async function toggleShield($: Dollar, arg: string): Promise<string> {
+  if (arg === 'reset' || arg === plain(t().guard.reset)) {
+    await $.store.set('allowed', {})
+    return t().guard.forgot
+  }
   const next = await setPrefs($, v => ({ ...v, hasShield: !v.hasShield }))
-  return next.hasShield ? t().cmd.shieldOn : t().cmd.shieldOff
+  await loadRules($).catch(() => undefined)
+  return [next.hasShield ? t().cmd.shieldOn : t().cmd.shieldOff, ...shieldLines(allowedOf(await $.store.get('allowed')))].join('\n')
 }
 
 async function toggleAlerts($: Dollar): Promise<string> {
@@ -1388,6 +1403,91 @@ async function feedback($: Dollar): Promise<string> {
   return t().data.feedback(feedbackUrl({ mochi: await mochiVersion($), claude, platform: chat.platform, surface: surfaces[0] ?? '', lang: t().name }))
 }
 
+// ---------- shield ----------
+
+/** What the shield asks about in a call; `face` shows what it lets by (low risk, or always allowed here); `root` is where "always" holds. */
+type Verdict = { ask: Danger[]; face: Reaction | null; root: string }
+
+/** Runs git in the session's folder: what it prints, '' when it fails. */
+async function git($: Dollar, args: string[]): Promise<string> {
+  const ran = await $.process.run(['git', ...args], { timeoutMs: 5000 }).catch(() => undefined)
+  return ran?.exitCode === 0 ? ran.stdout : ''
+}
+
+/** Reads the person's own rules (~/.claude/mochi/shield.json) at start and whenever the file changes; what cannot be used is said once. */
+async function loadRules($: Dollar) {
+  if (chat.dataDir === '') return
+  const path = `${chat.dataDir}/shield.json`
+  const at = (await $.fs.stat(path).catch(() => undefined))?.mtimeMs ?? 0
+  if (at === chat.rulesAt) return
+  chat.rulesAt = at
+  const rules = parseRules(at === 0 ? '' : await $.fs.read(path).catch(() => ''))
+  setRules(rules)
+  if (rules.bad.length > 0) $.ui.toast(`Mochi: ${t().guard.badRules(rules.bad.join(', '))}`, { timeoutMs: 8000 })
+}
+
+/** Where "always allow here" holds: the repository's top folder, else the session's. */
+async function repoRoot($: Dollar): Promise<string> {
+  const top = (await git($, ['rev-parse', '--show-toplevel'])).trim()
+  return repoKey(top !== '' ? top : await $.session.root().catch(() => ''))
+}
+
+/** Remembers these kinds as always allowed in the repository at `root`. */
+async function allowHere($: Dollar, root: string, keys: string[]) {
+  await $.store.set('allowed', allow(allowedOf(await $.store.get('allowed')), root, keys))
+}
+
+/** What a command's `git add` or `git commit` would put into git that looks secret. */
+async function gitSecrets($: Dollar, cmd: string): Promise<Danger[]> {
+  const specs = gitAdds(cmd)
+  const scan = commitScan(cmd)
+  if (specs === null && scan === null) return []
+  const fresh = specs === null ? [] : (await git($, ['ls-files', '-z', '--others', '--exclude-standard'])).split('\0').filter(f => f !== '')
+  const taken = addedFiles(specs ?? [], fresh)
+  const files = scan === null ? [] : diffAdds(await git($, ['diff', scan === 'all' ? 'HEAD' : '--cached', '--unified=0', '--no-color', '--no-ext-diff', '--no-textconv']))
+  // New files added and committed at once are in no diff yet: their text, for the first twenty under a megabyte.
+  if (scan === 'all') {
+    for (const path of fresh.filter(f => taken.includes(f)).slice(0, 20)) {
+      if (((await $.fs.stat(path).catch(() => undefined))?.size ?? Infinity) > 1_000_000) continue
+      const text = await $.fs.read(path).catch(() => null)
+      if (text !== null) files.push({ path, added: text })
+    }
+  }
+  return shellSecrets(taken, files)
+}
+
+/**
+ * Weighs a call before it runs: commands that cannot be undone (a force push
+ * by the branch it rewrites), secrets about to be written or put into git,
+ * less what is always allowed here. Null while the shield is off or when
+ * nothing is found.
+ */
+async function judge($: Dollar, args: Record<string, unknown> & { tool: string }, cmd: string): Promise<Verdict | null> {
+  const path = /^(Write|Edit|MultiEdit)$/.test(args.tool) && typeof args.file_path === 'string' ? args.file_path : ''
+  if ((cmd === '' && path === '') || !(await read($, prefs)).hasShield) return null
+  await loadRules($)
+  let found: Danger[]
+  let isCalm = false
+  if (cmd === '') {
+    found = editSecrets(args, args.tool === 'Write' ? await $.fs.read(path).catch(() => null) : '')
+  } else {
+    found = dangers(cmd)
+    if (found.some(x => x.key === 'forcePush')) {
+      const head = (await git($, ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'])).trim().replace(/^origin\//, '')
+      const weighed = weigh(found, cmd, (await git($, ['rev-parse', '--abbrev-ref', 'HEAD'])).trim(), head)
+      isCalm = !weighed.some(x => x.key.startsWith('forcePush'))
+      found = weighed
+    }
+    found = [...found, ...(await gitSecrets($, cmd))]
+  }
+  const careful = (words: string): Reaction => ({ mood: 'nervous', line: `${words} · ${subject(args)}`, holdMs: 0 })
+  if (found.length === 0) return isCalm ? { ask: [], face: careful(t().st.careful), root: '' } : null
+  const root = await repoRoot($)
+  const allowed = allowedOf(await $.store.get('allowed'))[root] ?? []
+  const ask = found.filter(x => !allowed.includes(x.key))
+  return { ask, face: ask.length === 0 ? careful(t().guard.allowed) : null, root }
+}
+
 export const register: Register = on => {
   // `$.mochi` for the plugins that depend on Mochi (docs/API.md): the hooks
   // below answer each call; the noun's own methods answer only if they fail.
@@ -1412,6 +1512,7 @@ export const register: Register = on => {
     chat.lastActivity = await $.clock.now()
     await startShared($).catch(() => undefined)
     void findWhere($).catch(() => undefined)
+    await loadRules($).catch(() => undefined)
     await measure($)
     chat.lastNudge = await $.clock.now()
     void refreshGit($).catch(() => undefined)
@@ -1479,19 +1580,19 @@ export const register: Register = on => {
     chat.lastActivity = startedAt
     if (e.tool === 'ExitPlanMode') chat.coach.hasPlanned = true
 
-    // The shield: a command that cannot be undone waits for the person's word.
+    // The shield: a command that cannot be undone, or a secret on its way out, waits for the person's word.
     const cmd = isShell(e.tool) && typeof args.command === 'string' ? args.command : ''
-    const what = cmd === '' ? null : danger(cmd)
-    const stop = what === null ? null : await shield($, args, cmd, what, startedAt)
+    const verdict = await judge($, args, cmd)
+    const stop = verdict === null ? null : await shield($, args, cmd, verdict, startedAt)
     if (stop !== null) return stop
 
     let token = -1
     if (isSub) {
       const f = await read($, face)
       if (f.mood === 'agent') await update($, face, v => ({ ...v, line: `${t().st.agent} · ${beforeTool(args).line}` }))
-    } else if (what === null || !(await read($, prefs)).hasShield) {
+    } else if (verdict === null || verdict.ask.length === 0) {
       chat.stream = null
-      token = await show($, beforeTool(args), waitsOnPerson(e.tool) ? 0 : startedAt)
+      token = await show($, verdict?.face ?? beforeTool(args), waitsOnPerson(e.tool) ? 0 : startedAt)
       if (waitsOnPerson(e.tool) && chat.isBusy && startedAt - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, beforeTool(args).line)
     }
     if (isAgent) await setEnv($, v => ({ ...v, agents: v.agents + 1 }))

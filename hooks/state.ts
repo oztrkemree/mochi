@@ -140,4 +140,6 @@ export const chat = {
   counted: [] as string[],
   /** When each other plugin last made Mochi react, by its name. */
   reactedAt: {} as Record<string, number>,
+  /** When the person's shield.json was last changed, as last read (0: there is none; -1: not read yet). */
+  rulesAt: -1,
 }
