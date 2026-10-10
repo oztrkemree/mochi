@@ -26,7 +26,7 @@ import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
 import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdds, isMild, leavesRepo, parseRules, repoKey, shellSecrets, shieldLines, weigh } from './shield'
 import { paramsAt } from './rig'
-import { SNAP_W, bestOutfit, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
+import { SNAP_W, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
 import type { ChatDays } from './share'
 import { clip } from './sound'
 import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
@@ -1340,10 +1340,12 @@ async function card($: Dollar, raw: string): Promise<string> {
 
 /** The month (or the year) wrapped up from every chat's days. */
 async function wrapped($: Dollar, arg: string): Promise<string> {
+  const now = await $.clock.now()
   const v = await read($, env)
-  const w = wrappedOf(await readChats($), names(arg, 'year', 'year') ? 'year' : 'month', dayKey(await $.clock.now(), v.tz))
+  const w = wrappedOf(await readChats($), names(arg, 'year', 'year') ? 'year' : 'month', dayKey(now, v.tz))
+  const worn = outfitNow(await read($, prefs), v, w.activeDays > 0 ? 'party' : 'sleeping', now)
   try {
-    return t().share.wrappedSaved(periodTitle(w.key), await saveShare($, `mochi-wrapped-${w.key}.svg`, wrappedSvg(w, bestOutfit(unlocked(v.history)))))
+    return t().share.wrappedSaved(periodTitle(w.key), await saveShare($, `mochi-wrapped-${w.key}.svg`, wrappedSvg(w, worn)))
   } catch (e) {
     return failed(e)
   }

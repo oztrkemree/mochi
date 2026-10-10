@@ -199,7 +199,7 @@ function strip(w: Wrapped, y: number): { svg: string; height: number } {
   return { svg, height: Math.round(7 * step + 14) }
 }
 
-/** A month or a year wrapped up, to share: Mochi in the best it has earned, the work in figures, every day as a cell. */
+/** A month or a year wrapped up, to share: Mochi in what it wears now, the work in figures, every day as a cell. */
 export function wrappedSvg(w: Wrapped, outfit: Outfit): string {
   const d = t().share
   const x = 176
