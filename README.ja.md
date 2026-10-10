@@ -11,7 +11,7 @@
 [![ライセンス: MIT](https://img.shields.io/badge/ライセンス-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Claude Codeプラグイン](https://img.shields.io/badge/Claude_Code-プラグイン-D97757?style=flat-square)](#-インストール)
 [![16言語](https://img.shields.io/badge/対応言語-16-7AA2F7?style=flat-square)](#-対応言語)
-[![46個のアクセサリー](https://img.shields.io/badge/着せ替え-46個-B794F6?style=flat-square)](#-使うほど増える着せ替え)
+[![134個のアクセサリー](https://img.shields.io/badge/着せ替え-134個-B684F6?style=flat-square)](#-使うほど増える着せ替え)
 [![PR歓迎](https://img.shields.io/badge/PR-歓迎-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · **日本語** · [한국어](README.ko.md)
@@ -156,7 +156,7 @@ Mochiが手すきのとき、たまに、いま起きたことに合わせてCla
 
 ## 👒 使うほど増える着せ替え
 
-ターン、編集、コミット、そして作業した日のひとつひとつが経験値になります。レベルが上がるごとに着られるものが増え、頭、顔、首、手、そしてMochiの足元に、全部で**46アイテム**。日付に合わせてやって来るもの（10月末には魔女の帽子、旧正月には紅包、ディワリにはディヤ、誕生日にはパーティー帽とケーキ）や、時間帯に合わせてやって来るもの（朝はコーヒー、深夜0時を過ぎたらナイトキャップ）もあります。
+ターン、編集、コミット、そして作業した日のひとつひとつが経験値になります。レベルが上がるごとに着られるものが増え、頭、顔、首、手、そしてMochiの足元に、全部で**134アイテム**。日付に合わせてやって来るもの（10月末には魔女の帽子、旧正月には紅包、ディワリにはディヤ、誕生日にはパーティー帽とケーキ）や、時間帯に合わせてやって来るもの（朝はコーヒー、深夜0時を過ぎたらナイトキャップ）もあります。
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="いろいろな着せ替えをした12体のMochi。ニット帽にコーヒー、口ひげのカウボーイ、魔法使い、パーティー帽、モノクルとねこを連れた王冠、マフラーとナイトキャップ、ほかにもたくさん">

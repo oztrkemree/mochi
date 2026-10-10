@@ -11,7 +11,7 @@
 [![라이선스: MIT](https://img.shields.io/badge/라이선스-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Claude Code 플러그인](https://img.shields.io/badge/Claude_Code-플러그인-D97757?style=flat-square)](#-설치)
 [![16개 언어](https://img.shields.io/badge/언어-16개-7AA2F7?style=flat-square)](#-언어)
-[![아이템 46개](https://img.shields.io/badge/옷장-아이템_46개-B794F6?style=flat-square)](#-함께-자라는-옷장)
+[![아이템 134개](https://img.shields.io/badge/옷장-아이템_134개-B684F6?style=flat-square)](#-함께-자라는-옷장)
 [![PR 환영](https://img.shields.io/badge/PR-환영-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · **한국어**
@@ -156,7 +156,7 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
 
 ## 👒 함께 자라는 옷장
 
-턴 하나, 수정 하나, 커밋 하나, 그리고 작업한 하루하루가 모두 경험치가 돼요. 레벨이 오르면 입을 거리가 해제돼요: 머리, 얼굴, 목, 손, 그리고 Mochi 옆자리까지 **아이템 46개**. 날짜 따라 찾아오는 아이템도 있고(10월 말엔 마녀 모자, 설날엔 세뱃돈 봉투, 디왈리엔 디야 등잔, 생일엔 파티 모자와 케이크), 시간 따라 찾아오는 아이템도 있어요(아침엔 커피, 자정이 넘으면 수면 모자).
+턴 하나, 수정 하나, 커밋 하나, 그리고 작업한 하루하루가 모두 경험치가 돼요. 레벨이 오르면 입을 거리가 해제돼요: 머리, 얼굴, 목, 손, 그리고 Mochi 옆자리까지 **아이템 134개**. 날짜 따라 찾아오는 아이템도 있고(10월 말엔 마녀 모자, 설날엔 세뱃돈 봉투, 디왈리엔 디야 등잔, 생일엔 파티 모자와 케이크), 시간 따라 찾아오는 아이템도 있어요(아침엔 커피, 자정이 넘으면 수면 모자).
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="저마다 다른 옷을 입은 Mochi 열두 명: 커피를 든 비니, 콧수염 난 카우보이, 마법사, 파티 모자, 모노클과 고양이를 곁들인 왕관, 목도리를 두른 수면 모자 등">

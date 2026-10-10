@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- The details pane, rebuilt in four tabs. **Now**: the context and the 5-hour and weekly limits as thin bars with when each resets (or fills at this pace), the session in one line, then chats, changes and the context as rows that fold; the tab counts the chats waiting for you. **History**: activity, level and badges. **Mochi**: the wardrobe. **Settings**: every setting and action. A click anywhere on a row folds it; the tab and what is open are kept.
+- Everything `/mochi` does is in the pane now. Switches turn the shield, alerts, sound, CI, tips, breaks and plugin reactions on and off (the whole row is clickable); the size, the language and your birthday are set there, and Mochi hidden. The card, a wrapped and a snapshot, the tour, what is new, a bug report, export and reset (still asking first) are buttons, and what an action answers stays in the pane with a Copy button.
+- Arrange each tab your way: ⠿ turns it into a list where you drag a part to another place and click to hide it; with the focus, ↑↓ pick, shift+↑↓ move and space hides. **Default order** puts it back. Where nothing can be dragged (the terminal, VS Code), ↑ and ↓ buttons do the same.
+
+- Twenty things to hold: whisk, rolling pin, ice cream cone, cupcake, pinwheel, joystick, bubble wand, ping-pong paddle, sunflower, toadstool, potted cactus, four-leaf clover, star wand, potion bottle, scroll, star key, pocket compass, red flag, harmonica and tambourine. Six come from habits (a 14-day streak, 100 commits, 500 turns, 60 active days, 1000 edits, 50 night turns); the other fourteen from levels 40 to 46.
+- Twenty more to stand beside Mochi: red mushroom, frog, toy robot, ramen bowl, snail, campfire, bonsai, penguin, lava lamp, taco, camping tent, hedgehog, watering can, macarons, arcade machine, snowman, toy rocket, watermelon slice, treasure chest and axolotl. Two a level, from levels 47 to 56.
+- Ultracode: Mochi answers a workflow. The `Workflow` call and the word `ultracode` in a prompt show the agent face; while a workflow's agents run, the band counts them (`ultracode · 3/9 · 4 agents`) with helpers beside Mochi, and when the last one has ended there is a party with how many agents it took and for how long. A finished workflow's notification no longer reads as frustration.
+
 ## 0.3.1
 
 - The wardrobe shows one category at a time, picked from a row of buttons with how many items are unlocked, instead of every category at once. Cells are wider and a locked item shows its name with the hint to open it.

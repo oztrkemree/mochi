@@ -11,7 +11,7 @@ und behält die Zahlen, nach denen du ständig schaust, für dich im Blick.
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Claude-Code-Plugin](https://img.shields.io/badge/Claude_Code-Plugin-D97757?style=flat-square)](#-installation)
 [![16 Sprachen](https://img.shields.io/badge/Sprachen-16-7AA2F7?style=flat-square)](#-sprachen)
-[![46 Accessoires](https://img.shields.io/badge/Kleiderschrank-46_Teile-B794F6?style=flat-square)](#-ein-kleiderschrank-der-mit-dir-wächst)
+[![134 Accessoires](https://img.shields.io/badge/Kleiderschrank-134_Teile-B684F6?style=flat-square)](#-ein-kleiderschrank-der-mit-dir-wächst)
 [![PRs willkommen](https://img.shields.io/badge/PRs-willkommen-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · **Deutsch** · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -156,7 +156,7 @@ Weiter unten: der Kontext nach Kategorien, deine letzten Runden, ein Kalender mi
 
 ## 👒 Ein Kleiderschrank, der mit dir wächst
 
-Jede Runde, jede Bearbeitung, jeder Commit und jeder Arbeitstag bringt Erfahrung. Mit jedem Level schaltest du etwas zum Anziehen frei: **46 Teile** für Kopf, Gesicht, Hals, Hand und den Platz neben Mochi. Manche kommen mit dem Tag (ein Hexenhut Ende Oktober, ein roter Umschlag zum Mondneujahr, eine Diya-Lampe zu Diwali, ein Partyhut und ein Kuchen an deinem Geburtstag), manche mit der Uhrzeit (Kaffee am Morgen, eine Schlafmütze nach Mitternacht).
+Jede Runde, jede Bearbeitung, jeder Commit und jeder Arbeitstag bringt Erfahrung. Mit jedem Level schaltest du etwas zum Anziehen frei: **134 Teile** für Kopf, Gesicht, Hals, Hand und den Platz neben Mochi. Manche kommen mit dem Tag (ein Hexenhut Ende Oktober, ein roter Umschlag zum Mondneujahr, eine Diya-Lampe zu Diwali, ein Partyhut und ein Kuchen an deinem Geburtstag), manche mit der Uhrzeit (Kaffee am Morgen, eine Schlafmütze nach Mitternacht).
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Zwölf Mochis in verschiedenen Outfits: Strickmütze mit Kaffee, Cowboy mit Schnurrbart, Zauberer, Partyhut, Krone mit Monokel und Katze, Schlafmütze mit Schal und mehr">

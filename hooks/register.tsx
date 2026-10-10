@@ -1,14 +1,14 @@
 import { atom, read, update } from 'claude-code'
-import type { EngineInterface, Register } from 'claude-code'
+import type { EngineInterface, Register, RenderSurface } from 'claude-code'
 
-import type { Badge, Ci, DayRec, Env, Face, Info, Item, Limit, MochiAnswer, MochiReaction, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
+import type { Badge, Block, Ci, DayRec, Env, Face, Info, Item, Limit, MochiAnswer, MochiReaction, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
 import { cheerOf, isKept, mayReact, reactionOf, signed } from './api'
 import { BADGES, TEAM_AT, badgeHint, badgeName, badgesOf, commandBadges, isEarly, langBit, provenBy, turnBadges } from './badges'
 import { PR_FIELDS, RUN_FIELDS, ciLine, ciOf, ghTrouble, isPushing, prOf } from './ci'
 import { exportOf, feedbackUrl, isCleared, isExported } from './data'
 import type { Scope } from './data'
 import { kaomoji, moodLabel } from './looks'
-import { afterTool, beforeTool, duration, isCommit, isTest, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
+import { afterTool, beforeTool, duration, flowEnd, flowLine, isCommit, isTest, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
 import { boardLines, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from './chats'
 import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
@@ -29,7 +29,7 @@ import { paramsAt } from './rig'
 import { SNAP_W, bestOutfit, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
 import type { ChatDays } from './share'
 import { clip } from './sound'
-import { ALL_ITEMS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, chat, rest0, restorePrefs } from './state'
+import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
 import { alertCommand, langCodes, langCommand, pngCommands, removeCommand } from './system'
 import type { Platform } from './system'
 
@@ -50,6 +50,7 @@ const frame = atom({ plugin: 'mochi', key: 'frame' } as const, 0)
 const sec = atom({ plugin: 'mochi', key: 'sec' } as const, 0)
 const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
 const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
+const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
 
 const TICK_MS = 450
 /** While Mochi dozes or is hidden, the timer does its rounds on one beat in this many, about every 2 seconds. */
@@ -102,10 +103,66 @@ async function toggleItem($: Dollar, item: Item) {
   const v = await read($, env)
   const p = await read($, prefs)
   if (!wearable(v.history, now, v.tz, p).includes(item)) return
-  const worn = outfitNow(p, v, (await read($, face)).mood, now)
+  // As the wardrobe shows it: Mochi at rest, whatever the pose of the moment.
+  const worn = outfitNow(p, v, 'idle', now)
   const slot = SLOT[item]
   await setPrefs($, x => ({ ...x, pick: { ...x.pick, [slot]: worn[slot] === item ? null : item } }))
   await sync($)
+}
+
+/**
+ * What a press on one of the details pane's buttons does: a section folded
+ * or opened, a setting turned, an item worn, or one of /mochi's actions run,
+ * its answer kept for the pane to show.
+ */
+async function pressed($: Dollar, element: string, surface?: RenderSurface) {
+  const fold = SECTIONS.find(s => `fold:${s}` === element)
+  if (fold !== undefined) await setPrefs($, p => ({ ...p, open: { ...p.open, [fold]: !p.open[fold] } }))
+  if (element.startsWith('shelf:')) {
+    const shelf = SLOTS.find(slot => slot === element.slice(6))
+    if (shelf !== undefined) await setPrefs($, p => ({ ...p, shelf }))
+  }
+  if (element.startsWith('set:')) await turn($, element.slice(4))
+  if (element === 'shield:forget') $.ui.toast(`Mochi: ${await shieldNow($, 'reset')}`)
+  if (element === 'size:big' || element === 'size:small') await resize($, element === 'size:small')
+  if (element === 'visible') await setHidden($, !(await read($, prefs)).isHidden)
+  if (element === 'bday:off') await birthday($, 'none')
+  if (element.startsWith('do:')) await act($, element.slice(3))
+  // Arranging the pane: in and out, back to the default, a block moved a place or shown and hidden.
+  if (element === 'arrange') await setPrefs($, p => ({ ...p, isArranging: !p.isArranging }))
+  if (element === 'arrange:reset') await setPrefs($, p => ({ ...p, order: [...BLOCKS], hidden: [] }))
+  const [verb, id, way] = element.split(':')
+  const block = BLOCKS.find(b => b === id)
+  if (block !== undefined && verb === 'move') await setPrefs($, p => ({ ...p, order: stepped(p.order, block, way === 'up' ? 'up' : 'down') }))
+  const tab = TABS.find(x => `tab:${x}` === element)
+  if (tab !== undefined) await setPrefs($, p => ({ ...p, tab }))
+  if (block !== undefined && verb === 'hide') await hideBlock($, block)
+  if (element === 'said:close') await update($, said, () => NO_SAID)
+  if (element === 'said:copy') {
+    const { copy } = await read($, said)
+    if (copy !== '') await $.ui.copy({ text: copy, surface }).catch(() => undefined)
+  }
+  if (element.startsWith('wear:')) {
+    const what = element.slice(5)
+    const item = itemOf(what)
+    if (what === 'auto') await setPrefs($, p => ({ ...p, pick: {} }))
+    else if (what === 'none') await setPrefs($, p => ({ ...p, pick: { head: null, face: null, neck: null, held: null, ground: null } }))
+    else if (item !== null) await toggleItem($, item)
+    await sync($)
+  }
+}
+
+async function hideBlock($: Dollar, block: Block) {
+  await setPrefs($, p => ({ ...p, hidden: p.hidden.includes(block) ? p.hidden.filter(b => b !== block) : [...p.hidden, block] }))
+}
+
+/** What the arranging list (arrange.tsx) sends: the order its tab was dragged into, or a block to show or hide. */
+async function arranged($: Dollar, data: unknown) {
+  if (typeof data !== 'object' || data === null) return
+  const { order, hide } = data as { order?: unknown; hide?: unknown }
+  if (order !== undefined) await setPrefs($, p => ({ ...p, order: reordered(p.order, order) ?? p.order }))
+  const block = BLOCKS.find(b => b === hide)
+  if (block !== undefined) await hideBlock($, block)
 }
 
 /** The scene the drawing shows, in steps coarse enough not to redraw on every token. */
@@ -677,6 +734,7 @@ async function tick($: Dollar) {
   }
   if (await restMoments($, p, f, v.tz, now)) return
   void coach($, now, f).catch(() => undefined)
+  if (await flowTick($, now, f)) return
 
   if (f.until > 0) {
     if (now > f.until) await rest($)
@@ -702,6 +760,72 @@ async function tick($: Dollar) {
     const line = restLine(mood, quiet)
     if (f.mood !== mood || f.line !== line) await putFace($, { mood, line, until: 0, since: 0 })
   }
+}
+
+// ---------- ultracode ----------
+
+/** A round's last agent has ended this long ago: the workflow is done, not between two stages. */
+const FLOW_SETTLE_MS = 2500
+/** Agents that report nothing for this long were stopped: let go of them. */
+const FLOW_STALE_MS = 10 * 60_000
+
+/** One of a workflow script's agents started or ended: the helpers beside Mochi follow, and three at once earn the badge. */
+async function flowMove($: Dollar, id: string, isStart: boolean, isAnswer = true) {
+  const w = chat.flow
+  if (isStart ? w.ids.has(id) : !w.ids.has(id)) return
+  const now = await $.clock.now()
+  chat.lastActivity = now
+  w.at = now
+  if (isStart) {
+    if (w.total === 0) w.startedAt = now
+    w.ids.add(id)
+    w.total += 1
+    w.idleAt = 0
+  } else {
+    w.ids.delete(id)
+    if (isAnswer) w.ok += 1
+    if (w.ids.size === 0) w.idleAt = now
+  }
+  await setEnv($, v => ({ ...v, agents: Math.max(0, v.agents + (isStart ? 1 : -1)) }))
+  if (isStart && (await read($, env)).agents >= TEAM_AT) void award($, ['team']).catch(() => undefined)
+}
+
+/**
+ * While a workflow's agents run and nothing else holds the face, it says how
+ * far they are; once the last has ended, a party. True when it drew.
+ */
+async function flowTick($: Dollar, now: number, f: Face): Promise<boolean> {
+  const w = chat.flow
+  // Not while a subagent's call runs or a question waits on the person: that is silence of another kind.
+  if (w.ids.size > 0 && w.calls === 0 && chat.perm === null && !chat.isAsking && now - w.at > FLOW_STALE_MS) {
+    const stopped = w.ids.size
+    w.ids.clear()
+    w.idleAt = now
+    await setEnv($, v => ({ ...v, agents: Math.max(0, v.agents - stopped) }))
+  }
+  if (w.ids.size > 0) {
+    const line = flowLine(w.ids.size, w.total)
+    const isFree = !chat.isBusy && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy' || f.mood === 'agent')
+    if (!isFree || f.line === line) return false
+    await show($, { mood: 'agent', line, holdMs: 0 }, w.startedAt)
+    return true
+  }
+  if (w.total === 0 || w.idleAt === 0 || now - w.idleAt < FLOW_SETTLE_MS) return false
+  const end = flowEnd(w.total, w.ok, Math.round((w.idleAt - w.startedAt) / 1000))
+  w.total = 0
+  w.ok = 0
+  w.idleAt = 0
+  // The reply to the workflow's notification is on its way: its end shows the party.
+  if (chat.isBusy) {
+    w.finale = end
+    return false
+  }
+  if (!mayCelebrate(f, now)) {
+    $.ui.toast(`Mochi: ${end.line}`, { timeoutMs: 9000 })
+    return false
+  }
+  await show($, end)
+  return true
 }
 
 async function wake($: Dollar): Promise<boolean> {
@@ -908,6 +1032,42 @@ async function toggleSound($: Dollar, arg: string): Promise<string> {
 async function setHidden($: Dollar, isHidden: boolean): Promise<string> {
   await setPrefs($, v => ({ ...v, isHidden }))
   return isHidden ? t().cmd.hidden : t().cmd.shown
+}
+
+/** A setting turned over from the details pane, as its command does with no word after it; the shield's command alone only looks, so it is told which way. */
+async function turn($: Dollar, key: string) {
+  const p = await read($, prefs)
+  if (key === 'shield') await shieldNow($, p.hasShield ? 'off' : 'on')
+  if (key === 'alerts') await toggleAlerts($, '')
+  if (key === 'sound') await toggleSound($, '')
+  if (key === 'ci') await toggleCi($, '')
+  if (key === 'tips') await toggleTips($, '')
+  if (key === 'breaks') await toggleBreaks($, '')
+  if (key === 'plugins') await togglePlugins($, '')
+}
+
+/** What is worth copying from an action's answer: the card's line for a profile, else a path or link it ends with; '' when there is none. */
+function copyOf(verb: string, text: string): string {
+  const lines = text.split('\n')
+  if (verb === 'card') return lines.length > 1 ? (lines.at(-1) ?? '') : ''
+  const last = text.trim().split(/\s+/).at(-1) ?? ''
+  return /[\\/]/.test(last) ? last : ''
+}
+
+/** One of /mochi's actions run from the details pane (`reset:history` and the like); its answer is kept for the pane to show. */
+async function act($: Dollar, what: string) {
+  const [verb = '', scope = ''] = what.split(':')
+  const text = verb === 'card' ? await card($, '')
+    : verb === 'wrapped' ? await wrapped($, '')
+    : verb === 'year' ? await wrapped($, 'year')
+    : verb === 'snap' ? await snap($)
+    : verb === 'tour' ? await replayTour()
+    : verb === 'news' ? newsLines(chat.coach.version)
+    : verb === 'feedback' ? await feedback($)
+    : verb === 'export' ? await exportAll($)
+    : verb === 'reset' ? await reset($, scope)
+    : ''
+  if (text !== '') await update($, said, () => ({ text, copy: copyOf(verb, text) }))
 }
 
 /** What /mochi says to a word none of the subcommands knows: where Mochi stands. */
@@ -1248,7 +1408,7 @@ async function onceSeen($: Dollar) {
 
 /** A prompt: a long one opening a fresh chat may call for plan mode; a standing instruction the person typed counts for its project. */
 async function notePrompt($: Dollar, text: string, isPerson: boolean) {
-  if (text.length >= LONG_PROMPT && (await $.session.turns()) <= 1) chat.coach.isLongFirst = true
+  if (isPerson && text.length >= LONG_PROMPT && (await $.session.turns()) <= 1) chat.coach.isLongFirst = true
   const rules = isPerson ? rulesOf(text) : []
   if (rules.length === 0 || chat.dataDir === '' || !(await read($, prefs)).hasTips) return
   const counted = countRules(readLog(await $.fs.read(coachFile()).catch(() => '')), projectKey(await $.session.root()), rules)
@@ -1724,7 +1884,8 @@ export const register: Register = on => {
     await $.command.register({ name: 'mochi', description: t().cmd.description, argumentHint: t().cmd.hint })
     // State outlives a reload: a value an older version wrote may lack fields
     // this one reads, so every value is completed with its defaults first.
-    await update($, env, v => ({ ...NO_ENV, ...v }))
+    // No agent outlives a reload, so a count it left is dropped.
+    await update($, env, v => ({ ...NO_ENV, ...v, agents: 0 }))
     await update($, face, f => ({ ...rest0(), ...f, frameAt: f.frameAt ?? -1 }))
     await update($, shot, v => ({ ...FIRST_SHOT, ...v, scene: { ...FIRST_SHOT.scene, ...v.scene } }))
     await update($, panel, v => ({ shot: { ...FIRST_SHOT, ...v.shot }, info: { ...NO_INFO, ...v.info }, infoFrom: null, infoAt: v.infoAt ?? 0 }))
@@ -1765,10 +1926,12 @@ export const register: Register = on => {
     const wasAsleep = await wake($)
     const now = await $.clock.now()
     chat.stream = null
-    const egg = promptEgg(text)
+    // A background task's notification (a finished workflow's) is no one speaking: nothing in it is thanks or frustration.
+    const isNote = e.origin?.kind === 'task-notification'
+    const egg = isNote ? null : promptEgg(text)
     // A good night (the egg's stretch) puts Mochi to sleep once the reply is done.
     chat.isGoodNight = egg?.mood === 'stretch'
-    await show($, egg ?? onPrompt(text, wasAsleep), now)
+    await show($, isNote ? { mood: 'thinking', line: t().st.thinking, holdMs: 0 } : egg ?? onPrompt(text, wasAsleep), now)
 
     return next(e)
   }).catch(($, e, next) => next(e))
@@ -1796,12 +1959,20 @@ export const register: Register = on => {
     }
   })
 
+  // The agents a workflow script starts (ultracode): counted from their start to their turn's end.
+  on('agent.spawn', async ($, e, next) => {
+    const started = await next(e)
+    if (e.workflow !== undefined && started.agentId !== undefined) await flowMove($, started.agentId, true)
+    return started
+  })
+
   on('tool.call', async ($, e, next) => {
     const args = e as unknown as Record<string, unknown> & { tool: string }
     const isSub = e.agentId !== undefined
     const isAgent = e.tool === 'Agent' || String(e.tool) === 'Task'
     const startedAt = await $.clock.now()
     chat.lastActivity = startedAt
+    if (isSub) chat.flow.at = startedAt
     if (e.tool === 'ExitPlanMode') chat.coach.hasPlanned = true
 
     // The shield: a command that cannot be undone, or a secret on its way out, waits for the person's word.
@@ -1809,11 +1980,15 @@ export const register: Register = on => {
     const verdict = await judge($, args, cmd)
     const stop = verdict === null ? null : await shield($, args, cmd, verdict, startedAt)
     if (stop !== null) return stop
+    // The face an approved question left: a subagent's call does not take it down again, so its end does.
+    const approvedToken = verdict !== null && verdict.ask.length > 0 ? chat.faceToken : -1
+    // While a workflow's count has the face (nothing else busy), a subagent's call does not rewrite its line.
+    const countHasFace = !chat.isBusy && chat.flow.ids.size > 0
 
     let token = -1
     if (isSub) {
       const f = await read($, face)
-      if (f.mood === 'agent') await update($, face, v => ({ ...v, line: `${t().st.agent} · ${beforeTool(args).line}` }))
+      if (f.mood === 'agent' && !countHasFace) await update($, face, v => ({ ...v, line: `${t().st.agent} · ${beforeTool(args).line}` }))
     } else if (verdict === null || verdict.ask.length === 0) {
       chat.stream = null
       token = await show($, verdict?.face ?? beforeTool(args), waitsOnPerson(e.tool) ? 0 : startedAt)
@@ -1845,19 +2020,30 @@ export const register: Register = on => {
     }
 
     let ran
+    if (isSub) chat.flow.calls += 1
     try {
       ran = await next(e)
     } finally {
+      if (isSub) {
+        chat.flow.calls = Math.max(0, chat.flow.calls - 1)
+        chat.flow.at = await $.clock.now()
+      }
       if (isAgent) await setEnv($, v => ({ ...v, agents: Math.max(0, v.agents - 1) }))
     }
 
     // A permission this call asked for was answered once the call is over: the face it covered comes back, its own again.
+    // Questions asked together share what the first covered: it comes back when the last of their calls is over.
     const perm = chat.perm
-    if (perm !== null && perm.token === chat.faceToken && perm.key === callKey(e.agentId, e.tool, subject(args))) {
-      chat.perm = null
-      chat.faceToken = perm.was
-      await putFace($, isSub && perm.face.mood === 'agent' ? { ...perm.face, line: `${t().st.agent} · ${beforeTool(args).line}` } : perm.face)
+    const asked = perm === null ? -1 : perm.keys.indexOf(callKey(e.agentId, e.tool, subject(args)))
+    if (perm !== null && perm.token === chat.faceToken && asked >= 0) {
+      perm.keys.splice(asked, 1)
+      if (perm.keys.length === 0) {
+        chat.perm = null
+        chat.faceToken = perm.was
+        await putFace($, isSub && perm.face.mood === 'agent' && !countHasFace ? { ...perm.face, line: `${t().st.agent} · ${beforeTool(args).line}` } : perm.face)
+      }
     }
+    if (isSub && approvedToken === chat.faceToken) await rest($)
 
     // The loop watch, over the subagents' calls too (each its own).
     const isError = ran.isError === true
@@ -1914,9 +2100,13 @@ export const register: Register = on => {
     const about = subject({ ...input, tool: e.tool_name })
     const line = `${t().st.awaitingApproval} · ${about}`
     // Mochi cannot see the answer: the call's end tells it (tool.call), and the face it covers comes back then.
-    const { frameAt: _at, ...covered } = await read($, face)
-    const was = chat.faceToken
-    chat.perm = { token: await show($, { mood: 'asking', line, holdMs: 0 }), was, face: covered, key: callKey(e.agent_id, e.tool_name, about) }
+    // A question asked while another is still on the face covers what the first covered, not that question.
+    const open = chat.perm !== null && chat.perm.token === chat.faceToken ? chat.perm : null
+    const { frameAt: _at, ...seen } = await read($, face)
+    const covered = open?.face ?? seen
+    const was = open?.was ?? chat.faceToken
+    const keys = [...(open?.keys ?? []), callKey(e.agent_id, e.tool_name, about)]
+    chat.perm = { token: await show($, { mood: 'asking', line, holdMs: 0 }), was, face: covered, keys }
     void noteAsk($, e.tool_name, input).catch(() => undefined)
     if (chat.isBusy && (await $.clock.now()) - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
 
@@ -1925,7 +2115,10 @@ export const register: Register = on => {
 
   on('turn.complete', async ($, e, next) => {
     const done = await next(e)
-    if (e.agentId !== undefined) return done
+    if (e.agentId !== undefined) {
+      await flowMove($, e.agentId, false, e.reason === 'answer')
+      return done
+    }
     chat.isBusy = false
     chat.stream = null
     const now = await $.clock.now()
@@ -1947,6 +2140,8 @@ export const register: Register = on => {
     chat.isGitWanted = true
     chat.lastTurnFailed = e.reason === 'error'
     void noteTurn($, e.reason, chat.errorRun).catch(() => undefined)
+    let finale = chat.flow.finale
+    chat.flow.finale = null
     if (chat.pendingWarn > 0) {
       const level = chat.pendingWarn
       chat.pendingWarn = 0
@@ -1955,9 +2150,14 @@ export const register: Register = on => {
       await show($, { mood: 'nervous', line: chat.pendingLimit, holdMs: 10_000, sound: 'alarm' })
     } else if (chat.isGoodNight && !['aborted', 'error', 'refusal'].includes(e.reason)) {
       await show($, { mood: 'sleeping', line: t().fun.goodNight, holdMs: 0 })
+    } else if (finale !== null && e.reason === 'answer') {
+      await show($, finale)
+      finale = null
     } else {
       await show($, ended)
     }
+    // A workflow's end that no face could show reaches the person as a toast.
+    if (finale !== null) $.ui.toast(`Mochi: ${finale.line}`, { timeoutMs: 9000 })
     chat.pendingLimit = ''
     chat.isGoodNight = false
     if (rec.seconds >= LONG_TURN_S && e.reason !== 'aborted') await notify($, ended.line)
@@ -2034,27 +2234,25 @@ export const register: Register = on => {
     if (e.element === 'hit' && typeof data === 'object' && data !== null && (data as { open?: unknown }).open === 'detail') {
       await openDetail($)
     }
+    // A wardrobe card or tab is clickable all over: a clear region on it, keyed `tap:` and the button's own key.
+    if (e.element.startsWith('tap:')) await pressed($, e.element.slice(4))
+    if (e.element === 'arrange') await arranged($, data)
     return next(e)
   })
 
   on('ui.press', async ($, e, next) => {
-    if (e.plugin === 'mochi' && (e.element === 'fold:level' || e.element === 'fold:wardrobe')) {
-      const which = e.element === 'fold:level' ? 'level' : 'wardrobe'
-      await setPrefs($, p => ({ ...p, open: { ...p.open, [which]: !p.open[which] } }))
-    }
-    if (e.plugin === 'mochi' && e.element.startsWith('shelf:')) {
-      const shelf = SLOTS.find(slot => slot === e.element.slice(6))
-      if (shelf !== undefined) await setPrefs($, p => ({ ...p, shelf }))
-    }
-    if (e.plugin === 'mochi' && e.element === 'fold:badges') await setPrefs($, p => ({ ...p, open: { ...p.open, badges: !p.open.badges } }))
-    if (e.plugin === 'mochi' && e.element.startsWith('wear:')) {
-      const what = e.element.slice(5)
-      const item = itemOf(what)
-      if (what === 'auto') await setPrefs($, p => ({ ...p, pick: {} }))
-      else if (what === 'none') await setPrefs($, p => ({ ...p, pick: { head: null, face: null, neck: null, held: null, ground: null } }))
-      else if (item !== null) await toggleItem($, item)
-      await sync($)
-    }
+    if (e.plugin === 'mochi') await pressed($, e.element, e.surface)
+    return next(e)
+  })
+
+  // The details pane's language picker and birthday field.
+  on('ui.select', async ($, e, next) => {
+    if (e.plugin === 'mochi' && e.element === 'lang') $.ui.toast(`Mochi: ${await language($, plain(e.value), e.value)}`)
+    return next(e)
+  })
+
+  on('ui.input', async ($, e, next) => {
+    if (e.plugin === 'mochi' && e.element === 'bday' && e.kind === 'submit') $.ui.toast(`Mochi: ${await birthday($, plain(e.value) === '' ? 'none' : plain(e.value))}`)
     return next(e)
   })
 

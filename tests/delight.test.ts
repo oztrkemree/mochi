@@ -8,7 +8,7 @@ import { DICTS, LANGS, setLang } from '../hooks/i18n'
 import { LOOKS, asciiRows } from '../hooks/looks'
 import { MOOD_INK } from '../hooks/panel'
 import { POSES, VECTOR_WEAR, WEAR_AT, svgFor } from '../hooks/rig'
-import { ALL_ITEMS, restorePrefs } from '../hooks/state'
+import { ALL_ITEMS, layoutOf, reordered, restorePrefs, stepped } from '../hooks/state'
 import { WEAR } from '../hooks/wear'
 
 // The days Mochi celebrates, the badges it gives for real work, its small
@@ -253,7 +253,9 @@ test('two hours of work without a quiet gap earn a suggested stretch, at most ev
   expect(workFrom(from, t0 + 120 * 60_000, t0 + 135 * 60_000)).toBe(0)
   expect(isBreakDue(0, 0, t0 + 200 * 60_000)).toBe(false)
   expect(restorePrefs({ lang: 'en' }).hasBreaks).toBe(true)
-  expect(restorePrefs({ lang: 'en', open: { level: true } } as never).open).toEqual({ level: true, wardrobe: false, badges: false })
+  expect(restorePrefs({ lang: 'en', open: { level: true, chats: false } } as never).open).toEqual({
+    chats: false, changes: true, context: false, activity: true, level: true, wardrobe: true, badges: false, settings: true, more: true,
+  })
 })
 
 test('the first start on a special day greets it; a greeted one is not greeted again', async ($, on) => {
@@ -275,6 +277,117 @@ test('a day already greeted starts as usual', async ($, on) => {
   await ui.unmount()
 })
 
+test('the details pane: tabs, rows that fold, switches for every setting and every action', async ($, on) => {
+  const clock = engine(on)
+  const copied: string[] = []
+  on('ui.copy', ($, e) => {
+    copied.push(e.text)
+    return { value: undefined } as never
+  })
+  on('tool.call', { tool: 'AskUserQuestion' }, (($: unknown, e: { questions: { question: string }[] }) =>
+    ({ result: { questions: e.questions, answers: { [e.questions[0]?.question ?? '']: 'Keep' } }, text: 'Keep' })) as never)
+  await clock.set(at(2026, 7, 1, 12))
+  await $.session.start(START)
+  const run = async (args: string) => (await $.command.run({ command: 'mochi', args } as never)).text ?? ''
+  const pane = await $.ui.mount(PANE)
+  // "Now" first: the meters, then rows; one with nothing to show is left out, the context starts folded.
+  expect((await pane.find({ key: 'tab:now' }))?.text).toBe('Now')
+  expect((await pane.find({ key: 'fold:context' }))?.text).toBe('▸')
+  expect(await pane.find({ key: 'fold:chats' })).toBeUndefined()
+  await pane.post({}, { in: 'tap:fold:context' })
+  expect((await pane.find({ key: 'fold:context' }))?.text).toBe('▾')
+  // The tab is kept; another one shows its own rows.
+  await pane.press({ key: 'tab:past' })
+  expect(await pane.find({ key: 'fold:context' })).toBeUndefined()
+  expect((await pane.find({ key: 'fold:level' }))?.text).toBe('▾')
+  await pane.press({ key: 'tab:settings' })
+  // A switch shows where a setting stands; the whole row turns it, as its command would.
+  expect(await pane.find({ key: 'set:sound' })).toBeUndefined()
+  await pane.post({}, { in: 'tap:set:sound' })
+  expect(await run('sound')).toBe('Sound off.')
+  await pane.post({}, { in: 'tap:set:shield' })
+  expect(await run('shield')).toContain('Shield off.')
+  await pane.post({}, { in: 'tap:set:shield' })
+  await pane.press({ key: 'size:small' })
+  expect(await run('status')).toContain('Size: small')
+  await pane.press({ key: 'size:big' })
+  // The birthday field and the language picker.
+  await pane.input({ key: 'bday', text: '07-01', kind: 'submit' })
+  expect(await run('birthday')).toBe('Birthday: July 1. To change it: /mochi birthday MM-DD · none')
+  await pane.press({ key: 'bday:off' })
+  expect(await run('birthday')).toContain('No birthday set.')
+  await pane.select({ key: 'lang', value: 'tr' })
+  expect((await pane.find({ key: 'tab:settings' }))?.text).toBe('Ayarlar')
+  await pane.select({ key: 'lang', value: 'en' })
+  // Every other action of /mochi, its answer shown above the buttons until dismissed.
+  await pane.press({ key: 'do:tour' })
+  expect(await pane.find({ type: 'Text', text: 'The tour starts in a moment: watch Mochi.' })).toBeDefined()
+  expect(await pane.find({ key: 'said:copy' })).toBeUndefined()
+  await pane.press({ key: 'said:close' })
+  expect(await pane.find({ type: 'Text', text: 'The tour starts in a moment: watch Mochi.' })).toBeUndefined()
+  await pane.press({ key: 'do:feedback' })
+  expect(await pane.find({ type: 'Link' })).toBeDefined()
+  await pane.press({ key: 'said:copy' })
+  expect(copied[0]).toMatch(/^https:\/\/github\.com\//)
+  // A reset still asks first.
+  await pane.press({ key: 'do:reset:history' })
+  expect(await pane.find({ type: 'Text', text: 'Nothing was cleared.' })).toBeDefined()
+  await pane.unmount()
+})
+
+test('each tab is arranged: its blocks dragged into place, hidden, moved by buttons and put back', async ($, on) => {
+  const clock = engine(on)
+  await clock.set(at(2026, 7, 1, 12))
+  await $.session.start(START)
+  const pane = await $.ui.mount(PANE)
+  await pane.press({ key: 'arrange' })
+  expect((await pane.find({ key: 'arrange' }))?.text).toBe('Done')
+  const rows = async () => ((await pane.find({ type: 'Client', key: 'arrange' }))?.props.props as { rows: { id: string; isHidden: boolean }[] }).rows
+  expect((await rows()).map(r => r.id)).toEqual(['overview', 'chats', 'changes', 'context'])
+  // Two rows to a block: held on the first and let go on the third, the overview drops there.
+  await pane.resize({ columns: 80, rows: 8, in: 'arrange' })
+  await pane.pointer({ type: 'down', x: 4, y: 0, button: 'left', in: 'arrange' })
+  await pane.pointer({ type: 'move', x: 4, y: 5, button: 'left', in: 'arrange' })
+  await pane.pointer({ type: 'up', x: 4, y: 5, button: 'left', in: 'arrange' })
+  expect((await rows()).map(r => r.id)).toEqual(['chats', 'changes', 'overview', 'context'])
+  // A click at the right of a row hides it; an order that is not exactly the tab's blocks is let be.
+  await pane.pointer({ type: 'down', x: 76, y: 6, button: 'left', in: 'arrange' })
+  await pane.pointer({ type: 'up', x: 76, y: 6, button: 'left', in: 'arrange' })
+  await pane.post({ order: ['chats', 'changes', 'nonsense', 'context'] }, { in: 'arrange' })
+  expect((await rows()).map(r => r.id)).toEqual(['chats', 'changes', 'overview', 'context'])
+  expect((await rows()).find(r => r.id === 'context')?.isHidden).toBe(true)
+  // Another tab arranges its own.
+  await pane.press({ key: 'tab:past' })
+  expect((await rows()).map(r => r.id)).toEqual(['activity', 'level', 'badges'])
+  await pane.press({ key: 'tab:now' })
+  await pane.press({ key: 'arrange' })
+  // Out of arranging: a hidden block is not drawn.
+  expect(await pane.find({ key: 'fold:context' })).toBeUndefined()
+  await pane.press({ key: 'arrange' })
+  await pane.press({ key: 'arrange:reset' })
+  expect((await rows()).map(r => r.id)).toEqual(['overview', 'chats', 'changes', 'context'])
+  expect((await rows()).some(r => r.isHidden)).toBe(false)
+  await pane.unmount()
+  // Where nothing can be dragged, buttons move a block within its tab and hide it.
+  const term = await $.ui.mount({ ...(PANE as object), surface: 'terminal' } as never)
+  await term.press({ key: 'move:overview:down' })
+  await term.press({ key: 'hide:more' })
+  expect((await term.find({ key: 'hide:more' }))?.text).toBe('Show')
+  expect(await term.find({ key: 'move:chats:up' })).toBeUndefined()
+  expect(await term.find({ key: 'move:activity:up' })).toBeUndefined()
+  await term.press({ key: 'arrange' })
+  expect(await term.find({ key: 'fold:more' })).toBeUndefined()
+  await term.unmount()
+  // What an older version saved, or a newer block it never named, falls into place.
+  expect(layoutOf(['more', 'level', 'x', 'more'], ['level', 'y']).order).toEqual(['overview', 'chats', 'changes', 'context', 'activity', 'more', 'level', 'wardrobe', 'badges', 'settings'])
+  expect(layoutOf(undefined, undefined)).toEqual({ order: ['overview', 'chats', 'changes', 'context', 'activity', 'level', 'wardrobe', 'badges', 'settings', 'more'], hidden: [] })
+  const all = layoutOf(undefined, undefined).order
+  expect(stepped(all, 'activity', 'up')).toEqual(all)
+  expect(stepped(all, 'level', 'down').slice(4, 8)).toEqual(['activity', 'badges', 'wardrobe', 'level'])
+  expect(reordered(all, ['more', 'settings'])?.slice(-2)).toEqual(['more', 'settings'])
+  expect(reordered(all, ['more'])).toBeNull()
+})
+
 test('/mochi birthday, breaks and badges', async ($, on) => {
   const clock = engine(on)
   await clock.set(at(2026, 7, 1, 12))
@@ -286,8 +399,10 @@ test('/mochi birthday, breaks and badges', async ($, on) => {
   expect(await ui.find({ text: 'happy birthday!' })).toBeDefined()
   await ui.unmount()
   const pane = await $.ui.mount(PANE)
-  await pane.press({ key: 'fold:wardrobe' } as never)
+  await pane.press({ key: 'tab:mochi' } as never)
+  await pane.press({ key: 'shelf:ground' } as never)
   expect((await pane.find({ type: 'Text', text: /^Beside · / }))?.text).toBe('Beside · birthday cake (auto)')
+  await pane.press({ key: 'tab:past' } as never)
   expect(await pane.find({ key: 'badge:green' })).toBeUndefined()
   await pane.press({ key: 'fold:badges' } as never)
   expect(await pane.find({ key: 'badge:green' })).toBeDefined()
@@ -468,5 +583,78 @@ test('once the reply to a good night is done, Mochi goes to sleep and sleeps on'
   // Past the minute and a half that makes a quiet Mochi sleepy at night, it does not wake to doze.
   for (let i = 0; i < 3; i++) await clock.advance(60_000)
   expect(await ui.find({ text: 'good night' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('ultracode: the agents of a workflow show as a count, and the last one ending is a party', async ($, on) => {
+  const clock = engine(on)
+  let n = 0
+  on('agent.spawn', () => ({ model: 'm', agentId: `w${++n}` }) as never)
+  on('turn.complete', () => ({ text: '' }) as never)
+  await clock.set(at(2026, 7, 1, 12))
+  await $.session.start(START)
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  const spawn = (agentIndex: number) => $.agent.spawn({ prompt: 'p', description: 'd', workflow: { runId: 'wf_1', agentIndex } } as never)
+  const finish = (agentId: string) => $.turn.complete({ agentId, turnId: `t-${agentId}`, reason: 'answer', answer: '', durationMs: 1000, isAborted: false } as never)
+  await spawn(1)
+  await spawn(2)
+  // The greeting holds the face for three seconds; the count comes after it.
+  await clock.advance(4000)
+  expect(await ui.find({ text: /ultracode · 0\/2 · 2 agents/ })).toBeDefined()
+  await finish('w1')
+  await clock.advance(1000)
+  expect(await ui.find({ text: /ultracode · 1\/2 · 1 agent/ })).toBeDefined()
+  // Between two stages the last agent ends and the next starts: that is no ending.
+  await finish('w2')
+  await clock.advance(1000)
+  await spawn(3)
+  await clock.advance(1000)
+  expect(await ui.find({ text: /ultracode · 2\/3 · 1 agent/ })).toBeDefined()
+  expect(await ui.find({ text: /ultracode · done/ })).toBeUndefined()
+  await finish('w3')
+  await clock.advance(4000)
+  expect(await ui.find({ text: /ultracode · done · 3 agents/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('ultracode: agents asking at once give the count back, and a stopped run is no party', async ($, on) => {
+  const clock = engine(on)
+  let n = 0
+  const gates: Record<string, () => void> = {}
+  on('agent.spawn', () => ({ model: 'm', agentId: `w${++n}` }) as never)
+  on('turn.complete', () => ({ text: '' }) as never)
+  on('classic.PermissionRequest', () => ({}) as never)
+  on('tool.call', ($, e) => new Promise(resolve => {
+    gates[String(e.agentId)] = () => resolve({ result: 'ok', text: 'ok' } as never)
+  }) as never)
+  await clock.set(at(2026, 7, 1, 12))
+  await $.session.start(START)
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  const spawn = (agentIndex: number) => $.agent.spawn({ prompt: 'p', description: 'd', workflow: { runId: 'wf_1', agentIndex } } as never)
+  const finish = (agentId: string, reason: string) => $.turn.complete({ agentId, turnId: `t-${agentId}`, reason, answer: '', durationMs: 1000, isAborted: reason === 'aborted' } as never)
+  await spawn(1)
+  await spawn(2)
+  await clock.advance(4000)
+  expect(await ui.find({ text: /ultracode · 0\/2 · 2 agents/ })).toBeDefined()
+  const a = $.tool.call({ tool: 'Bash', command: 'npm test', agentId: 'w1' } as never)
+  const b = $.tool.call({ tool: 'Bash', command: 'npm run build', agentId: 'w2' } as never)
+  await clock.advance(450)
+  await $.classic.PermissionRequest({ tool_name: 'Bash', tool_input: { command: 'npm test' }, agent_id: 'w1' } as never)
+  await $.classic.PermissionRequest({ tool_name: 'Bash', tool_input: { command: 'npm run build' }, agent_id: 'w2' } as never)
+  await clock.advance(450)
+  expect(await ui.find({ text: /awaiting approval/ })).toBeDefined()
+  gates.w1?.()
+  await a
+  gates.w2?.()
+  await b
+  await clock.advance(1500)
+  expect(await ui.find({ text: /ultracode · 0\/2 · 2 agents/ })).toBeDefined()
+  expect(await ui.find({ text: /awaiting approval/ })).toBeUndefined()
+  // Stopped, both: the run is over, but nothing was done.
+  await finish('w1', 'aborted')
+  await finish('w2', 'aborted')
+  await clock.advance(4000)
+  expect(await ui.find({ text: /ultracode · stopped/ })).toBeDefined()
+  expect(await ui.find({ text: /ultracode · done/ })).toBeUndefined()
   await ui.unmount()
 })

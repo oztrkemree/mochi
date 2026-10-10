@@ -1,6 +1,6 @@
 import type { Env, Recent } from '../types'
 import { boardLines, chatsCard } from './chats'
-import { ciCard, ciLines } from './ci'
+import { ciCard, ciLine, ciLines, prLine } from './ci'
 import { age, ago, baseName, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, warnLevel } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { t } from './i18n'
@@ -26,10 +26,21 @@ export type Card = { title: string; right?: string; content: number; body: (x: n
 
 const thousands = (v: number) => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, t().thousands)
 
+/** The pane's parts in order: the overview always shown, then those its folding sections hold. */
+export const PARTS = ['overview', 'chats', 'changes', 'context', 'activity'] as const
+export type Part = (typeof PARTS)[number]
+/** A part's cards, and the gist its section's heading shows while it is folded. */
+export type Parts = Record<Part, { cards: Card[]; gist: string }>
+
+/** The whole pane as one drawing, as `/mochi snap` saves it. */
 export function detailSvg(env: Env, now: number, width: number): string {
   const W = Math.max(340, Math.round(width))
-  const cardW = W - PAD * 2
-  const innerW = cardW - IN * 2
+  const parts = detailParts(env, now, W - PAD * 2 - IN * 2)
+  return paint(PARTS.flatMap(p => parts[p].cards), W)
+}
+
+/** Every card of the pane, `innerW` wide, by the part it belongs to. */
+export function detailParts(env: Env, now: number, innerW: number): Parts {
   const cards: Card[] = []
   const level = warnLevel(env)
   const total = Math.max(1, env.window)
@@ -97,20 +108,22 @@ export function detailSvg(env: Env, now: number, width: number): string {
     },
   })
 
+  const overview = cards.splice(0)
+
   // ---- every chat on the machine ----
   const board = chatsCard(env, now)
-  if (board) cards.push(board)
 
   // ---- what changed in the files ----
   const changes = changesCard(env, now, innerW)
   if (changes) cards.push(changes)
   const ci = ciCard(env, now)
   if (ci) cards.push(ci)
+  const changed = cards.splice(0)
 
   // ---- context, as /context draws it ----
   const all = env.allSlices.length > 0 ? env.allSlices : env.slices.map(s => ({ ...s, kind: 'used' }))
   const legend = all.filter(s => s.tokens > 0)
-  const legendCols = W >= 560 ? 3 : 2
+  const legendCols = innerW >= 500 ? 3 : 2
   const legendRows = Math.ceil(legend.length / legendCols)
   cards.push({
     title: t().detail.contextTitle,
@@ -149,6 +162,7 @@ export function detailSvg(env: Env, now: number, width: number): string {
         `<rect class="trackf" x="${x}" y="${y}" width="${w}" height="12" rx="6"/><g clip-path="url(#bar)">${segs}</g>${mark}${items}${warn}`
     },
   })
+  const context = cards.splice(0)
 
   // ---- the last turns ----
   if (turns.length > 0) {
@@ -279,7 +293,121 @@ export function detailSvg(env: Env, now: number, width: number): string {
     })
   }
 
-  return paint(cards, W)
+  const activity = cards.splice(0)
+  const days = hist && hist.activeDays > 0 ? `${hist.days[dayKey(now, tz)]?.turns ?? 0} ${t().detail.today}` : ''
+  const gist = (...parts: (string | undefined)[]) => parts.filter(s => s !== undefined && s !== '').join(' · ')
+  return {
+    overview: { cards: overview, gist: '' },
+    chats: { cards: board ? [board] : [], gist: board?.right ?? '' },
+    changes: { cards: changed, gist: gist(changes?.right, env.ci ? ciLine(env.ci) : env.pr ? prLine(env.pr) : '') },
+    context: { cards: context, gist: context[0]?.right ?? '' },
+    activity: { cards: activity, gist: gist(activity.find(c => c.title === t().detail.recentTurns)?.right, days) },
+  }
+}
+
+/**
+ * A part on its own, for its folding section, which is its card: the cards
+ * one under another, a rule between them; the first one's heading left out
+ * when it is the section's own (`heading`).
+ */
+export function partSvg(cards: Card[], width: number, heading: string): string {
+  const W = Math.max(280, Math.round(width))
+  let y = 6
+  const body = cards.map((c, i) => {
+    const top = y
+    const hasHead = c.title !== '' && !(i === 0 && c.title === heading)
+    const rule = i > 0 ? `<path class="rule" d="M2 ${top - 9}H${W - 2}"/>` : ''
+    const head = hasHead
+      ? `<text class="t faint" x="2" y="${top + 10}" font-size="10" font-weight="650" letter-spacing="1.1">${esc(c.title)}</text>` +
+        (c.right ? `<text class="t faint" x="${W - 2}" y="${top + 10}" font-size="10.5" text-anchor="end">${esc(clip(c.right, Math.floor((W - 120) / 6.2)))}</text>` : '')
+      : ''
+    const offset = hasHead ? 26 : 0
+    y += offset + c.content + 20
+    return rule + head + c.body(2, top + offset, W - 4)
+  }).join('')
+  const H = Math.max(12, y - 12)
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMin meet">${STYLE}${rtlStyle()}${DEFS}${body}</svg>`
+}
+
+/**
+ * The overview as the pane's "now" tab shows it: the context and the two
+ * usage windows as thin bars (the context in its kinds, the compaction
+ * marked), each with its figure and when it resets, or when it fills at this
+ * pace; under them the session in one line.
+ */
+export function metersSvg(env: Env, now: number, width: number): string {
+  const W = Math.max(280, Math.round(width))
+  const total = Math.max(1, env.window)
+  const level = warnLevel(env)
+  const pct = env.window > 0 ? (env.tokens / env.window) * 100 : env.context
+  const five = env.limits.find(l => l.kind === 'five_hour')
+  const week = env.limits.find(l => l.kind === 'seven_day')
+  type Meter = { label: string; right: string; ink?: string; segs: { value: number; color: string }[]; mark?: number }
+  const meters: Meter[] = [
+    {
+      label: t().detail.context,
+      right: pct >= 0 ? `${Math.round(pct)}% · ${tokens(env.tokens)}` : '—',
+      ...(level >= 2 ? { ink: '#F0645A' } : level >= 1 ? { ink: '#F2B84B' } : {}),
+      segs: env.slices.map(s => ({ value: (s.tokens / total) * 100, color: sliceInk(s.name) })),
+      ...(env.compactAt > 0 ? { mark: (env.compactAt / total) * 100 } : {}),
+    },
+    ...([[five, t().detail.session5h], [week, t().detail.week7d]] as const).map(([l, label]): Meter => {
+      if (!l) return { label, right: '—', segs: [] }
+      const full = forecastFull(env.samples ?? [], l, now)
+      const right = full !== null ? t().detail.paceFull(clockAt(full, now, env.tz ?? 0)) : l.resetsAt > now ? `${Math.round(l.percent)}% · ${until(l.resetsAt - now)}` : `${Math.round(l.percent)}%`
+      return {
+        label, right: full !== null ? `${Math.round(l.percent)}% · ${right}` : right,
+        ...(full !== null ? { ink: full - now < 30 * 60_000 ? '#F0645A' : '#F2B84B' } : l.percent >= 80 ? { ink: '#F0645A' } : {}),
+        segs: [{ value: Math.min(100, l.percent), color: usageInk(l.percent) }],
+      }
+    }),
+  ]
+  const labelW = Math.min(170, Math.max(...meters.map(m => cols(m.label))) * 6.6 + 14)
+  const rightW = Math.min(220, Math.max(...meters.map(m => cols(m.right))) * 6.2 + 14)
+  const barX = 2 + labelW
+  const barW = Math.max(60, W - 4 - labelW - rightW)
+  let svg = ''
+  meters.forEach((m, i) => {
+    const y = 6 + i * 24
+    let at = barX
+    const segs = m.segs.map(s => {
+      const sw = (barW * Math.max(0, s.value)) / 100
+      const r = `<rect x="${n(at)}" y="${y + 4}" width="${n(Math.max(0, sw - (m.segs.length > 1 ? 1 : 0)))}" height="6" fill="${s.color}"/>`
+      at += sw
+      return r
+    }).join('')
+    const mark = m.mark !== undefined ? `<path d="M${n(barX + (barW * m.mark) / 100)} ${y + 1}V${y + 13}" stroke="#F2B84B" stroke-width="1.4" stroke-linecap="round"/>` : ''
+    svg += `<text class="t ${m.ink ? '' : 'fg'}" x="2" y="${y + 11}" font-size="12"${m.ink ? ` fill="${m.ink}"` : ''}>${esc(m.label)}</text>` +
+      `<clipPath id="m${i}"><rect x="${barX}" y="${y + 4}" width="${n(barW)}" height="6" rx="3"/></clipPath>` +
+      `<rect class="trackf" x="${barX}" y="${y + 4}" width="${n(barW)}" height="6" rx="3"/><g clip-path="url(#m${i})">${segs}</g>${mark}` +
+      `<text class="t ${m.ink ? '' : 'dim'}" x="${W - 2}" y="${y + 11}" font-size="11.5" text-anchor="end" font-variant-numeric="tabular-nums"${m.ink ? ` fill="${m.ink}"` : ''}>${esc(clip(m.right, Math.floor(rightW / 6)))}</text>`
+  })
+  const s = t().detail.stats
+  const errors = env.turns.reduce((a, x) => a + x.errors, 0)
+  const parts = [
+    ...(env.startedAt > 0 ? [`${until(now - env.startedAt)} ${s.time}`] : []),
+    `${env.turns.length} ${s.turns}`,
+    `${Object.values(env.kinds).reduce((a, b) => a + b, 0)} ${s.tools}`,
+    `${env.turns.reduce((a, x) => a + x.edits, 0)} ${s.edits}`,
+  ]
+  const line = `<text class="t dim" x="2" y="${6 + 3 * 24 + 12}" font-size="11.5" font-variant-numeric="tabular-nums">${esc(parts.join(' · '))}` +
+    (errors > 0 ? `<tspan class="dim"> · </tspan><tspan fill="#F0645A">${errors} ${esc(s.errors)}</tspan>` : '') +
+    (env.cost > 0 ? `<tspan class="dim"> · $${env.cost.toFixed(2)}</tspan>` : '') + '</text>'
+  const H = 6 + 3 * 24 + 22
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMin meet">${STYLE}${rtlStyle()}${DEFS}${svg}${line}</svg>`
+}
+
+/** A hairline across the pane, between the rows of its list. */
+export function ruleSvg(width: number): string {
+  const W = Math.max(40, Math.round(width))
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} 9" width="100%" height="100%" preserveAspectRatio="none">${STYLE}<path class="rule" d="M0 4.5H${W}"/></svg>`
+}
+
+/** A setting's switch: the clay track with the knob at the right when on, a quiet one at the left when off. */
+export function switchSvg(isOn: boolean): string {
+  const track = isOn ? '<rect x="1" y="1" width="30" height="17" rx="8.5" fill="#D97757"/>' : '<rect class="trackf" x="1" y="1" width="30" height="17" rx="8.5" style="fill-opacity:.16"/>'
+  const knob = `<circle cx="${isOn ? 22.5 : 9.5}" cy="9.5" r="6.5" fill="${isOn ? '#FFF4EE' : '#D8D2CA'}"/>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 19" width="100%" height="100%">${STYLE}${track}${knob}</svg>`
 }
 
 /** The cards one under another, each as tall as its content, in one drawing. */
@@ -498,27 +626,42 @@ export function detailHeight(svg: string): number {
 
 /** The same facts as lines, for the terminal. */
 export function detailLines(env: Env, now: number): string[] {
-  const out: string[] = []
+  const parts = partLines(env, now)
+  return PARTS.flatMap(p => parts[p])
+}
+
+/** The terminal's lines by part, for its folding sections. */
+export function partLines(env: Env, now: number): Record<Part, string[]> {
   const tools = Object.values(env.kinds).reduce((a, b) => a + b, 0)
   const d = t().detail
-  out.push(`${d.lineSession(env.turns.length, tools)}${env.cost > 0 ? ` · $${env.cost.toFixed(2)}` : ''}`)
-  out.push(`${d.lineContext}: ${tokens(env.tokens)} / ${tokens(env.window)}${env.compactAt > 0 ? ` · ${d.compactsAt(tokens(env.compactAt))}` : ''}`)
-  for (const s of env.slices) out.push(`  ${categoryName(s.name)}: ${tokens(s.tokens)}`)
-  for (const l of env.limits) out.push(`${limitName(l.kind)}: ${Math.round(l.percent)}%${l.resetsAt > now ? ` · ${d.resetsIn(until(l.resetsAt - now))}` : ''}`)
-  if ((env.peers ?? []).length > 0) out.push(...boardLines(env.me, env.peers, now))
+  const overview = [
+    `${d.lineSession(env.turns.length, tools)}${env.cost > 0 ? ` · $${env.cost.toFixed(2)}` : ''}`,
+    ...env.limits.map(l => `${limitName(l.kind)}: ${Math.round(l.percent)}%${l.resetsAt > now ? ` · ${d.resetsIn(until(l.resetsAt - now))}` : ''}`),
+  ]
+  const context = [
+    `${d.lineContext}: ${tokens(env.tokens)} / ${tokens(env.window)}${env.compactAt > 0 ? ` · ${d.compactsAt(tokens(env.compactAt))}` : ''}`,
+    ...env.slices.map(s => `  ${categoryName(s.name)}: ${tokens(s.tokens)}`),
+  ]
+  const changes: string[] = []
   if (env.git) {
     const g = env.git
     const add = g.files.reduce((a, f) => a + (f.add ?? 0), 0)
     const del = g.files.reduce((a, f) => a + (f.del ?? 0), 0)
-    out.push(`${d.lineGit(g.branch, g.changed)} · +${add} −${del}${g.ahead ? ` · ↑${g.ahead}` : ''}${g.behind ? ` · ↓${g.behind}` : ''}`)
-    for (const f of g.files.slice(0, 8)) out.push(`  ${changeKind(f.code).sign} ${f.path}${f.add !== undefined ? `  +${f.add} −${f.del ?? 0}` : ''}`)
+    changes.push(`${d.lineGit(g.branch, g.changed)} · +${add} −${del}${g.ahead ? ` · ↑${g.ahead}` : ''}${g.behind ? ` · ↓${g.behind}` : ''}`)
+    for (const f of g.files.slice(0, 8)) changes.push(`  ${changeKind(f.code).sign} ${f.path}${f.add !== undefined ? `  +${f.add} −${f.del ?? 0}` : ''}`)
   }
-  out.push(...ciLines(env, now))
+  changes.push(...ciLines(env, now))
   if (env.lastEdit) {
     const h = env.lastEdit
-    out.push(`${d.lineLastEdit(baseName(h.path), ago(now - h.at))} · +${h.add} −${h.del}`)
-    for (const line of h.old) out.push(`  − ${line}`)
-    for (const line of h.new) out.push(`  + ${line}`)
+    changes.push(`${d.lineLastEdit(baseName(h.path), ago(now - h.at))} · +${h.add} −${h.del}`)
+    for (const line of h.old) changes.push(`  − ${line}`)
+    for (const line of h.new) changes.push(`  + ${line}`)
   }
-  return out
+  const hist = env.history
+  const today = dayKey(now, env.tz ?? 0)
+  const week = hist ? Array.from({ length: 7 }, (_, i) => hist.days[shiftDay(today, -i)]?.turns ?? 0).reduce((a, b) => a + b, 0) : 0
+  const activity = hist && hist.activeDays > 0
+    ? [`${hist.days[today]?.turns ?? 0} ${d.today} · ${week} ${d.last7} · ${hist.streak} ${d.streak} · ${thousands(hist.total.turns)} ${d.total(hist.activeDays)}`]
+    : []
+  return { overview, chats: (env.peers ?? []).length > 0 ? boardLines(env.me, env.peers, now) : [], changes, context, activity }
 }

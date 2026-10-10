@@ -11,7 +11,7 @@ y mantiene a la vista esos números que no paras de mirar.
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Plugin de Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=flat-square)](#-instalación)
 [![16 idiomas](https://img.shields.io/badge/idiomas-16-7AA2F7?style=flat-square)](#-idiomas)
-[![46 accesorios](https://img.shields.io/badge/armario-46_accesorios-B794F6?style=flat-square)](#-un-armario-que-crece-contigo)
+[![134 accesorios](https://img.shields.io/badge/armario-134_accesorios-B684F6?style=flat-square)](#-un-armario-que-crece-contigo)
 [![PRs bienvenidos](https://img.shields.io/badge/PRs-bienvenidos-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 [English](README.md) · [Türkçe](README.tr.md) · **Español** · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -156,7 +156,7 @@ Más abajo: el contexto por categoría, tus turnos recientes, un calendario con 
 
 ## 👒 Un armario que crece contigo
 
-Cada turno, edición, commit y día de trabajo suma experiencia. Los niveles desbloquean cosas que ponerse: **46 accesorios** para la cabeza, la cara, el cuello, la mano y el hueco al lado de Mochi. Algunos llegan con el día (un sombrero de bruja a finales de octubre, un sobre rojo en el Año Nuevo Lunar, una lámpara diya en Diwali, un gorro de fiesta y un pastel en tu cumpleaños), otros con la hora (café por la mañana, gorro de dormir pasada la medianoche).
+Cada turno, edición, commit y día de trabajo suma experiencia. Los niveles desbloquean cosas que ponerse: **134 accesorios** para la cabeza, la cara, el cuello, la mano y el hueco al lado de Mochi. Algunos llegan con el día (un sombrero de bruja a finales de octubre, un sobre rojo en el Año Nuevo Lunar, una lámpara diya en Diwali, un gorro de fiesta y un pastel en tu cumpleaños), otros con la hora (café por la mañana, gorro de dormir pasada la medianoche).
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Doce Mochis con distintos atuendos: un gorro de lana con café, un vaquero con bigote, un mago, un gorro de fiesta, una corona con monóculo y un gato, un gorro de dormir con bufanda, y más">

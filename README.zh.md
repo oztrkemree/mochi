@@ -11,7 +11,7 @@
 [![许可证: MIT](https://img.shields.io/badge/许可证-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Claude Code 插件](https://img.shields.io/badge/Claude_Code-插件-D97757?style=flat-square)](#-安装)
 [![16 种语言](https://img.shields.io/badge/语言-16_种-7AA2F7?style=flat-square)](#-语言)
-[![46 件配饰](https://img.shields.io/badge/衣橱-46_件-B794F6?style=flat-square)](#-和你一起成长的衣橱)
+[![134 件配饰](https://img.shields.io/badge/衣橱-134_件-B684F6?style=flat-square)](#-和你一起成长的衣橱)
 [![欢迎 PR](https://img.shields.io/badge/PR-欢迎-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · **中文** · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -156,7 +156,7 @@ Mochi 空闲时，偶尔会针对刚发生的事给一条简短的 Claude Code �
 
 ## 👒 和你一起成长的衣橱
 
-每一轮对话、每次编辑、每个 commit、每个工作日都会积累经验值。升级就能解锁可以穿戴的东西：头部、脸部、颈部、手持和 Mochi 身旁，一共 **46 件**。有些随日子而来（十月底的女巫帽、春节的红包、排灯节的油灯、你生日那天的派对帽和蛋糕），有些随时间出现（早上的咖啡、午夜之后的睡帽）。
+每一轮对话、每次编辑、每个 commit、每个工作日都会积累经验值。升级就能解锁可以穿戴的东西：头部、脸部、颈部、手持和 Mochi 身旁，一共 **134 件**。有些随日子而来（十月底的女巫帽、春节的红包、排灯节的油灯、你生日那天的派对帽和蛋糕），有些随时间出现（早上的咖啡、午夜之后的睡帽）。
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="十二个不同装扮的 Mochi：毛线帽配咖啡、留着胡子的牛仔、巫师、派对帽、王冠配单片眼镜和猫、睡帽配围巾，还有更多">

@@ -11,7 +11,7 @@ dönüp dönüp baktığın rakamları da hep göz önünde tutar.
 [![Lisans: MIT](https://img.shields.io/badge/lisans-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Claude Code eklentisi](https://img.shields.io/badge/Claude_Code-eklenti-D97757?style=flat-square)](#-kurulum)
 [![16 dil](https://img.shields.io/badge/dil-16-7AA2F7?style=flat-square)](#-diller)
-[![46 aksesuar](https://img.shields.io/badge/gardırop-46_parça-B794F6?style=flat-square)](#-seninle-büyüyen-bir-gardırop)
+[![134 aksesuar](https://img.shields.io/badge/gardırop-134_parça-B684F6?style=flat-square)](#-seninle-büyüyen-bir-gardırop)
 [![PR'lara açık](https://img.shields.io/badge/PR-açık-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 [English](README.md) · **Türkçe** · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -156,7 +156,7 @@ Aşağısında: kategorilere göre context, son turların, bütün sohbetlerinin
 
 ## 👒 Seninle büyüyen bir gardırop
 
-Her tur, her düzenleme, her commit ve çalıştığın her gün deneyim kazandırır. Seviyeler giyilecek şeyler açar: baş, yüz, boyun, el ve Mochi'nin yanı için **46 parça**. Bazıları günüyle gelir (ekim sonunda cadı şapkası, Ay Yeni Yılı'nda kırmızı zarf, Diwali'de diya kandili, doğum gününde parti şapkası ve pasta), bazıları saatiyle (sabah kahve, gece yarısından sonra gece şapkası).
+Her tur, her düzenleme, her commit ve çalıştığın her gün deneyim kazandırır. Seviyeler giyilecek şeyler açar: baş, yüz, boyun, el ve Mochi'nin yanı için **134 parça**. Bazıları günüyle gelir (ekim sonunda cadı şapkası, Ay Yeni Yılı'nda kırmızı zarf, Diwali'de diya kandili, doğum gününde parti şapkası ve pasta), bazıları saatiyle (sabah kahve, gece yarısından sonra gece şapkası).
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Farklı kıyafetlerle on iki Mochi: kahveli bere, bıyıklı kovboy, sihirbaz, parti şapkası, monokllü ve kedili taç, atkılı gece şapkası ve daha fazlası">

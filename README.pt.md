@@ -11,7 +11,7 @@ e deixa à vista os números que você vive conferindo.
 [![Licença: MIT](https://img.shields.io/badge/licença-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Plugin do Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=flat-square)](#-instalação)
 [![16 idiomas](https://img.shields.io/badge/idiomas-16-7AA2F7?style=flat-square)](#-idiomas)
-[![46 acessórios](https://img.shields.io/badge/guarda--roupa-46_itens-B794F6?style=flat-square)](#-um-guarda-roupa-que-cresce-com-você)
+[![134 acessórios](https://img.shields.io/badge/guarda--roupa-134_itens-B684F6?style=flat-square)](#-um-guarda-roupa-que-cresce-com-você)
 [![PRs bem-vindos](https://img.shields.io/badge/PRs-bem--vindos-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · **Português** · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -156,7 +156,7 @@ Mais abaixo: o contexto por categoria, seus turnos recentes, um calendário com 
 
 ## 👒 Um guarda-roupa que cresce com você
 
-Cada turno, edição, commit e dia de trabalho rende experiência. Os níveis liberam coisas para vestir: **46 itens** entre cabeça, rosto, pescoço, mão e o cantinho ao lado do Mochi. Alguns chegam com a data (chapéu de bruxa no fim de outubro, envelope vermelho no Ano-Novo Lunar, uma lamparina diya no Diwali, chapéu de festa e bolo no seu aniversário), outros com a hora (café de manhã, touca de dormir depois da meia-noite).
+Cada turno, edição, commit e dia de trabalho rende experiência. Os níveis liberam coisas para vestir: **134 itens** entre cabeça, rosto, pescoço, mão e o cantinho ao lado do Mochi. Alguns chegam com a data (chapéu de bruxa no fim de outubro, envelope vermelho no Ano-Novo Lunar, uma lamparina diya no Diwali, chapéu de festa e bolo no seu aniversário), outros com a hora (café de manhã, touca de dormir depois da meia-noite).
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Doze Mochis com roupas diferentes: gorro com café, caubói de bigode, mago, chapéu de festa, coroa com monóculo e gato, touca de dormir com cachecol e mais">

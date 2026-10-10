@@ -1,6 +1,6 @@
 # Adding something for Mochi to wear
 
-Mochi's wardrobe is 46 items in five slots. A new one touches a handful of places, and a test checks that none is missed: an item without a slot, art, a place on the drawing, a way to get it or a name in every language fails `claude plugin test .`.
+Mochi's wardrobe is 134 items in five slots. A new one touches a handful of places, and a test checks that none is missed: an item without a slot, art, a place on the drawing, a way to get it or a name in every language fails `claude plugin test .`.
 
 Have an idea but no art? Open an **Outfit idea** issue instead; someone may draw it.
 

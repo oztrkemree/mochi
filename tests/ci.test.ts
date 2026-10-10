@@ -2,7 +2,7 @@ import type { On, RenderElement } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
 
 import { ciLine, ciOf, ghTrouble, isPushing, prLine, prOf } from '../hooks/ci'
-import { detailLines, detailSvg } from '../hooks/detail'
+import { detailSvg, partLines } from '../hooks/detail'
 import { setLang } from '../hooks/i18n'
 import { panelSvg } from '../hooks/panel'
 import { NO_ENV, NO_INFO } from '../hooks/state'
@@ -86,7 +86,7 @@ test('the details show the last CI and the pull request; the panel shows runs go
   const env = { ...NO_ENV, ci, pr }
   const svg = detailSvg(env, now, 560)
   for (const part of ['>CI<', 'ci passed · 2 checks · 3m', 'c0ffee0 · 5m ago', 'PR #12 · Watch CI after a push', '>approved<', 'checks 4/5 · 1 failing']) expect(svg).toContain(part)
-  expect(detailLines(env, now).slice(-2)).toEqual(['ci passed · 2 checks · 3m · 5m ago', 'PR #12 · Watch CI after a push · approved · checks 4/5 · 1 failing'])
+  expect(partLines(env, now).changes.slice(-2)).toEqual(['ci passed · 2 checks · 3m · 5m ago', 'PR #12 · Watch CI after a push · approved · checks 4/5 · 1 failing'])
   expect(detailSvg(NO_ENV, now, 560)).not.toContain('>CI<')
 
   const going = ciOf(runs(run('completed', 'success', 'build'), run('in_progress', '', 'test')), SHA, 1)

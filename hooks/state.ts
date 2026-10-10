@@ -1,6 +1,7 @@
-import type { DayRec, Env, Face, Info, Outfit, Panel, Peer, Prefs, Shot } from '../types'
+import type { Block, DayRec, Env, Face, Info, Outfit, Panel, Peer, Prefs, Section, Shot, Tab } from '../types'
 import type { GhTrouble } from './ci'
 import type { Pending, TipId } from './coach'
+import type { Reaction } from './react'
 import { NEW_WATCH } from './guard'
 import type { Watch } from './guard'
 import { pickLang, t } from './i18n'
@@ -11,7 +12,18 @@ import type { Platform } from './system'
 // What register.tsx and render.tsx share: the defaults of the values kept in
 // $.state, and this load's own bookkeeping.
 
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false, badges: false }, shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, birthday: '', firstDay: '' }
+/** The detail pane's sections in order, and which start open: what is live now, not what is looked at once in a while. */
+export const SECTIONS: readonly Section[] = ['chats', 'changes', 'context', 'activity', 'level', 'wardrobe', 'badges', 'settings', 'more']
+const OPEN: Record<Section, boolean> = { chats: true, changes: true, context: false, activity: true, level: true, wardrobe: true, badges: false, settings: true, more: true }
+export const BLOCKS: readonly Block[] = ['overview', ...SECTIONS]
+/** The pane's tabs, and the tab each block lives in. */
+export const TABS: readonly Tab[] = ['now', 'past', 'mochi', 'settings']
+export const TAB_OF: Record<Block, Tab> = {
+  overview: 'now', chats: 'now', changes: 'now', context: 'now', activity: 'past', level: 'past', badges: 'past', wardrobe: 'mochi', settings: 'settings', more: 'settings',
+}
+/** A tab's blocks in the person's order. */
+export const inTab = (order: readonly Block[], tab: Tab): Block[] => order.filter(b => TAB_OF[b] === tab)
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: OPEN, order: [...BLOCKS], hidden: [], isArranging: false, tab: 'now', shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, birthday: '', firstDay: '' }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**
@@ -34,11 +46,46 @@ export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | unde
     pick[SLOT[worn]] = worn
   }
   const { wear: _old, ...rest } = saved ?? {}
-  const open = { level: saved?.open?.level === true, wardrobe: saved?.open?.wardrobe === true, badges: saved?.open?.badges === true }
+  const was = (saved?.open ?? {}) as Partial<Record<Section, unknown>>
+  const open = Object.fromEntries(SECTIONS.map(s => [s, typeof was[s] === 'boolean' ? was[s] : OPEN[s]])) as Record<Section, boolean>
   // Choices saved before there were languages were made in Turkish, its only one then.
   const lang = typeof saved?.lang === 'string' && (saved.lang === 'auto' || pickLang(saved.lang) !== null) ? saved.lang : saved !== undefined ? 'tr' : 'auto'
   const shelf = SLOTS.find(slot => slot === saved?.shelf) ?? 'head'
-  return { ...DEFAULT_PREFS, ...rest, pick, open, shelf, lang }
+  const tab = TABS.find(x => x === saved?.tab) ?? 'now'
+  return { ...DEFAULT_PREFS, ...rest, pick, open, shelf, lang, ...layoutOf(saved?.order, saved?.hidden), isArranging: false, tab }
+}
+
+/** The pane's order and what is hidden, from what was saved: unknown names dropped, a block it does not name (a newer one) put where it goes by default. */
+export function layoutOf(order: unknown, hidden: unknown): { order: Block[]; hidden: Block[] } {
+  const known = (list: unknown) => (Array.isArray(list) ? BLOCKS.filter(b => list.includes(b)) : [])
+  const saved = Array.isArray(order) ? order.filter((b, i): b is Block => BLOCKS.includes(b) && order.indexOf(b) === i) : []
+  const next = [...saved]
+  for (const b of BLOCKS) {
+    if (next.includes(b)) continue
+    // After the block it follows by default, or first.
+    const before = BLOCKS.slice(0, BLOCKS.indexOf(b)).reverse().find(x => next.includes(x))
+    next.splice(before === undefined ? 0 : next.indexOf(before) + 1, 0, b)
+  }
+  return { order: next, hidden: known(hidden) }
+}
+
+/** The order with a block swapped with the one before or after it in its own tab; unchanged at the tab's end. */
+export function stepped(order: readonly Block[], block: Block, way: 'up' | 'down'): Block[] {
+  const mates = inTab(order, TAB_OF[block])
+  const other = mates[mates.indexOf(block) + (way === 'up' ? -1 : 1)]
+  if (other === undefined) return [...order]
+  return order.map(b => (b === block ? other : b === other ? block : b))
+}
+
+/** The order with one tab's blocks put in the order `part` gives them; null when `part` is not exactly that tab's blocks. */
+export function reordered(order: readonly Block[], part: unknown): Block[] | null {
+  if (!Array.isArray(part)) return null
+  const first = BLOCKS.find(b => b === part[0])
+  if (first === undefined) return null
+  const mates = inTab(order, TAB_OF[first])
+  if (part.length !== mates.length || !mates.every(b => part.includes(b))) return null
+  let k = 0
+  return order.map(b => (TAB_OF[b] === TAB_OF[first] ? (part[k++] as Block) : b))
 }
 export const NO_ENV: Env = {
   context: -1, agents: 0, turnTools: 0, tokens: 0, window: 0, slices: [], limits: [], cost: 0, recent: [], last: '', compactAt: 0, allSlices: [], git: null, turns: [], files: [], kinds: {}, startedAt: 0,
@@ -52,6 +99,8 @@ export const NO_INFO: Info = {
   label: '', detail: '', context: { percent: -1, tokens: 0, window: 0, slices: [] }, limits: [], cost: 0, agents: 0, tools: 0, isBusy: false, recent: [], last: '', compactPct: 0, warn: 0, git: null,
 }
 export const NO_PANEL: Panel = { shot: FIRST_SHOT, info: NO_INFO, infoFrom: null, infoAt: 0 }
+/** What the last of the details pane's actions answered, and the part of it worth copying; '' when there is none to show. */
+export const NO_SAID = { text: '', copy: '' }
 
 /**
  * Per-load bookkeeping (a reload starts it over); what the drawing reads lives
@@ -111,8 +160,8 @@ export const chat = {
   waitTold: 0,
   /** The shield waits on the person's word. */
   isAsking: false,
-  /** Claude Code's permission question on the face: its token, the face it covered and that face's token, and the call it asks about. */
-  perm: null as { token: number; was: number; face: Omit<Face, 'frameAt'>; key: string } | null,
+  /** Claude Code's permission questions on the face: its token, the face the first covered and that face's token, and the calls they ask about. */
+  perm: null as { token: number; was: number; face: Omit<Face, 'frameAt'>; keys: string[] } | null,
   /** The prompt said good night: once its reply is done, Mochi goes to sleep. */
   isGoodNight: false,
   /** This chat's folder and whether git keeps it as a linked worktree, for the board of chats. */
@@ -164,4 +213,11 @@ export const chat = {
   winkDay: '',
   /** The badge awards in line, run one at a time. */
   awards: Promise.resolve() as Promise<void>,
+  /**
+   * Ultracode: the agents a workflow script started and has not heard back from,
+   * how many ran this round, how many of those answered, and since when, when
+   * the last one ended (0 while one runs), when any of them last did something,
+   * the tool calls the subagents have open, and the finale a busy turn's end shows.
+   */
+  flow: { ids: new Set<string>(), total: 0, ok: 0, startedAt: 0, idleAt: 0, at: 0, calls: 0, finale: null as Reaction | null },
 }

@@ -11,7 +11,7 @@ et garde sous vos yeux les chiffres que vous vérifiez sans arrêt.
 [![Licence : MIT](https://img.shields.io/badge/licence-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Plugin Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=flat-square)](#-installation)
 [![16 langues](https://img.shields.io/badge/langues-16-7AA2F7?style=flat-square)](#-langues)
-[![46 accessoires](https://img.shields.io/badge/garde--robe-46_accessoires-B794F6?style=flat-square)](#-une-garde-robe-qui-grandit-avec-vous)
+[![134 accessoires](https://img.shields.io/badge/garde--robe-134_accessoires-B684F6?style=flat-square)](#-une-garde-robe-qui-grandit-avec-vous)
 [![PR bienvenues](https://img.shields.io/badge/PR-bienvenues-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · **Français** · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -156,7 +156,7 @@ Plus bas : le contexte par catégorie, vos derniers tours, un calendrier des jou
 
 ## 👒 Une garde-robe qui grandit avec vous
 
-Chaque tour, chaque modification, chaque commit et chaque journée de travail rapporte de l’expérience. Les niveaux débloquent de quoi s’habiller : **46 accessoires** pour la tête, le visage, le cou, la main et la place juste à côté de Mochi. Certains arrivent avec le jour (un chapeau de sorcière fin octobre, une enveloppe rouge au Nouvel An lunaire, une lampe diya à Diwali, un chapeau de fête et un gâteau le jour de votre anniversaire), d’autres avec l’heure (un café le matin, un bonnet de nuit après minuit).
+Chaque tour, chaque modification, chaque commit et chaque journée de travail rapporte de l’expérience. Les niveaux débloquent de quoi s’habiller : **134 accessoires** pour la tête, le visage, le cou, la main et la place juste à côté de Mochi. Certains arrivent avec le jour (un chapeau de sorcière fin octobre, une enveloppe rouge au Nouvel An lunaire, une lampe diya à Diwali, un chapeau de fête et un gâteau le jour de votre anniversaire), d’autres avec l’heure (un café le matin, un bonnet de nuit après minuit).
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Douze Mochi dans des tenues différentes : un bonnet avec un café, un cow-boy moustachu, un magicien, un chapeau de fête, une couronne avec un monocle et un chat, un bonnet de nuit avec une écharpe, et bien d’autres">

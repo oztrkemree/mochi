@@ -16,7 +16,7 @@ import { clip, cols } from '../hooks/text'
 setLang('tr')
 import { panelSvg } from '../hooks/panel'
 import { paramsAt, svgFor, target, TRANSITION_MS } from '../hooks/rig'
-import { afterTool, beforeTool, duration, isScary, onPrompt, onTurnEnd } from '../hooks/react'
+import { afterTool, beforeTool, duration, flowEnd, flowLine, isScary, onPrompt, onTurnEnd } from '../hooks/react'
 
 const BAND = {
   plugin: 'mochi',
@@ -144,6 +144,19 @@ test('prompts and turn ends stay plain', async () => {
   expect(onTurnEnd({ reason: 'answer', seconds: 400, tools: 3, edits: 0, errors: 0 })).toEqual({ mood: 'tired', line: 'bitti · 6dk 40sn · 3 araç', holdMs: 12000, sound: 'ding' })
   expect(onTurnEnd({ reason: 'answer', seconds: 20, tools: 3, edits: 2, errors: 0 }).line).toBe('bitti · 20sn · 3 araç · 2 düzenleme')
   expect(duration(75)).toBe('1dk 15sn')
+})
+
+test('ultracode: the workflow and its agents have a face of their own', async () => {
+  expect(beforeTool({ tool: 'Workflow', name: 'review-changes' })).toEqual({ mood: 'agent', line: 'ultracode · review-changes', holdMs: 0 })
+  expect(beforeTool({ tool: 'Workflow', script: "export const meta = { name: 'find-flaky-tests', description: 'x' }" }).line).toBe('ultracode · find-flaky-tests')
+  expect(beforeTool({ tool: 'Workflow' }).line).toBe('ultracode · workflow')
+  expect(onPrompt('ultracode ile hepsini tara', false)).toEqual({ mood: 'agent', line: 'ultracode', holdMs: 0 })
+  expect(flowLine(2, 9)).toBe('ultracode · 7/9 · 2 ajan')
+  expect(flowEnd(9, 9, 252)).toEqual({ mood: 'party', line: 'ultracode · bitti · 9 ajan · 4dk 12sn', holdMs: 12000, sound: 'party' })
+  // A run none of whose agents answered was stopped: no party.
+  expect(flowEnd(3, 0, 40)).toEqual({ mood: 'shocked', line: 'ultracode · durduruldu', holdMs: 6000 })
+  // Re-run by file or by run id, the call has no name of its own.
+  expect(beforeTool({ tool: 'Workflow', scriptPath: 'C:\\s\\review-changes-wf_b8f1738e-d35.js' }).line).toBe('ultracode · review-changes')
 })
 
 test('the band shows the running tool; the desktop panel shows it with context and limits', async ($, on) => {
@@ -409,10 +422,10 @@ test('days add up into a history, a level and things to wear', async () => {
   expect(xpOf(h)).toBe(47 * 10 + 20 * 2 + 3 * 25 + 3 * 30)
   expect(levelOf(0)).toEqual({ level: 1, at: 0, next: 100 })
   expect(levelOf(450)).toEqual({ level: 3, at: 400, next: 900 })
-  expect(unlocked(h)).toEqual(['beanie', 'glasses', 'mug', 'tea', 'bowtie', 'sunglasses', 'headphones', 'pencil'])
+  expect(unlocked(h)).toEqual(['beanie', 'glasses', 'mug', 'tea', 'bowtie', 'sunglasses', 'pencil', 'bandana'])
   const noon = Date.UTC(2026, 6, 1, 9, 0)
   const none = { head: null, face: null, neck: null, held: null, ground: null }
-  expect(outfitFor({}, ['bowtie', 'headphones'], noon, 180, 'idle', true)).toEqual({ ...none, head: 'headphones', neck: 'bowtie' })
+  expect(outfitFor({}, ['bowtie', 'hardhat'], noon, 180, 'idle', true)).toEqual({ ...none, head: 'hardhat', neck: 'bowtie' })
   expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 5, 0), 180, 'idle', true).held).toBe('mug')
   expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 23, 0), 180, 'writing', false).head).toBe('nightcap')
   expect(outfitFor({}, ['hardhat'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true)).toEqual({ ...none, head: 'witchhat', neck: 'pin', ground: 'pumpkin' })
@@ -428,14 +441,19 @@ test('the wardrobe puts on, takes off and goes back to automatic', async ($, on)
   await $.session.start(START)
   const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   expect(await pane.find({ key: 'wear:glasses' })).toBeUndefined()
-  expect(await pane.find({ type: 'Text', text: /^1?\d\/46 açık · takılı: / })).toBeDefined()
-  await pane.press({ key: 'fold:wardrobe' } as never)
-  expect(await pane.find({ key: 'wear:glasses' })).toBeDefined()
+  await pane.press({ key: 'tab:mochi' } as never)
+  expect(await pane.find({ type: 'Text', text: /^\d+\/\d+ açık$/ })).toBeDefined()
+  // One slot at a time; what is locked is shown with what unlocks it, and no button.
   expect(await pane.find({ key: 'wear:viking' })).toBeUndefined()
+  expect(await pane.find({ type: 'Text', text: 'seviye 12' })).toBeDefined()
+  await pane.press({ key: 'shelf:face' } as never)
+  expect(await pane.find({ key: 'wear:glasses' })).toBeDefined()
   await pane.press({ key: 'wear:glasses' } as never)
   expect((await pane.find({ type: 'Text', text: /^Yüz · / }))?.text).toBe('Yüz · gözlük')
-  await pane.press({ key: 'wear:glasses' } as never)
+  // On the desktop the whole card is clickable: a clear region over it posts for the button.
+  await pane.post({}, { in: 'tap:wear:glasses' })
   expect((await pane.find({ type: 'Text', text: /^Yüz · / }))?.text).toBe('Yüz · boş')
+  await pane.post({}, { in: 'tap:shelf:head' })
   const said = await $.command.run({ command: 'mochi', args: 'aksesuar viking' } as never)
   expect(said.text).toBe('viking kaskı kilitli (seviye 12).')
   await $.command.run({ command: 'mochi', args: 'aksesuar bere' } as never)
@@ -534,12 +552,12 @@ test('the level folds open and shut, and stays as left', async ($, on) => {
   await clock.set(NOON)
   await $.session.start(START)
   const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
-  expect((await pane.find({ key: 'fold:level' }))?.text).toBe('Aç')
-  expect(await pane.find({ type: 'Svg', text: 'Seviye' })).toBeUndefined()
+  await pane.press({ key: 'tab:past' } as never)
+  expect((await pane.find({ key: 'fold:level' }))?.text).toBe('▾')
   await pane.press({ key: 'fold:level' } as never)
-  expect((await pane.find({ key: 'fold:level' }))?.text).toBe('Kapat')
+  expect((await pane.find({ key: 'fold:level' }))?.text).toBe('▸')
   await pane.press({ key: 'fold:level' } as never)
-  expect((await pane.find({ key: 'fold:level' }))?.text).toBe('Aç')
+  expect((await pane.find({ key: 'fold:level' }))?.text).toBe('▾')
   await pane.unmount()
 })
 

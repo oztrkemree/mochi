@@ -67,12 +67,19 @@ export type Params = {
 
 /** Something Mochi can wear or have beside it (see hooks/level.ts). */
 export type Item =
-  | 'hardhat' | 'crown' | 'partyhat' | 'witchhat' | 'santahat' | 'nightcap' | 'headphones' | 'gradcap' | 'cowboy' | 'pirate' | 'chefhat' | 'viking' | 'wizard' | 'fez' | 'propeller' | 'beanie'
+  | 'hardhat' | 'crown' | 'partyhat' | 'witchhat' | 'santahat' | 'nightcap' | 'gradcap' | 'cowboy' | 'pirate' | 'chefhat' | 'viking' | 'wizard' | 'fez' | 'propeller' | 'beanie'
   | 'sunglasses' | 'glasses' | 'mustache' | 'monocle'
   | 'bowtie' | 'medal' | 'scarf' | 'necktie' | 'evileye'
   | 'mug' | 'tea' | 'simit' | 'pencil' | 'wrench' | 'balloon'
   | 'pumpkin' | 'duck' | 'cactus' | 'cat' | 'gift'
   | 'sakura' | 'pin' | 'rosette' | 'candy' | 'lantern' | 'envelope' | 'diya' | 'sprouts' | 'songpyeon' | 'cake'
+  | 'bandana' | 'sailorhat' | 'strawhat' | 'daisyhat' | 'leaf' | 'catears' | 'bunnyears' | 'flowercrown' | 'beret' | 'tophat' | 'jester' | 'nursecap' | 'sombrero' | 'antlers' | 'farmer' | 'sunflowercrown' | 'bee' | 'halo' | 'unicorn' | 'shortcake' | 'rainbow' | 'dragon' | 'astronaut'
+  | 'bowler' | 'flatcap' | 'explorer' | 'baseballcap'
+  | 'heartglasses' | 'eyepatch' | 'beard' | 'goggles' | 'starglasses' | 'cinema3d' | 'nerdglasses' | 'visor'
+  | 'clownnose' | 'catwhiskers' | 'plaster' | 'freckles' | 'bushybrows' | 'eyelashes' | 'fangs' | 'teardrop'
+  | 'spikedcollar' | 'pearls'  | 'bellcollar' | 'neckerchief' | 'lei'  | 'goldchain' | 'overalls'
+  | 'flag' | 'whisk' | 'pinwheel' | 'compass'  | 'key' | 'icecream' | 'cupcake' | 'sunflower' | 'clover' | 'toadstool' | 'cactuspot' | 'wand' | 'potion' | 'paddle' | 'joystick' | 'bubblewand' | 'rollingpin' | 'harmonica' | 'tambourine'
+  | 'mushroom' | 'frog' | 'robot' | 'ramen' | 'snail' | 'campfire' | 'bonsai' | 'penguin' | 'lavalamp' | 'taco' | 'tent' | 'hedgehog' | 'wateringcan' | 'macaron' | 'arcade' | 'snowman' | 'rocket' | 'watermelon' | 'chest' | 'axolotl'
 
 /** Something earned once from real work (see hooks/badges.ts). */
 export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' | 'owl' | 'bird' | 'polyglot' | 'marathon' | 'week' | 'hundred'
@@ -192,6 +199,13 @@ export type History = {
   bestStreak: number
 }
 
+/** The detail pane's folding sections, in the order drawn. */
+export type Section = 'chats' | 'changes' | 'context' | 'activity' | 'level' | 'wardrobe' | 'badges' | 'settings' | 'more'
+/** What the detail pane is made of, each moved and hidden by the person: the overview and the sections. */
+export type Block = 'overview' | Section
+/** The detail pane's tabs, each holding its own blocks. */
+export type Tab = 'now' | 'past' | 'mochi' | 'settings'
+
 export type Prefs = {
   isCompact: boolean
   isHidden: boolean
@@ -203,9 +217,16 @@ export type Prefs = {
   /** The person's choice per slot: an item, or null for nothing; a slot left out dresses itself (level, season, hour). */
   pick: Partial<Outfit>
   /** Which of the detail pane's folding sections are open. */
-  open: { level: boolean; wardrobe: boolean; badges: boolean }
+  open: Record<Section, boolean>
+  /** The detail pane's blocks in the person's order, every one of them; those hidden are left out of the pane. */
+  order: Block[]
+  hidden: Block[]
+  /** The pane shows its blocks as a list to move and hide. */
+  isArranging: boolean
+  /** The detail pane's tab in view. */
+  tab: Tab
   /** The wardrobe's category (slot) shown in the details pane. */
-  shelf: Slot
+  shelf: keyof Outfit
   /** `auto` follows Claude Code's language setting and the system; otherwise a language code (en, tr, de…). */
   lang: string
   /** Follow the CI of a push made in this chat, and show the branch's pull request, through gh. */
@@ -332,6 +353,8 @@ declare module 'claude-code' {
       sec: number
       env: Env
       prefs: Prefs
+      /** What the last of the details pane's actions answered, and the part of it worth copying. */
+      said: { text: string; copy: string }
     }
   }
 }

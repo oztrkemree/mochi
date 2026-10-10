@@ -21,6 +21,9 @@ const host = (url: unknown): string => {
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '')
 
+/** Claude Code's own name for the mode where a workflow's agents do the work: kept as it is in every language. */
+export const ULTRA = 'ultracode'
+
 /** 75 → "1m 15s", 9 → "9s", 4000 → "1h 6m", in the language's units. */
 export const duration = (seconds: number): string => {
   const u = t().unit
@@ -64,6 +67,10 @@ export function subject(e: Args): string {
     case 'Task': return short(str(e.description) || str(e.subagent_type) || t().word.agent, 30)
     case 'Skill': return short(str(e.skill), 28)
     case 'ToolSearch': return `'${short(str(e.query), 28)}'`
+    // A saved workflow's name, or the `name` of an inline script's `meta`.
+    // A re-run by `scriptPath` has the file's name, which the harness gives as `<name>-wf_<run>.js`.
+    case 'Workflow': return short(str(e.name) || /\bname:\s*['"`]([^'"`]+)['"`]/.exec(str(e.script))?.[1]
+      || baseName(str(e.scriptPath)).replace(/(-wf_[\w-]+)?\.[cm]?[jt]s$/, '') || 'workflow', 30)
   }
   if (e.tool.startsWith('mcp__')) {
     const [, server = '', name = ''] = e.tool.split('__')
@@ -99,6 +106,7 @@ export function beforeTool(e: Args): Reaction {
     case 'WebSearch': return at('web', w.searching)
     case 'Agent':
     case 'Task': return at('agent', w.agent)
+    case 'Workflow': return at('agent', ULTRA)
     case 'AskUserQuestion': return { mood: 'asking', line: w.waitingAnswer, holdMs: 0 }
     case 'ExitPlanMode': return { mood: 'asking', line: w.waitingPlan, holdMs: 0 }
     case 'EnterPlanMode': return { mood: 'thinking', line: w.planning, holdMs: 0 }
@@ -147,6 +155,8 @@ export function onPrompt(text: string, wasAsleep: boolean): Reaction {
   const low = said.toLocaleLowerCase()
   const thinking = t().st.thinking
   if (wasAsleep) return { mood: 'shocked', line: t().st.wokeUp, holdMs: 1500 }
+  // The keyword that sends the work to a workflow's agents: Mochi is ready before the first one starts.
+  if (/\bultra[ -]?code\b/.test(low)) return { mood: 'agent', line: ULTRA, holdMs: 0 }
   // Thanks and praise, in the languages Mochi speaks.
   if (/te[sş]ekk[uü]r|sa[gğ]ol|eyvallah|\beyv\b|thanks|thank you|\bthx\b|\btsk\b|harika|s[uü]per|m[uü]kemmel|aferin|bravo|helal|efsane|perfect|awesome|great job|gracias|danke|merci|obrigad|grazie|dzi[eę]kuj[eę]|dzi[eę]ki|terima kasih|makasih|спасибо|дякую|谢谢|ありがとう|감사|고마워|धन्यवाद|शुक्रिया|شكر/.test(low)) {
     return { mood: 'pleased', line: thinking, holdMs: 2500 }
@@ -159,6 +169,18 @@ export function onPrompt(text: string, wasAsleep: boolean): Reaction {
     return { mood: 'nervous', line: thinking, holdMs: 2500 }
   }
   return { mood: 'thinking', line: thinking, holdMs: 0 }
+}
+
+// ---------- ultracode: a workflow's agents ----------
+
+/** While a workflow's agents run: how many of those started have finished, and how many work now. */
+export const flowLine = (running: number, total: number): string => `${ULTRA} · ${total - running}/${total} · ${t().st.agents(running)}`
+
+/** Once they have all finished: how many there were and how long it took; a run none of whose agents answered was stopped, not done. */
+export function flowEnd(agents: number, answered: number, seconds: number): Reaction {
+  const w = t().st
+  if (answered === 0) return { mood: 'shocked', line: `${ULTRA} · ${w.stopped}`, holdMs: 6000 }
+  return { mood: 'party', line: `${ULTRA} · ${w.done} · ${w.agents(agents)} · ${duration(seconds)}`, holdMs: 12_000, sound: 'party' }
 }
 
 // ---------- the end of a turn ----------

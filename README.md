@@ -11,7 +11,7 @@ and keeps the numbers you keep checking in plain sight.
 [![License: MIT](https://img.shields.io/badge/license-MIT-E08A6A?style=flat-square)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=flat-square)](#-install)
 [![16 languages](https://img.shields.io/badge/languages-16-7AA2F7?style=flat-square)](#-languages)
-[![46 accessories](https://img.shields.io/badge/wardrobe-46_items-B794F6?style=flat-square)](#-a-wardrobe-that-grows-with-you)
+[![134 accessories](https://img.shields.io/badge/wardrobe-134_items-B684F6?style=flat-square)](#-a-wardrobe-that-grows-with-you)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-4CC38A?style=flat-square)](CONTRIBUTING.md)
 
 **English** · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -156,7 +156,7 @@ Further down: the context by category, your recent turns, a calendar of every ch
 
 ## 👒 A wardrobe that grows with you
 
-Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **46 items** across head, face, neck, hand and the spot beside Mochi. Some arrive with the day (a witch hat in late October, a red envelope at Lunar New Year, a diya at Diwali, a party hat and a cake on your birthday), some with the hour (coffee in the morning, a night cap after midnight).
+Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **134 items** across head, face, neck, hand and the spot beside Mochi. Some arrive with the day (a witch hat in late October, a red envelope at Lunar New Year, a diya at Diwali, a party hat and a cake on your birthday), some with the hour (coffee in the morning, a night cap after midnight).
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Twelve Mochis in different outfits: a beanie with coffee, a cowboy with a mustache, a wizard, a party hat, a crown with a monocle and a cat, a night cap with a scarf, and more">
