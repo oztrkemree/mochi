@@ -332,6 +332,30 @@ export const de: typeof en = {
     wardrobe: 'Kleiderschrank',
   },
 
+  data: {
+    exported: path => `Alles, was Mochi speichert, steht in einer Datei: ${path}`,
+    exportFailed: reason => `Der Export konnte nicht geschrieben werden: ${reason}`,
+    resetHow: 'Was löschen? /mochi zurücksetzen level · verlauf · alles',
+    resetAsk: {
+      level: 'Das Level wird aus dem Verlauf berechnet; dies löscht nur, was Mochi davon behält (level.json). Löschen?',
+      history: 'Dies löscht den Verlauf aller Chats, und das Level beginnt von vorn. Löschen?',
+      all: 'Dies löscht alles, was Mochi speichert: Verlauf, Level, Nutzungswerte und Einstellungen (Exporte bleiben). Alles löschen?',
+    },
+    clear: 'Löschen',
+    keep: 'Behalten',
+    kept: 'Nichts wurde gelöscht.',
+    cleared: {
+      level: 'Level-Speicher gelöscht. Das Level wird aus dem Verlauf berechnet: /mochi zurücksetzen verlauf beginnt es neu.',
+      history: 'Verlauf in allen Chats gelöscht; das Level beginnt von vorn.',
+      all: 'Alles, was Mochi gespeichert hatte, ist gelöscht, und die Einstellungen sind zurückgesetzt.',
+    },
+    notCleared: files => `Diese Dateien konnten nicht entfernt werden: ${files}`,
+    feedback: url => `Um einen Fehler zu melden, öffne diesen Link. Das Formular enthält nur die Versionen, das System, die Oberfläche und die Sprache:\n${url}`,
+    pluginsOn: 'Reaktionen anderer Plugins an.',
+    pluginsOff: 'Reaktionen anderer Plugins aus.',
+    words: { export: ['exportieren'], reset: ['zurücksetzen', 'zuruecksetzen'], feedback: ['rückmeldung', 'fehler'], plugins: ['erweiterungen'], history: ['verlauf'], all: ['alles'] },
+  },
+
   shield: {
     question: (what, cmd) => `Dieser Befehl ${what}:\n\n${cmd}\n\nAusführen?`,
     run: 'Ausführen',

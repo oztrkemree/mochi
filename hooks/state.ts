@@ -11,7 +11,7 @@ import type { Platform } from './system'
 // What register.tsx and render.tsx share: the defaults of the values kept in
 // $.state, and this load's own bookkeeping.
 
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false }, lang: 'auto', hasCi: true, hasTips: true }
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false }, lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**
@@ -136,4 +136,8 @@ export const chat = {
     /** This plugin's version, from its plugin.json. */
     version: '',
   },
+  /** The days files this chat counted, by name: one gone means a history reset in some chat. */
+  counted: [] as string[],
+  /** When each other plugin last made Mochi react, by its name. */
+  reactedAt: {} as Record<string, number>,
 }

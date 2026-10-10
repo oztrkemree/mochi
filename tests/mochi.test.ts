@@ -546,7 +546,7 @@ test('every language has every word, and the language is picked from names and c
   for (const l of LANGS) {
     // The command words differ by language; everything else has the same shape.
     const own = shape(DICTS[l]) as Record<string, Record<string, unknown>>
-    const strip = (d: Record<string, unknown>) => JSON.stringify({ ...d, cmd: { ...(d.cmd as object), words: null } })
+    const strip = (d: Record<string, unknown>) => JSON.stringify(d, (k, v: unknown) => (k === 'words' ? null : v))
     expect(strip(own)).toBe(strip(en))
     expect(DICTS[l].unit(5, 'm').length > 0).toBe(true)
   }

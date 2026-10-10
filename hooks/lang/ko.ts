@@ -330,6 +330,30 @@ export const ko: typeof en = {
     wardrobe: '옷장',
   },
 
+  data: {
+    exported: path => `Mochi가 보관하는 모든 것을 파일 하나에 담았습니다: ${path}`,
+    exportFailed: reason => `내보내기 파일을 쓰지 못했습니다: ${reason}`,
+    resetHow: '무엇을 지울까요? /mochi reset level · history · all',
+    resetAsk: {
+      level: '레벨은 기록으로 계산됩니다. Mochi가 기억하는 레벨 정보(level.json)만 지웁니다. 지울까요?',
+      history: '모든 채팅의 기록을 지웁니다. 레벨도 처음부터 다시 시작합니다. 지울까요?',
+      all: 'Mochi가 보관하는 모든 것을 지웁니다: 기록, 레벨, 사용량 측정값, 설정(내보낸 파일은 남습니다). 모두 지울까요?',
+    },
+    clear: '지우기',
+    keep: '유지',
+    kept: '아무것도 지우지 않았습니다.',
+    cleared: {
+      level: '레벨 정보를 지웠습니다. 레벨은 기록으로 계산됩니다: 처음부터 시작하려면 /mochi reset history',
+      history: '모든 채팅의 기록을 지웠습니다. 레벨은 처음부터 시작합니다.',
+      all: 'Mochi가 보관하던 모든 것을 지우고 설정을 기본값으로 되돌렸습니다.',
+    },
+    notCleared: files => `다음 파일을 지우지 못했습니다: ${files}`,
+    feedback: url => `버그를 신고하려면 이 링크를 여세요. 양식에는 버전, 시스템, 화면, 언어만 담깁니다:\n${url}`,
+    pluginsOn: '다른 플러그인의 반응 켜짐.',
+    pluginsOff: '다른 플러그인의 반응 꺼짐.',
+    words: { export: ['내보내기'], reset: ['초기화'], feedback: ['피드백', '신고'], plugins: ['플러그인'], history: ['기록'], all: ['전체', '모두'] },
+  },
+
   shield: {
     question: (what, cmd) => `이 명령이 하는 일: ${what}\n\n${cmd}\n\n실행할까요?`,
     run: '실행',

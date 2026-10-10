@@ -357,6 +357,33 @@ export const en = {
     wardrobe: 'Wardrobe',
   },
 
+  /** What Mochi keeps (export, reset, feedback) and the reactions other plugins ask for. */
+  data: {
+    exported: (path: string) => `Everything Mochi keeps is in one file: ${path}`,
+    exportFailed: (reason: string) => `The export could not be written: ${reason}`,
+    resetHow: 'Clear what? /mochi reset level · history · all',
+    /** The confirmation before a reset; each ends in a question. */
+    resetAsk: {
+      level: 'The level is counted from the history; this clears only what Mochi remembers of it (level.json). Clear it?',
+      history: 'This clears the history of every chat, and the level starts over with it. Clear it?',
+      all: 'This clears everything Mochi keeps: history, level, usage readings and settings (exports stay). Clear it?',
+    },
+    clear: 'Clear',
+    keep: 'Keep',
+    kept: 'Nothing was cleared.',
+    cleared: {
+      level: 'Level memory cleared. The level is counted from the history: /mochi reset history starts it over.',
+      history: 'History cleared in every chat; the level starts over.',
+      all: 'Everything Mochi kept is cleared, and its settings are back to their defaults.',
+    },
+    notCleared: (files: string) => `These files could not be removed: ${files}`,
+    feedback: (url: string) => `To report a bug, open this link. The form carries only the versions, the system, the surface and the language:\n${url}`,
+    pluginsOn: 'Reactions from other plugins on.',
+    pluginsOff: 'Reactions from other plugins off.',
+    /** Words this language accepts for these commands and reset's scopes, besides the English ones. */
+    words: { export: [] as string[], reset: [] as string[], feedback: [] as string[], plugins: [] as string[], history: [] as string[], all: [] as string[] },
+  },
+
   /** The shield's question. */
   shield: {
     question: (what: string, cmd: string) => `This command ${what}:\n\n${cmd}\n\nRun it?`,

@@ -1,8 +1,11 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { Ci, DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
+import type { Ci, DayRec, Env, Face, Info, Item, Limit, MochiAnswer, MochiReaction, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
+import { cheerOf, isKept, mayReact, reactionOf, signed } from './api'
 import { PR_FIELDS, RUN_FIELDS, ciLine, ciOf, ghTrouble, isPushing, prOf } from './ci'
+import { exportOf, feedbackUrl, isCleared, isExported } from './data'
+import type { Scope } from './data'
 import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
@@ -412,11 +415,18 @@ async function refreshHistory($: Dollar) {
   if (chat.dataDir === '') return
   chat.historyAt = await $.clock.now()
   const dir = `${chat.dataDir}/days`
+  const list = await $.fs.list(dir).catch(() => null)
+  const names = (list ?? []).map(f => f.name).filter(n => n.endsWith('.json'))
+  if (list !== null) {
+    // This chat's file counted before and gone now: a history reset in some chat took its days too.
+    const own = `${chat.sessionId}.json`
+    if (chat.counted.includes(own) && !names.includes(own)) chat.myDays = {}
+    chat.counted = names
+  }
   const others: Record<string, DayRec>[] = []
-  for (const entry of await $.fs.list(dir).catch(() => [])) {
-    if (!entry.name.endsWith('.json')) continue
+  for (const name of names) {
     try {
-      const file = JSON.parse(await $.fs.read(`${dir}/${entry.name}`)) as { id?: unknown; days?: unknown }
+      const file = JSON.parse(await $.fs.read(`${dir}/${name}`)) as { id?: unknown; days?: unknown }
       if (typeof file.id !== 'string' || file.id === chat.sessionId || typeof file.days !== 'object' || file.days === null) continue
       others.push(file.days as Record<string, DayRec>)
     } catch {
@@ -439,10 +449,14 @@ async function recount($: Dollar) {
 
 async function saveDays($: Dollar) {
   if (chat.dataDir === '' || chat.sessionId === '') return
-  await $.fs.write(`${chat.dataDir}/days/${chat.sessionId}.json`, `${JSON.stringify({ id: chat.sessionId, label: chat.label, isLabelFromPrompt: chat.isLabelFromPrompt, days: chat.myDays })}\n`).catch(() => undefined)
+  await forgetIfReset($)
+  const name = `${chat.sessionId}.json`
+  await $.fs.write(`${chat.dataDir}/days/${name}`, `${JSON.stringify({ id: chat.sessionId, label: chat.label, isLabelFromPrompt: chat.isLabelFromPrompt, days: chat.myDays })}\n`)
+    .then(() => { if (!chat.counted.includes(name)) chat.counted = [...chat.counted, name] }, () => undefined)
 }
 
 async function addToday($: Dollar, rec: Partial<DayRec>) {
+  await forgetIfReset($)
   const now = await $.clock.now()
   const key = dayKey(now, (await read($, env)).tz)
   chat.myDays = { ...chat.myDays, [key]: addDay(chat.myDays[key] ?? EMPTY_DAY, rec) }
@@ -549,9 +563,11 @@ async function startShared($: Dollar) {
   if (chat.isLabelFromPrompt) void firstPromptLabel($).catch(() => undefined)
   if (chat.dataDir === '' || chat.sessionId === '') return
   chat.myDays = {}
+  chat.counted = []
   try {
     const file = JSON.parse(await $.fs.read(`${chat.dataDir}/days/${chat.sessionId}.json`)) as { days?: Record<string, DayRec> }
     if (file.days) chat.myDays = file.days
+    chat.counted = [`${chat.sessionId}.json`]
   } catch {
     // A new chat has no file yet.
   }
@@ -703,12 +719,12 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
 
 // ---------- /mochi ----------
 
-type Word = keyof Dict['cmd']['words'] | 'chats'
+type Word = keyof Dict['cmd']['words'] | keyof Dict['data']['words'] | 'chats'
 /** A subcommand's name: the key of its words in each language, or a name the same in every language. */
 type Name = Word | 'ci'
 
 /** A command's words in the language in use: in `cmd.words`, or, for a newer command, in its own section; none for a name the same in every language. */
-const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' ? [] : t().cmd.words[key])
+const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' ? [] : { ...t().cmd.words, ...t().data.words }[key])
 
 /** Whether `value` names the command: its English words, or the words of the language in use. */
 const names = (value: string, key: Name, ...english: string[]) => english.includes(value) || wordsFor(key).some(w => plain(w) === value)
@@ -738,6 +754,10 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'tips', english: ['tips', 'tip'], run: () => toggleTips($) },
     { name: 'tour', english: ['tour', 'welcome'], run: () => replayTour() },
     { name: 'news', english: ['news', 'new'], run: () => Promise.resolve(newsLines(chat.coach.version)) },
+    { name: 'export', english: ['export'], run: () => exportAll($) },
+    { name: 'reset', english: ['reset'], run: arg => reset($, arg) },
+    { name: 'feedback', english: ['feedback', 'bug'], run: () => feedback($) },
+    { name: 'plugins', english: ['plugins'], run: () => togglePlugins($) },
   ]
 }
 
@@ -1128,8 +1148,7 @@ function wantTip(id: TipId, now: number, arg = '') {
  */
 async function welcome($: Dollar, hasPrefs: boolean) {
   const seen = await $.store.get('version')
-  const manifest = JSON.parse(await $.fs.read(`${$.plugin.root}/.claude-plugin/plugin.json`).catch(() => '{}')) as { version?: unknown }
-  const version = typeof manifest.version === 'string' ? manifest.version : ''
+  const version = await mochiVersion($)
   chat.coach.version = version
   if (seen === version) return
   await $.store.set('version', version)
@@ -1257,7 +1276,125 @@ async function replayTour(): Promise<string> {
   return t().coach.tourStarts
 }
 
+// ---------- ecosystem & data ----------
+
+/** A reaction another plugin asked for through `$.mochi`: shown unless turned off, malformed, too soon, or over a face that matters. */
+async function reactFor($: Dollar, r: Required<MochiReaction> | null, plugin: string, sound?: SoundName): Promise<MochiAnswer> {
+  if (!(await read($, prefs)).hasPlugins) return { isShown: false, reason: 'off' }
+  if (r === null) return { isShown: false, reason: 'invalid' }
+  const now = await $.clock.now()
+  if (!mayReact(chat.reactedAt[plugin], now)) return { isShown: false, reason: 'often' }
+  if (isKept(await read($, face), now)) return { isShown: false, reason: 'busy' }
+  chat.reactedAt[plugin] = now
+  await show($, { mood: r.mood, line: signed(r.line, plugin), holdMs: r.holdMs, sound })
+  return { isShown: true }
+}
+
+async function togglePlugins($: Dollar): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasPlugins: !v.hasPlugins }))
+  return next.hasPlugins ? t().data.pluginsOn : t().data.pluginsOff
+}
+
+/** A days file this chat counted is gone, so a history reset in some chat: every chat's days are read again before this one counts or writes its own. */
+async function forgetIfReset($: Dollar) {
+  if (chat.counted.length === 0) return
+  const list = await $.fs.list(`${chat.dataDir}/days`).catch(() => null)
+  if (list !== null && chat.counted.some(n => !list.some(f => f.name === n))) await refreshHistory($)
+}
+
+/** Mochi's version, from its manifest; '' when it cannot be read. */
+async function mochiVersion($: Dollar): Promise<string> {
+  try {
+    const v = (JSON.parse(await $.fs.read(`${$.plugin.root}/.claude-plugin/plugin.json`)) as { version?: unknown }).version
+    return typeof v === 'string' ? v : ''
+  } catch {
+    return ''
+  }
+}
+
+/** The files `takes` picks in Mochi's folder and the folders in it (links never followed), by folder. */
+async function keptFiles($: Dollar, takes: (dir: string, name: string) => boolean): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {}
+  for (const entry of await $.fs.list(chat.dataDir).catch(() => [])) {
+    if (entry.kind === 'file' && takes('', entry.name)) out[''] = [...(out[''] ?? []), entry.name]
+    if (entry.kind !== 'dir') continue
+    const picked = (await $.fs.list(`${chat.dataDir}/${entry.name}`).catch(() => [])).filter(f => f.kind === 'file' && takes(entry.name, f.name)).map(f => f.name)
+    if (picked.length > 0) out[entry.name] = picked
+  }
+  return out
+}
+
+/** Everything Mochi keeps, in one file beside it; the answer names where. */
+async function exportAll($: Dollar): Promise<string> {
+  const d = t().data
+  if (chat.dataDir === '') return d.exportFailed('HOME')
+  await saveDays($)
+  await saveSamples($).catch(() => undefined)
+  const store: Record<string, unknown> = {}
+  for (const key of await $.store.keys()) store[key] = await $.store.get(key)
+  const files: Record<string, string> = {}
+  for (const [dir, list] of Object.entries(await keptFiles($, isExported))) {
+    for (const name of list) {
+      const path = dir === '' ? name : `${dir}/${name}`
+      const text = await $.fs.read(`${chat.dataDir}/${path}`).catch(() => null)
+      if (text !== null) files[path] = text
+    }
+  }
+  const now = await $.clock.now()
+  const name = `export-${dayKey(now, (await read($, env)).tz)}.json`
+  try {
+    await $.fs.write(`${chat.dataDir}/${name}`, `${JSON.stringify(exportOf(now, await mochiVersion($), store, files), null, 2)}\n`)
+  } catch (err) {
+    return d.exportFailed(err instanceof Error ? err.message : String(err))
+  }
+  return d.exported(`~/.claude/mochi/${name}`)
+}
+
+/** Clears what the person names once they say yes: files through the system's own delete, inside Mochi's folder alone. */
+async function reset($: Dollar, arg: string): Promise<string> {
+  const d = t().data
+  const scope: Scope | null = names(arg, 'level', 'level') ? 'level' : names(arg, 'history', 'history') ? 'history' : names(arg, 'all', 'all', 'everything') ? 'all' : null
+  if (scope === null) return d.resetHow
+  const answer = await $.ui.ask(d.resetAsk[scope], { header: 'Mochi', options: [d.clear, d.keep] }).catch(() => d.keep)
+  if (answer !== d.clear) return d.kept
+  const takes = (dir: string, name: string) => isCleared(scope, dir, name)
+  for (const [dir, list] of Object.entries(chat.dataDir === '' ? {} : await keptFiles($, takes))) {
+    // A hundred names at a time keeps the command line short enough for Windows.
+    for (let i = 0; i < list.length; i += 100) {
+      const argv = removeCommand(chat.platform, list.slice(i, i + 100))
+      if (argv !== null) await $.process.run(argv, { cwd: dir === '' ? chat.dataDir : `${chat.dataDir}/${dir}`, timeoutMs: 10_000 }).catch(() => undefined)
+    }
+  }
+  // The other chats rewrite their presence files at once: those are not counted.
+  const left = chat.dataDir === '' ? [] : Object.values(await keptFiles($, (dir, name) => dir !== 'live' && takes(dir, name))).flat()
+  if (scope === 'all') {
+    await setPrefs($, () => restorePrefs(undefined))
+    for (const key of await $.store.keys()) await $.store.delete(key)
+    await update($, env, v => ({ ...v, samples: [] }))
+    await applyLang($, await read($, prefs))
+    await rest($)
+  }
+  if (scope !== 'level') {
+    chat.myDays = {}
+    await refreshHistory($)
+  }
+  return left.length > 0 ? t().data.notCleared(left.join(', ')) : t().data.cleared[scope]
+}
+
+/** A link to a new bug report, its form filled with the versions, the system, the surface and the language alone. */
+async function feedback($: Dollar): Promise<string> {
+  const claude = await $.session.version().then(v => v.version, () => '')
+  const surfaces = await $.session.surfaces().catch(() => [])
+  return t().data.feedback(feedbackUrl({ mochi: await mochiVersion($), claude, platform: chat.platform, surface: surfaces[0] ?? '', lang: t().name }))
+}
+
 export const register: Register = on => {
+  // `$.mochi` for the plugins that depend on Mochi (docs/API.md): the hooks
+  // below answer each call; the noun's own methods answer only if they fail.
+  on('engine.create', async ($, e, next) => ({ ...(await next(e)), mochi: { react: async () => ({ isShown: false }), celebrate: async () => ({ isShown: false }) } }))
+  on('mochi.react', async ($, e, next) => ({ value: await reactFor($, reactionOf(e), next.origin.plugin) }))
+  on('mochi.celebrate', async ($, e, next) => ({ value: await reactFor($, cheerOf(e), next.origin.plugin, 'party') }))
+
   on('session.start', async ($, e, next) => {
     // The system, then the language: everything after speaks it.
     chat.platform = await findPlatform($)

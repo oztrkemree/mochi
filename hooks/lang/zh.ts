@@ -330,6 +330,30 @@ export const zh: typeof en = {
     wardrobe: '衣橱',
   },
 
+  data: {
+    exported: path => `Mochi 保存的一切都在这个文件里：${path}`,
+    exportFailed: reason => `导出文件写入失败：${reason}`,
+    resetHow: '清除什么？/mochi reset level · history · all',
+    resetAsk: {
+      level: '等级由历史算出；这只清除 Mochi 记住的等级（level.json）。要清除吗？',
+      history: '这会清除所有对话的历史，等级也从头开始。要清除吗？',
+      all: '这会清除 Mochi 保存的一切：历史、等级、用量记录和设置（导出文件保留）。要全部清除吗？',
+    },
+    clear: '清除',
+    keep: '保留',
+    kept: '没有清除任何内容。',
+    cleared: {
+      level: '等级记录已清除。等级由历史算出：/mochi reset history 可从头开始。',
+      history: '所有对话的历史已清除，等级从头开始。',
+      all: 'Mochi 保存的一切已清除，设置已恢复默认。',
+    },
+    notCleared: files => `这些文件无法删除：${files}`,
+    feedback: url => `报告问题请打开此链接，表单只包含版本、系统、界面和语言：\n${url}`,
+    pluginsOn: '其他插件的反应已开启。',
+    pluginsOff: '其他插件的反应已关闭。',
+    words: { export: ['导出'], reset: ['重置', '清除'], feedback: ['反馈'], plugins: ['插件'], history: ['历史'], all: ['全部'] },
+  },
+
   shield: {
     question: (what, cmd) => `这条命令将${what}：\n\n${cmd}\n\n要运行吗？`,
     run: '运行',

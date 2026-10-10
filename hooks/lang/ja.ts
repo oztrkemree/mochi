@@ -330,6 +330,30 @@ export const ja: typeof en = {
     wardrobe: '着せ替え',
   },
 
+  data: {
+    exported: path => `Mochiが保存しているものを1つのファイルにまとめた: ${path}`,
+    exportFailed: reason => `エクスポートを書き込めなかった: ${reason}`,
+    resetHow: '何を消す？ /mochi reset level · history · all',
+    resetAsk: {
+      level: 'レベルは履歴から計算される。消えるのはMochiのレベルの記憶 (level.json) だけ。消す？',
+      history: 'すべてのチャットの履歴を消す。レベルも最初からになる。消す？',
+      all: 'Mochiが保存しているものをすべて消す: 履歴、レベル、使用量の記録、設定 (エクスポートは残る)。消す？',
+    },
+    clear: '消す',
+    keep: '残す',
+    kept: '何も消していない。',
+    cleared: {
+      level: 'レベルの記憶を消した。レベルは履歴から計算される: 最初からにするには /mochi reset history',
+      history: 'すべてのチャットの履歴を消した。レベルは最初から。',
+      all: 'Mochiが保存していたものをすべて消し、設定を初期値に戻した。',
+    },
+    notCleared: files => `次のファイルを削除できなかった: ${files}`,
+    feedback: url => `不具合の報告はこのリンクから。フォームに入るのはバージョン、OS、画面、言語だけ:\n${url}`,
+    pluginsOn: '他のプラグインからのリアクションON。',
+    pluginsOff: '他のプラグインからのリアクションOFF。',
+    words: { export: ['エクスポート', '書き出し'], reset: ['リセット'], feedback: ['フィードバック', '報告'], plugins: ['プラグイン'], history: ['履歴'], all: ['すべて', '全部'] },
+  },
+
   shield: {
     question: (what, cmd) => `このコマンドは${what}:\n\n${cmd}\n\n実行する？`,
     run: '実行',
