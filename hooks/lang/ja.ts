@@ -14,6 +14,12 @@ export const ja: typeof en = {
   months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
 
   news: {
+    '0.4.1': {
+      headline: '変更されたファイルの差分が、変更からワンクリックで',
+      notes: [
+        '詳細パネルの変更に、変更されたファイルごとのボタンがつきました。押すと、最後の編集の代わりに最後のコミットとの差分を表示します（新しいファイルはすべて追加として）。もう一度押すか別のファイルを選ぶまで表示されます。',
+      ],
+    },
     '0.4.0': {
       headline: '詳細パネルが4つのタブに、すべての設定とアクションつき',
       notes: [
@@ -427,6 +433,7 @@ export const ja: typeof en = {
     moreFiles: n => `+ 他${n}ファイル`,
     byClaude: 'このチャットでClaudeが変更 · 新しい順',
     lastEdit: '最後の編集',
+    fileDiff: 'ファイルの差分',
     moreLines: n => `… 他${n}行`,
     levelN: n => `レベル ${n}`,
     toNext: xp => `次のレベルまで ${xp} XP`,
@@ -521,6 +528,7 @@ export const ja: typeof en = {
     open: '開く',
     dismiss: '閉じる',
     moreGist: 'カード · まとめ · スナップ · ツアー · エクスポート · リセット',
+    diffPick: 'ファイルの差分：',
     tabs: { now: '今', past: '履歴', mochi: 'Mochi', settings: '設定' },
     names: { overview: '概要', chats: 'チャット', changes: '変更', context: 'コンテキスト', activity: 'アクティビティ', level: 'レベル', wardrobe: '着せ替え', badges: 'バッジ', settings: '設定', more: 'その他' },
     arrange: '並べ替え',

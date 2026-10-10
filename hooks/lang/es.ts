@@ -17,6 +17,12 @@ export const es: typeof en = {
   months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
 
   news: {
+    '0.4.1': {
+      headline: 'el diff de un archivo cambiado, a un clic en Cambios',
+      notes: [
+        'Cambios, en el panel de detalles, tiene un botón para cada archivo cambiado: pulsa uno para ver su diff frente al último commit en lugar de la última edición (un archivo nuevo aparece todo añadido). Se queda hasta que lo pulses de nuevo o elijas otro.',
+      ],
+    },
     '0.4.0': {
       headline: 'el panel de detalles en cuatro pestañas, con cada ajuste y acción',
       notes: [
@@ -430,6 +436,7 @@ export const es: typeof en = {
     moreFiles: n => `+${plural(n, 'archivo', 'archivos')} más`,
     byClaude: 'cambiados por Claude en este chat · los más recientes primero',
     lastEdit: 'ÚLTIMA EDICIÓN',
+    fileDiff: 'DIFF DEL ARCHIVO',
     moreLines: n => `… ${plural(n, 'línea', 'líneas')} más`,
     levelN: n => `Nivel ${n}`,
     toNext: xp => `${xp} XP para el siguiente nivel`,
@@ -525,6 +532,7 @@ export const es: typeof en = {
     open: 'Abrir',
     dismiss: 'Cerrar',
     moreGist: 'tarjeta · resumen · captura · recorrido · exportar · restablecer',
+    diffPick: 'Ver el diff de un archivo:',
     tabs: { now: 'Ahora', past: 'Historial', mochi: 'Mochi', settings: 'Ajustes' },
     names: { overview: 'Resumen', chats: 'Chats', changes: 'Cambios', context: 'Contexto', activity: 'Actividad', level: 'Nivel', wardrobe: 'Armario', badges: 'Insignias', settings: 'Ajustes', more: 'Más' },
     arrange: 'Organizar',

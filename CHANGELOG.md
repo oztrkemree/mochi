@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Changes in the details pane shows any changed file's diff, not only the last edit. Under the card is a button for each file it lists; press one and its diff against the last commit (before the first commit, what is staged; a new file as all added) takes the last edit's place, its first 60 lines with how many more there are. It follows the file as it changes, and stays until the button is pressed again (✕) or another file is picked. The file picked is this chat's own. In the terminal the same buttons show the diff as lines.
+
 ## 0.4.0
 
 - The details pane, rebuilt in four tabs. **Now**: the context and the 5-hour and weekly limits as thin bars with when each resets (or fills at this pace), the session in one line, then chats, changes and the context as rows that fold; the tab counts the chats waiting for you. **History**: activity, level and badges. **Mochi**: the wardrobe. **Settings**: every setting and action. A click anywhere on a row folds it; the tab and what is open are kept.

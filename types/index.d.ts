@@ -139,6 +139,8 @@ export type Env = {
   /** The machine's offset from UTC, in minutes. */
   tz: number
   lastEdit: Hunk | null
+  /** The changed file picked in the details pane, with its diff; absent or `path` '' when none is. */
+  diff?: FileDiff
   /** This chat as the others see it, for the board of chats; absent until first written. */
   me?: Peer
   /** The last push's CI and the branch's open pull request, as gh last told them. */
@@ -272,6 +274,9 @@ export type FileRec = { path: string; reads: number; edits: number; at: number; 
 /** The last edit, as the detail pane shows it: the changed lines with one line of context before them. */
 export type Hunk = { path: string; at: number; ctx: string; old: string[]; new: string[]; add: number; del: number }
 
+/** A changed file's diff against the last commit as the pane shows it: its first lines marked, and how many more there are. */
+export type FileDiff = { path: string; lines: { kind: 'ctx' | 'old' | 'new'; text: string }[]; more: number }
+
 /** A usage window: the 5-hour session or the 7-day week. */
 export type Limit = { kind: string; percent: number; resetsAt: number }
 
@@ -355,6 +360,8 @@ declare module 'claude-code' {
       prefs: Prefs
       /** What the last of the details pane's actions answered, the part of it worth copying, and the file, folder or link it opens (absent from an older version). */
       said: { text: string; copy: string; open?: string }
+      /** The changed file picked in the details pane's Changes, with its diff; `path` '' when none is. */
+      diff: FileDiff
     }
   }
 }

@@ -3,7 +3,7 @@ import { expect, mock, test } from 'claude-code/testing'
 
 import { asciiRows, kaomoji, LOOKS } from '../hooks/looks'
 import { detailSvg, levelSummary, levelSvg } from '../hooks/detail'
-import { addSample, clockAt, contextWarning, dayKey, dirOf, forecastFull, lineCount, lineDelta, parseGit, parseNumstat, shiftDay, warnLevel, withLines } from '../hooks/facts'
+import { addSample, clockAt, contextWarning, dayKey, dirOf, forecastFull, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, shiftDay, warnLevel, withLines } from '../hooks/facts'
 import { NEW_WATCH, danger, watchCall } from '../hooks/guard'
 import { itemOf, levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
 import { peerLabel, peerNews, peersLine } from '../hooks/live'
@@ -547,6 +547,43 @@ test('git line counts reach the changes', async () => {
   const drawn = detailSvg(windows, 5_000_000, 640)
   expect(drawn).toContain('bu sohbette Claude değiştirdi')
   expect(drawn).toContain('>rig.ts</tspan>')
+})
+
+test('a file pressed in Changes shows its diff until pressed again', async ($, on) => {
+  const parsed = parseDiff('a.ts', 'diff --git a/a.ts b/a.ts\nindex 1..2 100644\n--- a/a.ts\n+++ b/a.ts\n@@ -1,2 +1,2 @@\n keep\n-old\n+new\n\\ No newline at end of file\n', 2)
+  expect(parsed).toEqual({ path: 'a.ts', lines: [{ kind: 'ctx', text: '@@ -1,2 +1,2 @@' }, { kind: 'ctx', text: 'keep' }], more: 2 })
+  expect(freshDiff('b.bin', 'a\0b').lines).toEqual([])
+  const clock = engine(on)
+  const prints = (stdout: string) => ({ value: { exitCode: 0, stdout, stderr: '' } }) as never
+  on('process.run', ($, e) => {
+    const a = e.argv.join(' ')
+    if (a.includes('status')) return prints('## main\n M hooks/rig.ts\n?? new.ts\n')
+    if (a.includes('log -1')) return prints('1760000000\n')
+    if (a.includes('--show-toplevel')) return prints('/r\n')
+    if (a.includes('--numstat')) return prints('1\t1\thooks/rig.ts\n')
+    if (a.endsWith('HEAD -- hooks/rig.ts')) return prints('diff --git a/hooks/rig.ts b/hooks/rig.ts\n--- a/hooks/rig.ts\n+++ b/hooks/rig.ts\n@@ -1,2 +1,2 @@\n const a = 1\n-const b = 2\n+const b = 3\n')
+    return { value: { exitCode: 1, stdout: '', stderr: '' } } as never
+  })
+  on('fs.read', ($, e) => ({ value: e.path.endsWith('new.ts') ? 'hello\nworld\n' : '' }) as never)
+  await clock.set(NOON)
+  await $.session.start(START)
+  for (let i = 0; i < 10; i++) await clock.advance(450)
+  const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'terminal', props: { bodyColumns: 100, bodyRows: 40 } } as never)
+  expect(await pane.find({ type: 'Text', text: '  + const b = 3' })).toBeUndefined()
+  await pane.press({ key: 'diff:hooks/rig.ts' } as never)
+  expect(await pane.find({ type: 'Text', text: '  − const b = 2' })).toBeDefined()
+  expect(await pane.find({ type: 'Text', text: '  + const b = 3' })).toBeDefined()
+  expect((await pane.find({ key: 'diff:hooks/rig.ts' }))?.text).toBe('• rig.ts ✕')
+  // Another file takes its place; pressed again, it is put away.
+  await pane.press({ key: 'diff:new.ts' } as never)
+  expect(await pane.find({ type: 'Text', text: '  + const b = 3' })).toBeUndefined()
+  expect(await pane.find({ type: 'Text', text: '  + world' })).toBeDefined()
+  await pane.press({ key: 'diff:new.ts' } as never)
+  expect(await pane.find({ type: 'Text', text: '  + world' })).toBeUndefined()
+  await pane.unmount()
+  // On the desktop the drawing shows it in the last edit's place.
+  const svg = detailSvg({ ...ENV, git: { branch: 'main', ahead: 0, behind: 0, changed: 1, lastCommit: 1, files: [{ code: ' M', path: 'a.ts', add: 1, del: 1 }] }, diff: parsed }, 5_000_000, 640)
+  for (const part of ['DOSYA FARKI', '>keep<', '… 2 satır daha']) expect(svg).toContain(part)
 })
 
 test('the level folds open and shut, and stays as left', async ($, on) => {

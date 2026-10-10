@@ -4,9 +4,9 @@ import type { MatchedHook } from 'claude-code'
 import type { Badge, Block, Env, Item, Prefs, Section } from '../types'
 import { BADGES, badgeHint, badgeName, badgeSvg } from './badges'
 import { ciLine, prLine } from './ci'
-import { detailHeight, detailParts, levelSummary, levelSvg, metersSvg, partLines, partSvg, ruleSvg, switchSvg } from './detail'
+import { detailHeight, detailParts, diffable, levelSummary, levelSvg, metersSvg, partLines, partSvg, ruleSvg, switchSvg } from './detail'
 import type { Part, Parts } from './detail'
-import { clockAt, forecasts } from './facts'
+import { baseName, clockAt, forecasts } from './facts'
 import { birthdayName } from './fun'
 import { DICTS, LANGS, t } from './i18n'
 import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, outfitNow, slotName, wearable } from './level'
@@ -16,7 +16,7 @@ import { LOOKS, asciiRows, kaomoji } from './looks'
 import { PANEL_H, limitName, panelSvg } from './panel'
 import { duration } from './react'
 import { VECTOR_WEAR, svgFor } from './rig'
-import { ALL_ITEMS, DEFAULT_PREFS, NO_ENV, NO_FACE, NO_PANEL, NO_SAID, TABS, TAB_OF, chat, inTab } from './state'
+import { ALL_ITEMS, DEFAULT_PREFS, NO_DIFF, NO_ENV, NO_FACE, NO_PANEL, NO_SAID, TABS, TAB_OF, chat, inTab } from './state'
 import { WEAR } from './wear'
 
 // What Mochi draws: the band above the prompt (the mascot and its line in the
@@ -32,6 +32,7 @@ const sec = atom({ plugin: 'mochi', key: 'sec' } as const, 0)
 const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
 const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
 const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
+const diff = atom({ plugin: 'mochi', key: 'diff' } as const, NO_DIFF)
 
 const width = (s: string) => [...s].length
 const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0, Math.max(1, max - 1)).join('')}…`)
@@ -97,6 +98,9 @@ function blockGists(v: Env, p: Prefs, parts: Parts, unlocked: number): Record<Bl
   }
 }
 
+/** A changed file's button under Changes: pressed, its diff shows in the card; pressed again (✕), it is put away. */
+const diffLabel = (v: Env, path: string) => `${baseName(path)}${path === v.diff?.path ? ' ✕' : ''}`
+
 /** The language picker's options: automatic, naming what it found, then each language in its own name. */
 const langOptions = () => [{ value: 'auto', label: t().pane.langAuto(t().name) }, ...LANGS.map(l => ({ value: l, label: DICTS[l].name }))]
 
@@ -107,11 +111,12 @@ const langOptions = () => [{ value: 'auto', label: t().pane.langAuto(t().name) }
  * of /mochi are here too, as buttons. Lines and buttons in the terminal.
  */
 export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async ($, e) => {
-  const v = { ...NO_ENV, ...(await read($, detail)) }
+  const v = { ...NO_ENV, ...(await read($, detail)), diff: await read($, diff) }
   const now = await $.clock.now()
   const p = await read($, prefs)
   const answer = await read($, said)
   const d = t().pane
+  const diffs = diffable(v)
   if (e.surface === 'desktop' || e.surface === 'mobile' || e.surface === 'vscode') {
     const ui = $.ui.resolve(e)
     const { Box, Button, Link, Svg, Text } = ui
@@ -208,15 +213,23 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       )
     }
     const rule = (key: string) => <Box key={`rule:${key}`}><Svg source={ruleSvg(secW)} alt="" width={secW} height={9} /></Box>
-    // A row drawn from the detail's own cards; none when it has nothing to show.
-    const drawn = (id: Exclude<Part, 'overview'> & Section) => {
+    // A row drawn from the detail's own cards, with what goes under them; none when it has nothing to show.
+    const drawn = (id: Exclude<Part, 'overview'> & Section, under: JSX.Element | null = null) => {
       const part = parts[id]
       if (part.cards.length === 0) return null
       return item(id, part.gist, () => {
         const svg = partSvg(part.cards, secW, CARD_TITLE[id]())
-        return <Svg source={svg} alt={names[id]} width={secW} height={Math.round(detailHeight(svg))} />
+        const card = <Svg source={svg} alt={names[id]} width={secW} height={Math.round(detailHeight(svg))} />
+        return under === null ? card : <Box flexDirection="column" gap={1}>{card}{under}</Box>
       })
     }
+    // The drawing hears no clicks: a button for each changed file it lists shows that file's diff in it.
+    const diffPicks = diffs.length === 0 ? null : (
+      <Box key="diffs" flexDirection="row" flexWrap="wrap" alignItems="center" columnGap={1} rowGap={0.5}>
+        <Text dimColor>{d.diffPick}</Text>
+        {diffs.map(f => <Button key={`diff:${f.path}`} variant={f.path === v.diff.path ? 'primary' : 'secondary'} onPress={pressed}>{diffLabel(v, f.path)}</Button>)}
+      </Box>
+    )
 
     // A setting: its name and what it does, its switch at the right; the whole row turns it on the desktop.
     const rowW = e.props.bodyColumns >= 120 ? Math.floor((e.props.bodyColumns - 11) / 2) : '100%'
@@ -283,7 +296,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         return <Box key="overview"><Svg source={meters} alt={t().detail.title} width={secW} height={Math.round(detailHeight(meters))} /></Box>
       },
       chats: () => drawn('chats'),
-      changes: () => drawn('changes'),
+      changes: () => drawn('changes', diffPicks),
       context: () => drawn('context'),
       activity: () => drawn('activity'),
       level: () => item('level', gists.level, () => {
@@ -387,10 +400,17 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       <Button key={`fold:${id}`} onPress={pressed}>{p.open[id] ? t().ui.close : t().ui.open}</Button>
     </Box>
   )
-  const block = (id: Exclude<Part, 'overview'> & Section, title: string, gist: string) => lines[id].length === 0 ? null : (
+  const block = (id: Exclude<Part, 'overview'> & Section, title: string, gist: string, under: JSX.Element | null = null) => lines[id].length === 0 ? null : (
     <Box key={`sec:${id}`} flexDirection="column">
       {head(id, title, gist)}
       {p.open[id] ? lines[id].map(line => <Text wrap="truncate">{line}</Text>) : null}
+      {p.open[id] ? under : null}
+    </Box>
+  )
+  const diffPicks = diffs.length === 0 ? null : (
+    <Box key="diffs" flexDirection="row" flexWrap="wrap" columnGap={1}>
+      <Text dimColor>{d.diffPick}</Text>
+      {diffs.map(f => <Button key={`diff:${f.path}`} onPress={pressed}>{`${f.sign} ${diffLabel(v, f.path)}`}</Button>)}
     </Box>
   )
   const parts = detailParts(v, now, Math.max(300, e.props.bodyColumns * 7))
@@ -399,7 +419,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
   const blocks: Record<Block, () => JSX.Element | null> = {
     overview: () => <Box key="overview" flexDirection="column">{lines.overview.map(line => <Text wrap="truncate">{line}</Text>)}</Box>,
     chats: () => block('chats', names.chats, gists.chats),
-    changes: () => block('changes', names.changes, gists.changes),
+    changes: () => block('changes', names.changes, gists.changes, diffPicks),
     context: () => block('context', names.context, gists.context),
     activity: () => block('activity', names.activity, gists.activity),
     level: () => <Box key="sec:level" flexDirection="row" gap={1}><Text bold>{levelSummary(v)}</Text></Box>,

@@ -34,6 +34,12 @@ export const pl: typeof en = {
   months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
 
   news: {
+    '0.4.1': {
+      headline: 'diff zmienionego pliku, jedno kliknięcie w Zmianach',
+      notes: [
+        'Zmiany w panelu szczegółów mają przycisk dla każdego zmienionego pliku: kliknij jeden, aby zobaczyć jego diff względem ostatniego commita zamiast ostatniej edycji (nowy plik widać jako całkiem dodany). Zostaje, dopóki nie klikniesz ponownie albo nie wybierzesz innego.',
+      ],
+    },
     '0.4.0': {
       headline: 'panel szczegółów w czterech zakładkach, z każdym ustawieniem i działaniem',
       notes: [
@@ -447,6 +453,7 @@ export const pl: typeof en = {
     moreFiles: n => `+ jeszcze ${filesN(n)}`,
     byClaude: 'zmienione przez Claude w tym czacie · najnowsze na górze',
     lastEdit: 'OSTATNIA EDYCJA',
+    fileDiff: 'DIFF PLIKU',
     moreLines: n => `… jeszcze ${count(n, 'linia', 'linie', 'linii')}`,
     levelN: n => `Poziom ${n}`,
     toNext: xp => `${xp} XP do następnego poziomu`,
@@ -541,6 +548,7 @@ export const pl: typeof en = {
     open: 'Otwórz',
     dismiss: 'Zamknij',
     moreGist: 'karta · podsumowanie · zrzut · wprowadzenie · eksport · reset',
+    diffPick: 'Diff pliku:',
     tabs: { now: 'Teraz', past: 'Historia', mochi: 'Mochi', settings: 'Ustawienia' },
     names: { overview: 'Przegląd', chats: 'Czaty', changes: 'Zmiany', context: 'Kontekst', activity: 'Aktywność', level: 'Poziom', wardrobe: 'Garderoba', badges: 'Odznaki', settings: 'Ustawienia', more: 'Więcej' },
     arrange: 'Układ',

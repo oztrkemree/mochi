@@ -1,4 +1,4 @@
-import type { Block, DayRec, Env, Face, Info, Outfit, Panel, Peer, Prefs, Section, Shot, Tab } from '../types'
+import type { Block, DayRec, Env, Face, FileDiff, Info, Outfit, Panel, Peer, Prefs, Section, Shot, Tab } from '../types'
 import type { GhTrouble } from './ci'
 import type { Pending, TipId } from './coach'
 import type { Reaction } from './react'
@@ -101,6 +101,8 @@ export const NO_INFO: Info = {
 export const NO_PANEL: Panel = { shot: FIRST_SHOT, info: NO_INFO, infoFrom: null, infoAt: 0 }
 /** What the last of the details pane's actions answered, and the part of it worth copying; '' when there is none to show. */
 export const NO_SAID = { text: '', copy: '', open: '' }
+/** The changed file picked in the details pane's Changes, this chat's own; `path` '' when none is. */
+export const NO_DIFF: FileDiff = { path: '', lines: [], more: 0 }
 
 /**
  * Per-load bookkeeping (a reload starts it over); what the drawing reads lives

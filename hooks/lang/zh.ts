@@ -14,6 +14,12 @@ export const zh: typeof en = {
   months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
 
   news: {
+    '0.4.1': {
+      headline: '改动文件的 diff，在改动里点一下就能看',
+      notes: [
+        '详情面板的改动里，每个改动的文件都有一个按钮：点一下，就在最近编辑的位置显示它相对上次提交的 diff（新文件显示为全部新增）。再点一次或选另一个文件之前，它会一直显示。',
+      ],
+    },
     '0.4.0': {
       headline: '详情面板分成四个标签页，含所有设置和操作',
       notes: [
@@ -427,6 +433,7 @@ export const zh: typeof en = {
     moreFiles: n => `还有 ${n} 个文件`,
     byClaude: 'Claude 在本对话中的改动 · 最新在前',
     lastEdit: '最近编辑',
+    fileDiff: '文件 diff',
     moreLines: n => `… 还有 ${n} 行`,
     levelN: n => `等级 ${n}`,
     toNext: xp => `距下一级 ${xp} XP`,
@@ -521,6 +528,7 @@ export const zh: typeof en = {
     open: '打开',
     dismiss: '关闭',
     moreGist: '卡片 · 回顾 · 快照 · 导览 · 导出 · 重置',
+    diffPick: '查看文件 diff：',
     tabs: { now: '当前', past: '历史', mochi: 'Mochi', settings: '设置' },
     names: { overview: '概览', chats: '对话', changes: '改动', context: '上下文', activity: '活动', level: '等级', wardrobe: '衣橱', badges: '徽章', settings: '设置', more: '更多' },
     arrange: '排列',

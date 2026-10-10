@@ -1,4 +1,4 @@
-import type { Env, Git, Limit, Sample } from '../types'
+import type { Env, FileDiff, Git, Limit, Sample } from '../types'
 import { t } from './i18n'
 
 /** `git status --porcelain=v1 -b` and `git log -1 --format=%ct`, read into one record. */
@@ -179,6 +179,29 @@ export function parseNumstat(text: string): Record<string, { add: number; del: n
     out[path] = m[1] === '-' ? null : { add: Number(m[1]) + (was?.add ?? 0), del: Number(m[2]) + (was?.del ?? 0) }
   }
   return out
+}
+
+/**
+ * `git diff` read into its lines, each marked as kept, removed or added, the
+ * hunks' `@@` lines kept as they are; the headers left out. The first `cap`
+ * lines are kept, and how many more there were.
+ */
+export function parseDiff(path: string, text: string, cap = 60): FileDiff {
+  const all: FileDiff['lines'] = []
+  let isBody = false
+  for (const line of lines(text)) {
+    if (line.startsWith('@@')) isBody = true
+    if (!isBody || line.startsWith('\\')) continue
+    const sign = line[0]
+    all.push({ kind: sign === '+' ? 'new' : sign === '-' ? 'old' : 'ctx', text: line.startsWith('@@') ? line : line.slice(1) })
+  }
+  return { path, lines: all.slice(0, cap), more: Math.max(0, all.length - cap) }
+}
+
+/** A new file not yet added, as a diff: all its lines added; none for one that is not text. */
+export function freshDiff(path: string, text: string, cap = 60): FileDiff {
+  const all = text.includes('\0') ? [] : lines(text)
+  return { path, lines: all.slice(0, cap).map(line => ({ kind: 'new' as const, text: line })), more: Math.max(0, all.length - cap) }
 }
 
 /** How many lines a file's text has; a last line without its newline counts too. */

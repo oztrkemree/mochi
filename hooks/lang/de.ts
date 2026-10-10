@@ -15,6 +15,12 @@ export const de: typeof en = {
   months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 
   news: {
+    '0.4.1': {
+      headline: 'der Diff einer geänderten Datei, einen Klick entfernt in Änderungen',
+      notes: [
+        'Änderungen in der Detailansicht hat für jede geänderte Datei einen Knopf: Ein Klick zeigt ihren Diff zum letzten Commit anstelle der letzten Bearbeitung (eine neue Datei als ganz hinzugefügt). Er bleibt, bis du erneut klickst oder eine andere Datei wählst.',
+      ],
+    },
     '0.4.0': {
       headline: 'die Detailansicht in vier Tabs, mit jeder Einstellung und Aktion',
       notes: [
@@ -428,6 +434,7 @@ export const de: typeof en = {
     moreFiles: n => `+${n} weitere ${n === 1 ? 'Datei' : 'Dateien'}`,
     byClaude: 'in diesem Chat von Claude geändert · neueste zuerst',
     lastEdit: 'LETZTE BEARBEITUNG',
+    fileDiff: 'DATEI-DIFF',
     moreLines: n => `… ${n} weitere ${n === 1 ? 'Zeile' : 'Zeilen'}`,
     levelN: n => `Level ${n}`,
     toNext: xp => `${xp} XP bis zum nächsten Level`,
@@ -523,6 +530,7 @@ export const de: typeof en = {
     open: 'Öffnen',
     dismiss: 'Schließen',
     moreGist: 'karte · rückblick · schnappschuss · rundgang · exportieren · zurücksetzen',
+    diffPick: 'Diff einer Datei:',
     tabs: { now: 'Jetzt', past: 'Verlauf', mochi: 'Mochi', settings: 'Einstellungen' },
     names: { overview: 'Übersicht', chats: 'Chats', changes: 'Änderungen', context: 'Kontext', activity: 'Aktivität', level: 'Level', wardrobe: 'Kleiderschrank', badges: 'Abzeichen', settings: 'Einstellungen', more: 'Mehr' },
     arrange: 'Anordnen',

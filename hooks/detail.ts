@@ -1,4 +1,4 @@
-import type { Env, Recent } from '../types'
+import type { Env, FileDiff, Recent } from '../types'
 import { boardLines, chatsCard } from './chats'
 import { ciCard, ciLine, ciLines, prLine } from './ci'
 import { age, ago, baseName, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, warnLevel } from './facts'
@@ -463,12 +463,10 @@ function blocks(x: number, cy: number, add: number | null, del: number | null, m
   }).join('')
 }
 
-/**
- * The repository's changes against the last commit, line by line, the files
- * Claude edited in this chat marked and first; under them the last edit
- * itself. Outside a repository, the files edited in this chat.
- */
-function changesCard(env: Env, now: number, innerW: number): Card | null {
+type ChangeRow = { path: string; code: string; add: number | null; del: number | null; at: number }
+
+/** The changed files as Changes lists them: those Claude edited in this chat first, latest first, then the biggest. */
+function changeRows(env: Env): ChangeRow[] {
   const git = env.git
   const root = git?.root ?? ''
   // git writes `/`; Claude's own paths on Windows `\`.
@@ -478,22 +476,50 @@ function changesCard(env: Env, now: number, innerW: number): Card | null {
   }
   const edited = env.files.filter(f => f.edits > 0)
   const mine = new Map(edited.map(f => [rel(f.path), f]))
-  type Row = { path: string; code: string; add: number | null; del: number | null; at: number }
-  const all: Row[] = git
+  const all: ChangeRow[] = git
     ? git.files.map(f => ({ path: f.path, code: f.code, add: f.add ?? (f.code === '??' ? null : 0), del: f.del ?? (f.code === '??' ? null : 0), at: mine.get(f.path)?.at ?? 0 }))
     : edited.map(f => ({ path: f.path, code: ' M', add: f.add ?? 0, del: f.del ?? 0, at: f.at }))
+  return all.sort((a, b) => b.at - a.at || ((b.add ?? 0) + (b.del ?? 0)) - ((a.add ?? 0) + (a.del ?? 0)))
+}
+
+/** The files Changes shows whose diff can be picked: in a repository, with lines to show; `sign` as the card marks them. */
+export const diffable = (env: Env): { path: string; sign: string }[] =>
+  env.git ? changeRows(env).slice(0, 10).filter(r => r.add !== null).map(r => ({ path: r.path, sign: changeKind(r.code).sign })) : []
+
+/**
+ * The repository's changes against the last commit, line by line, the files
+ * Claude edited in this chat marked and first; under them the file picked
+ * below the card, or else the last edit itself. Outside a repository, the
+ * files edited in this chat.
+ */
+function changesCard(env: Env, now: number, innerW: number): Card | null {
+  const git = env.git
+  const all = changeRows(env)
   const hunk = env.lastEdit
   if (all.length === 0 && hunk === null && git === null) return null
-  const rows = [...all].sort((a, b) => b.at - a.at || ((b.add ?? 0) + (b.del ?? 0)) - ((a.add ?? 0) + (a.del ?? 0))).slice(0, 10)
+  const rows = all.slice(0, 10)
   const count = git ? git.changed : all.length
   const added = all.reduce((a, r) => a + (r.add ?? 0), 0)
   const removed = all.reduce((a, r) => a + (r.del ?? 0), 0)
   const most = Math.max(1, ...rows.map(r => (r.add ?? 0) + (r.del ?? 0)))
   const hasMine = rows.some(r => r.at > 0)
   const more = count - rows.length
-  const shown = hunk ? [...(hunk.ctx ? [hunk.ctx] : []), ...hunk.old, ...hunk.new] : []
-  const longer = hunk ? (hunk.add - hunk.new.length) + (hunk.del - hunk.old.length) : 0
-  const hunkH = hunk ? 14 + 20 + 8 + shown.length * 16 + 8 + (longer > 0 ? 16 : 0) : 0
+  // The file picked below the card, while it is still changed; else the last edit: the line before it, then what went and what came.
+  const picked = env.diff
+  const pick = picked && picked.path !== '' ? all.find(r => r.path === picked.path) : undefined
+  type Line = FileDiff['lines'][number]
+  const box = pick && picked
+    ? { label: t().detail.fileDiff, path: pick.path, when: '', add: pick.add ?? 0, del: pick.del ?? 0, lines: picked.lines, more: picked.more }
+    : hunk
+      ? {
+        label: t().detail.lastEdit, path: hunk.path, when: `${ago(now - hunk.at)} · `, add: hunk.add, del: hunk.del,
+        lines: [...(hunk.ctx ? [{ kind: 'ctx', text: hunk.ctx }] : []), ...hunk.old.map(text => ({ kind: 'old', text })), ...hunk.new.map(text => ({ kind: 'new', text }))] as Line[],
+        more: (hunk.add - hunk.new.length) + (hunk.del - hunk.old.length),
+      }
+      : null
+  const shown = box?.lines ?? []
+  const longer = box?.more ?? 0
+  const hunkH = box ? 14 + 20 + 8 + shown.length * 16 + 8 + (longer > 0 ? 16 : 0) : 0
   const rowsH = rows.length * 24 + (more > 0 ? 18 : 0) + (hasMine ? 20 : 0)
   return {
     title: t().detail.changes,
@@ -538,13 +564,12 @@ function changesCard(env: Env, now: number, innerW: number): Card | null {
         cy += 20
       }
       if (rows.length === 0) cy += 6
-      // The last edit itself: the line before it, then what went and what came.
-      if (hunk) {
+      if (box) {
         const top = cy - 12 + 14
         out += `<path class="rule" d="M${x} ${top - 8}H${x + w}"/>` +
-          `<text class="t" x="${x}" y="${top + 8}" font-size="10" font-weight="650" letter-spacing="1"><tspan class="faint">${esc(t().detail.lastEdit)}</tspan>` +
-          `<tspan class="fg" dx="10" font-size="12" letter-spacing="0">${esc(clip(baseName(hunk.path), 40))}</tspan>` +
-          `<tspan class="faint" dx="8" font-size="11" letter-spacing="0">${esc(`${ago(now - hunk.at)} · `)}</tspan><tspan fill="${ADD_INK}" font-size="11" letter-spacing="0">+${hunk.add}</tspan><tspan fill="${DEL_INK}" font-size="11" dx="5" letter-spacing="0">−${hunk.del}</tspan></text>`
+          `<text class="t" x="${x}" y="${top + 8}" font-size="10" font-weight="650" letter-spacing="1"><tspan class="faint">${esc(box.label)}</tspan>` +
+          `<tspan class="fg" dx="10" font-size="12" letter-spacing="0">${esc(clip(baseName(box.path), 40))}</tspan>` +
+          `<tspan class="faint" dx="8" font-size="11" letter-spacing="0">${esc(box.when)}</tspan><tspan fill="${ADD_INK}" font-size="11" letter-spacing="0">+${box.add}</tspan><tspan fill="${DEL_INK}" font-size="11" dx="5" letter-spacing="0">−${box.del}</tspan></text>`
         const boxY = top + 20
         const boxH = shown.length * 16 + 8 + (longer > 0 ? 16 : 0)
         const chars = Math.max(10, Math.floor((w - 40) / 6.5))
@@ -561,9 +586,7 @@ function changesCard(env: Env, now: number, innerW: number): Card | null {
           ly += 16
           return row
         }
-        if (hunk.ctx) out += line(hunk.ctx, 'ctx')
-        for (const t of hunk.old) out += line(t, 'old')
-        for (const t of hunk.new) out += line(t, 'new')
+        for (const l of shown) out += line(l.text, l.kind)
         if (longer > 0) out += `<text class="t faint" x="${x + 22}" y="${ly + 11.5}" font-size="10.5">${esc(t().detail.moreLines(longer))}</text>`
       }
       return out
@@ -651,7 +674,12 @@ export function partLines(env: Env, now: number): Record<Part, string[]> {
     for (const f of g.files.slice(0, 8)) changes.push(`  ${changeKind(f.code).sign} ${f.path}${f.add !== undefined ? `  +${f.add} −${f.del ?? 0}` : ''}`)
   }
   changes.push(...ciLines(env, now))
-  if (env.lastEdit) {
+  const picked = env.diff
+  if (picked && picked.path !== '' && env.git?.files.some(f => f.path === picked.path)) {
+    changes.push(picked.path)
+    for (const l of picked.lines) changes.push(`  ${l.kind === 'old' ? '−' : l.kind === 'new' ? '+' : ' '} ${l.text}`)
+    if (picked.more > 0) changes.push(`  ${d.moreLines(picked.more)}`)
+  } else if (env.lastEdit) {
     const h = env.lastEdit
     changes.push(`${d.lineLastEdit(baseName(h.path), ago(now - h.at))} · +${h.add} −${h.del}`)
     for (const line of h.old) changes.push(`  − ${line}`)
