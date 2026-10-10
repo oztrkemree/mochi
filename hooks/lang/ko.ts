@@ -310,7 +310,7 @@ export const ko: typeof en = {
       hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'],
       status: ['상태'], details: ['상세', '자세히'], level: ['레벨'], wear: ['착용', '입기'], shield: ['보호막', '실드'],
       alerts: ['알림'], lang: ['언어'], auto: ['자동'], none: ['없음', '벗기'],
-      card: ['카드'], wrapped: ['결산'], snap: ['스냅샷'], month: ['월', '달'], year: ['년', '연간'],
+      card: ['카드'], wrapped: ['결산'], snap: ['스냅샷'], year: ['년', '연간'],
     },
   },
 }

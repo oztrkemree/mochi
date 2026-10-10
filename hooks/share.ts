@@ -72,8 +72,9 @@ export function cardSvg(h: History | null, outfit: Outfit): string {
 /** The markdown line that shows the card in a README, linked to Mochi's page. */
 export const cardMarkdown = (file: string) => `[![${t().share.tagline}](${encodeURI(file)})](https://${REPO})`
 
-/** Where `/mochi card <path>` writes: an absolute path as given, `~` in the home, a relative one under the session's folder; a folder gets the card's own name. */
-export function cardPath(arg: string, cwd: string, home: string): string {
+/** Where `/mochi card <path>` writes: an absolute path as given (quotes around it dropped), `~` in the home, a relative one under the session's folder; a folder gets the card's own name. */
+export function cardPath(typed: string, cwd: string, home: string): string {
+  const arg = typed.replace(/^(["'])(.*)\1$/, '$2')
   const path = /^([A-Za-z]:)?[\\/]/.test(arg) ? arg : /^~([\\/]|$)/.test(arg) && home !== '' ? `${home}${arg.slice(1)}` : `${cwd.replace(/[\\/]+$/, '')}/${arg}`
   return /\.svg$/i.test(path) ? path : `${path.replace(/[\\/]+$/, '')}/mochi-card.svg`
 }
@@ -143,12 +144,12 @@ export function wrappedOf(chats: readonly ChatDays[], kind: 'month' | 'year', to
     if (turns > (busiest?.turns ?? 0)) busiest = { day: k, turns }
   }
   // Chats in the same folder share a name: their time adds up.
-  const time: Record<string, DayRec> = {}
+  const time = new Map<string, DayRec>()
   for (const c of chats) {
     if (c.label === '') continue
-    for (const [k, rec] of Object.entries(c.days)) if (k.startsWith(key) && typeof rec === 'object' && rec !== null) time[c.label] = addDay(time[c.label] ?? EMPTY_DAY, rec)
+    for (const [k, rec] of Object.entries(c.days)) if (k.startsWith(key) && typeof rec === 'object' && rec !== null) time.set(c.label, addDay(time.get(c.label) ?? EMPTY_DAY, rec))
   }
-  const top = Object.entries(time).filter(([, r]) => r.turns > 0).sort((a, b) => b[1].secs - a[1].secs || b[1].turns - a[1].turns)[0]?.[0] ?? null
+  const top = [...time].filter(([, r]) => r.turns > 0).sort((a, b) => b[1].secs - a[1].secs || b[1].turns - a[1].turns)[0]?.[0] ?? null
   return { key, from, to, days, total, activeDays: Object.values(days).filter(r => r.turns > 0).length, longest, busiest, top }
 }
 
@@ -231,6 +232,7 @@ export function wrappedSvg(w: Wrapped, outfit: Outfit): string {
 
 // ---------- the snapshot ----------
 
-/** A drawing of the band or the pane given its own size and the cards' background, to be seen on its own page. */
+/** A drawing of the band or the pane given its own size, a margin and the cards' background, to be seen on its own page. */
 export const framed = (svg: string, w: number, h: number) =>
-  svg.replace('width="100%" height="100%"', `width="${w}" height="${n(h)}"`).replace('</style>', `</style>${BG}<rect class="bg" x="0.5" y="0.5" width="${w - 1}" height="${n(h - 1)}" rx="16"/>`)
+  svg.replace(/viewBox="[^"]*" width="100%" height="100%"/, `viewBox="-12 -12 ${w + 24} ${n(h + 24)}" width="${w + 24}" height="${n(h + 24)}"`)
+    .replace('</style>', `</style>${BG}<rect class="bg" x="-11.5" y="-11.5" width="${w + 23}" height="${n(h + 23)}" rx="16"/>`)

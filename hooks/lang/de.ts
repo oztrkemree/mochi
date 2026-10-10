@@ -314,7 +314,7 @@ export const de: typeof en = {
       hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'],
       status: [], details: [], level: [], wear: ['tragen', 'anziehen'], shield: ['schild', 'schutz'],
       alerts: ['hinweise', 'benachrichtigungen', 'meldungen'], lang: ['sprache'], auto: ['automatisch'], none: ['nichts', 'keins'],
-      card: ['karte'], wrapped: ['rückblick'], snap: ['schnappschuss', 'foto'], month: ['monat'], year: ['jahr'],
+      card: ['karte'], wrapped: ['rückblick'], snap: ['schnappschuss', 'foto'], year: ['jahr'],
     },
   },
 }

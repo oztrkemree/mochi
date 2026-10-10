@@ -119,6 +119,7 @@ test('the card goes where it is told, and its markdown line shows it on a profil
   expect(cardPath('/srv/me', '/proj', '/home/me')).toBe('/srv/me/mochi-card.svg')
   expect(cardPath('~/profile/', '/proj', '/home/me')).toBe('/home/me/profile/mochi-card.svg')
   expect(cardPath('docs/me.svg', '/proj/', '/home/me')).toBe('/proj/docs/me.svg')
+  expect(cardPath('"/srv/my card.svg"', '/proj', '/home/me')).toBe('/srv/my card.svg')
   expect(cardMarkdown('my card.svg')).toBe('[![Mochi for Claude Code](my%20card.svg)](https://github.com/oztrkemree/mochi)')
   expect(bestOutfit(['beanie', 'crown', 'glasses', 'monocle', 'bowtie', 'medal', 'mug', 'cat'])).toEqual({ head: 'crown', face: 'monocle', neck: 'medal', held: null, ground: 'cat' })
   expect(bestOutfit([])).toEqual(NONE)
@@ -135,7 +136,10 @@ test('/mochi card, wrapped and snap write under ~/.claude/mochi/share; a new mon
   // The engine hands a path on with the separators (and on Windows the drive) of the system the test runs on.
   const plain = (path: string) => path.replaceAll('\\', '/').replace(/^[A-Za-z]:/, '')
   const toasts: string[] = []
-  const other = JSON.stringify({ id: 'other-1', label: 'api', days: CHATS[1]?.days })
+  const other = JSON.stringify({ id: 'other-1', label: 'api', isLabelFromPrompt: false, days: CHATS[1]?.days })
+  // A chat named after its first prompt (or too old to say) puts no words of it into a picture to share.
+  const prompted = JSON.stringify({ id: 'other-2', label: 'fix the login bug', isLabelFromPrompt: true, days: { '2026-09-05': day({ turns: 1, secs: 90_000 }) } })
+  const old = JSON.stringify({ id: 'other-3', label: 'my secret plan', days: { '2026-09-06': day({ turns: 1, secs: 90_000 }) } })
   on('session.start', () => ({ cwd: '/proj' }))
   on('session.id', () => ({ value: 'me-1' }) as never)
   on('session.cwd', () => ({ value: '/proj' }) as never)
@@ -145,8 +149,8 @@ test('/mochi card, wrapped and snap write under ~/.claude/mochi/share; a new mon
     toasts.push(e.text)
     return { value: undefined }
   })
-  on('fs.list', ($, e) => ({ value: plain(e.path).endsWith('/days') ? [{ name: 'other-1.json', kind: 'file' as const, size: 9, mtimeMs: OCT2, isLink: false }] : [] }))
-  on('fs.read', ($, e) => ({ value: plain(e.path).endsWith('/days/other-1.json') ? other : '' }) as never)
+  on('fs.list', ($, e) => ({ value: plain(e.path).endsWith('/days') ? ['other-1.json', 'other-2.json', 'other-3.json'].map(name => ({ name, kind: 'file' as const, size: 9, mtimeMs: OCT2, isLink: false })) : [] }))
+  on('fs.read', ($, e) => ({ value: plain(e.path).endsWith('/days/other-1.json') ? other : plain(e.path).endsWith('/days/other-2.json') ? prompted : plain(e.path).endsWith('/days/other-3.json') ? old : '' }) as never)
   on('fs.write', ($, e) => {
     written[plain(e.path)] = e.text
     return { value: undefined }
@@ -167,6 +171,8 @@ test('/mochi card, wrapped and snap write under ~/.claude/mochi/share; a new mon
   const wrapped = await $.command.run({ command: 'mochi', args: 'wrapped' } as never)
   expect(wrapped.text).toBe('September 2026 wrapped: /home/me/.claude/mochi/share/mochi-wrapped-2026-09.svg')
   expect(written['/home/me/.claude/mochi/share/mochi-wrapped-2026-09.svg']).toContain('most time in api')
+  expect(written['/home/me/.claude/mochi/share/mochi-wrapped-2026-09.svg']).not.toContain('login')
+  expect(written['/home/me/.claude/mochi/share/mochi-wrapped-2026-09.svg']).not.toContain('secret')
   const year = await $.command.run({ command: 'mochi', args: 'wrapped year' } as never)
   expect(year.text).toContain('mochi-wrapped-2026.svg')
 

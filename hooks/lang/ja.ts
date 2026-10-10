@@ -231,7 +231,7 @@ export const ja: typeof en = {
     year: year => `${year}年`,
     date: (month, day) => `${month}${day}日`,
     busiest: (date, turns) => `いちばん忙しかった日 · ${date} · ${turns}ターン`,
-    most: label => `いちばん長く: ${label}`,
+    most: label => `いちばん長く作業したのは ${label}`,
     quiet: '静かな期間: まだターンなし',
     cardSaved: path => `カードを保存: ${path}`,
     cardHow: 'GitHub プロフィール用: プロフィールリポジトリの README.md の隣に置いて、これを貼り付けて:',
@@ -310,7 +310,7 @@ export const ja: typeof en = {
       hide: ['非表示', '隠す'], show: ['表示'], small: ['小さく', '小'], big: ['大きく', '大'], sound: ['サウンド', '音'],
       status: ['状態', 'ステータス'], details: ['詳細'], level: ['レベル'], wear: ['着せ替え', '着る'], shield: ['シールド'],
       alerts: ['通知'], lang: ['言語'], auto: ['自動'], none: ['なし'],
-      card: ['カード'], wrapped: ['まとめ'], snap: ['スナップ'], month: ['月'], year: ['年'],
+      card: ['カード'], wrapped: ['まとめ'], snap: ['スナップ'], year: ['年'],
     },
   },
 }

@@ -310,7 +310,7 @@ export const zh: typeof en = {
       hide: ['隐藏'], show: ['显示'], small: ['小', '缩小'], big: ['大', '放大'], sound: ['声音', '音效'],
       status: ['状态'], details: ['详情'], level: ['等级'], wear: ['穿戴', '配饰'], shield: ['护盾'],
       alerts: ['提醒', '通知'], lang: ['语言'], auto: ['自动'], none: ['无', '不戴'],
-      card: ['卡片'], wrapped: ['回顾'], snap: ['快照'], month: ['月'], year: ['年'],
+      card: ['卡片'], wrapped: ['回顾'], snap: ['快照'], year: ['年'],
     },
   },
 }

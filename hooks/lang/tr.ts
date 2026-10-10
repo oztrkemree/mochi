@@ -310,7 +310,7 @@ export const tr: typeof en = {
       hide: ['gizle'], show: ['göster', 'goster'], small: ['küçük', 'kucuk'], big: ['büyük', 'buyuk'], sound: ['ses'],
       status: ['durum'], details: ['detay'], level: ['seviye'], wear: ['aksesuar', 'giy'], shield: ['kalkan'],
       alerts: ['bildirim'], lang: ['dil'], auto: ['otomatik'], none: ['yok', 'hiçbiri', 'hicbiri'],
-      card: ['kart'], wrapped: ['özet'], snap: ['fotoğraf', 'anlık'], month: ['ay'], year: ['yıl', 'sene'],
+      card: ['kart'], wrapped: ['özet'], snap: ['fotoğraf', 'anlık'], year: ['yıl', 'sene'],
     },
   },
 }

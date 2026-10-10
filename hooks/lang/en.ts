@@ -337,7 +337,7 @@ export const en = {
       hide: [] as string[], show: [] as string[], small: [] as string[], big: [] as string[], sound: [] as string[],
       status: [] as string[], details: [] as string[], level: [] as string[], wear: [] as string[], shield: [] as string[],
       alerts: [] as string[], lang: [] as string[], auto: [] as string[], none: [] as string[],
-      card: [] as string[], wrapped: [] as string[], snap: [] as string[], month: [] as string[], year: [] as string[],
+      card: [] as string[], wrapped: [] as string[], snap: [] as string[], year: [] as string[],
     },
   },
 }

@@ -427,7 +427,7 @@ async function recount($: Dollar) {
 
 async function saveDays($: Dollar) {
   if (chat.dataDir === '' || chat.sessionId === '') return
-  await $.fs.write(`${chat.dataDir}/days/${chat.sessionId}.json`, `${JSON.stringify({ id: chat.sessionId, label: chat.label, days: chat.myDays })}\n`).catch(() => undefined)
+  await $.fs.write(`${chat.dataDir}/days/${chat.sessionId}.json`, `${JSON.stringify({ id: chat.sessionId, label: chat.label, isLabelFromPrompt: chat.isLabelFromPrompt, days: chat.myDays })}\n`).catch(() => undefined)
 }
 
 async function addToday($: Dollar, rec: Partial<DayRec>) {
@@ -826,17 +826,17 @@ async function statusLines($: Dollar, p: Prefs): Promise<string> {
 
 // ---------- share ----------
 
-/** Every chat's days with its name, read file by file, this chat's own from memory. */
+/** Every chat's days with its folder's name, this chat's own from memory; a name taken from a prompt (or a file too old to say) stays out of a picture to share. */
 async function readChats($: Dollar): Promise<ChatDays[]> {
-  const out: ChatDays[] = [{ label: chat.label, days: chat.myDays }]
+  const out: ChatDays[] = [{ label: chat.isLabelFromPrompt ? '' : chat.label, days: chat.myDays }]
   if (chat.dataDir === '') return out
   const dir = `${chat.dataDir}/days`
   for (const entry of await $.fs.list(dir).catch(() => [])) {
     if (!entry.name.endsWith('.json')) continue
     try {
-      const file = JSON.parse(await $.fs.read(`${dir}/${entry.name}`)) as { id?: unknown; label?: unknown; days?: unknown }
+      const file = JSON.parse(await $.fs.read(`${dir}/${entry.name}`)) as { id?: unknown; label?: unknown; isLabelFromPrompt?: unknown; days?: unknown }
       if (typeof file.id !== 'string' || file.id === chat.sessionId || typeof file.days !== 'object' || file.days === null) continue
-      out.push({ label: typeof file.label === 'string' ? file.label : '', days: file.days as ChatDays['days'] })
+      out.push({ label: typeof file.label === 'string' && file.isLabelFromPrompt === false ? file.label : '', days: file.days as ChatDays['days'] })
     } catch {
       // A file caught mid-write counts next time.
     }
