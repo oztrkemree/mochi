@@ -134,6 +134,10 @@ test('the details pane draws the board as a card, and as lines in the terminal',
   for (const part of ['mochi', 'this chat', 'wiki', 'fix (worktree)', 'waiting for you', 'rm -rf &lt;x&gt;', '6m', '3m']) expect(svg).toContain(part)
   expect(svg.indexOf('mochi') < svg.indexOf('wiki')).toBe(true)
   expect(/<[^a-zA-Z/!?]/.test(svg)).toBe(false)
+  // On the narrowest card the name has no room for the mark; this chat stays first.
+  const narrow = card?.body(0, 0, 280) ?? ''
+  expect(narrow).not.toContain('this chat')
+  expect(narrow.indexOf('mochi') < narrow.indexOf('wiki')).toBe(true)
   expect(chatsCard({ ...env, peers: [] }, NOW)).toBe(null)
   expect(detailLines(env, NOW)).toContain('  ● wiki · fix (worktree) · waiting for you · awaiting approval · rm -rf <x> · 6m')
 })

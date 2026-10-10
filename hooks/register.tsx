@@ -849,24 +849,25 @@ async function findWhere($: Dollar) {
  * wait on the person that went on, and a nearly used-up window that reset.
  */
 async function watchChats($: Dollar, now: number) {
+  // Taken before any wait, so beats that overlap never look at the same stretch twice.
+  const seenAt = chat.resetsSeenAt
+  chat.resetsSeenAt = now
   const me: Peer = { ...(await liveNow($)), at: 0 }
   const v = await read($, env)
-  if (JSON.stringify(me) !== JSON.stringify(v.me)) await setEnv($, x => ({ ...x, me }))
+  if (JSON.stringify(me) !== JSON.stringify(v.me)) await update($, env, x => ({ ...x, me }))
   if (isWaitLong(me, chat.waitTold, now)) {
     chat.waitTold = me.stateAt ?? 0
     await notify($, t().chats.waitingLong(me.label, age(now - chat.waitTold)))
   }
   // The readings are as old as the last response, so the reset comes from the time they gave.
-  const passed = resetsPassed(v.limits, chat.resetsSeenAt, now)
-  chat.resetsSeenAt = now
-  for (const l of passed) await limitBack($, l)
+  for (const l of resetsPassed(v.limits, seenAt, now)) await limitBack($, l)
 }
 
-/** A nearly used-up window has reset: every chat's Mochi shows it, and one chat on the machine tells the person. */
+/** A nearly used-up window has reset: every idle chat's Mochi shows it, and one chat on the machine tells the person. */
 async function limitBack($: Dollar, l: Limit) {
   const line = t().limit.back(t().limit.long[l.kind] ?? l.kind)
-  if (chat.isBusy) chat.pendingLimit = line
-  else await show($, { mood: 'party', line, holdMs: 10_000, sound: 'ding' })
+  // A working chat keeps its face on the work.
+  if (!chat.isBusy) await show($, { mood: 'party', line, holdMs: 10_000, sound: 'ding' })
   if (await claim($, `reset-${l.kind}`, l.resetsAt)) await notify($, line)
 }
 

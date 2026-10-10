@@ -117,7 +117,7 @@ export const ja: typeof en = {
     here: 'ここ',
     worktree: branch => `${branch}（ワークツリー）`,
     waiting: n => `${n}件が返事待ち`,
-    waitingLong: (label, span) => `${label}が${span}返事待ち`,
+    waitingLong: (label, span) => `${label}が${span}前から返事待ち`,
     words: 'チャット',
   },
 

@@ -103,8 +103,9 @@ export function chatsCard(env: Env, now: number): Card | null {
       const nameW = Math.min(160, w * 0.24)
       const branchW = w >= 480 ? Math.min(140, w * 0.18) : 0
       const chars = Math.floor(nameW / 7)
-      const name = i === 0 && env.me !== undefined
-        ? `${esc(clip(p.label, Math.max(4, chars - cols(d.here) - 1)))}<tspan class="faint" font-weight="400" dx="6">${esc(d.here)}</tspan>`
+      // This chat is marked where the name has room for it; a narrow card only keeps it first.
+      const name = i === 0 && env.me !== undefined && chars - cols(d.here) - 1 >= 4
+        ? `${esc(clip(p.label, chars - cols(d.here) - 1))}<tspan class="faint" font-weight="400" dx="6">${esc(d.here)}</tspan>`
         : esc(clip(p.label, chars))
       const room = Math.floor((w - 16 - nameW - branchW - 44) / 6.3)
       const state = clip(peerState(p.state), room)
