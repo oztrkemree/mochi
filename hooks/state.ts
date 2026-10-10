@@ -1,4 +1,5 @@
 import type { DayRec, Env, Face, Info, Outfit, Panel, Peer, Prefs, Shot } from '../types'
+import type { Pending, TipId } from './coach'
 import { NEW_WATCH } from './guard'
 import type { Watch } from './guard'
 import { pickLang, t } from './i18n'
@@ -9,7 +10,7 @@ import type { Platform } from './system'
 // What register.tsx and render.tsx share: the defaults of the values kept in
 // $.state, and this load's own bookkeeping.
 
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false }, lang: 'auto' }
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: { level: false, wardrobe: false }, lang: 'auto', hasTips: true }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**
@@ -100,4 +101,19 @@ export const chat = {
   lastStatus: undefined as string | undefined,
   autoLang: null as Lang | null,
   lastEnv: null as Env | null,
+  /** The coach: tips waiting for an idle moment, the tour's next step (-1 when none), an instruction to offer for CLAUDE.md. */
+  coach: {
+    pending: {} as Pending,
+    /** When Mochi last looked for something to say; a later time holds it off until then. */
+    at: 0,
+    tour: -1,
+    rule: '',
+    /** Permission questions this chat, by program or tool. */
+    asks: {} as Record<string, number>,
+    isLongFirst: false,
+    hasPlanned: false,
+    retired: [] as TipId[],
+    /** This plugin's version, from its plugin.json. */
+    version: '',
+  },
 }

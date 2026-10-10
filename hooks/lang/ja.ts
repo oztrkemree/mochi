@@ -13,6 +13,18 @@ export const ja: typeof en = {
   days: ['日', '月', '火', '水', '木', '金', '土'],
   months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
 
+  news: {
+    '0.3.0': {
+      headline: 'ヒント、初回ツアー、CLAUDE.mdの提案',
+      notes: [
+        'ヒント: Mochiが待機中のとき、たまにClaude Codeの短いヒントを出す。/mochi tips でオフ。',
+        'CLAUDE.md: 同じ指示を3回目に出すと、プロジェクトのCLAUDE.mdに追加するか聞く。',
+        '初回起動時に短いツアー。/mochi tour でもう一度見られる。',
+        'アップデートごとの新機能: /mochi news。',
+      ],
+    },
+  },
+
   mood: {
     idle: '待機中', wave: '手を振ってる', listening: '話を聞いてる', thinking: '考え中', talking: '返信を書いてる',
     reading: '読んでる', searching: '検索中', writing: 'コードを書いてる', running: 'コマンド実行中', waiting: '待ってる',
@@ -71,6 +83,38 @@ export const ja: typeof en = {
   },
 
   word: { file: 'ファイル', agent: 'エージェント', chat: 'チャット' },
+
+  coach: {
+    tip: 'ヒント',
+    off: '/mochi tips でオフ',
+    tips: {
+      rewind: { line: 'Esc Esc · 巻き戻し', text: '方向を間違えた？Escを2回押すか /rewind で前のメッセージに戻って、別のプロンプトを試せる。' },
+      permissions: { line: '/permissions · 常に許可', text: what => `Claudeが${what}を使う許可を何度も求めている。/permissions で常に許可できる。` },
+      compact: { line: '/compact 残す内容', text: 'コンテキストが埋まってきた。/compact のあとに大事なことを書くと（例:「/compact APIの決定を残して」）、その要点が残る。' },
+      mcp: { line: '/mcp · 使わないサーバー', text: 'コンテキストで一番場所を取っているのはMCPツール。/mcp でサーバーを一覧し、使わないものをオフにすると空く。' },
+      plan: { line: 'Shift+Tab · まず計画', text: '大きな作業はShift+Tabでプランモードにしてから。Claudeはまず計画を立て、承認するまで何も変更しない。' },
+      commit: { line: 'Claudeにコミットを頼む', text: n => `前回のコミットから${n}ファイルが変更されている。Claudeにコミットを頼めば、メッセージも書いてくれる。` },
+      rings: { line: 'リングをクリック · 詳細', text: 'Mochiのリングをクリックするか /mochi details で、コンテキスト、上限、変更、履歴が見られる。' },
+      wear: { line: '/mochi wear', text: '着られるアイテムがある。/mochi wear で一覧、詳細パネルの着せ替えでMochiに着せられる。' },
+    },
+    tour: [
+      { line: 'こんにちは、Mochiだよ', text: 'こんにちは、Mochiだよ。プロンプトの上にいて、Claude Codeが何をしているか見せる: 読んでる、実行してる、返事待ち。' },
+      { line: 'リングをクリック · 詳細', text: 'リングはコンテキストと利用上限を表す。クリックするか /mochi details で全体が見られる。' },
+      { line: '/mochi wear · シールド', text: 'レベルを上げて /mochi wear で着せ替えしよう。シールドは取り消せないコマンドの前に確認する。/mochi shield でオフ。' },
+    ],
+    rule: {
+      question: rule => `「${rule}」をCLAUDE.mdに追加する？`,
+      add: '追加',
+      later: '今はしない',
+      never: 'これは今後聞かない',
+      added: 'CLAUDE.mdに追加した',
+    },
+    tipsOn: 'ヒントON: Mochiが待機中のとき、たまに短いヒントを出す。何度も出す指示はCLAUDE.mdへの追加を提案する。',
+    tipsOff: 'ヒントOFF。',
+    tourStarts: 'ツアーがすぐ始まる。Mochiを見てて。',
+    newsToast: (version, headline) => `Mochi ${version}: ${headline} · /mochi news`,
+    noNews: version => `Mochi ${version} の更新情報はない。`,
+  },
 
   limit: {
     short: { five_hour: 'セッション', seven_day: '週間', spend_limit: '利用額' },
@@ -288,6 +332,7 @@ export const ja: typeof en = {
       hide: ['非表示', '隠す'], show: ['表示'], small: ['小さく', '小'], big: ['大きく', '大'], sound: ['サウンド', '音'],
       status: ['状態', 'ステータス'], details: ['詳細'], level: ['レベル'], wear: ['着せ替え', '着る'], shield: ['シールド'],
       alerts: ['通知'], lang: ['言語'], auto: ['自動'], none: ['なし'],
+      tips: ['ヒント'], tour: ['ツアー', '紹介'], news: ['新機能', 'ニュース'],
     },
   },
 }

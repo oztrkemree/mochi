@@ -14,6 +14,18 @@ export const de: typeof en = {
   days: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
   months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 
+  news: {
+    '0.3.0': {
+      headline: 'Tipps, ein Rundgang zum Start und Vorschläge für die CLAUDE.md',
+      notes: [
+        'Tipps: ab und zu, während Mochi Pause hat, ein kurzer Tipp zu Claude Code. /mochi tipps schaltet sie aus.',
+        'CLAUDE.md: Gibst du dieselbe Anweisung zum dritten Mal, bietet Mochi an, sie in die CLAUDE.md des Projekts aufzunehmen.',
+        'Ein kurzer Rundgang beim allerersten Start; /mochi rundgang zeigt ihn noch einmal.',
+        'Neues nach jedem Update: /mochi neuigkeiten.',
+      ],
+    },
+  },
+
   mood: {
     idle: 'im Leerlauf', wave: 'winkt', listening: 'hört dir zu', thinking: 'denkt nach', talking: 'schreibt eine Antwort',
     reading: 'liest', searching: 'sucht', writing: 'schreibt Code', running: 'führt einen Befehl aus', waiting: 'wartet',
@@ -72,6 +84,38 @@ export const de: typeof en = {
   },
 
   word: { file: 'Datei', agent: 'Agent', chat: 'Chat' },
+
+  coach: {
+    tip: 'Tipp',
+    off: '/mochi tipps schaltet sie aus',
+    tips: {
+      rewind: { line: 'Esc Esc · zurückspulen', text: 'Falsch abgebogen? Drück zweimal Esc oder tippe /rewind, um zu einer früheren Nachricht zurückzugehen und einen anderen Prompt zu versuchen.' },
+      permissions: { line: '/permissions · dauerhaft erlauben', text: what => `Claude fragt immer wieder, ob es ${what} verwenden darf. Mit /permissions kannst du es dauerhaft erlauben.` },
+      compact: { line: '/compact was bleiben soll', text: 'Der Kontext füllt sich. /compact mit ein paar Worten zum Wichtigen, etwa „/compact behalte die API-Entscheidungen“, bewahrt das Wesentliche.' },
+      mcp: { line: '/mcp · ungenutzte Server', text: 'MCP-Tools belegen den meisten Platz im Kontext. /mcp listet die Server; schalte ab, was du nicht nutzt, dann wird Platz frei.' },
+      plan: { line: 'Shift+Tab · erst planen', text: 'Bei einer großen Aufgabe drück Shift+Tab, bis der Planmodus an ist: Claude plant zuerst und ändert nichts, bevor du zustimmst.' },
+      commit: { line: 'Claude committen lassen', text: n => `${pl(n, 'Datei', 'Dateien')} seit dem letzten Commit geändert. Bitte Claude um einen Commit: Die Nachricht schreibt es gleich mit.` },
+      rings: { line: 'Ringe anklicken · Details', text: 'Klick auf Mochis Ringe oder tippe /mochi details: Kontext, Limits, Änderungen und dein Verlauf.' },
+      wear: { line: '/mochi tragen', text: 'Du hast Accessoires freigeschaltet. /mochi tragen listet sie; im Kleiderschrank der Detailansicht ziehst du sie Mochi an.' },
+    },
+    tour: [
+      { line: 'hallo, ich bin Mochi', text: 'Hallo, ich bin Mochi. Ich wohne über deinem Prompt und zeige, was Claude Code gerade tut: lesen, ausführen, auf dich warten.' },
+      { line: 'Ringe anklicken · Details', text: 'Die Ringe zeigen den Kontext und deine Nutzungslimits. Klick sie an oder tippe /mochi details für das ganze Bild.' },
+      { line: '/mochi tragen · der Schild', text: 'Steig im Level auf und zieh mich mit /mochi tragen an. Der Schild fragt vor Befehlen, die sich nicht rückgängig machen lassen; /mochi schild schaltet ihn aus.' },
+    ],
+    rule: {
+      question: rule => `„${rule}“ in die CLAUDE.md aufnehmen?`,
+      add: 'Aufnehmen',
+      later: 'Jetzt nicht',
+      never: 'Hierfür nie',
+      added: 'in die CLAUDE.md aufgenommen',
+    },
+    tipsOn: 'Tipps an: ab und zu, während Mochi Pause hat, ein kurzer Tipp; und das Angebot, eine Anweisung, die du immer wieder gibst, in die CLAUDE.md aufzunehmen.',
+    tipsOff: 'Tipps aus.',
+    tourStarts: 'Der Rundgang beginnt gleich: schau auf Mochi.',
+    newsToast: (version, headline) => `Mochi ${version}: ${headline} · /mochi neuigkeiten`,
+    noNews: version => `Keine Notizen für Mochi ${version}.`,
+  },
 
   limit: {
     short: { five_hour: 'Sitzung', seven_day: 'Woche', spend_limit: 'Ausgaben' },
@@ -292,6 +336,7 @@ export const de: typeof en = {
       hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'],
       status: [], details: [], level: [], wear: ['tragen', 'anziehen'], shield: ['schild', 'schutz'],
       alerts: ['hinweise', 'benachrichtigungen', 'meldungen'], lang: ['sprache'], auto: ['automatisch'], none: ['nichts', 'keins'],
+      tips: ['tipps', 'tipp'], tour: ['rundgang'], news: ['neuigkeiten', 'neu'],
     },
   },
 }

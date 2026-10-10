@@ -16,6 +16,18 @@ export const es: typeof en = {
   days: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
   months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
 
+  news: {
+    '0.3.0': {
+      headline: 'consejos, un recorrido inicial y sugerencias para CLAUDE.md',
+      notes: [
+        'Consejos: de vez en cuando, mientras Mochi está inactivo, un consejo breve sobre Claude Code. /mochi consejos los desactiva.',
+        'CLAUDE.md: si das la misma instrucción por tercera vez, Mochi se ofrece a añadirla al CLAUDE.md del proyecto.',
+        'Un recorrido breve en el primer inicio; /mochi recorrido lo repite.',
+        'Novedades tras cada actualización: /mochi novedades.',
+      ],
+    },
+  },
+
   mood: {
     idle: 'inactivo', wave: 'saludando', listening: 'escuchándote', thinking: 'pensando', talking: 'escribiendo la respuesta',
     reading: 'leyendo', searching: 'buscando', writing: 'escribiendo código', running: 'ejecutando un comando', waiting: 'esperando',
@@ -74,6 +86,38 @@ export const es: typeof en = {
   },
 
   word: { file: 'archivo', agent: 'agente', chat: 'chat' },
+
+  coach: {
+    tip: 'consejo',
+    off: '/mochi consejos los desactiva',
+    tips: {
+      rewind: { line: 'Esc Esc · retroceder', text: '¿Tomó un mal camino? Pulsa Esc dos veces, o escribe /rewind, para volver a un mensaje anterior y probar con otro prompt.' },
+      permissions: { line: '/permissions · permitir siempre', text: what => `Claude sigue pidiendo permiso para usar ${what}. Con /permissions puedes permitirlo para siempre.` },
+      compact: { line: '/compact qué conservar', text: 'El contexto se está llenando. /compact con unas palabras sobre lo importante, como «/compact conserva las decisiones de la API», guarda lo esencial.' },
+      mcp: { line: '/mcp · servidores sin usar', text: 'Las herramientas MCP ocupan la mayor parte de tu contexto. /mcp lista los servidores; desactivar los que no usas libera espacio.' },
+      plan: { line: 'Shift+Tab · primero el plan', text: 'Para una tarea grande, pulsa Shift+Tab hasta activar el modo plan: Claude planifica primero y no cambia nada hasta que des el visto bueno.' },
+      commit: { line: 'pide a Claude un commit', text: n => `${plural(n, 'archivo cambió', 'archivos cambiaron')} desde el último commit. Pide a Claude que haga el commit: también escribe el mensaje.` },
+      rings: { line: 'clic en los anillos · detalles', text: 'Haz clic en los anillos de Mochi, o escribe /mochi detalles, para ver el contexto, tus límites, los cambios y tu historial.' },
+      wear: { line: '/mochi poner', text: 'Ya tienes accesorios. /mochi poner los muestra; en el Armario del panel de detalles se los pones a Mochi.' },
+    },
+    tour: [
+      { line: 'hola, soy Mochi', text: 'Hola, soy Mochi. Vivo encima de tu prompt y muestro lo que hace Claude Code: leer, ejecutar, esperarte.' },
+      { line: 'clic en los anillos · detalles', text: 'Los anillos muestran el contexto y tus límites de uso. Haz clic en ellos, o escribe /mochi detalles, para verlo todo.' },
+      { line: '/mochi poner · el escudo', text: 'Sube de nivel y vísteme con /mochi poner. El escudo pregunta antes de un comando que no se puede deshacer; /mochi escudo lo desactiva.' },
+    ],
+    rule: {
+      question: rule => `¿Añadir «${rule}» a CLAUDE.md?`,
+      add: 'Añadir',
+      later: 'Ahora no',
+      never: 'Nunca para esto',
+      added: 'añadido a CLAUDE.md',
+    },
+    tipsOn: 'Consejos activados: de vez en cuando, mientras Mochi está inactivo, un consejo breve; y la oferta de añadir a CLAUDE.md una instrucción que repites.',
+    tipsOff: 'Consejos desactivados.',
+    tourStarts: 'El recorrido empieza en un momento: mira a Mochi.',
+    newsToast: (version, headline) => `Mochi ${version}: ${headline} · /mochi novedades`,
+    noNews: version => `No hay notas para Mochi ${version}.`,
+  },
 
   limit: {
     short: { five_hour: 'sesión', seven_day: 'semana', spend_limit: 'gasto' },
@@ -294,6 +338,7 @@ export const es: typeof en = {
       hide: ['ocultar', 'esconder'], show: ['mostrar'], small: ['pequeño', 'pequeno'], big: ['grande'], sound: ['sonido'],
       status: ['estado'], details: ['detalles', 'detalle'], level: ['nivel'], wear: ['poner', 'vestir'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma'], auto: ['automático', 'automatico'], none: ['nada', 'ninguno'],
+      tips: ['consejos', 'consejo'], tour: ['recorrido'], news: ['novedades'],
     },
   },
 }

@@ -13,6 +13,18 @@ export const ko: typeof en = {
   days: ['일', '월', '화', '수', '목', '금', '토'],
   months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
 
+  news: {
+    '0.3.0': {
+      headline: '팁, 첫 실행 안내, CLAUDE.md 제안',
+      notes: [
+        '팁: Mochi가 쉬고 있을 때 가끔 Claude Code에 관한 짧은 팁을 보여 줍니다. /mochi tips로 끌 수 있습니다.',
+        'CLAUDE.md: 같은 지시를 세 번째로 하면 Mochi가 프로젝트의 CLAUDE.md에 추가할지 묻습니다.',
+        '처음 실행할 때 짧은 안내가 나옵니다. /mochi tour로 다시 볼 수 있습니다.',
+        '업데이트마다 새로운 점: /mochi news.',
+      ],
+    },
+  },
+
   mood: {
     idle: '쉬는 중', wave: '손 흔드는 중', listening: '듣는 중', thinking: '생각 중', talking: '답장 쓰는 중',
     reading: '읽는 중', searching: '찾는 중', writing: '코드 작성 중', running: '명령 실행 중', waiting: '기다리는 중',
@@ -71,6 +83,38 @@ export const ko: typeof en = {
   },
 
   word: { file: '파일', agent: '에이전트', chat: '채팅' },
+
+  coach: {
+    tip: '팁',
+    off: '/mochi tips로 끌 수 있음',
+    tips: {
+      rewind: { line: 'Esc Esc · 되감기', text: '방향이 틀렸나요? Esc를 두 번 누르거나 /rewind를 입력하면 이전 메시지로 돌아가 다른 프롬프트를 시도할 수 있습니다.' },
+      permissions: { line: '/permissions · 항상 허용', text: what => `Claude가 ${what} 사용 권한을 계속 묻고 있습니다. /permissions에서 항상 허용할 수 있습니다.` },
+      compact: { line: '/compact 남길 내용', text: '컨텍스트가 차고 있습니다. /compact 뒤에 중요한 점을 적으면(예: “/compact API 결정 사항 유지”) 그 요지가 남습니다.' },
+      mcp: { line: '/mcp · 안 쓰는 서버', text: '컨텍스트에서 MCP 도구가 가장 많은 자리를 차지합니다. /mcp에서 서버를 보고 안 쓰는 서버를 끄면 공간이 생깁니다.' },
+      plan: { line: 'Shift+Tab · 계획 먼저', text: '큰 작업은 Shift+Tab으로 플랜 모드를 켜고 시작하세요. Claude가 먼저 계획을 세우고, 승인하기 전에는 아무것도 바꾸지 않습니다.' },
+      commit: { line: 'Claude에게 커밋 부탁', text: n => `마지막 커밋 이후 파일 ${n}개가 바뀌었습니다. Claude에게 커밋을 부탁하면 메시지도 써 줍니다.` },
+      rings: { line: '링 클릭 · 상세', text: 'Mochi의 링을 클릭하거나 /mochi details를 입력하면 컨텍스트, 한도, 변경 사항, 기록을 볼 수 있습니다.' },
+      wear: { line: '/mochi wear', text: '착용할 아이템이 생겼습니다. /mochi wear로 목록을 보고, 상세 패널의 옷장에서 Mochi에게 입힐 수 있습니다.' },
+    },
+    tour: [
+      { line: '안녕하세요, Mochi예요', text: '안녕하세요, Mochi예요. 프롬프트 위에 살면서 Claude Code가 하는 일을 보여 드려요: 읽기, 실행, 답 기다리기.' },
+      { line: '링 클릭 · 상세', text: '링은 컨텍스트와 사용 한도를 보여 줍니다. 클릭하거나 /mochi details를 입력하면 전체를 볼 수 있습니다.' },
+      { line: '/mochi wear · 보호막', text: '레벨을 올리고 /mochi wear로 저를 꾸며 주세요. 보호막은 되돌릴 수 없는 명령 전에 확인합니다. /mochi shield로 끌 수 있습니다.' },
+    ],
+    rule: {
+      question: rule => `“${rule}”을(를) CLAUDE.md에 추가할까요?`,
+      add: '추가',
+      later: '나중에',
+      never: '이건 다시 묻지 않기',
+      added: 'CLAUDE.md에 추가됨',
+    },
+    tipsOn: '팁 켜짐: Mochi가 쉬고 있을 때 가끔 짧은 팁을 보여 주고, 반복하는 지시는 CLAUDE.md에 추가하자고 제안합니다.',
+    tipsOff: '팁 꺼짐.',
+    tourStarts: '곧 안내가 시작됩니다. Mochi를 보세요.',
+    newsToast: (version, headline) => `Mochi ${version}: ${headline} · /mochi news`,
+    noNews: version => `Mochi ${version}의 업데이트 노트가 없습니다.`,
+  },
 
   limit: {
     short: { five_hour: '세션', seven_day: '주간', spend_limit: '지출' },
@@ -288,6 +332,7 @@ export const ko: typeof en = {
       hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'],
       status: ['상태'], details: ['상세', '자세히'], level: ['레벨'], wear: ['착용', '입기'], shield: ['보호막', '실드'],
       alerts: ['알림'], lang: ['언어'], auto: ['자동'], none: ['없음', '벗기'],
+      tips: ['팁'], tour: ['둘러보기', '안내'], news: ['새소식', '소식'],
     },
   },
 }

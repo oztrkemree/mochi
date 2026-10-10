@@ -5,6 +5,8 @@ import type { DayRec, Env, Face, Info, Item, Limit, Mood, Outfit, Peer, Prefs, R
 import { kaomoji, moodLabel } from './looks'
 import { afterTool, beforeTool, isCommit, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
+import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, rulesOf, settleRule, shownTip, tipLines, turnTips, withRule } from './coach'
+import type { TipId } from './coach'
 import { addSample, ago, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
 import { NEW_WATCH, danger, dangerKey, isShell, watchCall } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
@@ -568,6 +570,7 @@ async function removeLive($: Dollar, names: string[]) {
 async function openDetail($: Dollar) {
   await update($, detail, () => ({ ...NO_ENV, ...(chat.lastEnv ?? NO_ENV) }))
   chat.detailAt = await $.clock.now()
+  void retireTip($, 'rings').catch(() => undefined)
   const opened = await $.ui.open({ id: DETAIL, title: t().detail.title })
   if (!opened.isPlaced) $.ui.toast(t().note.detailFailed(opened.reason))
 }
@@ -620,6 +623,7 @@ async function tick($: Dollar) {
     await show($, { mood: 'asking', line: t().st.commitNudge(git.changed, git.lastCommit > 0 ? t().st.lastCommit(ago(now - git.lastCommit)) : t().st.noCommits), holdMs: 9000 })
     return
   }
+  void coach($, now, f).catch(() => undefined)
 
   if (f.until > 0) {
     if (now > f.until) await rest($)
@@ -702,6 +706,9 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'sound', english: ['sound'], run: () => toggleSound($) },
     { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
+    { name: 'tips', english: ['tips', 'tip'], run: () => toggleTips($) },
+    { name: 'tour', english: ['tour', 'welcome'], run: () => replayTour() },
+    { name: 'news', english: ['news', 'new'], run: () => Promise.resolve(newsLines(chat.coach.version)) },
   ]
 }
 
@@ -817,6 +824,154 @@ async function statusLines($: Dollar, p: Prefs): Promise<string> {
   ].join('\n')
 }
 
+// ---------- coach ----------
+
+/** While idle, Mochi looks for the tour's next step, a question or a tip at most this often. */
+const COACH_EVERY_MS = 3000
+/** A first prompt this long would have been better planned first. */
+const LONG_PROMPT = 1000
+
+// ponytail: read, change, write with no lock; two chats writing in the same moment can lose one count. Fine for tips and counts.
+const coachFile = () => `${chat.dataDir}/coach.json`
+
+/** A tip a situation called for, shown once Mochi is idle and the limits allow. */
+function wantTip(id: TipId, now: number, arg = '') {
+  chat.coach.pending = { ...chat.coach.pending, [id]: { at: now, arg } }
+}
+
+/**
+ * On the very first start ever (no preferences, no version seen), the tour; on
+ * the first start of a newer version, a word on what is new, once.
+ */
+async function welcome($: Dollar, hasPrefs: boolean) {
+  const seen = await $.store.get('version')
+  const manifest = JSON.parse(await $.fs.read(`${$.plugin.root}/.claude-plugin/plugin.json`).catch(() => '{}')) as { version?: unknown }
+  const version = typeof manifest.version === 'string' ? manifest.version : ''
+  chat.coach.version = version
+  if (seen === version) return
+  await $.store.set('version', version)
+  if (!hasPrefs && seen === undefined) {
+    chat.coach.tour = 0
+    return
+  }
+  const news = newsFor(version)
+  if (news === null || (typeof seen === 'string' && !isNewer(version, seen)) || !(await read($, prefs)).hasTips) return
+  $.ui.toast(t().coach.newsToast(version, news.headline), { timeoutMs: 12_000 })
+}
+
+/** A prompt: a long one opening a fresh chat may call for plan mode; a standing instruction the person typed counts for its project. */
+async function notePrompt($: Dollar, text: string, isPerson: boolean) {
+  if (text.length >= LONG_PROMPT && (await $.session.turns()) <= 1) chat.coach.isLongFirst = true
+  const rules = isPerson ? rulesOf(text) : []
+  if (rules.length === 0 || chat.dataDir === '' || !(await read($, prefs)).hasTips) return
+  const counted = countRules(readLog(await $.fs.read(coachFile()).catch(() => '')), projectKey(await $.session.root()), rules)
+  await $.fs.write(coachFile(), JSON.stringify(counted.log))
+  if (counted.ask !== null) chat.coach.rule = counted.ask
+}
+
+/** The same permission asked a third time this chat calls for /permissions. */
+async function noteAsk($: Dollar, tool: string, input: Record<string, unknown>) {
+  const what = permKey(tool, input)
+  const n = (chat.coach.asks[what] ?? 0) + 1
+  chat.coach.asks = { ...chat.coach.asks, [what]: n }
+  if (n >= 3) wantTip('permissions', await $.clock.now(), what)
+}
+
+/** The end of a turn: the tips it calls for take the place of those the last one called for. */
+async function noteTurn($: Dollar, reason: string, errorRun: number) {
+  const now = await $.clock.now()
+  const hasPick = Object.keys((await read($, prefs)).pick).length > 0
+  const ids = turnTips(await read($, env), { reason, errorRun, isLongFirst: chat.coach.isLongFirst, hasPlanned: chat.coach.hasPlanned, hasPick }, now)
+  const asked = chat.coach.pending.permissions
+  chat.coach.isLongFirst = false
+  chat.coach.pending = asked ? { permissions: asked } : {}
+  for (const id of ids) wantTip(id, now)
+}
+
+/** While Mochi is idle: the tour's next step, the question about an instruction given again and again, or one tip. */
+async function coach($: Dollar, now: number, f: Face) {
+  if (chat.isBusy || f.until > 0 || f.mood !== 'idle' || now - chat.coach.at < COACH_EVERY_MS) return
+  chat.coach.at = now
+  if (chat.coach.tour >= 0) return await tourStep($)
+  const p = await read($, prefs)
+  if (chat.dataDir === '' || p.isHidden || !p.hasTips) return
+  if (chat.coach.rule !== '') return await askRule($)
+  if (freshTips(chat.coach.pending, now).length === 0) return
+  const v = await read($, env)
+  const log = readLog(await $.fs.read(coachFile()).catch(() => ''))
+  const id = pickTip(log, chat.coach.pending, now, v.tz)
+  if (id === null) {
+    // The limits hold every tip back: look again in a minute, not on every beat.
+    chat.coach.at = now + 60_000
+    return
+  }
+  const tip = tipLines(id, id === 'commit' ? String(v.git?.changed ?? 0) : (chat.coach.pending[id]?.arg ?? ''))
+  const { [id]: _shown, ...rest } = chat.coach.pending
+  chat.coach.pending = rest
+  await $.fs.write(coachFile(), JSON.stringify(shownTip(log, id, now, v.tz)))
+  await show($, { mood: 'pleased', line: `${t().coach.tip} · ${tip.line}`, holdMs: 10_000 })
+  $.ui.toast(`Mochi: ${tip.text} (${t().coach.off})`, { timeoutMs: 12_000 })
+}
+
+/** The tour's next step, on the face and in a toast in Mochi's own voice. */
+async function tourStep($: Dollar) {
+  const at = chat.coach.tour
+  const steps = t().coach.tour
+  chat.coach.tour = at + 1 < steps.length ? at + 1 : -1
+  const step = steps[at]
+  if (step === undefined) return
+  await show($, { mood: TOUR_MOODS[at] ?? 'pleased', line: step.line, holdMs: 8000 })
+  $.ui.toast(step.text, { timeoutMs: 10_000 })
+}
+
+/**
+ * Asks whether to add an instruction given a third time to the project's
+ * CLAUDE.md, and adds it only on a yes. A CLAUDE.md that cannot be read is
+ * never written over: the question is dropped.
+ */
+async function askRule($: Dollar) {
+  const rule = chat.coach.rule
+  chat.coach.rule = ''
+  if ((await $.session.surfaces()).length === 0) return
+  // Nothing else is said while the question is open, nor for a minute after.
+  chat.coach.at = Number.POSITIVE_INFINITY
+  try {
+    const root = await $.session.root()
+    const path = `${root}/CLAUDE.md`
+    const readMd = async () => ((await $.fs.exists(path)) ? await $.fs.read(path) : '')
+    const d = t().coach.rule
+    // Already there, it counts as settled.
+    const answer = hasRule(await readMd(), rule) ? d.never : await $.ui.ask(d.question(rule), { header: 'Mochi', options: [d.add, d.later, d.never] }).catch(() => d.later)
+    if (answer === d.add) {
+      await $.fs.write(path, withRule(await readMd(), rule))
+      await show($, { mood: 'proud', line: d.added, holdMs: 5000 })
+    }
+    const log = readLog(await $.fs.read(coachFile()).catch(() => ''))
+    await $.fs.write(coachFile(), JSON.stringify(settleRule(log, projectKey(root), rule, answer === d.add || answer === d.never)))
+  } finally {
+    chat.coach.at = (await $.clock.now()) + 60_000
+  }
+}
+
+/** A tip whose feature the person found on their own never shows. */
+async function retireTip($: Dollar, id: TipId) {
+  if (chat.dataDir === '' || chat.coach.retired.includes(id)) return
+  chat.coach.retired = [...chat.coach.retired, id]
+  const log = readLog(await $.fs.read(coachFile()).catch(() => ''))
+  if ((log.shown[id] ?? 0) < MAX_SHOWN) await $.fs.write(coachFile(), JSON.stringify({ ...log, shown: { ...log.shown, [id]: MAX_SHOWN } }))
+}
+
+async function toggleTips($: Dollar): Promise<string> {
+  const next = await setPrefs($, v => ({ ...v, hasTips: !v.hasTips }))
+  return next.hasTips ? t().coach.tipsOn : t().coach.tipsOff
+}
+
+async function replayTour(): Promise<string> {
+  chat.coach.tour = 0
+  chat.coach.at = 0
+  return t().coach.tourStarts
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     // The system, then the language: everything after speaks it.
@@ -838,6 +993,7 @@ export const register: Register = on => {
     chat.lastNudge = await $.clock.now()
     void refreshGit($).catch(() => undefined)
     await show($, { mood: 'wave', line: t().st.ready, holdMs: 3000 })
+    void welcome($, saved !== undefined).catch(() => undefined)
     if (p.isHidden) await refreshStatus($)
     $.clock.every(TICK_MS, () => void tick($).catch(() => undefined))
 
@@ -859,6 +1015,7 @@ export const register: Register = on => {
     if (text.startsWith('/')) return next(e)
     if (chat.isLabelFromPrompt && chat.label === '') chat.label = peerLabel('', text)
     chat.lastTurnFailed = false
+    void notePrompt($, text, ['composer', 'bridge', 'sdk'].includes(e.origin?.kind)).catch(() => undefined)
     const wasAsleep = await wake($)
     const now = await $.clock.now()
     chat.stream = null
@@ -896,6 +1053,7 @@ export const register: Register = on => {
     const isAgent = e.tool === 'Agent' || String(e.tool) === 'Task'
     const startedAt = await $.clock.now()
     chat.lastActivity = startedAt
+    if (e.tool === 'ExitPlanMode') chat.coach.hasPlanned = true
 
     // The shield: a command that cannot be undone waits for the person's word.
     const cmd = isShell(e.tool) && typeof args.command === 'string' ? args.command : ''
@@ -994,6 +1152,7 @@ export const register: Register = on => {
     const input = typeof e.tool_input === 'object' && e.tool_input !== null ? (e.tool_input as Record<string, unknown>) : {}
     const line = `${t().st.awaitingApproval} · ${subject({ ...input, tool: e.tool_name })}`
     await show($, { mood: 'asking', line, holdMs: 0 })
+    void noteAsk($, e.tool_name, input).catch(() => undefined)
     if (chat.isBusy && (await $.clock.now()) - chat.turn.startedAt >= ASKS_AFTER_MS) await notify($, line)
 
     return next(e)
@@ -1022,6 +1181,7 @@ export const register: Register = on => {
     const after = await update($, env, v => ({ ...v, last, turns: [...v.turns, rec].slice(-40) }))
     chat.isGitWanted = true
     chat.lastTurnFailed = e.reason === 'error'
+    void noteTurn($, e.reason, chat.errorRun).catch(() => undefined)
     if (chat.pendingWarn > 0) {
       const level = chat.pendingWarn
       chat.pendingWarn = 0

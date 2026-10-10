@@ -161,6 +161,8 @@ export type Prefs = {
   open: { level: boolean; wardrobe: boolean }
   /** `auto` follows Claude Code's language setting and the system; otherwise a language code (en, tr, de…). */
   lang: string
+  /** Tips while Mochi is idle, and the offer to add an instruction given again and again to CLAUDE.md. */
+  hasTips: boolean
 }
 
 /** One slice of the context window, coloured as /context colours it. */

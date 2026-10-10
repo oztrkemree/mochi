@@ -13,6 +13,18 @@ export const tr: typeof en = {
   days: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'],
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
+  news: {
+    '0.3.0': {
+      headline: 'ipuçları, ilk açılış tanıtımı ve CLAUDE.md önerileri',
+      notes: [
+        'İpuçları: Mochi boştayken arada bir Claude Code hakkında kısa bir ipucu. /mochi ipucu kapatır.',
+        'CLAUDE.md: aynı talimatı üçüncü kez verince Mochi onu projenin CLAUDE.md dosyasına eklemeyi önerir.',
+        'İlk açılışta kısa bir tanıtım; /mochi tanıtım yeniden gösterir.',
+        'Her güncellemeden sonra yenilikler: /mochi yenilikler.',
+      ],
+    },
+  },
+
   mood: {
     idle: 'boşta', wave: 'el sallıyor', listening: 'seni dinliyor', thinking: 'düşünüyor', talking: 'cevap yazıyor',
     reading: 'okuyor', searching: 'arıyor', writing: 'kod yazıyor', running: 'komut çalıştırıyor', waiting: 'bekliyor',
@@ -71,6 +83,38 @@ export const tr: typeof en = {
   },
 
   word: { file: 'dosya', agent: 'ajan', chat: 'sohbet' },
+
+  coach: {
+    tip: 'ipucu',
+    off: '/mochi ipucu ile kapatabilirsin',
+    tips: {
+      rewind: { line: 'Esc Esc · geri sar', text: 'Yanlış yola mı girdi? Esc’e iki kez bas ya da /rewind yaz; önceki bir mesaja dönüp başka bir prompt dene.' },
+      permissions: { line: '/permissions · kalıcı izin', text: what => `Claude ${what} için sürekli izin istiyor. /permissions ile kalıcı olarak izin verebilirsin.` },
+      compact: { line: '/compact + korunacaklar', text: 'Context doluyor. /compact’ın yanına neyin önemli olduğunu yaz, mesela “/compact API kararlarını koru”; özet bunu korur.' },
+      mcp: { line: '/mcp · kullanılmayan sunucular', text: 'Context’te en çok yeri MCP araçları kaplıyor. /mcp sunucuları listeler; kullanmadıklarını kapatırsan yer açılır.' },
+      plan: { line: 'Shift+Tab · önce plan', text: 'Büyük bir iş için plan modu açılana kadar Shift+Tab’a bas: Claude önce plan yapar, sen onaylamadan hiçbir şeyi değiştirmez.' },
+      commit: { line: 'Claude’a commit attır', text: n => `Son commit’ten beri ${n} dosya değişti. Claude’dan commit atmasını iste: mesajını da o yazar.` },
+      rings: { line: 'halkalara tıkla · detay', text: 'Context, limitler, değişiklikler ve geçmişin için Mochi’nin halkalarına tıkla ya da /mochi detay yaz.' },
+      wear: { line: '/mochi aksesuar', text: 'Takabileceğin aksesuarlar var. /mochi aksesuar listeler; detay ekranındaki Gardırop’tan Mochi’ye takabilirsin.' },
+    },
+    tour: [
+      { line: 'merhaba, ben Mochi', text: 'Merhaba, ben Mochi. Prompt’unun üstünde yaşıyorum ve Claude Code’un ne yaptığını gösteriyorum: okuyor, çalıştırıyor, seni bekliyor.' },
+      { line: 'halkalara tıkla · detay', text: 'Halkalar context’i ve kullanım limitlerini gösterir. Tamamı için tıkla ya da /mochi detay yaz.' },
+      { line: '/mochi aksesuar · kalkan', text: 'Seviye atladıkça beni /mochi aksesuar ile giydir. Kalkan, geri alınamayan bir komuttan önce sorar; /mochi kalkan ile kapanır.' },
+    ],
+    rule: {
+      question: rule => `“${rule}” CLAUDE.md’ye eklensin mi?`,
+      add: 'Ekle',
+      later: 'Şimdi değil',
+      never: 'Bunu bir daha sorma',
+      added: 'CLAUDE.md’ye eklendi',
+    },
+    tipsOn: 'İpuçları açık: Mochi boştayken arada bir kısa bir ipucu; sürekli verdiğin bir talimat olursa onu CLAUDE.md’ye eklemeyi önerir.',
+    tipsOff: 'İpuçları kapalı.',
+    tourStarts: 'Tanıtım birazdan başlıyor: Mochi’ye bak.',
+    newsToast: (version, headline) => `Mochi ${version}: ${headline} · /mochi yenilikler`,
+    noNews: version => `Mochi ${version} için not yok.`,
+  },
 
   limit: {
     short: { five_hour: 'oturum', seven_day: 'hafta', spend_limit: 'harcama' },
@@ -288,6 +332,7 @@ export const tr: typeof en = {
       hide: ['gizle'], show: ['göster', 'goster'], small: ['küçük', 'kucuk'], big: ['büyük', 'buyuk'], sound: ['ses'],
       status: ['durum'], details: ['detay'], level: ['seviye'], wear: ['aksesuar', 'giy'], shield: ['kalkan'],
       alerts: ['bildirim'], lang: ['dil'], auto: ['otomatik'], none: ['yok', 'hiçbiri', 'hicbiri'],
+      tips: ['ipucu', 'ipuçları'], tour: ['tanıtım'], news: ['yenilikler'],
     },
   },
 }

@@ -17,6 +17,18 @@ export const fr: typeof en = {
   days: ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'],
   months: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'],
 
+  news: {
+    '0.3.0': {
+      headline: 'des astuces, une visite au premier lancement et des suggestions pour CLAUDE.md',
+      notes: [
+        'Astuces : de temps en temps, quand Mochi est au repos, une courte astuce sur Claude Code. /mochi astuces les désactive.',
+        'CLAUDE.md : donnez la même consigne une troisième fois et Mochi propose de l’ajouter au CLAUDE.md du projet.',
+        'Une courte visite au tout premier lancement ; /mochi visite la rejoue.',
+        'Les nouveautés après chaque mise à jour : /mochi nouveautés.',
+      ],
+    },
+  },
+
   mood: {
     idle: 'au repos', wave: 'fait coucou', listening: 'vous écoute', thinking: 'réfléchit', talking: 'rédige une réponse',
     reading: 'lit', searching: 'cherche', writing: 'écrit du code', running: 'lance une commande', waiting: 'attend',
@@ -75,6 +87,38 @@ export const fr: typeof en = {
   },
 
   word: { file: 'fichier', agent: 'agent', chat: 'conversation' },
+
+  coach: {
+    tip: 'astuce',
+    off: '/mochi astuces les désactive',
+    tips: {
+      rewind: { line: 'Esc Esc · revenir en arrière', text: 'Mauvaise piste ? Appuyez deux fois sur Esc, ou tapez /rewind, pour revenir à un message précédent et essayer un autre prompt.' },
+      permissions: { line: '/permissions · autoriser pour de bon', text: what => `Claude demande sans cesse l’autorisation d’utiliser ${what}. /permissions peut l’autoriser pour de bon.` },
+      compact: { line: '/compact ce qu’il faut garder', text: 'Le contexte se remplit. /compact suivi de quelques mots sur l’essentiel, comme « /compact garde les décisions d’API », en conserve l’idée.' },
+      mcp: { line: '/mcp · serveurs inutilisés', text: 'Les outils MCP prennent le plus de place dans votre contexte. /mcp liste les serveurs ; désactiver ceux que vous n’utilisez pas libère de la place.' },
+      plan: { line: 'Shift+Tab · d’abord le plan', text: 'Pour une grosse tâche, appuyez sur Shift+Tab jusqu’au mode plan : Claude planifie d’abord et ne change rien sans votre accord.' },
+      commit: { line: 'demandez un commit à Claude', text: n => `${pl(n, 'fichier modifié', 'fichiers modifiés')} depuis le dernier commit. Demandez à Claude de faire le commit : il écrit aussi le message.` },
+      rings: { line: 'cliquez sur les anneaux · détails', text: 'Cliquez sur les anneaux de Mochi, ou tapez /mochi détails, pour le contexte, vos limites, les modifications et votre historique.' },
+      wear: { line: '/mochi porter', text: 'Vous avez des accessoires à porter. /mochi porter les liste ; la garde-robe du panneau de détails les met à Mochi.' },
+    },
+    tour: [
+      { line: 'bonjour, je suis Mochi', text: 'Bonjour, je suis Mochi. Je vis au-dessus de votre prompt et je montre ce que fait Claude Code : il lit, il exécute, il vous attend.' },
+      { line: 'cliquez sur les anneaux · détails', text: 'Les anneaux montrent le contexte et vos limites d’utilisation. Cliquez dessus, ou tapez /mochi détails, pour tout voir.' },
+      { line: '/mochi porter · le bouclier', text: 'Montez de niveau et habillez-moi avec /mochi porter. Le bouclier demande avant une commande irréversible ; /mochi bouclier le désactive.' },
+    ],
+    rule: {
+      question: rule => `Ajouter « ${rule} » à CLAUDE.md ?`,
+      add: 'Ajouter',
+      later: 'Pas maintenant',
+      never: 'Jamais pour ceci',
+      added: 'ajouté à CLAUDE.md',
+    },
+    tipsOn: 'Astuces activées : de temps en temps, quand Mochi est au repos, une courte astuce ; et la proposition d’ajouter à CLAUDE.md une consigne que vous répétez.',
+    tipsOff: 'Astuces désactivées.',
+    tourStarts: 'La visite commence dans un instant : regardez Mochi.',
+    newsToast: (version, headline) => `Mochi ${version} : ${headline} · /mochi nouveautés`,
+    noNews: version => `Pas de notes pour Mochi ${version}.`,
+  },
 
   limit: {
     short: { five_hour: 'session', seven_day: 'semaine', spend_limit: 'dépenses' },
@@ -293,6 +337,7 @@ export const fr: typeof en = {
       hide: ['cacher', 'masquer'], show: ['afficher', 'montrer'], small: ['petit'], big: ['grand'], sound: ['son'],
       status: ['statut', 'état', 'etat'], details: ['détails', 'détail', 'detail'], level: ['niveau'], wear: ['porter', 'accessoire'], shield: ['bouclier'],
       alerts: ['alertes', 'alerte'], lang: ['langue'], auto: ['automatique'], none: ['aucun', 'rien'],
+      tips: ['astuces', 'astuce', 'conseils'], tour: ['visite'], news: ['nouveautés'],
     },
   },
 }
