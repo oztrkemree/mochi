@@ -82,7 +82,7 @@ export type Item =
   | 'mushroom' | 'frog' | 'robot' | 'ramen' | 'snail' | 'campfire' | 'bonsai' | 'penguin' | 'lavalamp' | 'taco' | 'tent' | 'hedgehog' | 'wateringcan' | 'macaron' | 'arcade' | 'snowman' | 'rocket' | 'watermelon' | 'chest' | 'axolotl'
 
 /** Something earned once from real work (see hooks/badges.ts). */
-export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' | 'owl' | 'bird' | 'polyglot' | 'marathon' | 'week' | 'hundred'
+export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' | 'owl' | 'bird' | 'polyglot' | 'marathon' | 'week' | 'hundred' | 'month' | 'fivehundred' | 'regular' | 'craftsman' | 'bulldozer' | 'vampire'
 
 /** What is on Mochi right now, slot by slot. */
 export type Outfit = { head: Item | null; face: Item | null; neck: Item | null; held: Item | null; ground: Item | null }

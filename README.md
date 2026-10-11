@@ -105,13 +105,13 @@ Now and then, while Mochi is idle, one short Claude Code tip about what just hap
 <td valign="top">
 
 **🏅 Badges for real work**<br>
-Twelve of them, each celebrated once: a first green test run, a comeback in a single turn, a tidy day that removes more than it adds, night owl, early bird, polyglot, a marathon turn, a hundred commits…
+Eighteen of them, each celebrated once: a first green test run, a comeback in a single turn, a tidy day that removes more than it adds, night owl, early bird, polyglot, a marathon turn, a hundred commits, and hard ones: a 30-day streak, five hundred commits, 5,000 edits, 10,000 lines removed, 150 night turns…
 
 </td>
 <td valign="top">
 
 **🎉 Special days, small surprises**<br>
-Eid, Lunar New Year, Nowruz, Diwali, Chuseok, sakura season, Hacktoberfest, Halloween, Christmas and your birthday each bring something to wear. Say good night to Mochi, or thank it. After two hours without a break, it suggests a stretch.
+Eid, Lunar New Year, Nowruz, Diwali, Chuseok, sakura season, Hacktoberfest, Halloween, Christmas and your birthday each dress Mochi, in what it has earned. Say good night to Mochi, or thank it. After two hours without a break, it suggests a stretch.
 
 </td>
 </tr>
@@ -156,7 +156,7 @@ Further down: the context by category, your recent turns, a calendar of every ch
 
 ## 👒 A wardrobe that grows with you
 
-Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **134 items** across head, face, neck, hand and the spot beside Mochi. Some arrive with the day (a witch hat in late October, a red envelope at Lunar New Year, a diya at Diwali, a party hat and a cake on your birthday), some with the hour (coffee in the morning, a night cap after midnight).
+Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **134 items** across head, face, neck, hand and the spot beside Mochi. Nothing opens by the date: levels open most, habits some, and the hard badges the rest (a witch hat and a pumpkin for a hundred and fifty nights, a cake for five hundred commits). Once earned, a witch hat comes on at Halloween, a cake on your birthday, a diya at Diwali; coffee comes in the morning and a night cap after midnight.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Twelve Mochis in different outfits: a beanie with coffee, a cowboy with a mustache, a wizard, a party hat, a crown with a monocle and a cat, a night cap with a scarf, and more">

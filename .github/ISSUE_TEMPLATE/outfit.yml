@@ -32,7 +32,7 @@ body:
       options:
         - At a level
         - For a habit (turns, active days, a streak, commits, edits, late nights)
-        - By the date (a holiday or a season)
+        - For a hard badge (a month-long streak, 500 commits, 10,000 lines removed…)
         - Not sure
     validations:
       required: true

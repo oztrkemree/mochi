@@ -57,10 +57,9 @@ Look at your neighbours in the same slot: a new hat starts from `beanie` or `cow
 
 At least one of:
 
-- **Earned**: one entry in `UNLOCKS` in `hooks/level.ts`, by `level` or by a habit: `turns`, `days` (active days), `streak` (days in a row), `commits`, `edits` or `night` (turns between midnight and 5 am). Keep levels spread out: two items per level at most.
-- **Worn on a day**: the item under its occasion in `DRESS` in the same file (`halloween: { head: 'witchhat', ground: 'pumpkin' }`), worn by the date alone. The occasions and their dates are `RULES` in `hooks/fun.ts`; a new one needs its dates there, and its greeting (`fun.greet`) and hint (`item.hint`) in every language.
+One entry in `UNLOCKS` in `hooks/level.ts`, one way each: a `level`, a habit (`turns`, `days` (active days), `streak` (days in a row), `commits`, `edits` or `night` (turns between midnight and 5 am)), or a `badge` (a hard one that `provenBy` in `hooks/badges.ts` proves from totals). Keep levels spread out: two items per level at most.
 
-An item can be both: the party hat is earned with 50 commits and also worn on a birthday and at New Year.
+The date opens nothing. An occasion can still dress Mochi in an item it has earned: put it under its occasion in `DRESS` in the same file (`halloween: { head: 'witchhat', ground: 'pumpkin' }`). The occasions and their dates are `RULES` in `hooks/fun.ts`.
 
 To have Mochi put it on by itself once earned (as it does the best hat), add it to `HEAD_RANK` or `NECK_RANK` there. Otherwise people choose it in the wardrobe or with `/mochi wear <name>`.
 

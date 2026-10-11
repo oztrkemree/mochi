@@ -20,7 +20,7 @@ import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
-import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, wearable, xpOf } from './level'
+import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
 import { peerLabel, peerNews, peerOf } from './live'
 import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
@@ -102,7 +102,7 @@ async function toggleItem($: Dollar, item: Item) {
   const now = await $.clock.now()
   const v = await read($, env)
   const p = await read($, prefs)
-  if (!wearable(v.history, now, v.tz, p).includes(item)) return
+  if (!unlocked(v.history).includes(item)) return
   // As the wardrobe shows it: Mochi at rest, whatever the pose of the moment.
   const worn = outfitNow(p, v, 'idle', now)
   const slot = SLOT[item]
@@ -1002,7 +1002,7 @@ async function wear($: Dollar, arg: string, p: Prefs): Promise<string> {
   const d = t().cmd
   const v = await read($, env)
   const now = await $.clock.now()
-  const ok = wearable(v.history, now, v.tz, p)
+  const ok = unlocked(v.history)
   if (arg === '') {
     const worn = outfitNow(p, v, (await read($, face)).mood, now)
     return [

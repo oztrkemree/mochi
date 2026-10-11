@@ -3,7 +3,7 @@ import { expect, mock, test } from 'claude-code/testing'
 
 import { BADGES, badgesOf, badgeSvg, commandBadges, isEarly, langBit, provenBy, turnBadges } from '../hooks/badges'
 import { birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, occasions, parseBirthday, promptEgg, workFrom } from '../hooks/fun'
-import { ASCII_HAT, addDay, EMPTY_DAY, hintFor, outfitFor, summarize, wearable } from '../hooks/level'
+import { ASCII_HAT, addDay, EMPTY_DAY, hintFor, outfitFor, summarize, unlocked } from '../hooks/level'
 import { DICTS, LANGS, setLang } from '../hooks/i18n'
 import { LOOKS, asciiRows } from '../hooks/looks'
 import { MOOD_INK } from '../hooks/panel'
@@ -120,21 +120,23 @@ test('each occasion is greeted once, however many days it spans', async () => {
   expect(firstDayOf('', '2026-10-10', [])).toBe('2026-10-10')
 })
 
-test('the date dresses Mochi, and its things can be put on that day only', async () => {
+test('the date dresses Mochi in what it has earned, and opens nothing by itself', async () => {
   const noon = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d, 12, 0)
   const birthday = { birthday: '07-01', firstDay: '' }
-  expect(outfitFor({}, [], noon(2026, 7, 1), 0, 'idle', true, birthday)).toEqual({ ...NONE, head: 'partyhat', ground: 'cake' })
-  expect(outfitFor({}, [], noon(2026, 11, 8), 0, 'idle', true)).toEqual({ ...NONE, ground: 'diya' })
-  expect(outfitFor({}, [], noon(2026, 4, 3), 0, 'idle', true).head).toBe('sakura')
-  expect(outfitFor({}, [], Date.UTC(2026, 1, 17, 8, 0), 0, 'idle', true).held).toBe('envelope')
-  expect(outfitFor({}, [], noon(2026, 3, 20), 0, 'success', false).held).toBe(null)
-  expect(outfitFor({}, [], noon(2027, 10, 9), 0, 'idle', true, { birthday: '', firstDay: '2026-10-09' }).neck).toBe('rosette')
-  expect(outfitFor({ neck: null }, [], noon(2026, 10, 10), 0, 'idle', true).neck).toBe(null)
-  expect(wearable(null, noon(2026, 9, 25), 0)).toContain('songpyeon')
-  expect(wearable(null, noon(2026, 9, 28), 0).includes('songpyeon')).toBe(false)
-  expect(wearable(null, noon(2026, 7, 1), 0, birthday)).toContain('cake')
-  expect(hintFor('sakura')).toBe('Apr 1 – 10')
-  expect(hintFor('envelope')).toBe('Lunar New Year')
+  const all = ['partyhat', 'cake', 'diya', 'sakura', 'envelope', 'rosette'] as const
+  expect(outfitFor({}, all, noon(2026, 7, 1), 0, 'idle', true, birthday)).toEqual({ ...NONE, head: 'partyhat', ground: 'cake' })
+  expect(outfitFor({}, all, noon(2026, 11, 8), 0, 'idle', true)).toEqual({ ...NONE, ground: 'diya' })
+  expect(outfitFor({}, all, noon(2026, 4, 3), 0, 'idle', true).head).toBe('sakura')
+  expect(outfitFor({}, all, Date.UTC(2026, 1, 17, 8, 0), 0, 'idle', true).held).toBe('envelope')
+  expect(outfitFor({}, all, noon(2026, 3, 20), 0, 'success', false).held).toBe(null)
+  expect(outfitFor({}, all, noon(2027, 10, 9), 0, 'idle', true, { birthday: '', firstDay: '2026-10-09' }).neck).toBe('rosette')
+  expect(outfitFor({ neck: null }, all, noon(2026, 10, 10), 0, 'idle', true).neck).toBe(null)
+  // Not earned: the day does not give it.
+  expect(outfitFor({}, [], noon(2026, 7, 1), 0, 'idle', true, birthday)).toEqual(NONE)
+  expect(outfitFor({}, [], noon(2026, 4, 3), 0, 'idle', true).head).toBe(null)
+  expect(unlocked(null)).not.toContain('songpyeon')
+  expect(hintFor('sakura')).toBe('level 26')
+  expect(hintFor('envelope')).toBe('craftsman')
   expect(hintFor('partyhat')).toBe('50 commits')
 })
 
@@ -194,6 +196,11 @@ test('badges come from real work: tests, pushes, calm turns, long days and many 
   expect(provenBy(h)).toEqual(['tidy', 'owl', 'polyglot', 'week'])
   expect(provenBy(summarize([{ ...days, [day(9)]: { turns: 1, early: 1, commits: 100 } }], day(9)))).toEqual(['tidy', 'owl', 'bird', 'polyglot', 'week', 'hundred'])
   expect(provenBy(null)).toEqual([])
+  // The hard ones come from totals.
+  const big = summarize([{ [day(1)]: { turns: 1, commits: 500, edits: 5000, del: 10000, night: 150 } }], day(1))
+  expect(provenBy(big)).toEqual(['tidy', 'hundred', 'fivehundred', 'craftsman', 'bulldozer', 'vampire'])
+  expect(unlocked(big)).toEqual(expect.arrayContaining(['cake', 'envelope', 'candy', 'witchhat', 'pumpkin', 'pin']))
+  expect(unlocked(h)).not.toContain('cake')
   for (const b of BADGES) {
     expect(badgeSvg(b, true).startsWith('<svg')).toBe(true)
     expect(badgeSvg(b, false)).toContain('#8C8580')
@@ -401,12 +408,12 @@ test('/mochi birthday, breaks and badges', async ($, on) => {
   const pane = await $.ui.mount(PANE)
   await pane.press({ key: 'tab:mochi' } as never)
   await pane.press({ key: 'shelf:ground' } as never)
-  expect((await pane.find({ type: 'Text', text: /^Beside · / }))?.text).toBe('Beside · birthday cake (auto)')
+  expect((await pane.find({ type: 'Text', text: /^Beside · / }))?.text).toBe('Beside · empty (auto)')
   await pane.press({ key: 'tab:past' } as never)
   expect(await pane.find({ key: 'badge:green' })).toBeUndefined()
   await pane.press({ key: 'fold:badges' } as never)
   expect(await pane.find({ key: 'badge:green' })).toBeDefined()
-  expect(await pane.find({ type: 'Text', text: '0/12 earned' })).toBeDefined()
+  expect(await pane.find({ type: 'Text', text: '0/18 earned' })).toBeDefined()
   await pane.unmount()
   expect(await run('birthday')).toBe('Birthday: July 1. To change it: /mochi birthday MM-DD · none')
   expect(await run('birthday 02-30')).toBe('Not a date: 02-30. Use MM-DD, e.g. /mochi birthday 04-23')
@@ -419,7 +426,7 @@ test('/mochi birthday, breaks and badges', async ($, on) => {
   expect(await run('tips off')).toBe('Tips off.')
   expect(await run('status')).toContain('Tips: off · Breaks: off · Plugin reactions: on')
   expect(await run('breaks on')).toBe('Breaks on: after two hours of work without a pause, Mochi suggests a stretch.')
-  expect((await run('badges')).startsWith('Badges 0/12: none yet\nTo earn: first green (a test run that passes), first push (a git push)')).toBe(true)
+  expect((await run('badges')).startsWith('Badges 0/18: none yet\nTo earn: first green (a test run that passes), first push (a git push)')).toBe(true)
   // The words of the language in use work too.
   await run('lang tr')
   expect(await run('mola')).toBe('Mola hatırlatması kapalı.')
@@ -453,7 +460,7 @@ test('badges are earned from real work, kept in a file of Mochi’s own, and cel
   await $.tool.call({ tool: 'Bash', command: 'npm test' })
   await $.tool.call({ tool: 'Bash', command: 'git push origin main' })
   expect(toasts.filter(x => x.includes('badge')).length).toBe(2)
-  expect(((await $.command.run({ command: 'mochi', args: 'badges' } as never)).text ?? '').split('\n')[0]).toBe('Badges 3/12: first green, comeback, first push')
+  expect(((await $.command.run({ command: 'mochi', args: 'badges' } as never)).text ?? '').split('\n')[0]).toBe('Badges 3/18: first green, comeback, first push')
 })
 
 test('a badge earned while a question is open is told in a toast; the question keeps the face', { timeoutMs: 30_000 }, async ($, on) => {

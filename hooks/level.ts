@@ -1,4 +1,5 @@
-import type { DayRec, Env, History, Item, Mood, Outfit, Prefs } from '../types'
+import type { Badge, DayRec, Env, History, Item, Mood, Outfit, Prefs } from '../types'
+import { badgeName, provenBy } from './badges'
 import { dayKey, local, shiftDay } from './facts'
 import { NO_OWN, occasions } from './fun'
 import type { Occasion, Own } from './fun'
@@ -7,8 +8,9 @@ import { POSES } from './rig'
 
 // Mochi grows with the work done in every chat: experience from turns,
 // edits, commits and days, levels from experience, and things to wear that
-// the levels (and a few habits) unlock. The days it celebrates (see
-// hooks/fun.ts) and the hour dress it too.
+// the levels, habits and badges unlock. Nothing is opened by the date: the
+// days it celebrates (see hooks/fun.ts) and the hour only dress Mochi in
+// what it has earned.
 
 /** An item's name, and its one-word form for the wardrobe's buttons, in the language in use. */
 export const itemName = (i: Item): string => t().item.name[i]
@@ -55,9 +57,9 @@ export function itemOf(v: unknown): Item | null {
   return Object.hasOwn(OLD_IDS, v) ? OLD_IDS[v] ?? null : null
 }
 
-type Need = { level?: number; commits?: number; night?: number; edits?: number; streak?: number; turns?: number; days?: number }
+type Need = { level?: number; badge?: Badge; commits?: number; night?: number; edits?: number; streak?: number; turns?: number; days?: number }
 
-/** What unlocks each item that can be earned: a level, or a habit. */
+/** What unlocks each item: a level, a habit or a badge (the hard ones). One way each. */
 export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'beanie', level: 1 }, { item: 'glasses', level: 1 }, { item: 'mug', level: 1 }, { item: 'tea', level: 1 },
   { item: 'bowtie', level: 2 }, { item: 'sunglasses', level: 2 },
@@ -99,7 +101,7 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'bowler', level: 19 },
   { item: 'flatcap', level: 24 },
   { item: 'explorer', level: 25 },
-  { item: 'baseballcap', level: 26 },
+  { item: 'baseballcap', level: 26 }, { item: 'sakura', level: 26 },
   { item: 'heartglasses', level: 27 },
   { item: 'eyepatch', level: 27 },
   { item: 'beard', level: 28 },
@@ -118,11 +120,11 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'teardrop', level: 34 },
   { item: 'spikedcollar', level: 35 },
   { item: 'pearls', level: 35 },
-  { item: 'bellcollar', level: 36 },
+  { item: 'bellcollar', level: 36 }, { item: 'songpyeon', level: 36 },
   { item: 'neckerchief', level: 37 },
   { item: 'lei', level: 37 },
-  { item: 'goldchain', level: 38 },
-  { item: 'overalls', level: 39 },
+  { item: 'goldchain', level: 38 }, { item: 'diya', level: 38 },
+  { item: 'overalls', level: 39 }, { item: 'sprouts', level: 39 },
   { item: 'icecream', level: 40 }, { item: 'cupcake', level: 40 },
   { item: 'sunflower', level: 41 }, { item: 'clover', level: 41 },
   { item: 'toadstool', level: 42 }, { item: 'cactuspot', level: 42 },
@@ -151,7 +153,14 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'pinwheel', turns: 500 },
   { item: 'compass', days: 60 },
   { item: 'key', night: 50 },
-// By level, the habits after them, so the first one still locked is the next to come.
+  { item: 'pin', badge: 'hundred' },
+  { item: 'rosette', badge: 'month' }, { item: 'santahat', badge: 'month' },
+  { item: 'cake', badge: 'fivehundred' },
+  { item: 'lantern', badge: 'regular' },
+  { item: 'envelope', badge: 'craftsman' },
+  { item: 'candy', badge: 'bulldozer' },
+  { item: 'witchhat', badge: 'vampire' }, { item: 'pumpkin', badge: 'vampire' },
+// By level, the habits and badges after them, so the first one still locked is the next to come.
 ] satisfies ({ item: Item } & Need)[]).sort((a, b) => (a.level ?? Infinity) - (b.level ?? Infinity))
 
 type Dressed = Exclude<Occasion, 'piDay' | 'friday13'>
@@ -173,19 +182,13 @@ const DRESS: Record<Dressed, Partial<Outfit>> = {
   xmas: { head: 'santahat' },
 }
 
-/** Worn by the date alone, with the occasion that brings each. */
-export const SEASONAL: { item: Item; season: Dressed }[] = (Object.entries(DRESS) as [Dressed, Partial<Outfit>][])
-  .flatMap(([season, wear]) => Object.values(wear).filter((item): item is Item => typeof item === 'string').map(item => ({ item, season })))
-
-/** What it takes, in a few words: "level 5", "50 commits". */
+/** What it takes, in a few words: "level 5", "50 commits", a badge's name. */
 export function hintFor(item: Item): string {
   const h = t().item.hint
   const u = UNLOCKS.find(x => x.item === item)
-  if (u === undefined) {
-    const s = SEASONAL.find(x => x.item === item)
-    return s ? h[s.season] : ''
-  }
+  if (u === undefined) return ''
   if (u.level !== undefined) return u.level <= 1 ? h.start : h.level(u.level)
+  if (u.badge !== undefined) return badgeName(u.badge)
   if (u.turns !== undefined) return h.turns(u.turns)
   if (u.days !== undefined) return h.days(u.days)
   if (u.streak !== undefined) return h.streak(u.streak)
@@ -248,9 +251,11 @@ export function levelOf(xp: number): { level: number; at: number; next: number }
 
 export function unlocked(h: History | null): Item[] {
   const { level } = levelOf(xpOf(h))
+  const badges = provenBy(h)
   const t = h?.total
   const isMet = (u: Need) =>
     (u.level !== undefined && level >= u.level) ||
+    (u.badge !== undefined && badges.includes(u.badge)) ||
     (u.commits !== undefined && (t?.commits ?? 0) >= u.commits) ||
     (u.night !== undefined && (t?.night ?? 0) >= u.night) ||
     (u.edits !== undefined && (t?.edits ?? 0) >= u.edits) ||
@@ -260,13 +265,8 @@ export function unlocked(h: History | null): Item[] {
   return UNLOCKS.filter(isMet).map(u => u.item)
 }
 
-/** What can be put on now: the items earned and those of the day's occasions. */
-export function wearable(h: History | null, now: number, tz: number, own: Own = NO_OWN): Item[] {
-  const on = occasions(dayKey(now, tz), own).map(o => o.name)
-  return [...new Set([...unlocked(h), ...SEASONAL.filter(x => on.includes(x.season)).map(x => x.item)])]
-}
 
-/** What the date and hour put on by themselves: the day's occasions, slot by slot, the first one's where two meet. */
+/** What the date and hour would put on: the day's occasions, slot by slot, the first one's where two meet (worn only if earned). */
 export function season(now: number, tz: number, own: Own = NO_OWN): Partial<Outfit> & { isNight: boolean; isMorning: boolean } {
   const { hour } = local(now, tz)
   const dress: Partial<Outfit> = {}
@@ -284,23 +284,24 @@ const MUG_MOODS: ReadonlySet<Mood> = new Set(['idle', 'listening', 'pleased', 's
 
 /**
  * What Mochi has on, slot by slot: the person's choice where there is one
- * (null for nothing); elsewhere the day's occasion (a pumpkin at Halloween, a
- * cake on the person's birthday), then sleep and the night (a night cap),
+ * (null for nothing); elsewhere the day's occasion if the item is earned (a
+ * pumpkin at Halloween, a cake on the person's birthday), then sleep and the night (a night cap),
  * then the best item earned; coffee in the morning. A held item only while
  * the pose leaves the hand free.
  */
 export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood, canHold: boolean, own: Own = NO_OWN): Outfit {
   const s = season(now, tz, own)
+  const dressed = (i: Item | undefined) => (i !== undefined && items.includes(i) ? i : undefined)
   const isAsleep = mood === 'sleeping' || mood === 'sleepy'
-  const head = pick.head !== undefined ? pick.head : s.head ?? (isAsleep || s.isNight ? 'nightcap' : HEAD_RANK.find(i => items.includes(i)) ?? null)
-  const neck = pick.neck !== undefined ? pick.neck : s.neck ?? NECK_RANK.find(i => items.includes(i)) ?? null
-  const held = pick.held !== undefined ? pick.held : s.held ?? (s.isMorning && MUG_MOODS.has(mood) ? 'mug' : null)
+  const head = pick.head !== undefined ? pick.head : dressed(s.head) ?? (isAsleep || s.isNight ? 'nightcap' : HEAD_RANK.find(i => items.includes(i)) ?? null)
+  const neck = pick.neck !== undefined ? pick.neck : dressed(s.neck) ?? NECK_RANK.find(i => items.includes(i)) ?? null
+  const held = pick.held !== undefined ? pick.held : dressed(s.held) ?? (s.isMorning && MUG_MOODS.has(mood) ? 'mug' : null)
   return {
     head,
     face: pick.face ?? null,
     neck,
     held: canHold ? held : null,
-    ground: pick.ground !== undefined ? pick.ground : s.ground ?? null,
+    ground: pick.ground !== undefined ? pick.ground : dressed(s.ground) ?? null,
   }
 }
 
@@ -309,7 +310,7 @@ const canHold = (mood: Mood) => POSES[mood].held === undefined && POSES[mood].ar
 
 /** What Mochi has on now: the person's choice (while it can still be worn), what it earned, the season and the hour. */
 export function outfitNow(p: Prefs, v: Env, mood: Mood, now: number): Outfit {
-  const ok = wearable(v.history, now, v.tz, p)
+  const ok = unlocked(v.history)
   const pick: Partial<Outfit> = {}
   for (const slot of SLOTS) {
     const chosen = p.pick[slot]

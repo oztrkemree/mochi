@@ -6,7 +6,7 @@ import { register as deployCheer } from '../examples/mochi-deploy-cheer/hooks/re
 import { API_MOODS, cheerOf, isKept, mayReact, reactionOf, signed } from '../hooks/api'
 import { exportOf, feedbackUrl, isCleared, isExported } from '../hooks/data'
 import { DICTS, LANGS, setLang } from '../hooks/i18n'
-import { ASCII_HAT, SEASONAL, SLOT, SLOTS, SLOT_ITEMS, UNLOCKS, hintFor } from '../hooks/level'
+import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, UNLOCKS, hintFor } from '../hooks/level'
 import { VECTOR_WEAR, WEAR_AT } from '../hooks/rig'
 import { ALL_ITEMS, DEFAULT_PREFS } from '../hooks/state'
 import { cols } from '../hooks/text'
@@ -302,9 +302,8 @@ test('every item has art, a place, a slot, a way to get it and a name in every l
     expect(where + (art !== undefined || vector !== undefined)).toBe(`${where}true`)
     const at = WEAR_AT[item]
     expect(where + [at.x, at.y].every(v => v >= 0 && v <= 100) + (at.w > 0 && at.w <= 100)).toBe(`${where}truetrue`)
-    // Earned one way at most, or worn by the date (the party hat both): never neither.
-    const earned = UNLOCKS.filter(u => u.item === item).length
-    expect(where + (earned <= 1 && earned + SEASONAL.filter(s => s.item === item).length >= 1)).toBe(`${where}true`)
+    // Earned one way, never by the date.
+    expect(where + UNLOCKS.filter(u => u.item === item).length).toBe(`${where}1`)
     for (const l of LANGS) {
       const d = DICTS[l].item
       expect(`${where}${l} ` + (d.name[item].trim() !== '' && d.short[item].trim() !== '')).toBe(`${where}${l} true`)

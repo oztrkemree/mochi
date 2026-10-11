@@ -9,7 +9,7 @@ import type { Part, Parts } from './detail'
 import { clockAt, forecasts } from './facts'
 import { birthdayName } from './fun'
 import { DICTS, LANGS, t } from './i18n'
-import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, outfitNow, slotName, wearable } from './level'
+import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, outfitNow, slotName, unlocked } from './level'
 import type { Slot } from './level'
 import { peersLine } from './live'
 import { LOOKS, asciiRows, kaomoji } from './looks'
@@ -123,7 +123,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     const parts = detailParts(v, now, secW - 4)
     // As Mochi stands at rest, so a held item shows whatever the pose of the moment.
     const dressed = outfitNow(p, v, 'idle', now)
-    const ok = wearable(v.history, now, v.tz, p)
+    const ok = unlocked(v.history)
     const isAuto = SLOTS.every(slot => p.pick[slot] === undefined)
     // The wardrobe: Mochi in what it has on, a tab per slot with what is worn
     // there, and the slot's items as cards of one size filling the row, those
@@ -378,7 +378,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
   const Input = 'Input' in ui ? ui.Input : null
   // As at rest, like the desktop's wardrobe and the press that toggles it.
   const dressed = outfitNow(p, v, 'idle', now)
-  const ok = wearable(v.history, now, v.tz, p)
+  const ok = unlocked(v.history)
   const lines = partLines(v, now)
   const head = (id: Section, title: string, gist: string) => (
     <Box key={`head:${id}`} flexDirection="row" gap={1}>
