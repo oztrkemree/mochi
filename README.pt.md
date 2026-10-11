@@ -12,7 +12,7 @@ e deixa à vista o seu contexto e os limites da sessão e da semana.
 [![Licença: MIT](https://img.shields.io/badge/licença-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Plugin do Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-instale-em-10-segundos)
 [![16 idiomas](https://img.shields.io/badge/idiomas-16-7AA2F7?style=for-the-badge)](#-16-idiomas)
-[![134 acessórios](https://img.shields.io/badge/guarda--roupa-134_itens-B684F6?style=for-the-badge)](#-um-guarda-roupa-que-cresce-com-você)
+[![133 acessórios](https://img.shields.io/badge/guarda--roupa-133_itens-B684F6?style=for-the-badge)](#-um-guarda-roupa-que-cresce-com-você)
 [![Sem rede](https://img.shields.io/badge/rede-nenhuma-4CC38A?style=for-the-badge)](#-o-que-ele-acessa)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · **Português** · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -45,7 +45,7 @@ Digite isso em qualquer chat do Claude Code, responda `y` para adicionar o marke
 <td align="center" width="25%">🎭<br><b>30 humores</b><br><sub>que acompanham cada chamada de ferramenta</sub></td>
 <td align="center" width="25%">🛡️<br><b>Um escudo</b><br><sub>contra <code>rm -rf</code>, force pushes e chaves vazadas</sub></td>
 <td align="center" width="25%">📊<br><b>Anéis de limite</b><br><sub>com a previsão de quando vão acabar</sub></td>
-<td align="center" width="25%">👒<br><b>134 coisas para vestir</b><br><sub>conquistadas com trabalho de verdade</sub></td>
+<td align="center" width="25%">👒<br><b>133 coisas para vestir</b><br><sub>conquistadas com trabalho de verdade</sub></td>
 </tr>
 </table>
 
@@ -151,7 +151,7 @@ Dezoito delas, cada uma comemorada uma vez só: os primeiros testes no verde, um
 <td valign="top">
 
 ### 🎉 Datas especiais, pequenas surpresas
-Eid, Ano-Novo Lunar, Nowruz, Diwali, Chuseok, a época das cerejeiras, Hacktoberfest, Halloween, Natal e o seu aniversário: cada um veste o Mochi, com o que ele já conquistou. Dê boa noite ao Mochi, ou agradeça. Depois de duas horas sem pausa, ele sugere um alongamento.
+A época das cerejeiras, Hacktoberfest, Halloween, Ano-Novo e o seu aniversário: cada um veste o Mochi, com o que ele já conquistou. Dê boa noite ao Mochi, ou agradeça. Depois de duas horas sem pausa, ele sugere um alongamento.
 
 </td>
 <td valign="top">
@@ -185,7 +185,7 @@ Mais abaixo: o contexto por categoria, seus turnos recentes, um calendário com 
   <img src="docs/gif/wardrobe.webp" width="760" alt="O Mochi provando roupas uma depois da outra: gorro com café, coroa com monóculo e gato, chapéu de mago e cachecol, chapéu de festa com medalha e balão, chapéu de caubói com bigode, capelo de formatura com óculos, chapéu de pirata com óculos escuros e um patinho, capacete com chave inglesa, chapéu de chef com gravata-borboleta e bolo, e touca de dormir ao lado de um cacto">
 </p>
 
-Cada turno, edição, commit e dia de trabalho rende experiência. Os níveis liberam coisas para vestir: **134 itens** entre cabeça, rosto, pescoço, mão e o cantinho ao lado do Mochi. Nada se abre pela data: os níveis liberam a maior parte, os hábitos alguns, e as conquistas difíceis o resto (um chapéu de bruxa e uma abóbora por cento e cinquenta noites, um bolo por quinhentos commits). Depois de conquistado, o chapéu de bruxa aparece no Halloween, o bolo no seu aniversário, a lamparina diya no Diwali; o café chega de manhã e a touca de dormir depois da meia-noite.
+Cada turno, edição, commit e dia de trabalho rende experiência. Os níveis liberam coisas para vestir: **133 itens** entre cabeça, rosto, pescoço, mão e o cantinho ao lado do Mochi. Nada se abre pela data: os níveis liberam a maior parte, os hábitos alguns, e as conquistas difíceis o resto (um chapéu de bruxa e uma abóbora por cento e cinquenta noites, um bolo por quinhentos commits). Depois de conquistado, o chapéu de bruxa aparece no Halloween e o bolo no seu aniversário; o café chega de manhã e a touca de dormir depois da meia-noite.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Doze Mochis com roupas diferentes: gorro com café, caubói de bigode, mago, chapéu de festa, coroa com monóculo e gato, touca de dormir com cachecol e mais">

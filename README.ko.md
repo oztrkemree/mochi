@@ -12,7 +12,7 @@ Claude가 하는 모든 일에 반응하고, 나중에 후회할 명령은 막�
 [![라이선스: MIT](https://img.shields.io/badge/라이선스-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code 플러그인](https://img.shields.io/badge/Claude_Code-플러그인-D97757?style=for-the-badge)](#-10초-만에-설치)
 [![16개 언어](https://img.shields.io/badge/언어-16개-7AA2F7?style=for-the-badge)](#-16개-언어)
-[![아이템 134개](https://img.shields.io/badge/옷장-아이템_134개-B684F6?style=for-the-badge)](#-함께-자라는-옷장)
+[![아이템 133개](https://img.shields.io/badge/옷장-아이템_133개-B684F6?style=for-the-badge)](#-함께-자라는-옷장)
 [![네트워크 없음](https://img.shields.io/badge/네트워크-없음-4CC38A?style=for-the-badge)](#-mochi가-손대는-것들)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · **한국어**
@@ -45,7 +45,7 @@ Claude가 하는 모든 일에 반응하고, 나중에 후회할 명령은 막�
 <td align="center" width="25%">🎭<br><b>30가지 기분</b><br><sub>도구 호출 하나하나를 따라가요</sub></td>
 <td align="center" width="25%">🛡️<br><b>보호막</b><br><sub><code>rm -rf</code>, 강제 푸시, 새어 나간 키 앞에서</sub></td>
 <td align="center" width="25%">📊<br><b>한도 링</b><br><sub>언제 바닥날지 예측까지</sub></td>
-<td align="center" width="25%">👒<br><b>입을 거리 134개</b><br><sub>진짜 작업으로 얻어요</sub></td>
+<td align="center" width="25%">👒<br><b>입을 거리 133개</b><br><sub>진짜 작업으로 얻어요</sub></td>
 </tr>
 </table>
 
@@ -151,7 +151,7 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
 <td valign="top">
 
 ### 🎉 특별한 날, 소소한 깜짝 선물
-이드, 설날, 노루즈, 디왈리, 추석, 벚꽃 시즌, Hacktoberfest, 핼러윈, 크리스마스, 그리고 내 생일엔 Mochi가 그동안 얻은 옷으로 차려입어요. Mochi에게 잘 자라고 인사하거나 고맙다고 말해 보세요. 쉬지 않고 두 시간이 지나면 기지개를 권해요.
+벚꽃 시즌, Hacktoberfest, 핼러윈, 새해, 그리고 내 생일엔 Mochi가 그동안 얻은 옷으로 차려입어요. Mochi에게 잘 자라고 인사하거나 고맙다고 말해 보세요. 쉬지 않고 두 시간이 지나면 기지개를 권해요.
 
 </td>
 <td valign="top">
@@ -185,7 +185,7 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
   <img src="docs/gif/wardrobe.webp" width="760" alt="옷을 하나씩 갈아입어 보는 Mochi: 커피를 든 비니, 모노클과 고양이를 곁들인 왕관, 마법사 모자와 목도리, 메달과 풍선을 든 파티 모자, 콧수염 난 카우보이 모자, 안경 쓴 학사모, 선글라스와 오리를 곁들인 해적 모자, 렌치를 든 안전모, 나비넥타이와 케이크를 곁들인 요리사 모자, 그리고 선인장 옆의 수면 모자">
 </p>
 
-턴 하나, 수정 하나, 커밋 하나, 그리고 작업한 하루하루가 모두 경험치가 돼요. 레벨이 오르면 입을 거리가 해제돼요: 머리, 얼굴, 목, 손, 그리고 Mochi 옆자리까지 **아이템 134개**. 날짜가 됐다고 열리는 건 없어요: 대부분은 레벨로, 일부는 습관으로, 나머지는 어려운 배지로 열려요(밤 150번이면 마녀 모자와 호박, 커밋 500개면 케이크). 한번 얻고 나면 핼러윈엔 마녀 모자, 생일엔 케이크, 디왈리엔 디야 등잔을 꺼내 입고, 아침엔 커피, 자정이 넘으면 수면 모자를 써요.
+턴 하나, 수정 하나, 커밋 하나, 그리고 작업한 하루하루가 모두 경험치가 돼요. 레벨이 오르면 입을 거리가 해제돼요: 머리, 얼굴, 목, 손, 그리고 Mochi 옆자리까지 **아이템 133개**. 날짜가 됐다고 열리는 건 없어요: 대부분은 레벨로, 일부는 습관으로, 나머지는 어려운 배지로 열려요(밤 150번이면 마녀 모자와 호박, 커밋 500개면 케이크). 한번 얻고 나면 핼러윈엔 마녀 모자, 생일엔 케이크를 꺼내 입고, 아침엔 커피, 자정이 넘으면 수면 모자를 써요.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="저마다 다른 옷을 입은 Mochi 열두 명: 커피를 든 비니, 콧수염 난 카우보이, 마법사, 파티 모자, 모노클과 고양이를 곁들인 왕관, 목도리를 두른 수면 모자 등">

@@ -32,7 +32,7 @@ export const SLOT_ITEMS: Record<Slot, Item[]> = {
     'spikedcollar', 'pearls', 'bellcollar', 'neckerchief', 'lei', 'goldchain', 'overalls'],
   held: ['mug', 'tea', 'pencil', 'simit', 'wrench', 'balloon', 'candy', 'lantern', 'envelope',
     'flag', 'whisk', 'pinwheel', 'compass', 'key', 'icecream', 'cupcake', 'sunflower', 'clover', 'toadstool', 'cactuspot', 'wand', 'potion', 'paddle', 'joystick', 'bubblewand', 'rollingpin', 'harmonica', 'tambourine'],
-  ground: ['cactus', 'duck', 'cat', 'gift', 'pumpkin', 'diya', 'sprouts', 'songpyeon', 'cake',
+  ground: ['cactus', 'duck', 'cat', 'gift', 'pumpkin', 'diya', 'songpyeon', 'cake',
     'mushroom', 'frog', 'robot', 'ramen', 'snail', 'campfire', 'bonsai', 'penguin', 'lavalamp', 'taco', 'tent', 'hedgehog', 'wateringcan', 'macaron', 'arcade', 'snowman', 'rocket', 'watermelon', 'chest', 'axolotl'],
 }
 
@@ -124,7 +124,7 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'neckerchief', level: 37 },
   { item: 'lei', level: 37 },
   { item: 'goldchain', level: 38 }, { item: 'diya', level: 38 },
-  { item: 'overalls', level: 39 }, { item: 'sprouts', level: 39 },
+  { item: 'overalls', level: 39 },
   { item: 'icecream', level: 40 }, { item: 'cupcake', level: 40 },
   { item: 'sunflower', level: 41 }, { item: 'clover', level: 41 },
   { item: 'toadstool', level: 42 }, { item: 'cactuspot', level: 42 },
@@ -170,16 +170,9 @@ const DRESS: Record<Dressed, Partial<Outfit>> = {
   birthday: { head: 'partyhat', ground: 'cake' },
   anniversary: { neck: 'rosette' },
   newYear: { head: 'partyhat' },
-  lunarNewYear: { held: 'envelope' },
-  eidFitr: { held: 'candy' },
-  eidAdha: { held: 'lantern' },
-  nowruz: { ground: 'sprouts' },
   hanami: { head: 'sakura' },
-  chuseok: { ground: 'songpyeon' },
-  diwali: { ground: 'diya' },
   halloween: { head: 'witchhat', ground: 'pumpkin' },
   hacktoberfest: { neck: 'pin' },
-  xmas: { head: 'santahat' },
 }
 
 /** What it takes, in a few words: "level 5", "50 commits", a badge's name. */

@@ -452,7 +452,6 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   lantern: { x: 80.5, y: 73, w: 9, s: 1.9 },
   envelope: { x: 83, y: 70, w: 9, s: 1.8 },
   diya: { x: 13, y: 84, w: 17, s: 1.4, ground: true },
-  sprouts: { x: 12, y: 81, w: 14, s: 1.4, ground: true },
   songpyeon: { x: 12, y: 85, w: 16, s: 1.4, ground: true },
   cake: { x: 12, y: 82, w: 15, s: 1.4, ground: true },
   mushroom: { x: 13.2, y: 75.7, w: 23.4, ground: true },
@@ -663,14 +662,6 @@ export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, numb
       '<path d="M17.6 83.6Q20.4 83 21.6 81.2Q20.8 84.4 18 85.4Z" fill="#B65A3C"/><path d="M5 83.6Q5.8 88.4 12 88.4Q18.2 88.4 19 83.6Z" fill="#C9694A"/>' +
       '<ellipse cx="12" cy="83.7" rx="7" ry="1.2" fill="#7A2E16"/><path d="M5 83.6Q12 85.6 19 83.6" stroke="#E08A6A" stroke-width="0.7" fill="none"/>' +
       `<g fill="#F2B84B"><circle cx="8.4" cy="86.2" r="0.55"/><circle cx="12" cy="87" r="0.55"/><circle cx="15.6" cy="86.2" r="0.55"/></g>${flame(21.3, 81, 1.15)}`,
-  },
-  sprouts: {
-    box: [3, 70.5, 18, 19.5],
-    svg: '<ellipse cx="12" cy="88.6" rx="7" ry="1.7" fill="#2B1B17" opacity="0.13"/>' +
-      '<path d="M7 84.4Q6.2 80 4.8 77.4M8.2 84.4Q7.6 79 6.6 75M9.4 84.4Q9 78 8.4 73.4M10.6 84.4Q10.6 77.6 10.4 72.4M12 84.4Q12.2 77.4 12.8 72.6M13.2 84.4Q13.8 78.4 15 74.2M14.6 84.4Q15.4 79.6 17 76.2M16 84.4Q17 81 18.8 78.6" stroke="#5FAF4E" stroke-width="1" fill="none" stroke-linecap="round"/>' +
-      '<path d="M7.6 84.4Q7.2 81 5.8 79.2M9 84.4Q8.6 80.4 7.6 77.6M11.2 84.4Q11.2 79.6 11.6 76M13.8 84.4Q14.2 80.6 15.4 78.2M15.4 84.4Q16 82 17.4 80.4" stroke="#3F8A3A" stroke-width="0.9" fill="none" stroke-linecap="round"/>' +
-      '<rect x="7" y="80.4" width="10" height="1.6" fill="#D8433B"/><path d="M12 81.2L9.8 80L10 82.4ZM12 81.2L14.2 80L14 82.4Z" fill="#D8433B" stroke="#8E2A22" stroke-width="0.3" stroke-linejoin="round"/>' +
-      '<path d="M5.4 84Q6.2 88.2 12 88.2Q17.8 88.2 18.6 84Z" fill="#F3ECE4" stroke="#C9B8AE" stroke-width="0.5"/><path d="M6 85.6Q12 87.4 18 85.6" stroke="#1E4CC2" stroke-width="0.7" fill="none"/>',
   },
   songpyeon: {
     box: [3, 77, 18.5, 13],

@@ -12,7 +12,7 @@ and keeps your context, session and weekly limits in plain sight.
 [![License: MIT](https://img.shields.io/badge/license-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-install-in-10-seconds)
 [![16 languages](https://img.shields.io/badge/languages-16-7AA2F7?style=for-the-badge)](#-16-languages)
-[![134 accessories](https://img.shields.io/badge/wardrobe-134_items-B684F6?style=for-the-badge)](#-a-wardrobe-that-grows-with-you)
+[![133 accessories](https://img.shields.io/badge/wardrobe-133_items-B684F6?style=for-the-badge)](#-a-wardrobe-that-grows-with-you)
 [![No network](https://img.shields.io/badge/network-none-4CC38A?style=for-the-badge)](#-what-it-touches)
 
 **English** · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -45,7 +45,7 @@ Type it in any Claude Code chat, answer `y` to add the marketplace and pick the 
 <td align="center" width="25%">🎭<br><b>30 moods</b><br><sub>that follow every tool call</sub></td>
 <td align="center" width="25%">🛡️<br><b>A shield</b><br><sub>for <code>rm -rf</code>, force pushes and leaked keys</sub></td>
 <td align="center" width="25%">📊<br><b>Limit rings</b><br><sub>with a forecast of when you run out</sub></td>
-<td align="center" width="25%">👒<br><b>134 things to wear</b><br><sub>earned by real work</sub></td>
+<td align="center" width="25%">👒<br><b>133 things to wear</b><br><sub>earned by real work</sub></td>
 </tr>
 </table>
 
@@ -151,7 +151,7 @@ Eighteen of them, each celebrated once: a first green test run, a comeback in a 
 <td valign="top">
 
 ### 🎉 Special days, small surprises
-Eid, Lunar New Year, Nowruz, Diwali, Chuseok, sakura season, Hacktoberfest, Halloween, Christmas and your birthday each dress Mochi, in what it has earned. Say good night to Mochi, or thank it. After two hours without a break, it suggests a stretch.
+Sakura season, Hacktoberfest, Halloween, New Year and your birthday each dress Mochi, in what it has earned. Say good night to Mochi, or thank it. After two hours without a break, it suggests a stretch.
 
 </td>
 <td valign="top">
@@ -185,7 +185,7 @@ Further down: the context by category, your recent turns, a calendar of every ch
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi trying on outfits one after another: a beanie with coffee, a crown with a monocle and a cat, a wizard hat and scarf, a party hat with a medal and balloon, a cowboy hat with a mustache, a graduation cap with glasses, a pirate hat with sunglasses and a duck, a hard hat with a wrench, a chef's hat with a bow tie and cake, and a night cap beside a cactus">
 </p>
 
-Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **134 items** across head, face, neck, hand and the spot beside Mochi. Nothing opens by the date: levels open most, habits some, and the hard badges the rest (a witch hat and a pumpkin for a hundred and fifty nights, a cake for five hundred commits). Once earned, a witch hat comes on at Halloween, a cake on your birthday, a diya at Diwali; coffee comes in the morning and a night cap after midnight.
+Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **133 items** across head, face, neck, hand and the spot beside Mochi. Nothing opens by the date: levels open most, habits some, and the hard badges the rest (a witch hat and a pumpkin for a hundred and fifty nights, a cake for five hundred commits). Once earned, a witch hat comes on at Halloween, a cake on your birthday; coffee comes in the morning and a night cap after midnight.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Twelve Mochis in different outfits: a beanie with coffee, a cowboy with a mustache, a wizard, a party hat, a crown with a monocle and a cat, a night cap with a scarf, and more">

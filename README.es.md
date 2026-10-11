@@ -12,7 +12,7 @@ y mantiene a la vista tu contexto y tus límites de sesión y de semana.
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Plugin de Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-instalación-en-10-segundos)
 [![16 idiomas](https://img.shields.io/badge/idiomas-16-7AA2F7?style=for-the-badge)](#-16-idiomas)
-[![134 accesorios](https://img.shields.io/badge/armario-134_accesorios-B684F6?style=for-the-badge)](#-un-armario-que-crece-contigo)
+[![133 accesorios](https://img.shields.io/badge/armario-133_accesorios-B684F6?style=for-the-badge)](#-un-armario-que-crece-contigo)
 [![Sin red](https://img.shields.io/badge/red-ninguna-4CC38A?style=for-the-badge)](#-qué-toca)
 
 [English](README.md) · [Türkçe](README.tr.md) · **Español** · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -45,7 +45,7 @@ Escríbelo en cualquier chat de Claude Code, responde `y` para añadir el market
 <td align="center" width="25%">🎭<br><b>30 estados de ánimo</b><br><sub>que siguen cada llamada a herramientas</sub></td>
 <td align="center" width="25%">🛡️<br><b>Un escudo</b><br><sub>para <code>rm -rf</code>, los force push y las claves filtradas</sub></td>
 <td align="center" width="25%">📊<br><b>Anillos de límites</b><br><sub>con un pronóstico de cuándo te quedarás sin margen</sub></td>
-<td align="center" width="25%">👒<br><b>134 cosas que ponerse</b><br><sub>ganadas con trabajo de verdad</sub></td>
+<td align="center" width="25%">👒<br><b>133 cosas que ponerse</b><br><sub>ganadas con trabajo de verdad</sub></td>
 </tr>
 </table>
 
@@ -151,7 +151,7 @@ Dieciocho, y cada una se celebra una sola vez: los primeros tests en verde, una 
 <td valign="top">
 
 ### 🎉 Días especiales, pequeñas sorpresas
-El Eid, el Año Nuevo Lunar, el Nouruz, Diwali, Chuseok, la temporada de sakura, Hacktoberfest, Halloween, Navidad y tu cumpleaños visten a Mochi con lo que se ha ganado. Dale las buenas noches a Mochi, o las gracias. Si llevas dos horas sin descansar, te propone estirar un poco.
+La temporada de sakura, Hacktoberfest, Halloween, Año Nuevo y tu cumpleaños visten a Mochi con lo que se ha ganado. Dale las buenas noches a Mochi, o las gracias. Si llevas dos horas sin descansar, te propone estirar un poco.
 
 </td>
 <td valign="top">
@@ -185,7 +185,7 @@ Más abajo: el contexto por categoría, tus turnos recientes, un calendario con 
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi probándose atuendos uno tras otro: un gorro de lana con café, una corona con monóculo y un gato, un sombrero de mago y una bufanda, un gorro de fiesta con medalla y globo, un sombrero de vaquero con bigote, un birrete con gafas, un sombrero pirata con gafas de sol y un pato, un casco de obra con una llave inglesa, un gorro de chef con pajarita y pastel, y un gorro de dormir junto a un cactus">
 </p>
 
-Cada turno, edición, commit y día de trabajo suma experiencia. Los niveles desbloquean cosas que ponerse: **134 accesorios** para la cabeza, la cara, el cuello, la mano y el hueco al lado de Mochi. Nada se abre por la fecha: los niveles abren la mayoría, los hábitos algunos y las insignias difíciles el resto (un sombrero de bruja y una calabaza por ciento cincuenta noches, un pastel por quinientos commits). Una vez ganados, el sombrero de bruja aparece en Halloween, el pastel en tu cumpleaños y la lámpara diya en Diwali; el café llega por la mañana y el gorro de dormir pasada la medianoche.
+Cada turno, edición, commit y día de trabajo suma experiencia. Los niveles desbloquean cosas que ponerse: **133 accesorios** para la cabeza, la cara, el cuello, la mano y el hueco al lado de Mochi. Nada se abre por la fecha: los niveles abren la mayoría, los hábitos algunos y las insignias difíciles el resto (un sombrero de bruja y una calabaza por ciento cincuenta noches, un pastel por quinientos commits). Una vez ganados, el sombrero de bruja aparece en Halloween y el pastel en tu cumpleaños; el café llega por la mañana y el gorro de dormir pasada la medianoche.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Doce Mochis con distintos atuendos: un gorro de lana con café, un vaquero con bigote, un mago, un gorro de fiesta, una corona con monóculo y un gato, un gorro de dormir con bufanda, y más">

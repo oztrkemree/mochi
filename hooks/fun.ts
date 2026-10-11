@@ -11,40 +11,17 @@ import type { Reaction } from './react'
 // ---------- the calendar ----------
 
 export type Occasion =
-  | 'birthday' | 'anniversary' | 'newYear' | 'lunarNewYear' | 'eidFitr' | 'eidAdha' | 'nowruz' | 'piDay'
-  | 'hanami' | 'chuseok' | 'diwali' | 'halloween' | 'hacktoberfest' | 'xmas' | 'friday13'
+  | 'birthday' | 'anniversary' | 'newYear' | 'piDay' | 'hanami' | 'halloween' | 'hacktoberfest' | 'friday13'
 
 /** The person's own days: a birthday ("MM-DD") and the first day Mochi ran ("2026-10-09"); '' for none. */
 export type Own = { birthday: string; firstDay: string }
 export const NO_OWN: Own = { birthday: '', firstDay: '' }
-
-/**
- * The days that move with the moon (Nowruz with the equinox), "MM-DD" by
- * year, as most calendars give them; a sighting a day later still falls in
- * the span. Needs extending in 2030.
- */
-const MOVING: Record<'lunarNewYear' | 'eidFitr' | 'eidAdha' | 'nowruz' | 'chuseok' | 'diwali', Record<number, string>> = {
-  lunarNewYear: { 2026: '02-17', 2027: '02-06', 2028: '01-26', 2029: '02-13', 2030: '02-03' },
-  eidFitr: { 2026: '03-20', 2027: '03-09', 2028: '02-26', 2029: '02-14', 2030: '02-04' },
-  eidAdha: { 2026: '05-27', 2027: '05-16', 2028: '05-05', 2029: '04-24', 2030: '04-13' },
-  nowruz: { 2026: '03-21', 2027: '03-21', 2028: '03-20', 2029: '03-20', 2030: '03-21' },
-  chuseok: { 2026: '09-25', 2027: '09-15', 2028: '10-03', 2029: '09-22', 2030: '09-12' },
-  diwali: { 2026: '11-08', 2027: '10-29', 2028: '10-17', 2029: '11-05', 2030: '10-26' },
-}
 
 /** The span's first day when `today` is in it. */
 const within = (today: string, from: string, to: string): string | null => (today >= from && today <= to ? from : null)
 
 /** The same days every year, "MM-DD" to "MM-DD". */
 const yearly = (from: string, to: string) => (today: string) => within(today, `${today.slice(0, 4)}-${from}`, `${today.slice(0, 4)}-${to}`)
-
-/** A moving day, with days before and after it. */
-const moving = (name: keyof typeof MOVING, before: number, after: number) => (today: string) => {
-  const date = MOVING[name][Number(today.slice(0, 4))]
-  if (date === undefined) return null
-  const day = `${today.slice(0, 4)}-${date}`
-  return within(today, shiftDay(day, -before), shiftDay(day, after))
-}
 
 /** Whether `today` is the yearly "MM-DD"; a 29 February falls on the 28th in other years. */
 function isDay(today: string, mmdd: string): boolean {
@@ -57,17 +34,10 @@ const RULES: [Occasion, (today: string, own: Own) => string | null][] = [
   ['birthday', (d, o) => (o.birthday !== '' && isDay(d, o.birthday) ? d : null)],
   ['anniversary', (d, o) => (o.firstDay !== '' && o.firstDay.slice(0, 4) < d.slice(0, 4) && isDay(d, o.firstDay.slice(5)) ? d : null)],
   ['newYear', d => (d.endsWith('-12-31') ? d : d.endsWith('-01-01') ? shiftDay(d, -1) : null)],
-  ['lunarNewYear', moving('lunarNewYear', 0, 2)],
-  ['eidFitr', moving('eidFitr', 0, 2)],
-  ['eidAdha', moving('eidAdha', 0, 3)],
-  ['nowruz', moving('nowruz', 0, 3)],
   ['piDay', yearly('03-14', '03-14')],
   ['hanami', yearly('04-01', '04-10')],
-  ['chuseok', moving('chuseok', 1, 1)],
-  ['diwali', moving('diwali', 2, 2)],
   ['halloween', yearly('10-24', '11-01')],
   ['hacktoberfest', yearly('10-01', '10-31')],
-  ['xmas', yearly('12-18', '12-30')],
   ['friday13', d => (d.endsWith('-13') && new Date(`${d}T00:00:00Z`).getUTCDay() === 5 ? d : null)],
 ]
 

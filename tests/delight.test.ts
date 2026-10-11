@@ -75,27 +75,20 @@ const at = (y: number, m: number, d: number, hour: number, minute = 0) => {
 
 const NONE = { head: null, face: null, neck: null, held: null, ground: null }
 
-test('the calendar knows the days that move with the moon, the fixed ones and the person’s own', async () => {
+test('the calendar knows the fixed days and the person’s own', async () => {
   const on = (day: string, own = { birthday: '', firstDay: '' }) => occasions(day, own).map(o => o.name)
-  expect(on('2026-02-17')).toEqual(['lunarNewYear'])
-  expect(on('2026-02-19')).toEqual(['lunarNewYear'])
   expect(on('2026-02-20')).toEqual([])
-  expect(on('2026-03-21')).toEqual(['eidFitr', 'nowruz'])
-  expect(on('2027-05-16')).toEqual(['eidAdha'])
-  expect(on('2028-10-03')).toEqual(['chuseok', 'hacktoberfest'])
-  expect(on('2026-11-06')).toEqual(['diwali'])
+  expect(on('2028-10-03')).toEqual(['hacktoberfest'])
   expect(on('2026-04-05')).toEqual(['hanami'])
   expect(on('2026-03-14')).toEqual(['piDay'])
   expect(on('2026-11-13')).toEqual(['friday13'])
   expect(on('2026-10-10')).toEqual(['hacktoberfest'])
   expect(on('2026-10-28')).toEqual(['halloween', 'hacktoberfest'])
-  expect(on('2026-12-24')).toEqual(['xmas'])
+  expect(on('2026-12-24')).toEqual([])
   expect(occasions('2027-01-01')).toEqual([{ name: 'newYear', from: '2026-12-31' }])
-  // The table of moving days ends with 2030.
-  expect(on('2031-01-23')).toEqual([])
   expect(on('2027-04-23', { birthday: '04-23', firstDay: '' })).toEqual(['birthday'])
   expect(on('2027-02-28', { birthday: '02-29', firstDay: '' })).toEqual(['birthday'])
-  expect(on('2028-02-28', { birthday: '02-29', firstDay: '' })).toEqual(['eidFitr'])
+  expect(on('2028-02-28', { birthday: '02-29', firstDay: '' })).toEqual([])
   expect(on('2028-02-29', { birthday: '02-29', firstDay: '' })).toEqual(['birthday'])
   expect(on('2027-10-09', { birthday: '', firstDay: '2026-10-09' })).toEqual(['anniversary', 'hacktoberfest'])
   expect(on('2026-10-09', { birthday: '', firstDay: '2026-10-09' })).toEqual(['hacktoberfest'])
@@ -108,7 +101,7 @@ test('each occasion is greeted once, however many days it spans', async () => {
   expect(dueGreeting('2026-07-01', own, [])).toBe(null)
   expect(greeting('anniversary', '2028-10-09', own)).toEqual({ mood: 'party', line: '2 years together today', holdMs: 8000, sound: 'party' })
   expect(greeting('friday13', '2026-11-13', own).mood).toBe('nervous')
-  expect(greeting('diwali', '2026-11-08', own)).toEqual({ mood: 'wave', line: 'happy diwali', holdMs: 8000 })
+  expect(greeting('halloween', '2026-10-28', own)).toEqual({ mood: 'wave', line: 'happy halloween', holdMs: 8000 })
   expect(parseBirthday('4-23')).toBe('04-23')
   expect(parseBirthday('04/23')).toBe('04-23')
   expect(parseBirthday('02-29')).toBe('02-29')
@@ -123,11 +116,11 @@ test('each occasion is greeted once, however many days it spans', async () => {
 test('the date dresses Mochi in what it has earned, and opens nothing by itself', async () => {
   const noon = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d, 12, 0)
   const birthday = { birthday: '07-01', firstDay: '' }
-  const all = ['partyhat', 'cake', 'diya', 'sakura', 'envelope', 'rosette'] as const
+  const all = ['partyhat', 'cake', 'witchhat', 'pumpkin', 'sakura', 'rosette'] as const
   expect(outfitFor({}, all, noon(2026, 7, 1), 0, 'idle', true, birthday)).toEqual({ ...NONE, head: 'partyhat', ground: 'cake' })
-  expect(outfitFor({}, all, noon(2026, 11, 8), 0, 'idle', true)).toEqual({ ...NONE, ground: 'diya' })
+  expect(outfitFor({}, all, noon(2026, 10, 28), 0, 'idle', true)).toEqual({ ...NONE, head: 'witchhat', ground: 'pumpkin' })
   expect(outfitFor({}, all, noon(2026, 4, 3), 0, 'idle', true).head).toBe('sakura')
-  expect(outfitFor({}, all, Date.UTC(2026, 1, 17, 8, 0), 0, 'idle', true).held).toBe('envelope')
+  expect(outfitFor({}, all, noon(2026, 12, 31), 0, 'idle', true).head).toBe('partyhat')
   expect(outfitFor({}, all, noon(2026, 3, 20), 0, 'success', false).held).toBe(null)
   expect(outfitFor({}, all, noon(2027, 10, 9), 0, 'idle', true, { birthday: '', firstDay: '2026-10-09' }).neck).toBe('rosette')
   expect(outfitFor({ neck: null }, all, noon(2026, 10, 10), 0, 'idle', true).neck).toBe(null)
@@ -145,7 +138,7 @@ test('every new thing to wear is drawn, and every mood has its pose, look, ink a
     expect(WEAR[item] !== undefined || VECTOR_WEAR[item] !== undefined).toBe(true)
     expect(WEAR_AT[item]).toBeDefined()
   }
-  for (const item of ['sakura', 'pin', 'rosette', 'candy', 'lantern', 'envelope', 'diya', 'sprouts', 'songpyeon', 'cake'] as const) {
+  for (const item of ['sakura', 'pin', 'rosette', 'candy', 'lantern', 'envelope', 'diya', 'songpyeon', 'cake'] as const) {
     const vector = VECTOR_WEAR[item]
     expect(vector).toBeDefined()
     const svg = svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit: { ...NONE, [WEAR_AT[item].ground ? 'ground' : item === 'sakura' ? 'head' : ['pin', 'rosette'].includes(item) ? 'neck' : 'held']: item } }, from: null })

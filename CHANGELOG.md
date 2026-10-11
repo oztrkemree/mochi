@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Nothing opens by the date any more. The thirteen things that came with a holiday (witch hat, pumpkin, santa hat, sakura, red envelope, candy, lantern, sprouts, songpyeon, diya, pin, rosette, cake) are earned now: four by level (26 to 39) and nine by badges (six of them new and hard). An occasion still dresses Mochi in them, once earned.
+- The calendar keeps to days anyone can share: your birthday, the day you met Mochi, New Year, π day, sakura season, Hacktoberfest, Halloween and Friday the 13th. Religious and national holidays no longer dress Mochi, and the sprouts are gone from the wardrobe, which now holds 133 things.
+- `node scripts/video.mjs` films a three-minute tour of Mochi, and `node scripts/video.mjs short` a 25-second cut, from the same drawing code.
+- Nothing opens by the date any more. The twelve things that came with a holiday (witch hat, pumpkin, santa hat, sakura, red envelope, candy, lantern, songpyeon, diya, pin, rosette, cake) are earned now: three by level (26 to 38) and nine by badges (six of them new and hard). An occasion still dresses Mochi in them, once earned.
 - Six hard badges: iron month (30-day streak), five hundred commits, regular (100 active days), craftsman (5,000 edits), bulldozer (10,000 lines removed) and vampire (150 night turns). The pin comes with the hundred-commits badge.
 
 ## 0.4.1
@@ -72,7 +74,7 @@ Needs Claude Code 2.1.293 or later.
 ### Badges, special days and breaks
 
 - 12 badges earned from real work, each celebrated once: `/mochi badges` and a Badges section in the details pane.
-- Eid al-Fitr, Eid al-Adha, Lunar New Year, Nowruz, Diwali, Chuseok, sakura season, Hacktoberfest, your birthday (`/mochi birthday`) and Mochi's own anniversary, each with a greeting and something to wear. The wardrobe grows to 46 items.
+- Eid al-Fitr, Eid al-Adha, Lunar New Year, Diwali, Chuseok, sakura season, Hacktoberfest, your birthday (`/mochi birthday`) and Mochi's own anniversary, each with a greeting and something to wear. The wardrobe grows to 46 items.
 - Small surprises: say good night (Mochi goes to sleep once the reply is done), call its name, thank it or tell it you love it, in any of its languages; a wink at 13:37.
 - After two hours of work with no break, a suggested stretch, once for all your chats. `/mochi breaks` turns it off.
 - Three new moods: stretching, in love and winking.

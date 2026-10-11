@@ -72,7 +72,7 @@ export type Item =
   | 'bowtie' | 'medal' | 'scarf' | 'necktie' | 'evileye'
   | 'mug' | 'tea' | 'simit' | 'pencil' | 'wrench' | 'balloon'
   | 'pumpkin' | 'duck' | 'cactus' | 'cat' | 'gift'
-  | 'sakura' | 'pin' | 'rosette' | 'candy' | 'lantern' | 'envelope' | 'diya' | 'sprouts' | 'songpyeon' | 'cake'
+  | 'sakura' | 'pin' | 'rosette' | 'candy' | 'lantern' | 'envelope' | 'diya' | 'songpyeon' | 'cake'
   | 'bandana' | 'sailorhat' | 'strawhat' | 'daisyhat' | 'leaf' | 'catears' | 'bunnyears' | 'flowercrown' | 'beret' | 'tophat' | 'jester' | 'nursecap' | 'sombrero' | 'antlers' | 'farmer' | 'sunflowercrown' | 'bee' | 'halo' | 'unicorn' | 'shortcake' | 'rainbow' | 'dragon' | 'astronaut'
   | 'bowler' | 'flatcap' | 'explorer' | 'baseballcap'
   | 'heartglasses' | 'eyepatch' | 'beard' | 'goggles' | 'starglasses' | 'cinema3d' | 'nerdglasses' | 'visor'
