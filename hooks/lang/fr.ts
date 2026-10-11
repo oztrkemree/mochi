@@ -18,6 +18,12 @@ export const fr: typeof en = {
   months: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'],
 
   news: {
+    '0.4.1': {
+      headline: 'le diff d’un fichier modifié, à un clic dans Modifications',
+      notes: [
+        'Modifications, dans le panneau de détails, a un bouton pour chaque fichier modifié : cliquez-en un pour voir son diff par rapport au dernier commit à la place de la dernière modification (un nouveau fichier apparaît tout ajouté). Il reste jusqu’à ce que vous cliquiez de nouveau ou en choisissiez un autre.',
+      ],
+    },
     '0.4.0': {
       headline: 'le panneau de détails en quatre onglets, avec chaque réglage et chaque action',
       notes: [
@@ -420,6 +426,7 @@ export const fr: typeof en = {
     moreFiles: n => `+${n} ${n < 2 ? 'autre fichier' : 'autres fichiers'}`,
     byClaude: 'modifiés par Claude dans cette conversation · plus récents en premier',
     lastEdit: 'DERNIÈRE MODIFICATION',
+    fileDiff: 'DIFF DU FICHIER',
     moreLines: n => `… ${pl(n, 'ligne', 'lignes')} de plus`,
     levelN: n => `Niveau ${n}`,
     toNext: xp => `${xp} XP avant le niveau suivant`,
@@ -514,6 +521,7 @@ export const fr: typeof en = {
     open: 'Ouvrir',
     dismiss: 'Fermer',
     moreGist: 'carte · bilan · capture · visite · exporter · réinitialiser',
+    diffPick: 'Voir le diff d’un fichier :',
     tabs: { now: 'Maintenant', past: 'Historique', mochi: 'Mochi', settings: 'Réglages' },
     names: { overview: 'Aperçu', chats: 'Conversations', changes: 'Modifications', context: 'Contexte', activity: 'Activité', level: 'Niveau', wardrobe: 'Garde-robe', badges: 'Badges', settings: 'Réglages', more: 'Plus' },
     arrange: 'Organiser',

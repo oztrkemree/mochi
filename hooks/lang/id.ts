@@ -15,6 +15,12 @@ export const id: typeof en = {
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
 
   news: {
+    '0.4.1': {
+      headline: 'diff berkas yang berubah, sekali klik di Perubahan',
+      notes: [
+        'Perubahan di panel detail punya tombol untuk tiap berkas yang berubah: tekan salah satunya untuk melihat diff-nya terhadap commit terakhir, menggantikan edit terakhir (berkas baru tampil sebagai seluruhnya ditambahkan). Diff itu tetap ada sampai Anda menekannya lagi atau memilih berkas lain.',
+      ],
+    },
     '0.4.0': {
       headline: 'panel detail dalam empat tab, lengkap dengan semua pengaturan dan aksi',
       notes: [
@@ -417,6 +423,7 @@ export const id: typeof en = {
     moreFiles: n => `+${n} file lagi`,
     byClaude: 'diubah Claude di chat ini · terbaru di atas',
     lastEdit: 'EDIT TERAKHIR',
+    fileDiff: 'DIFF BERKAS',
     moreLines: n => `… ${n} baris lagi`,
     levelN: n => `Level ${n}`,
     toNext: xp => `${xp} XP lagi ke level berikutnya`,
@@ -511,6 +518,7 @@ export const id: typeof en = {
     open: 'Buka',
     dismiss: 'Tutup',
     moreGist: 'kartu · rekap · jepretan · tur · ekspor · reset',
+    diffPick: 'Lihat diff berkas:',
     tabs: { now: 'Sekarang', past: 'Riwayat', mochi: 'Mochi', settings: 'Pengaturan' },
     names: { overview: 'Ringkasan', chats: 'Chat', changes: 'Perubahan', context: 'Konteks', activity: 'Aktivitas', level: 'Level', wardrobe: 'Lemari', badges: 'Lencana', settings: 'Pengaturan', more: 'Lainnya' },
     arrange: 'Atur',

@@ -14,6 +14,12 @@ export const ko: typeof en = {
   months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
 
   news: {
+    '0.4.1': {
+      headline: '변경된 파일의 diff를 변경 사항에서 클릭 한 번으로',
+      notes: [
+        '상세 패널의 변경 사항에 변경된 파일마다 버튼이 생겼습니다. 누르면 마지막 수정 대신 마지막 커밋과의 diff를 보여 줍니다(새 파일은 모두 추가된 것으로). 다시 누르거나 다른 파일을 고를 때까지 그대로 있습니다.',
+      ],
+    },
     '0.4.0': {
       headline: '상세 패널이 네 개의 탭으로, 모든 설정과 동작 포함',
       notes: [
@@ -416,6 +422,7 @@ export const ko: typeof en = {
     moreFiles: n => `+ 파일 ${n}개 더`,
     byClaude: '이 채팅에서 Claude가 변경 · 최신순',
     lastEdit: '마지막 수정',
+    fileDiff: '파일 diff',
     moreLines: n => `… ${n}줄 더`,
     levelN: n => `레벨 ${n}`,
     toNext: xp => `다음 레벨까지 ${xp} XP`,
@@ -510,6 +517,7 @@ export const ko: typeof en = {
     open: '열기',
     dismiss: '닫기',
     moreGist: '카드 · 결산 · 스냅샷 · 둘러보기 · 내보내기 · 초기화',
+    diffPick: '파일 diff 보기:',
     tabs: { now: '지금', past: '기록', mochi: 'Mochi', settings: '설정' },
     names: { overview: '개요', chats: '채팅', changes: '변경 사항', context: '컨텍스트', activity: '활동', level: '레벨', wardrobe: '옷장', badges: '배지', settings: '설정', more: '더 보기' },
     arrange: '정렬',

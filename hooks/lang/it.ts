@@ -19,6 +19,12 @@ export const it: typeof en = {
   months: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'],
 
   news: {
+    '0.4.1': {
+      headline: 'il diff di un file modificato, a un clic in Modifiche',
+      notes: [
+        'Modifiche, nel pannello dei dettagli, ha un pulsante per ogni file modificato: premine uno per vederne il diff rispetto all’ultimo commit al posto dell’ultima modifica (un file nuovo appare tutto aggiunto). Resta finché non lo premi di nuovo o ne scegli un altro.',
+      ],
+    },
     '0.4.0': {
       headline: 'il pannello dei dettagli in quattro schede, con ogni impostazione e azione',
       notes: [
@@ -421,6 +427,7 @@ export const it: typeof en = {
     moreFiles: n => `+${n} ${n === 1 ? 'altro file' : 'altri file'}`,
     byClaude: 'modificati da Claude in questa chat · i più recenti in alto',
     lastEdit: 'ULTIMA MODIFICA',
+    fileDiff: 'DIFF DEL FILE',
     moreLines: n => `… ${n === 1 ? 'un’altra riga' : `altre ${n} righe`}`,
     levelN: n => `Livello ${n}`,
     toNext: xp => `${xp} XP al prossimo livello`,
@@ -515,6 +522,7 @@ export const it: typeof en = {
     open: 'Apri',
     dismiss: 'Chiudi',
     moreGist: 'scheda · riepilogo · istantanea · giro · esporta · azzera',
+    diffPick: 'Vedi il diff di un file:',
     tabs: { now: 'Ora', past: 'Cronologia', mochi: 'Mochi', settings: 'Impostazioni' },
     names: { overview: 'Panoramica', chats: 'Chat', changes: 'Modifiche', context: 'Contesto', activity: 'Attività', level: 'Livello', wardrobe: 'Guardaroba', badges: 'Badge', settings: 'Impostazioni', more: 'Altro' },
     arrange: 'Disponi',

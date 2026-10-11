@@ -14,6 +14,12 @@ export const tr: typeof en = {
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
   news: {
+    '0.4.1': {
+      headline: 'değişen bir dosyanın farkı, Değişiklikler’de bir tık uzakta',
+      notes: [
+        'Detay ekranındaki Değişiklikler’de değişen her dosya için bir düğme var: birine basınca dosyanın son commit’e göre farkı, son düzenlemenin yerinde görünür (yeni bir dosya tümüyle eklenmiş olarak). Yeniden basana ya da başka bir dosya seçene kadar orada kalır.',
+      ],
+    },
     '0.4.0': {
       headline: 'dört sekmeli detay ekranı, her ayar ve eylemle birlikte',
       notes: [
@@ -416,6 +422,7 @@ export const tr: typeof en = {
     moreFiles: n => `+${n} dosya daha`,
     byClaude: 'bu sohbette Claude değiştirdi · en son değişenler üstte',
     lastEdit: 'SON DÜZENLEME',
+    fileDiff: 'DOSYA FARKI',
     moreLines: n => `… ${n} satır daha`,
     levelN: n => `Seviye ${n}`,
     toNext: xp => `sonraki seviyeye ${xp} XP`,
@@ -510,6 +517,7 @@ export const tr: typeof en = {
     open: 'Aç',
     dismiss: 'Kapat',
     moreGist: 'kart · özet · ekran görüntüsü · tanıtım · dışa aktar · sıfırla',
+    diffPick: 'Bir dosyanın farkı:',
     tabs: { now: 'Şimdi', past: 'Geçmiş', mochi: 'Mochi', settings: 'Ayarlar' },
     names: { overview: 'Genel bakış', chats: 'Sohbetler', changes: 'Değişiklikler', context: 'Context', activity: 'Etkinlik', level: 'Seviye', wardrobe: 'Gardırop', badges: 'Rozetler', settings: 'Ayarlar', more: 'Diğer' },
     arrange: 'Düzenle',

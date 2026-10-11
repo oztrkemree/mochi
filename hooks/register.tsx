@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, RenderSurface } from 'claude-code'
 
-import type { Badge, Block, Ci, DayRec, Env, Face, Info, Item, Limit, MochiAnswer, MochiReaction, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
+import type { Badge, Block, Ci, DayRec, Env, Face, FileDiff, Git, Info, Item, Limit, MochiAnswer, MochiReaction, Mood, Outfit, Peer, Prefs, Recent, Scene, Slice } from '../types'
 import { cheerOf, isKept, mayReact, reactionOf, signed } from './api'
 import { BADGES, TEAM_AT, badgeHint, badgeName, badgesOf, commandBadges, isEarly, langBit, provenBy, turnBadges } from './badges'
 import { PR_FIELDS, RUN_FIELDS, ciLine, ciOf, ghTrouble, isPushing, prOf } from './ci'
@@ -14,7 +14,7 @@ import { boardLines, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from 
 import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, ruleAsWritten, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
 import type { TipId } from './coach'
 import { detailHeight, detailSvg } from './detail'
-import { addSample, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, lineCount, lineDelta, parseGit, parseNumstat, warnLevel, withLines } from './facts'
+import { addSample, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, warnLevel, withLines } from './facts'
 import { BREAK_AFTER, birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, workFrom } from './fun'
 import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
@@ -29,7 +29,7 @@ import { paramsAt } from './rig'
 import { SNAP_W, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
 import type { ChatDays } from './share'
 import { clip } from './sound'
-import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
+import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_DIFF, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
 import { alertCommand, langCodes, langCommand, openCommand, pngCommands, removeCommand } from './system'
 import type { Platform } from './system'
 
@@ -51,6 +51,7 @@ const sec = atom({ plugin: 'mochi', key: 'sec' } as const, 0)
 const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
 const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
 const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
+const diff = atom({ plugin: 'mochi', key: 'diff' } as const, NO_DIFF)
 
 const TICK_MS = 450
 /** While Mochi dozes or is hidden, the timer does its rounds on one beat in this many, about every 2 seconds. */
@@ -128,6 +129,7 @@ async function pressed($: Dollar, element: string, surface?: RenderSurface) {
   if (element === 'visible') await setHidden($, !(await read($, prefs)).isHidden)
   if (element === 'bday:off') await birthday($, 'none')
   if (element.startsWith('do:')) await act($, element.slice(3))
+  if (element.startsWith('diff:')) await pickDiff($, element.slice(5))
   // Arranging the pane: in and out, back to the default, a block moved a place or shown and hidden.
   if (element === 'arrange') await setPrefs($, p => ({ ...p, isArranging: !p.isArranging }))
   if (element === 'arrange:reset') await setPrefs($, p => ({ ...p, order: [...BLOCKS], hidden: [] }))
@@ -384,7 +386,7 @@ async function refreshGit($: Dollar) {
   const top = await run(['git', 'rev-parse', '--show-toplevel'])
   const root = top?.exitCode === 0 ? top.stdout.trim() : ''
   // Lines added and removed against the last commit, staged or not; before the first commit, what is staged.
-  const diff = await run(['git', '-c', 'core.quotePath=false', 'diff', ...(base.lastCommit > 0 ? ['HEAD'] : ['--cached']), '--numstat', '--no-renames'])
+  const numstat = await run(['git', '-c', 'core.quotePath=false', 'diff', ...(base.lastCommit > 0 ? ['HEAD'] : ['--cached']), '--numstat', '--no-renames'])
   // A new file not yet added counts as all added: its lines, for the first twenty (none for one that cannot be read).
   const fresh = root === '' ? [] : base.files.filter(f => f.code === '??' && !f.path.endsWith('/')).slice(0, 20)
   const counts: Record<string, number> = {}
@@ -392,8 +394,35 @@ async function refreshGit($: Dollar) {
     const text = await $.fs.read(`${root}/${f.path}`).catch(() => null)
     if (text !== null) counts[f.path] = lineCount(text)
   }
-  const git = withLines(base, parseNumstat(diff?.stdout ?? ''), counts, root)
+  const git = withLines(base, parseNumstat(numstat?.stdout ?? ''), counts, root)
   await setEnv($, v => (JSON.stringify(v.git) === JSON.stringify(git) ? v : { ...v, git }))
+  // The file picked in Changes follows what it holds now, and is let go once it no longer differs.
+  const picked = (await read($, diff)).path
+  if (picked !== '') {
+    const kept = await loadDiff($, git, picked)
+    await update($, diff, d => (d.path !== picked || JSON.stringify(d) === JSON.stringify(kept) ? d : kept))
+  }
+}
+
+/** A changed file's diff against the last commit (before the first, what is staged); a new file not yet added, all added. */
+async function loadDiff($: Dollar, git: Git, path: string): Promise<FileDiff> {
+  const f = git.files.find(x => x.path === path)
+  if (f === undefined) return NO_DIFF
+  const root = git.root ?? ''
+  if (f.code === '??') return freshDiff(path, root === '' ? '' : await $.fs.read(`${root}/${path}`).catch(() => ''))
+  const ran = await $.process.run(['git', ...(root === '' ? [] : ['-C', root]), '-c', 'core.quotePath=false', 'diff', '--no-color', '--no-ext-diff', git.lastCommit > 0 ? 'HEAD' : '--cached', '--', path], { timeoutMs: 5000 }).catch(() => undefined)
+  return parseDiff(path, ran?.exitCode === 0 ? ran.stdout : '')
+}
+
+/** A file pressed in Changes: its diff shown in the pane, or put away when it already is. */
+async function pickDiff($: Dollar, path: string) {
+  const git = (await read($, env)).git
+  if ((await read($, diff)).path === path || git === null) {
+    await update($, diff, () => NO_DIFF)
+    return
+  }
+  const shown = await loadDiff($, git, path)
+  await update($, diff, () => shown)
 }
 
 /** What an edit is about to change, in lines; a Write is compared with the file as it stands before it. */

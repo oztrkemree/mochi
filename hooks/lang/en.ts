@@ -19,6 +19,12 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.4.1': {
+      headline: 'a changed file’s diff, a click away in Changes',
+      notes: [
+        'Changes in the details pane has a button for each changed file: press one to see its diff against the last commit in place of the last edit (a new file shows as all added). It stays until you press it again or pick another.',
+      ],
+    },
     '0.4.0': {
       headline: 'the details pane in four tabs, with every setting and action',
       notes: [
@@ -439,6 +445,7 @@ export const en = {
     moreFiles: (n: number) => `+${n} more ${n === 1 ? 'file' : 'files'}`,
     byClaude: 'changed by Claude in this chat · latest first',
     lastEdit: 'LAST EDIT',
+    fileDiff: 'FILE DIFF',
     moreLines: (n: number) => `… ${n} more ${n === 1 ? 'line' : 'lines'}`,
     levelN: (n: number) => `Level ${n}`,
     toNext: (xp: string) => `${xp} XP to the next level`,
@@ -541,6 +548,7 @@ export const en = {
     open: 'Open',
     dismiss: 'Dismiss',
     moreGist: 'card · wrapped · snapshot · tour · export · reset',
+    diffPick: 'See a file’s diff:',
     tabs: { now: 'Now', past: 'History', mochi: 'Mochi', settings: 'Settings' },
     /** Each part of the pane by name, as its row shows it. */
     names: { overview: 'Overview', chats: 'Chats', changes: 'Changes', context: 'Context', activity: 'Activity', level: 'Level', wardrobe: 'Wardrobe', badges: 'Badges', settings: 'Settings', more: 'More' },
