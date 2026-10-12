@@ -14,7 +14,7 @@ import { boardLines, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from 
 import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, ruleAsWritten, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
 import type { TipId } from './coach'
 import { detailHeight, detailSvg } from './detail'
-import { addSample, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, warnLevel, withLines } from './facts'
+import { addSample, keepSamples, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, warnLevel, withLines } from './facts'
 import { BREAK_AFTER, birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, workFrom } from './fun'
 import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
@@ -272,7 +272,7 @@ async function noteLimits($: Dollar) {
   const now = await $.clock.now()
   const v = await update($, env, x => ({ ...x, samples: x.limits.reduce((list, l) => addSample(list, l.kind, l.percent, now), x.samples) }))
   for (const l of v.limits) {
-    const at = forecastFull(v.samples, l, now)
+    const at = forecastFull(v.samples, l, now, v.tz)
     const key = `${l.kind}:${Math.round(l.resetsAt / 60_000)}`
     if (at === null || chat.warnedLimits.includes(key)) continue
     const isSoon = l.kind === 'five_hour' ? at - now <= 45 * 60_000 : at - now <= 24 * 60 * 60_000
@@ -608,10 +608,10 @@ async function saveSamples($: Dollar) {
   }
   const now = chat.samplesAt
   const v = await update($, env, x => {
-    const all = [...theirs, ...x.samples].filter(s => now - s.at < 48 * 60 * 60_000).sort((a, b) => a.at - b.at)
+    const all = [...theirs, ...x.samples].sort((a, b) => a.at - b.at)
     // Each reading once, however many times the chats' copies hold it.
     const seen = new Set<string>()
-    const merged = all.filter(s => !seen.has(`${s.kind}@${s.at}`) && seen.add(`${s.kind}@${s.at}`)).slice(-400)
+    const merged = keepSamples(all.filter(s => !seen.has(`${s.kind}@${s.at}`) && seen.add(`${s.kind}@${s.at}`)), now)
     return { ...x, samples: merged }
   })
   await $.fs.write(path, JSON.stringify(v.samples)).catch(() => undefined)

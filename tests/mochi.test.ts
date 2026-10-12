@@ -3,7 +3,7 @@ import { expect, mock, test } from 'claude-code/testing'
 
 import { asciiRows, kaomoji, LOOKS } from '../hooks/looks'
 import { detailSvg, levelSummary, levelSvg } from '../hooks/detail'
-import { addSample, clockAt, contextWarning, dayKey, dirOf, forecastFull, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, shiftDay, warnLevel, withLines } from '../hooks/facts'
+import { addSample, clockAt, contextWarning, dayKey, dirOf, forecastFull, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, shiftDay, warnLevel, weekHabit, withLines } from '../hooks/facts'
 import { NEW_WATCH, danger, watchCall } from '../hooks/guard'
 import { itemOf, levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
 import { peerLabel, peerNews, peersLine } from '../hooks/live'
@@ -405,10 +405,46 @@ test('the forecast reads the pace and says when a window runs out', async () => 
   expect(forecastFull(addSample([], 'five_hour', 69, now - 2 * 60_000), limit, now)).toBe(null)
   const reset = addSample(addSample(samples, 'five_hour', 3, now - 5 * 60_000), 'five_hour', 4, now - 4 * 60_000)
   expect(forecastFull(reset, { ...limit, percent: 4 }, now)).toBe(null)
+  // The week, read before any habit is known: a busy day does not stand for the whole week.
+  const monday = Date.UTC(2026, 9, 12, 9, 0)
+  const friday = Date.UTC(2026, 9, 16, 9, 0)
+  let week = addSample([], 'seven_day', 11, monday - 24 * 60 * 60_000)
+  week = addSample(week, 'seven_day', 21, monday)
+  expect(forecastFull(week, { kind: 'seven_day', percent: 21, resetsAt: friday }, monday, 180)).toBe(null)
+  expect(forecastFull(week, { kind: 'seven_day', percent: 80, resetsAt: friday }, monday, 180)).toBe(monday + (20 * 3 * 24 * 60 * 60_000) / 80)
   expect(clockAt(Date.UTC(2026, 9, 9, 12, 40), Date.UTC(2026, 9, 9, 10, 0), 180)).toBe('15:40')
   expect(clockAt(Date.UTC(2026, 9, 9, 11, 0), Date.UTC(2026, 9, 7, 10, 0), 180)).toBe('Cum 14:00')
   expect(dayKey(Date.UTC(2026, 9, 9, 22, 30), 180)).toBe('2026-10-10')
   expect(shiftDay('2026-03-01', -1)).toBe('2026-02-28')
+})
+
+test('the week forecast learns when the user works and when they rest', () => {
+  const H = 60 * 60_000
+  // Two past weeks of 9-to-6 weekdays, 1.5 points an hour, every reading on the hour, nothing at night or on weekends.
+  const reset = Date.UTC(2026, 9, 16, 6, 0) // Friday 09:00 local
+  let samples: ReturnType<typeof addSample> = []
+  let p = 0
+  const now = Date.UTC(2026, 9, 12, 9, 0) // Monday 12:00 local
+  for (let at = reset - 3 * 7 * 24 * H; at <= now; at += H) {
+    if ((at - reset) % (7 * 24 * H) === 0) p = 0
+    const l = new Date(at + 180 * 60_000)
+    const working = l.getUTCDay() >= 1 && l.getUTCDay() <= 5 && l.getUTCHours() >= 9 && l.getUTCHours() < 18
+    samples = addSample(samples, 'seven_day', p, at)
+    if (working && at < now) p += 1.5
+  }
+  // Old readings are thinned to one an hour, the oldest past five weeks dropped.
+  expect(samples.every(s => now - s.at < 5 * 7 * 24 * H)).toBe(true)
+  const habit = weekHabit(samples, reset, 180)
+  expect(habit.hours).toBeGreaterThan(72)
+  expect(Math.round(habit.week * 2) / 2).toBe(5 * 9 * 1.5)
+  // A usual Monday noon: Friday afternoon plus Monday's three hours, the week ends near 67, never full.
+  expect(forecastFull(samples, { kind: 'seven_day', percent: p, resetsAt: reset }, now, 180)).toBe(null)
+  // Twice as busy as usual this week: it runs out on a working afternoon, not in the night.
+  const full = forecastFull(samples, { kind: 'seven_day', percent: 2 * p, resetsAt: reset }, now, 180)
+  expect(full).not.toBe(null)
+  const at = new Date((full ?? 0) + 180 * 60_000)
+  expect(at.getUTCHours() >= 9 && at.getUTCHours() < 18).toBe(true)
+  expect(full ?? 0).toBeLessThan(reset)
 })
 
 test('days add up into a history, a level and things to wear', async () => {

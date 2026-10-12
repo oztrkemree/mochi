@@ -101,27 +101,136 @@ export function shiftDay(key: string, by: number): string {
 
 // ---------- the usage forecast ----------
 
-/** How far back a window's pace is read, and the least span it needs. */
-const PACE: Record<string, { look: number; least: number }> = {
-  five_hour: { look: 60 * 60_000, least: 10 * 60_000 },
-  seven_day: { look: 24 * 60 * 60_000, least: 2 * 60 * 60_000 },
+const HOUR = 60 * 60_000
+const WEEK = 7 * 24 * HOUR
+/** Every reading is kept two days; the week's, one an hour, five weeks, to learn the habits from. */
+const DENSE = 48 * HOUR
+const LEARN = 5 * WEEK
+/** The hours of readings the habits need before they are trusted over the plain average. */
+const HABIT_LEAST = 72
+
+/** The five-hour window's pace: read over the last hour, at least ten minutes of it. */
+const PACE = { look: HOUR, least: 10 * 60_000 }
+
+/** The readings worth keeping, oldest first: all of the last two days, then the week's thinned to the last one in each hour. */
+export function keepSamples(list: readonly Sample[], now: number): Sample[] {
+  const out: Sample[] = []
+  for (const s of [...list].sort((a, b) => a.at - b.at)) {
+    const old = now - s.at >= DENSE
+    if (old && (s.kind !== 'seven_day' || now - s.at >= LEARN)) continue
+    const prev = out[out.length - 1]
+    if (old && prev && Math.floor(prev.at / HOUR) === Math.floor(s.at / HOUR)) out[out.length - 1] = s
+    else out.push(s)
+  }
+  return out.slice(-2000)
 }
 
-/** Adds a reading: a changed figure always, the same one every ten minutes; two days kept. */
+/** Adds a reading: a changed figure always, the same one every ten minutes. */
 export function addSample(list: readonly Sample[], kind: string, p: number, now: number): Sample[] {
   const last = [...list].reverse().find(s => s.kind === kind)
   if (last && last.p === p && now - last.at < 10 * 60_000) return [...list]
-  return [...list.filter(s => now - s.at < 48 * 60 * 60_000), { kind, at: now, p }].slice(-400)
+  return keepSamples([...list, { kind, at: now, p }], now)
+}
+
+/** The hour of the week, 0 for Sunday's first, in local time. */
+const hourOfWeek = (at: number, tz: number) => {
+  const l = local(at, tz)
+  return l.dow * 24 + l.hour
 }
 
 /**
- * When the window runs out at the pace of the last hour (the last day for the
- * week), idle time included; null when it would not before its reset, or the
- * readings are too few or too short to say.
+ * How much of the week's window the user spends in each hour of the week, in
+ * points an hour, learned from the readings: what rose between two readings is
+ * spread evenly over the time between them, so the hours the computer slept
+ * through count as idle. `hours` is how many hours of readings it rests on.
  */
-export function forecastFull(samples: readonly Sample[], limit: Limit, now: number): number | null {
-  const pace = PACE[limit.kind]
-  if (!pace || limit.percent >= 100) return null
+export function weekHabit(samples: readonly Sample[], resetsAt: number, tz: number): { rate: (at: number) => number; hours: number; week: number } {
+  const spent = new Array<number>(168).fill(0)
+  const seen = new Array<number>(168).fill(0)
+  const own = samples.filter(s => s.kind === 'seven_day')
+  const windowOf = (at: number) => Math.floor((at - resetsAt) / WEEK)
+  for (let i = 1; i < own.length; i++) {
+    const a = own[i - 1]
+    const b = own[i]
+    if (!a || !b || b.at <= a.at || b.at - a.at > 24 * HOUR) continue
+    // A reset in between: what came before it says nothing of what came after.
+    if (b.p < a.p - 0.5 || (resetsAt > 0 && windowOf(a.at) !== windowOf(b.at))) continue
+    const rise = Math.max(0, b.p - a.p)
+    for (let at = a.at; at < b.at; ) {
+      const end = Math.min(b.at, (Math.floor(at / HOUR) + 1) * HOUR)
+      const h = hourOfWeek(at, tz)
+      seen[h] = (seen[h] ?? 0) + (end - at) / HOUR
+      spent[h] = (spent[h] ?? 0) + (rise * (end - at)) / (b.at - a.at)
+      at = end
+    }
+  }
+  const sum = (xs: number[]) => xs.reduce((x, y) => x + y, 0)
+  const hours = sum(seen)
+  const overall = hours > 0 ? sum(spent) / hours : 0
+  // An hour of the week not seen yet borrows the same hour of the other days, then the average.
+  const ofDay = Array.from({ length: 24 }, (_, h) => {
+    const days = [0, 1, 2, 3, 4, 5, 6].map(d => d * 24 + h)
+    const s = sum(days.map(i => seen[i] ?? 0))
+    return s >= 1 ? sum(days.map(i => spent[i] ?? 0)) / s : overall
+  })
+  const rates = spent.map((x, i) => ((seen[i] ?? 0) >= 0.5 ? x / (seen[i] ?? 1) : (ofDay[i % 24] ?? overall)))
+  return { rate: at => rates[hourOfWeek(at, tz)] ?? overall, hours, week: sum(rates) }
+}
+
+/** The points the habit expects between two moments. */
+function expected(rate: (at: number) => number, from: number, to: number): number {
+  let total = 0
+  for (let at = from; at < to; ) {
+    const end = Math.min(to, (Math.floor(at / HOUR) + 1) * HOUR)
+    total += (rate(at) * (end - at)) / HOUR
+    at = end
+  }
+  return total
+}
+
+/**
+ * When the week's window runs out. Once Mochi has three days of readings it
+ * walks the hours to the reset at the user's own rhythm (busy afternoons, idle
+ * nights and weekends), scaled by how this week and this last day compare with
+ * usual; before that, at the week's average pace so far, nights included.
+ */
+function forecastWeek(samples: readonly Sample[], limit: Limit, now: number, tz: number): number | null {
+  if (limit.resetsAt <= now) return null
+  const start = limit.resetsAt - WEEK
+  const habit = weekHabit(samples.filter(s => s.at <= now), limit.resetsAt, tz)
+  if (habit.hours < HABIT_LEAST) {
+    if (now - start < 12 * HOUR || limit.percent < 2) return null
+    const fullAt = now + ((100 - limit.percent) * (now - start)) / limit.percent
+    return fullAt < limit.resetsAt ? fullAt : null
+  }
+  // This week against the usual, and the last day against the usual: busier lately counts for half.
+  const own = samples.filter(s => s.kind === 'seven_day' && s.at >= Math.max(start, now - 24 * HOUR) && s.at <= now)
+  const ratio = (got: number, want: number) => (want >= 1 ? Math.min(3, Math.max(0.33, got / want)) : null)
+  const ofWeek = ratio(limit.percent, expected(habit.rate, start, now))
+  const first = own[0]
+  const ofDay = first && now - first.at >= 6 * HOUR ? ratio(limit.percent - first.p, expected(habit.rate, first.at, now)) : null
+  const scale = ofWeek !== null && ofDay !== null ? (ofWeek + ofDay) / 2 : (ofWeek ?? ofDay ?? 1)
+  let left = 100 - limit.percent
+  for (let at = now; at < limit.resetsAt; ) {
+    const end = Math.min(limit.resetsAt, (Math.floor(at / HOUR) + 1) * HOUR)
+    const burn = (habit.rate(at) * scale * (end - at)) / HOUR
+    if (burn >= left) return at + ((end - at) * left) / burn
+    left -= burn
+    at = end
+  }
+  return null
+}
+
+/**
+ * When the window runs out before its reset: the five-hour one at the pace of
+ * the last hour, the week's at the user's own rhythm (see `forecastWeek`);
+ * null when it would not, or the readings are too few or too short to say.
+ */
+export function forecastFull(samples: readonly Sample[], limit: Limit, now: number, tz = 0): number | null {
+  if (limit.percent >= 100) return null
+  if (limit.kind === 'seven_day') return forecastWeek(samples, limit, now, tz)
+  if (limit.kind !== 'five_hour') return null
+  const pace = PACE
   const own = samples.filter(s => s.kind === limit.kind && s.at <= now)
   // Only the current window: a reading lower than the one before is a reset.
   let start = 0
@@ -140,7 +249,7 @@ export function forecastFull(samples: readonly Sample[], limit: Limit, now: numb
 export function forecasts(v: Env, now: number): Record<string, number> {
   const out: Record<string, number> = {}
   for (const l of v.limits) {
-    const at = forecastFull(v.samples, l, now)
+    const at = forecastFull(v.samples, l, now, v.tz)
     if (at !== null) out[l.kind] = Math.round(at / 60_000) * 60_000
   }
   return out

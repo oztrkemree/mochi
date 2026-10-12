@@ -59,7 +59,7 @@ export function detailParts(env: Env, now: number, innerW: number): Parts {
     ...[five, week].map((l, i) => ({
       label: i === 0 ? t().detail.session5h : t().detail.week7d,
       sub: l && l.resetsAt > now ? t().detail.resetsIn(until(l.resetsAt - now)) : '—',
-      full: l ? forecastFull(env.samples ?? [], l, now) : null,
+      full: l ? forecastFull(env.samples ?? [], l, now, env.tz ?? 0) : null,
       center: l ? `${Math.round(l.percent)}%` : '—',
       arcs: l ? [{ key: 'u', value: Math.min(100, l.percent), color: usageInk(l.percent) }] : [],
       mark: undefined, halo: l && l.percent >= 80 ? '#F0645A' : undefined,
@@ -353,7 +353,7 @@ export function metersSvg(env: Env, now: number, width: number): string {
     },
     ...([[five, t().detail.session5h], [week, t().detail.week7d]] as const).map(([l, label]): Meter => {
       if (!l) return { label, right: '—', segs: [] }
-      const full = forecastFull(env.samples ?? [], l, now)
+      const full = forecastFull(env.samples ?? [], l, now, env.tz ?? 0)
       const right = full !== null ? t().detail.paceFull(clockAt(full, now, env.tz ?? 0)) : l.resetsAt > now ? `${Math.round(l.percent)}% · ${until(l.resetsAt - now)}` : `${Math.round(l.percent)}%`
       return {
         label, right: full !== null ? `${Math.round(l.percent)}% · ${right}` : right,
