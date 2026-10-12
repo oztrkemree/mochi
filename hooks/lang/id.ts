@@ -330,7 +330,7 @@ export const id: typeof en = {
       snail: 'siput', campfire: 'api unggun', bonsai: 'bonsai', penguin: 'pinguin',
       lavalamp: 'lampu lava', taco: 'taco', tent: 'tenda kemah', hedgehog: 'landak',
       wateringcan: 'poci penyiram', macaron: 'tumpukan makaron', arcade: 'mesin arkade', snowman: 'manusia salju',
-      rocket: 'roket mainan', watermelon: 'irisan semangka', chest: 'peti harta karun', axolotl: 'axolotl',
+      rocket: 'roket mainan', watermelon: 'irisan semangka', chest: 'peti harta karun', axolotl: 'axolotl', horse: 'kuda kecil', sprout: 'tunas di pot', bunny: 'kelinci',
     },
     short: {
       hardhat: 'helm', crown: 'mahkota', partyhat: 'pesta', witchhat: 'penyihir', santahat: 'Sinterklas', nightcap: 'topi tidur', gradcap: 'toga',
@@ -363,7 +363,7 @@ export const id: typeof en = {
       snail: 'siput', campfire: 'api', bonsai: 'bonsai', penguin: 'pinguin',
       lavalamp: 'lava', taco: 'taco', tent: 'tenda', hedgehog: 'landak',
       wateringcan: 'penyiram', macaron: 'makaron', arcade: 'arkade', snowman: 'salju',
-      rocket: 'roket', watermelon: 'semangka', chest: 'harta', axolotl: 'axolotl',
+      rocket: 'roket', watermelon: 'semangka', chest: 'harta', axolotl: 'axolotl', horse: 'kuda', sprout: 'tunas', bunny: 'kelinci',
     },
     slot: { head: 'Kepala', face: 'Wajah', neck: 'Leher', held: 'Tangan', ground: 'Di samping' },
     hint: {

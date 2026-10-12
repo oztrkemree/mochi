@@ -329,7 +329,7 @@ export const ja: typeof en = {
       snail: 'カタツムリ', campfire: 'たき火', bonsai: '盆栽', penguin: 'ペンギン',
       lavalamp: 'ラバランプ', taco: 'タコス', tent: 'テント', hedgehog: 'ハリネズミ',
       wateringcan: 'じょうろ', macaron: 'マカロン', arcade: 'ゲーム筐体', snowman: '雪だるま',
-      rocket: 'ロケット', watermelon: 'スイカ', chest: '宝箱', axolotl: 'ウーパールーパー',
+      rocket: 'ロケット', watermelon: 'スイカ', chest: '宝箱', axolotl: 'ウーパールーパー', horse: '子馬', sprout: '鉢の芽', bunny: 'うさぎ',
     },
     short: {
       hardhat: 'メット', crown: '王冠', partyhat: 'パーティー', witchhat: '魔女', santahat: 'サンタ', nightcap: 'ナイト帽', gradcap: '角帽',
@@ -362,7 +362,7 @@ export const ja: typeof en = {
       snail: 'カタツムリ', campfire: 'たき火', bonsai: '盆栽', penguin: 'ペンギン',
       lavalamp: 'ラバ', taco: 'タコス', tent: 'テント', hedgehog: 'ハリネズミ',
       wateringcan: 'じょうろ', macaron: 'マカロン', arcade: '筐体', snowman: '雪だるま',
-      rocket: 'ロケット', watermelon: 'スイカ', chest: '宝箱', axolotl: 'ウパ',
+      rocket: 'ロケット', watermelon: 'スイカ', chest: '宝箱', axolotl: 'ウパ', horse: '馬', sprout: '芽', bunny: 'うさぎ',
     },
     slot: { head: '頭', face: '顔', neck: '首', held: '手', ground: '足元' },
     hint: {

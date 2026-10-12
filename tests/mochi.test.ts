@@ -422,7 +422,7 @@ test('days add up into a history, a level and things to wear', async () => {
   expect(xpOf(h)).toBe(47 * 10 + 20 * 2 + 3 * 25 + 3 * 30)
   expect(levelOf(0)).toEqual({ level: 1, at: 0, next: 100 })
   expect(levelOf(450)).toEqual({ level: 3, at: 400, next: 900 })
-  expect(unlocked(h)).toEqual(['beanie', 'glasses', 'mug', 'tea', 'bowtie', 'sunglasses', 'pencil', 'bandana'])
+  expect(unlocked(h)).toEqual(['beanie', 'glasses', 'mug', 'tea', 'sprout', 'bowtie', 'sunglasses', 'bunny', 'pencil', 'horse', 'bandana'])
   const noon = Date.UTC(2026, 6, 1, 9, 0)
   const none = { head: null, face: null, neck: null, held: null, ground: null }
   expect(outfitFor({}, ['bowtie', 'hardhat'], noon, 180, 'idle', true)).toEqual({ ...none, head: 'hardhat', neck: 'bowtie' })

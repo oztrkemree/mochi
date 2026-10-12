@@ -329,7 +329,7 @@ export const zh: typeof en = {
       snail: '蜗牛', campfire: '篝火', bonsai: '盆景', penguin: '企鹅',
       lavalamp: '熔岩灯', taco: '塔可', tent: '露营帐篷', hedgehog: '刺猬',
       wateringcan: '洒水壶', macaron: '马卡龙塔', arcade: '街机', snowman: '雪人',
-      rocket: '玩具火箭', watermelon: '西瓜片', chest: '宝箱', axolotl: '美西螈',
+      rocket: '玩具火箭', watermelon: '西瓜片', chest: '宝箱', axolotl: '美西螈', horse: '小马', sprout: '盆栽幼苗', bunny: '兔子',
     },
     short: {
       hardhat: '安全帽', crown: '王冠', partyhat: '派对', witchhat: '女巫', santahat: '圣诞', nightcap: '睡帽', gradcap: '学士帽',
@@ -362,7 +362,7 @@ export const zh: typeof en = {
       snail: '蜗牛', campfire: '篝火', bonsai: '盆景', penguin: '企鹅',
       lavalamp: '熔岩灯', taco: '塔可', tent: '帐篷', hedgehog: '刺猬',
       wateringcan: '水壶', macaron: '马卡龙', arcade: '街机', snowman: '雪人',
-      rocket: '火箭', watermelon: '西瓜', chest: '宝箱', axolotl: '美西螈',
+      rocket: '火箭', watermelon: '西瓜', chest: '宝箱', axolotl: '美西螈', horse: '马', sprout: '幼苗', bunny: '兔子',
     },
     slot: { head: '头部', face: '脸部', neck: '颈部', held: '手持', ground: '身旁' },
     hint: {

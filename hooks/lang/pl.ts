@@ -349,7 +349,7 @@ export const pl: typeof en = {
       snail: 'ślimak', campfire: 'ognisko', bonsai: 'bonsai', penguin: 'pingwin',
       lavalamp: 'lampa lava', taco: 'taco', tent: 'namiot', hedgehog: 'jeż',
       wateringcan: 'konewka', macaron: 'wieża makaroników', arcade: 'automat arcade', snowman: 'bałwan',
-      rocket: 'rakieta zabawka', watermelon: 'kawałek arbuza', chest: 'skrzynia skarbów', axolotl: 'aksolotl',
+      rocket: 'rakieta zabawka', watermelon: 'kawałek arbuza', chest: 'skrzynia skarbów', axolotl: 'aksolotl', horse: 'konik', sprout: 'kiełek w doniczce', bunny: 'króliczek',
     },
     short: {
       hardhat: 'kask', crown: 'korona', partyhat: 'impreza', witchhat: 'czarownica', santahat: 'Mikołaj', nightcap: 'szlafmyca', gradcap: 'biret',
@@ -382,7 +382,7 @@ export const pl: typeof en = {
       snail: 'ślimak', campfire: 'ognisko', bonsai: 'bonsai', penguin: 'pingwin',
       lavalamp: 'lava', taco: 'taco', tent: 'namiot', hedgehog: 'jeż',
       wateringcan: 'konewka', macaron: 'makaroniki', arcade: 'arcade', snowman: 'bałwan',
-      rocket: 'rakieta', watermelon: 'arbuz', chest: 'skarb', axolotl: 'aksolotl',
+      rocket: 'rakieta', watermelon: 'arbuz', chest: 'skarb', axolotl: 'aksolotl', horse: 'koń', sprout: 'kiełek', bunny: 'królik',
     },
     slot: { head: 'Głowa', face: 'Twarz', neck: 'Szyja', held: 'W ręce', ground: 'Obok' },
     hint: {

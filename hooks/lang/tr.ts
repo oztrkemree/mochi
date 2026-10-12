@@ -329,7 +329,7 @@ export const tr: typeof en = {
       snail: 'salyangoz', campfire: 'kamp ateşi', bonsai: 'bonsai', penguin: 'penguen',
       lavalamp: 'lav lambası', taco: 'taco', tent: 'kamp çadırı', hedgehog: 'kirpi',
       wateringcan: 'sulama kabı', macaron: 'makaron kulesi', arcade: 'atari makinesi', snowman: 'kardan adam',
-      rocket: 'oyuncak roket', watermelon: 'karpuz dilimi', chest: 'hazine sandığı', axolotl: 'aksolotl',
+      rocket: 'oyuncak roket', watermelon: 'karpuz dilimi', chest: 'hazine sandığı', axolotl: 'aksolotl', horse: 'minik at', sprout: 'saksıda filiz', bunny: 'tavşan',
     },
     short: {
       hardhat: 'baret', crown: 'taç', partyhat: 'parti', witchhat: 'cadı', santahat: 'noel', nightcap: 'gece', gradcap: 'kep',
@@ -362,7 +362,7 @@ export const tr: typeof en = {
       snail: 'salyangoz', campfire: 'ateş', bonsai: 'bonsai', penguin: 'penguen',
       lavalamp: 'lav', taco: 'taco', tent: 'çadır', hedgehog: 'kirpi',
       wateringcan: 'sulama', macaron: 'makaron', arcade: 'atari', snowman: 'kardan adam',
-      rocket: 'roket', watermelon: 'karpuz', chest: 'hazine', axolotl: 'aksolotl',
+      rocket: 'roket', watermelon: 'karpuz', chest: 'hazine', axolotl: 'aksolotl', horse: 'at', sprout: 'filiz', bunny: 'tavşan',
     },
     slot: { head: 'Baş', face: 'Yüz', neck: 'Boyun', held: 'El', ground: 'Yanında' },
     hint: {

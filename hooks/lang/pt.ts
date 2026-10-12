@@ -332,7 +332,7 @@ export const pt: typeof en = {
       snail: 'caracol', campfire: 'fogueira', bonsai: 'bonsai', penguin: 'pinguim',
       lavalamp: 'lâmpada de lava', taco: 'taco', tent: 'barraca de acampamento', hedgehog: 'ouriço',
       wateringcan: 'regador', macaron: 'torre de macarons', arcade: 'máquina de arcade', snowman: 'boneco de neve',
-      rocket: 'foguete de brinquedo', watermelon: 'fatia de melancia', chest: 'baú do tesouro', axolotl: 'axolote',
+      rocket: 'foguete de brinquedo', watermelon: 'fatia de melancia', chest: 'baú do tesouro', axolotl: 'axolote', horse: 'cavalinho', sprout: 'broto no vaso', bunny: 'coelho',
     },
     short: {
       hardhat: 'capacete', crown: 'coroa', partyhat: 'festa', witchhat: 'bruxa', santahat: 'Noel', nightcap: 'touca', gradcap: 'formatura',
@@ -365,7 +365,7 @@ export const pt: typeof en = {
       snail: 'caracol', campfire: 'fogueira', bonsai: 'bonsai', penguin: 'pinguim',
       lavalamp: 'lava', taco: 'taco', tent: 'barraca', hedgehog: 'ouriço',
       wateringcan: 'regador', macaron: 'macarons', arcade: 'arcade', snowman: 'boneco',
-      rocket: 'foguete', watermelon: 'melancia', chest: 'tesouro', axolotl: 'axolote',
+      rocket: 'foguete', watermelon: 'melancia', chest: 'tesouro', axolotl: 'axolote', horse: 'cavalo', sprout: 'broto', bunny: 'coelho',
     },
     slot: { head: 'Cabeça', face: 'Rosto', neck: 'Pescoço', held: 'Mão', ground: 'Ao lado' },
     hint: {

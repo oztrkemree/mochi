@@ -355,7 +355,7 @@ export const ar: typeof en = {
       snail: 'حلزون', campfire: 'نار مخيم', bonsai: 'شجرة بونساي', penguin: 'بطريق',
       lavalamp: 'مصباح الحمم', taco: 'تاكو', tent: 'خيمة تخييم', hedgehog: 'قنفذ',
       wateringcan: 'إبريق ري', macaron: 'برج ماكارون', arcade: 'آلة أركيد', snowman: 'رجل ثلج',
-      rocket: 'صاروخ لعبة', watermelon: 'شريحة بطيخ', chest: 'صندوق كنز', axolotl: 'أكسولوتل',
+      rocket: 'صاروخ لعبة', watermelon: 'شريحة بطيخ', chest: 'صندوق كنز', axolotl: 'أكسولوتل', horse: 'حصان صغير', sprout: 'برعم في أصيص', bunny: 'أرنب',
     },
     short: {
       hardhat: 'خوذة', crown: 'تاج', partyhat: 'حفلة', witchhat: 'ساحرة', santahat: 'بابا نويل', nightcap: 'طاقية', gradcap: 'تخرج',
@@ -388,7 +388,7 @@ export const ar: typeof en = {
       snail: 'حلزون', campfire: 'نار', bonsai: 'بونساي', penguin: 'بطريق',
       lavalamp: 'حمم', taco: 'تاكو', tent: 'خيمة', hedgehog: 'قنفذ',
       wateringcan: 'إبريق', macaron: 'ماكارون', arcade: 'أركيد', snowman: 'ثلج',
-      rocket: 'صاروخ', watermelon: 'بطيخ', chest: 'كنز', axolotl: 'أكسولوتل',
+      rocket: 'صاروخ', watermelon: 'بطيخ', chest: 'كنز', axolotl: 'أكسولوتل', horse: 'حصان', sprout: 'برعم', bunny: 'أرنب',
     },
     slot: { head: 'الرأس', face: 'الوجه', neck: 'العنق', held: 'اليد', ground: 'بجانبه' },
     hint: {

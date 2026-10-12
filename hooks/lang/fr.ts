@@ -333,7 +333,7 @@ export const fr: typeof en = {
       snail: 'escargot', campfire: 'feu de camp', bonsai: 'bonsaï', penguin: 'pingouin',
       lavalamp: 'lampe à lave', taco: 'taco', tent: 'tente de camping', hedgehog: 'hérisson',
       wateringcan: 'arrosoir', macaron: 'tour de macarons', arcade: 'borne d’arcade', snowman: 'bonhomme de neige',
-      rocket: 'fusée jouet', watermelon: 'tranche de pastèque', chest: 'coffre au trésor', axolotl: 'axolotl',
+      rocket: 'fusée jouet', watermelon: 'tranche de pastèque', chest: 'coffre au trésor', axolotl: 'axolotl', horse: 'petit cheval', sprout: 'pousse en pot', bunny: 'lapin',
     },
     short: {
       hardhat: 'casque', crown: 'couronne', partyhat: 'fête', witchhat: 'sorcière', santahat: 'Noël', nightcap: 'nuit', gradcap: 'diplômé',
@@ -366,7 +366,7 @@ export const fr: typeof en = {
       snail: 'escargot', campfire: 'feu', bonsai: 'bonsaï', penguin: 'pingouin',
       lavalamp: 'lave', taco: 'taco', tent: 'tente', hedgehog: 'hérisson',
       wateringcan: 'arrosoir', macaron: 'macarons', arcade: 'arcade', snowman: 'bonhomme',
-      rocket: 'fusée', watermelon: 'pastèque', chest: 'trésor', axolotl: 'axolotl',
+      rocket: 'fusée', watermelon: 'pastèque', chest: 'trésor', axolotl: 'axolotl', horse: 'cheval', sprout: 'pousse', bunny: 'lapin',
     },
     slot: { head: 'Tête', face: 'Visage', neck: 'Cou', held: 'Main', ground: 'À côté' },
     hint: {

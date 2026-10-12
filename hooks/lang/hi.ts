@@ -334,7 +334,7 @@ export const hi: typeof en = {
       snail: 'घोंघा', campfire: 'अलाव', bonsai: 'बोनसाई पेड़', penguin: 'पेंगुइन',
       lavalamp: 'लावा लैंप', taco: 'टैको', tent: 'कैंपिंग टेंट', hedgehog: 'हेजहॉग',
       wateringcan: 'पानी की झारी', macaron: 'मैकरून की मीनार', arcade: 'आर्केड मशीन', snowman: 'स्नोमैन',
-      rocket: 'खिलौना रॉकेट', watermelon: 'तरबूज़ की फाँक', chest: 'खज़ाने का संदूक', axolotl: 'एक्सोलोटल',
+      rocket: 'खिलौना रॉकेट', watermelon: 'तरबूज़ की फाँक', chest: 'खज़ाने का संदूक', axolotl: 'एक्सोलोटल', horse: 'छोटा घोड़ा', sprout: 'गमले में अंकुर', bunny: 'खरगोश',
     },
     short: {
       hardhat: 'हेलमेट', crown: 'ताज', partyhat: 'पार्टी', witchhat: 'चुड़ैल', santahat: 'सांता', nightcap: 'नाइट कैप', gradcap: 'दीक्षांत',
@@ -367,7 +367,7 @@ export const hi: typeof en = {
       snail: 'घोंघा', campfire: 'अलाव', bonsai: 'बोनसाई', penguin: 'पेंगुइन',
       lavalamp: 'लावा', taco: 'टैको', tent: 'टेंट', hedgehog: 'हेजहॉग',
       wateringcan: 'झारी', macaron: 'मैकरून', arcade: 'आर्केड', snowman: 'स्नोमैन',
-      rocket: 'रॉकेट', watermelon: 'तरबूज़', chest: 'खज़ाना', axolotl: 'एक्सोलोटल',
+      rocket: 'रॉकेट', watermelon: 'तरबूज़', chest: 'खज़ाना', axolotl: 'एक्सोलोटल', horse: 'घोड़ा', sprout: 'अंकुर', bunny: 'खरगोश',
     },
     slot: { head: 'सिर', face: 'चेहरा', neck: 'गर्दन', held: 'हाथ', ground: 'बगल में' },
     hint: {

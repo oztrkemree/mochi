@@ -329,7 +329,7 @@ export const ko: typeof en = {
       snail: '달팽이', campfire: '모닥불', bonsai: '분재', penguin: '펭귄',
       lavalamp: '용암 램프', taco: '타코', tent: '캠핑 텐트', hedgehog: '고슴도치',
       wateringcan: '물뿌리개', macaron: '마카롱 탑', arcade: '아케이드 게임기', snowman: '눈사람',
-      rocket: '장난감 로켓', watermelon: '수박 조각', chest: '보물 상자', axolotl: '아홀로틀',
+      rocket: '장난감 로켓', watermelon: '수박 조각', chest: '보물 상자', axolotl: '아홀로틀', horse: '아기 말', sprout: '화분 새싹', bunny: '토끼',
     },
     short: {
       hardhat: '안전모', crown: '왕관', partyhat: '파티', witchhat: '마녀', santahat: '산타', nightcap: '수면모', gradcap: '학사모',
@@ -362,7 +362,7 @@ export const ko: typeof en = {
       snail: '달팽이', campfire: '모닥불', bonsai: '분재', penguin: '펭귄',
       lavalamp: '용암', taco: '타코', tent: '텐트', hedgehog: '고슴도치',
       wateringcan: '물뿌리개', macaron: '마카롱', arcade: '오락기', snowman: '눈사람',
-      rocket: '로켓', watermelon: '수박', chest: '보물', axolotl: '아홀로틀',
+      rocket: '로켓', watermelon: '수박', chest: '보물', axolotl: '아홀로틀', horse: '말', sprout: '새싹', bunny: '토끼',
     },
     slot: { head: '머리', face: '얼굴', neck: '목', held: '손', ground: '옆' },
     hint: {

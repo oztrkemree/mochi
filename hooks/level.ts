@@ -32,7 +32,7 @@ export const SLOT_ITEMS: Record<Slot, Item[]> = {
     'spikedcollar', 'pearls', 'bellcollar', 'neckerchief', 'lei', 'goldchain', 'overalls'],
   held: ['mug', 'tea', 'pencil', 'simit', 'wrench', 'balloon', 'candy', 'lantern', 'envelope',
     'flag', 'whisk', 'pinwheel', 'compass', 'key', 'icecream', 'cupcake', 'sunflower', 'clover', 'toadstool', 'cactuspot', 'wand', 'potion', 'paddle', 'joystick', 'bubblewand', 'rollingpin', 'harmonica', 'tambourine'],
-  ground: ['cactus', 'duck', 'cat', 'gift', 'pumpkin', 'diya', 'songpyeon', 'cake',
+  ground: ['sprout', 'bunny', 'horse', 'cactus', 'duck', 'cat', 'gift', 'pumpkin', 'diya', 'songpyeon', 'cake',
     'mushroom', 'frog', 'robot', 'ramen', 'snail', 'campfire', 'bonsai', 'penguin', 'lavalamp', 'taco', 'tent', 'hedgehog', 'wateringcan', 'macaron', 'arcade', 'snowman', 'rocket', 'watermelon', 'chest', 'axolotl'],
 }
 
@@ -61,9 +61,9 @@ type Need = { level?: number; badge?: Badge; commits?: number; night?: number; e
 
 /** What unlocks each item: a level, a habit or a badge (the hard ones). One way each. */
 export const UNLOCKS: ({ item: Item } & Need)[] = ([
-  { item: 'beanie', level: 1 }, { item: 'glasses', level: 1 }, { item: 'mug', level: 1 }, { item: 'tea', level: 1 },
-  { item: 'bowtie', level: 2 }, { item: 'sunglasses', level: 2 },
-  { item: 'pencil', level: 3 },
+  { item: 'beanie', level: 1 }, { item: 'glasses', level: 1 }, { item: 'mug', level: 1 }, { item: 'tea', level: 1 }, { item: 'sprout', level: 1 },
+  { item: 'bowtie', level: 2 }, { item: 'sunglasses', level: 2 }, { item: 'bunny', level: 2 },
+  { item: 'pencil', level: 3 }, { item: 'horse', level: 3 },
   { item: 'necktie', level: 4 }, { item: 'simit', level: 4 },
   { item: 'hardhat', level: 5 }, { item: 'wrench', level: 5 },
   { item: 'scarf', level: 6 }, { item: 'cactus', level: 6 },

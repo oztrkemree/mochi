@@ -351,7 +351,7 @@ export const uk: typeof en = {
       snail: 'равлик', campfire: 'багаття', bonsai: 'бонсай', penguin: 'пінгвін',
       lavalamp: 'лава-лампа', taco: 'тако', tent: 'намет', hedgehog: 'їжак',
       wateringcan: 'лійка', macaron: 'вежа макаронс', arcade: 'ігровий автомат', snowman: 'сніговик',
-      rocket: 'іграшкова ракета', watermelon: 'скибка кавуна', chest: 'скриня зі скарбами', axolotl: 'аксолотль',
+      rocket: 'іграшкова ракета', watermelon: 'скибка кавуна', chest: 'скриня зі скарбами', axolotl: 'аксолотль', horse: 'конячка', sprout: 'паросток у горщику', bunny: 'зайчик',
     },
     short: {
       hardhat: 'каска', crown: 'корона', partyhat: 'свято', witchhat: 'відьма', santahat: 'Санта', nightcap: 'нічний ковпак', gradcap: 'випускник',
@@ -384,7 +384,7 @@ export const uk: typeof en = {
       snail: 'равлик', campfire: 'багаття', bonsai: 'бонсай', penguin: 'пінгвін',
       lavalamp: 'лава', taco: 'тако', tent: 'намет', hedgehog: 'їжак',
       wateringcan: 'лійка', macaron: 'макаронс', arcade: 'автомат', snowman: 'сніговик',
-      rocket: 'ракета', watermelon: 'кавун', chest: 'скриня', axolotl: 'аксолотль',
+      rocket: 'ракета', watermelon: 'кавун', chest: 'скриня', axolotl: 'аксолотль', horse: 'кінь', sprout: 'паросток', bunny: 'зайчик',
     },
     slot: { head: 'Голова', face: 'Обличчя', neck: 'Шия', held: 'У руці', ground: 'Поруч' },
     hint: {

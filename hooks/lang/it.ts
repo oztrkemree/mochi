@@ -334,7 +334,7 @@ export const it: typeof en = {
       snail: 'lumaca', campfire: 'falò', bonsai: 'bonsai', penguin: 'pinguino',
       lavalamp: 'lampada lava', taco: 'taco', tent: 'tenda da campeggio', hedgehog: 'riccio',
       wateringcan: 'annaffiatoio', macaron: 'torre di macaron', arcade: 'cabinato arcade', snowman: 'pupazzo di neve',
-      rocket: 'razzo giocattolo', watermelon: 'fetta di anguria', chest: 'forziere', axolotl: 'assolotto',
+      rocket: 'razzo giocattolo', watermelon: 'fetta di anguria', chest: 'forziere', axolotl: 'assolotto', horse: 'cavallino', sprout: 'germoglio in vaso', bunny: 'coniglio',
     },
     short: {
       hardhat: 'casco', crown: 'corona', partyhat: 'festa', witchhat: 'strega', santahat: 'Babbo Natale', nightcap: 'notte', gradcap: 'laurea',
@@ -367,7 +367,7 @@ export const it: typeof en = {
       snail: 'lumaca', campfire: 'falò', bonsai: 'bonsai', penguin: 'pinguino',
       lavalamp: 'lava', taco: 'taco', tent: 'tenda', hedgehog: 'riccio',
       wateringcan: 'annaffiatoio', macaron: 'macaron', arcade: 'arcade', snowman: 'pupazzo',
-      rocket: 'razzo', watermelon: 'anguria', chest: 'forziere', axolotl: 'assolotto',
+      rocket: 'razzo', watermelon: 'anguria', chest: 'forziere', axolotl: 'assolotto', horse: 'cavallo', sprout: 'germoglio', bunny: 'coniglio',
     },
     slot: { head: 'Testa', face: 'Viso', neck: 'Collo', held: 'Mano', ground: 'Accanto' },
     hint: {

@@ -351,7 +351,7 @@ export const en = {
       snail: 'snail', campfire: 'campfire', bonsai: 'bonsai tree', penguin: 'penguin',
       lavalamp: 'lava lamp', taco: 'taco', tent: 'camping tent', hedgehog: 'hedgehog',
       wateringcan: 'watering can', macaron: 'macaron stack', arcade: 'arcade machine', snowman: 'snowman',
-      rocket: 'toy rocket', watermelon: 'watermelon slice', chest: 'treasure chest', axolotl: 'axolotl',
+      rocket: 'toy rocket', watermelon: 'watermelon slice', chest: 'treasure chest', axolotl: 'axolotl', horse: 'little horse', sprout: 'sprout in a pot', bunny: 'bunny',
     },
     short: {
       hardhat: 'hard hat', crown: 'crown', partyhat: 'party', witchhat: 'witch', santahat: 'Santa', nightcap: 'nightcap', gradcap: 'grad cap',
@@ -384,7 +384,7 @@ export const en = {
       snail: 'snail', campfire: 'campfire', bonsai: 'bonsai', penguin: 'penguin',
       lavalamp: 'lava lamp', taco: 'taco', tent: 'tent', hedgehog: 'hedgehog',
       wateringcan: 'water can', macaron: 'macarons', arcade: 'arcade', snowman: 'snowman',
-      rocket: 'rocket', watermelon: 'watermelon', chest: 'treasure', axolotl: 'axolotl',
+      rocket: 'rocket', watermelon: 'watermelon', chest: 'treasure', axolotl: 'axolotl', horse: 'horse', sprout: 'sprout', bunny: 'bunny',
     },
     slot: { head: 'Head', face: 'Face', neck: 'Neck', held: 'Hand', ground: 'Beside' },
     hint: {

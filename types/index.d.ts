@@ -79,7 +79,7 @@ export type Item =
   | 'clownnose' | 'catwhiskers' | 'plaster' | 'freckles' | 'bushybrows' | 'eyelashes' | 'fangs' | 'teardrop'
   | 'spikedcollar' | 'pearls'  | 'bellcollar' | 'neckerchief' | 'lei'  | 'goldchain' | 'overalls'
   | 'flag' | 'whisk' | 'pinwheel' | 'compass'  | 'key' | 'icecream' | 'cupcake' | 'sunflower' | 'clover' | 'toadstool' | 'cactuspot' | 'wand' | 'potion' | 'paddle' | 'joystick' | 'bubblewand' | 'rollingpin' | 'harmonica' | 'tambourine'
-  | 'mushroom' | 'frog' | 'robot' | 'ramen' | 'snail' | 'campfire' | 'bonsai' | 'penguin' | 'lavalamp' | 'taco' | 'tent' | 'hedgehog' | 'wateringcan' | 'macaron' | 'arcade' | 'snowman' | 'rocket' | 'watermelon' | 'chest' | 'axolotl'
+  | 'mushroom' | 'frog' | 'robot' | 'ramen' | 'snail' | 'campfire' | 'bonsai' | 'penguin' | 'lavalamp' | 'taco' | 'tent' | 'hedgehog' | 'wateringcan' | 'macaron' | 'arcade' | 'snowman' | 'rocket' | 'watermelon' | 'chest' | 'axolotl' | 'horse' | 'sprout' | 'bunny'
 
 /** Something earned once from real work (see hooks/badges.ts). */
 export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' | 'owl' | 'bird' | 'polyglot' | 'marathon' | 'week' | 'hundred' | 'month' | 'fivehundred' | 'regular' | 'craftsman' | 'bulldozer' | 'vampire'
