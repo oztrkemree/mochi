@@ -14,6 +14,12 @@ export const zh: typeof en = {
   months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
 
   news: {
+    '0.5.1': {
+      headline: '有新版本时 Mochi 会提醒你',
+      notes: [
+        '有更新的 Mochi 时，Mochi 会提醒一次；/mochi update 会显示用于更新的两条命令。',
+      ],
+    },
     '0.5.0': {
       headline: '会学习你节奏的每周预测、柔和的声音和六枚难拿的徽章',
       notes: [
@@ -589,9 +595,19 @@ export const zh: typeof en = {
     seeWardrobe: ' · /mochi wear',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: '更新 版本',
+    toast: (latest, mine) => `${latest} 已发布（你的是 ${mine}）· /mochi 更新`,
+    line: latest => `Mochi ${latest} 发布了！`,
+    available: (latest, mine) => `Mochi ${latest} 已发布；你的是 ${mine}。要更新，请在终端运行：`,
+    restart: '然后重启 Claude Code。',
+    current: v => `Mochi ${v} 已是最新版本。`,
+    unknown: v => `Mochi ${v}。暂时无法读取最新版本。`,
+  },
   cmd: {
-    description: 'Mochi：显示/隐藏、详情、等级、穿戴、徽章、对话、护盾、提醒、CI、提示、休息、声音、插件、卡片、回顾、快照、导览、新功能、生日、语言、大小、导出、重置、反馈、状态',
-    hint: '[details | level | wear [物品] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [代码] | small | big | hide | show | export | reset | feedback | status]',
+    description: 'Mochi：显示/隐藏、详情、等级、穿戴、徽章、对话、护盾、提醒、CI、提示、休息、声音、插件、卡片、回顾、快照、导览、新功能、生日、语言、大小、导出、重置、反馈、更新、状态',
+    hint: '[details | level | wear [物品] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [代码] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi 单行显示。',
     big: 'Mochi 全尺寸显示。',
     detailOpened: '详情面板已打开。',
@@ -624,7 +640,7 @@ export const zh: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `提示：${tips ? '开' : '关'} · 休息提醒：${breaks ? '开' : '关'} · 插件反应：${plugins ? '开' : '关'}`,
     peersLine: (level, peers) => `等级 ${level} · 其他对话：${peers}`,
-    commands: '命令：/mochi（显示/隐藏）| details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
+    commands: '命令：/mochi（显示/隐藏）| details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name, list) => `语言：${name}。可选：${list} · /mochi lang <代码> 或 auto`,
     langSet: name => `语言：${name}。`,
     langAuto: name => `语言跟随 Claude Code 和系统：${name}。`,

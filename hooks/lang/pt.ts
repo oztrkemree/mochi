@@ -17,6 +17,12 @@ export const pt: typeof en = {
   months: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
 
   news: {
+    '0.5.1': {
+      headline: 'o Mochi avisa quando sai uma versão nova',
+      notes: [
+        'Quando sai um Mochi mais novo, o Mochi avisa uma vez; /mochi atualizar mostra os dois comandos que o atualizam.',
+      ],
+    },
     '0.5.0': {
       headline: 'uma previsão semanal que aprende o seu ritmo, sons suaves e seis medalhas difíceis',
       notes: [
@@ -592,9 +598,19 @@ export const pt: typeof en = {
     seeWardrobe: ' · /mochi vestir',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: 'atualizar versão',
+    toast: (latest, mine) => `${latest} saiu (você tem a ${mine}) · /mochi atualizar`,
+    line: latest => `Saiu o Mochi ${latest}!`,
+    available: (latest, mine) => `Saiu o Mochi ${latest}; você tem a ${mine}. Para atualizar, rode num terminal:`,
+    restart: 'depois reinicie o Claude Code.',
+    current: v => `Mochi ${v} é a versão mais recente.`,
+    unknown: v => `Mochi ${v}. Não deu para ler a versão mais recente agora.`,
+  },
   cmd: {
-    description: 'Mochi: mostrar/esconder, detalhes, nível, vestir, conquistas, conversas, escudo, alertas, CI, dicas, pausas, som, extensões, cartão, retrospectiva, captura, apresentação, novidades, aniversário, idioma, pequeno/grande, exportar, redefinir, relatar, status',
-    hint: '[detalhes | nível | vestir [item] | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma [código] | pequeno | grande | esconder | mostrar | exportar | redefinir | relatar | status]',
+    description: 'Mochi: mostrar/esconder, detalhes, nível, vestir, conquistas, conversas, escudo, alertas, CI, dicas, pausas, som, extensões, cartão, retrospectiva, captura, apresentação, novidades, aniversário, idioma, pequeno/grande, exportar, redefinir, relatar, atualizar, status',
+    hint: '[detalhes | nível | vestir [item] | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma [código] | pequeno | grande | esconder | mostrar | exportar | redefinir | relatar | atualizar | status]',
     small: 'Mochi em uma linha.',
     big: 'Mochi em tamanho completo.',
     detailOpened: 'Painel de detalhes aberto.',
@@ -628,7 +644,7 @@ export const pt: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Dicas: ${tips ? 'ligadas' : 'desligadas'} · Pausas: ${breaks ? 'ligadas' : 'desligadas'} · Reações de plugins: ${plugins ? 'ligadas' : 'desligadas'}`,
     peersLine: (level, peers) => `Nível ${level} · outros chats: ${peers}`,
-    commands: 'Comandos: /mochi (mostrar/esconder) | detalhes | nível | vestir | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma | pequeno | grande | exportar | redefinir | relatar | status',
+    commands: 'Comandos: /mochi (mostrar/esconder) | detalhes | nível | vestir | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma | pequeno | grande | exportar | redefinir | relatar | atualizar | status',
     langNow: (name, list) => `Idioma: ${name}. Disponíveis: ${list} · /mochi idioma <código> ou automático`,
     langSet: name => `Idioma: ${name}.`,
     langAuto: name => `O idioma segue o Claude Code e o sistema: ${name}.`,

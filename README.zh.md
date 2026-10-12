@@ -38,6 +38,16 @@ Claude 的一举一动它都有反应，会拦下那些你事后会后悔的命�
 > [!NOTE]
 > Mochi 基于 Claude Code 的 hooks 模块（function hooks）构建，需要 **Claude Code 2.1.293 或更高版本**（用 `claude --version` 查看你的版本）。更早的版本（比如 2.1.286）根本不会加载这个模块，Mochi 也就不会出现。
 
+> [!TIP]
+> **更新。** 有新版本时 Mochi 会提醒你，`/mochi update` 会显示要运行的命令。Claude Code 不会自动刷新 GitHub 市场，所以 Update 按钮可能一直是灰色；在终端运行：
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin update mochi@mochi
+> ```
+>
+> 然后重启 Claude Code。
+
 <br>
 
 <table>

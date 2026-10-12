@@ -15,6 +15,12 @@ export const id: typeof en = {
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
 
   news: {
+    '0.5.1': {
+      headline: 'Mochi memberi tahu saat versi baru rilis',
+      notes: [
+        'Saat Mochi yang lebih baru rilis, Mochi memberi tahu sekali; /mochi perbarui menampilkan dua perintah untuk memperbaruinya.',
+      ],
+    },
     '0.5.0': {
       headline: 'prakiraan mingguan yang mempelajari ritmemu, suara lembut, dan enam lencana sulit',
       notes: [
@@ -590,9 +596,19 @@ export const id: typeof en = {
     seeWardrobe: ' · /mochi pakai',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: 'perbarui versi',
+    toast: (latest, mine) => `${latest} sudah rilis (kamu punya ${mine}) · /mochi perbarui`,
+    line: latest => `Mochi ${latest} sudah rilis!`,
+    available: (latest, mine) => `Mochi ${latest} sudah rilis; kamu punya ${mine}. Untuk memperbarui, jalankan di terminal:`,
+    restart: 'lalu mulai ulang Claude Code.',
+    current: v => `Mochi ${v} adalah versi terbaru.`,
+    unknown: v => `Mochi ${v}. Versi terbaru belum bisa dibaca sekarang.`,
+  },
   cmd: {
-    description: 'Mochi: tampilkan/sembunyikan, detail, level, pakai, lencana, chat, perisai, notifikasi, CI, tips, istirahat, suara, plugin, kartu, rekap, jepret, tur, baru, ultah, bahasa, kecil/besar, ekspor, reset, masukan, status',
-    hint: '[detail | level | pakai [barang] | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa [kode] | kecil | besar | sembunyikan | tampilkan | ekspor | reset | masukan | status]',
+    description: 'Mochi: tampilkan/sembunyikan, detail, level, pakai, lencana, chat, perisai, notifikasi, CI, tips, istirahat, suara, plugin, kartu, rekap, jepret, tur, baru, ultah, bahasa, kecil/besar, ekspor, reset, masukan, perbarui, status',
+    hint: '[detail | level | pakai [barang] | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa [kode] | kecil | besar | sembunyikan | tampilkan | ekspor | reset | masukan | perbarui | status]',
     small: 'Mochi dalam satu baris.',
     big: 'Mochi ukuran penuh.',
     detailOpened: 'Panel detail dibuka.',
@@ -625,7 +641,7 @@ export const id: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tips: ${tips ? 'aktif' : 'nonaktif'} · Istirahat: ${breaks ? 'aktif' : 'nonaktif'} · Reaksi plugin: ${plugins ? 'aktif' : 'nonaktif'}`,
     peersLine: (level, peers) => `Level ${level} · chat lain: ${peers}`,
-    commands: 'Perintah: /mochi (tampilkan/sembunyikan) | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | ekspor | reset | masukan | status',
+    commands: 'Perintah: /mochi (tampilkan/sembunyikan) | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | ekspor | reset | masukan | perbarui | status',
     langNow: (name, list) => `Bahasa: ${name}. Tersedia: ${list} · /mochi bahasa <kode> atau otomatis`,
     langSet: name => `Bahasa: ${name}.`,
     langAuto: name => `Bahasa mengikuti Claude Code dan sistem: ${name}.`,

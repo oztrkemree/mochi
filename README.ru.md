@@ -38,6 +38,16 @@
 > [!NOTE]
 > Mochi построен на модулях хуков Claude Code (function hooks), и ему нужен **Claude Code 2.1.293 или новее** (свою версию покажет `claude --version`). Более старые сборки, например 2.1.286, вообще не загружают модуль, и Mochi просто не появится.
 
+> [!TIP]
+> **Обновление.** Mochi сообщит, когда выйдет новая версия, а `/mochi обновить` покажет, что запустить. Claude Code сам не обновляет маркетплейс с GitHub, поэтому кнопка Update может оставаться серой; в терминале:
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin update mochi@mochi
+> ```
+>
+> затем перезапустите Claude Code.
+
 <br>
 
 <table>

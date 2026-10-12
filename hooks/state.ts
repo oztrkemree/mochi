@@ -146,6 +146,8 @@ export const chat = {
   otherDays: [] as Record<string, DayRec>[],
   historyAt: 0,
   samplesAt: 0,
+  /** When this chat last asked whether a newer Mochi is out. */
+  latestAt: 0,
   liveAt: 0,
   liveKey: '',
   peersAt: 0,

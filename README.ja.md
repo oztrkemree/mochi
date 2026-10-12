@@ -38,6 +38,16 @@ Claudeのすることすべてに反応し、あとで後悔しそうなコマ�
 > [!NOTE]
 > MochiはClaude Codeのhooksモジュール（function hooks）の上に作られていて、**Claude Code 2.1.293以降**が必要です（お使いのバージョンは`claude --version`で確認できます）。2.1.286のようなそれより古いビルドではモジュール自体が読み込まれないため、Mochiは現れません。
 
+> [!TIP]
+> **更新。** 新しいバージョンが出ると Mochi が知らせ、`/mochi update` で実行するコマンドが表示されます。Claude Code は GitHub のマーケットプレイスを自動では更新しないため、Update ボタンがグレーのままのことがあります。ターミナルで：
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin update mochi@mochi
+> ```
+>
+> そのあと Claude Code を再起動してください。
+
 <br>
 
 <table>

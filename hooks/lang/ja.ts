@@ -14,6 +14,12 @@ export const ja: typeof en = {
   months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
 
   news: {
+    '0.5.1': {
+      headline: '新しいバージョンが出ると Mochi が知らせます',
+      notes: [
+        '新しい Mochi が出ると、Mochi が一度だけ知らせます。/mochi update で更新用の2つのコマンドが表示されます。',
+      ],
+    },
     '0.5.0': {
       headline: 'あなたのリズムを学ぶ週間予測、やわらかな音、6つの難しいバッジ',
       notes: [
@@ -589,9 +595,19 @@ export const ja: typeof en = {
     seeWardrobe: ' · /mochi wear',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: '更新 バージョン',
+    toast: (latest, mine) => `${latest} が出ました（今は ${mine}）· /mochi 更新`,
+    line: latest => `Mochi ${latest} が出ました！`,
+    available: (latest, mine) => `Mochi ${latest} が出ました。今は ${mine} です。更新するにはターミナルで実行：`,
+    restart: 'そのあと Claude Code を再起動してください。',
+    current: v => `Mochi ${v} が最新です。`,
+    unknown: v => `Mochi ${v}。最新バージョンを今は読み取れませんでした。`,
+  },
   cmd: {
-    description: 'Mochi: 表示/非表示、詳細、レベル、着せ替え、バッジ、チャット、シールド、通知、CI、ヒント、休憩、サウンド、プラグイン、カード、まとめ、スナップ、ツアー、新機能、誕生日、言語、サイズ、エクスポート、リセット、フィードバック、状態',
-    hint: '[details | level | wear [アイテム] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [コード] | small | big | hide | show | export | reset | feedback | status]',
+    description: 'Mochi: 表示/非表示、詳細、レベル、着せ替え、バッジ、チャット、シールド、通知、CI、ヒント、休憩、サウンド、プラグイン、カード、まとめ、スナップ、ツアー、新機能、誕生日、言語、サイズ、エクスポート、リセット、フィードバック、更新、状態',
+    hint: '[details | level | wear [アイテム] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [コード] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochiを1行表示に。',
     big: 'Mochiをフルサイズに。',
     detailOpened: '詳細パネルを開いた。',
@@ -624,7 +640,7 @@ export const ja: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `ヒント: ${tips ? 'ON' : 'OFF'} · 休憩: ${breaks ? 'ON' : 'OFF'} · プラグインのリアクション: ${plugins ? 'ON' : 'OFF'}`,
     peersLine: (level, peers) => `レベル ${level} · 他のチャット: ${peers}`,
-    commands: 'コマンド: /mochi (表示/非表示) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
+    commands: 'コマンド: /mochi (表示/非表示) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name, list) => `言語: ${name}。選択肢: ${list} · /mochi lang <コード> または auto`,
     langSet: name => `言語: ${name}。`,
     langAuto: name => `言語はClaude Codeとシステムに合わせる: ${name}。`,

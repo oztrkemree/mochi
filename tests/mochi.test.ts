@@ -706,8 +706,9 @@ test('on Windows: the home is USERPROFILE, the language the display one, and old
   const clock = engine(on, {})
   mock.env(on, { OS: 'Windows_NT', USERPROFILE: 'C:\\Users\\me', HOME: 'C:\\msys64\\home\\me' })
   on('session.id', () => ({ value: 'abc-1' }) as never)
-  // The engine writes a path with the separators of the system the test runs on.
-  const slashed = (path = '') => path.replaceAll('\\', '/')
+  // The engine writes a path with the separators of the system the test runs on, and
+  // on macOS and Linux takes `C:\…` for a relative path, putting the folder it runs in before it.
+  const slashed = (path = '') => path.replaceAll('\\', '/').replace(/^.*?(?=[A-Za-z]:\/)/, '')
   const ran: { argv: readonly string[]; cwd?: string }[] = []
   on('process.run', ($, e) => {
     ran.push({ argv: e.argv, cwd: slashed(e.init?.cwd) })

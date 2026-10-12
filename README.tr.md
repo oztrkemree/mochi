@@ -38,6 +38,16 @@ Herhangi bir Claude Code sohbetine yaz, marketplace'i eklemek için `y` de ve **
 > [!NOTE]
 > Mochi, Claude Code'un hooks modülleri (fonksiyon hook'ları) üzerine kurulu; bu yüzden **Claude Code 2.1.293 ya da daha yeni** bir sürüm gerekiyor (seninkini `claude --version` söyler). 2.1.286 gibi daha eski sürümler modülü hiç yüklemez, Mochi de hiç görünmez.
 
+> [!TIP]
+> **Güncelleme.** Yeni bir sürüm çıktığında Mochi haber verir, `/mochi güncelle` de ne çalıştıracağını gösterir. Claude Code bir GitHub marketplace’ini kendiliğinden yenilemez, bu yüzden Update düğmesi pasif kalabilir; bir terminalde:
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin update mochi@mochi
+> ```
+>
+> sonra Claude Code’u yeniden başlat.
+
 <br>
 
 <table>

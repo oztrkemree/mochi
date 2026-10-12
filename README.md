@@ -38,6 +38,16 @@ Type it in any Claude Code chat, answer `y` to add the marketplace and pick the 
 > [!NOTE]
 > Mochi is built on Claude Code's hooks modules (function hooks) and needs **Claude Code 2.1.293 or later** (`claude --version` tells you yours). Older builds, such as 2.1.286, do not load the module at all, so Mochi never appears.
 
+> [!TIP]
+> **Updating.** Mochi tells you when a new version is out, and `/mochi update` shows what to run. Claude Code does not refresh a GitHub marketplace by itself, so the Update button can stay grey; in a terminal:
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin update mochi@mochi
+> ```
+>
+> then restart Claude Code.
+
 <br>
 
 <table>

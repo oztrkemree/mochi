@@ -38,6 +38,16 @@ Claude가 하는 모든 일에 반응하고, 나중에 후회할 명령은 막�
 > [!NOTE]
 > Mochi는 Claude Code의 hooks 모듈(함수 hook) 위에서 동작해서 **Claude Code 2.1.293 이상**이 필요해요(내 버전은 `claude --version`으로 확인할 수 있어요). 2.1.286 같은 이전 빌드는 모듈을 아예 불러오지 않아서 Mochi가 나타나지 않아요.
 
+> [!TIP]
+> **업데이트.** 새 버전이 나오면 Mochi가 알려 주고, `/mochi update`가 실행할 명령을 보여 줍니다. Claude Code는 GitHub 마켓플레이스를 스스로 새로 고치지 않아 Update 버튼이 회색으로 남을 수 있습니다. 터미널에서:
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin update mochi@mochi
+> ```
+>
+> 그다음 Claude Code를 다시 시작하세요.
+
 <br>
 
 <table>

@@ -14,6 +14,12 @@ export const ko: typeof en = {
   months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
 
   news: {
+    '0.5.1': {
+      headline: '새 버전이 나오면 Mochi가 알려 줍니다',
+      notes: [
+        '더 새로운 Mochi가 나오면 Mochi가 한 번 알려 줍니다. /mochi update는 업데이트하는 두 명령을 보여 줍니다.',
+      ],
+    },
     '0.5.0': {
       headline: '당신의 리듬을 배우는 주간 예측, 부드러운 소리, 어려운 배지 6개',
       notes: [
@@ -589,9 +595,19 @@ export const ko: typeof en = {
     seeWardrobe: ' · /mochi wear',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: '업데이트 버전',
+    toast: (latest, mine) => `${latest} 출시 (현재 ${mine}) · /mochi 업데이트`,
+    line: latest => `Mochi ${latest} 출시!`,
+    available: (latest, mine) => `Mochi ${latest}이 나왔습니다. 현재 ${mine}입니다. 업데이트하려면 터미널에서 실행하세요:`,
+    restart: '그다음 Claude Code를 다시 시작하세요.',
+    current: v => `Mochi ${v}이 최신입니다.`,
+    unknown: v => `Mochi ${v}. 지금은 최신 버전을 읽지 못했습니다.`,
+  },
   cmd: {
-    description: 'Mochi: 표시/숨기기, 상세, 레벨, 착용, 배지, 채팅, 보호막, 알림, CI, 팁, 휴식, 소리, 플러그인, 카드, 결산, 스냅샷, 둘러보기, 새소식, 생일, 언어, 크기, 내보내기, 초기화, 피드백, 상태',
-    hint: '[details | level | wear [아이템] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [코드] | small | big | hide | show | export | reset | feedback | status]',
+    description: 'Mochi: 표시/숨기기, 상세, 레벨, 착용, 배지, 채팅, 보호막, 알림, CI, 팁, 휴식, 소리, 플러그인, 카드, 결산, 스냅샷, 둘러보기, 새소식, 생일, 언어, 크기, 내보내기, 초기화, 피드백, 업데이트, 상태',
+    hint: '[details | level | wear [아이템] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [코드] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi를 한 줄로.',
     big: 'Mochi를 전체 크기로.',
     detailOpened: '상세 패널을 열었습니다.',
@@ -624,7 +640,7 @@ export const ko: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `팁: ${tips ? '켜짐' : '꺼짐'} · 휴식 알림: ${breaks ? '켜짐' : '꺼짐'} · 플러그인 반응: ${plugins ? '켜짐' : '꺼짐'}`,
     peersLine: (level, peers) => `레벨 ${level} · 다른 채팅: ${peers}`,
-    commands: '명령: /mochi (표시/숨기기) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
+    commands: '명령: /mochi (표시/숨기기) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name, list) => `언어: ${name}. 사용 가능: ${list} · /mochi lang <코드> 또는 auto`,
     langSet: name => `언어: ${name}.`,
     langAuto: name => `언어는 Claude Code와 시스템 설정을 따릅니다: ${name}.`,

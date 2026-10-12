@@ -312,6 +312,39 @@ test('after an update, the new version is told once in a toast, and /mochi news 
   expect(news).toBe(newsLines('0.3.0'))
 })
 
+test('a newer Mochi on GitHub is told once, and /mochi update reads afresh and gives the commands', async ($, on) => {
+  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.5.0' }) }
+  const store: Record<string, unknown> = { prefs: { lang: 'en' }, version: '0.5.0' }
+  const w = world(on, store, manifest)
+  let latest: string | null = '0.5.1'
+  const urls: string[] = []
+  on('http.fetch', ($, e) => {
+    urls.push(e.url)
+    if (latest === null) throw new Error('offline')
+    return { value: { status: 200, ok: true, headers: {}, text: JSON.stringify({ name: 'mochi', version: latest }) } } as never
+  })
+  await w.clock.set(NOW)
+  await $.session.start(START)
+  await wait(w.clock, 20_000)
+  expect(w.toasts.filter(x => x.includes('/mochi update'))).toEqual(['Mochi: 0.5.1 is out (you have 0.5.0) · /mochi update'])
+  // One reading serves the twelve hours.
+  expect(urls).toEqual(['https://raw.githubusercontent.com/oztrkemree/mochi/main/.claude-plugin/plugin.json'])
+  const update = async () => (await $.command.run({ command: 'mochi', args: 'update' } as never)).text
+  expect(await update()).toBe([
+    'Mochi 0.5.1 is out; you have 0.5.0. To update, run in a terminal:',
+    '  claude plugin marketplace update mochi',
+    '  claude plugin update mochi@mochi',
+    'then restart Claude Code.',
+  ].join('\n'))
+  expect(urls).toHaveLength(2)
+  // The network gone, the last version known still answers; told already, it is not told again.
+  latest = null
+  expect((await update())?.startsWith('Mochi 0.5.1 is out')).toBe(true)
+  latest = '0.5.0'
+  expect(await update()).toBe('Mochi 0.5.0 is the latest.')
+  expect(w.toasts.filter(x => x.includes('/mochi update'))).toHaveLength(1)
+})
+
 test('a run that draws nowhere uses up nothing said once: the greeting and the news wait for a surface', async ($, on) => {
   const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.3.0' }) }
   const store: Record<string, unknown> = { prefs: { lang: 'en' }, version: '0.2.0' }

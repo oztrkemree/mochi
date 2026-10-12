@@ -18,6 +18,12 @@ export const fr: typeof en = {
   months: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'],
 
   news: {
+    '0.5.1': {
+      headline: 'Mochi te prévient quand une nouvelle version sort',
+      notes: [
+        'Quand un Mochi plus récent sort, Mochi le dit une fois ; /mochi maj montre les deux commandes qui le mettent à jour.',
+      ],
+    },
     '0.5.0': {
       headline: 'une prévision hebdo qui apprend ton rythme, des sons doux et six badges difficiles',
       notes: [
@@ -593,9 +599,19 @@ export const fr: typeof en = {
     seeWardrobe: ' · /mochi porter',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: 'maj version',
+    toast: (latest, mine) => `${latest} est sortie (tu as ${mine}) · /mochi maj`,
+    line: latest => `Mochi ${latest} est sortie !`,
+    available: (latest, mine) => `Mochi ${latest} est sortie ; tu as ${mine}. Pour mettre à jour, lance dans un terminal :`,
+    restart: 'puis redémarre Claude Code.',
+    current: v => `Mochi ${v} est la dernière version.`,
+    unknown: v => `Mochi ${v}. La dernière version n’a pas pu être lue pour l’instant.`,
+  },
   cmd: {
-    description: 'Mochi : afficher/cacher, détails, niveau, porter, insignes, conversations, bouclier, alertes, CI, astuces, pauses, son, extensions, carte, bilan, capture, visite, nouveautés, anniversaire, langue, petit/grand, exporter, réinitialiser, avis, statut',
-    hint: '[détails | niveau | porter [nom] | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue [code] | petit | grand | cacher | afficher | exporter | réinitialiser | avis | statut]',
+    description: 'Mochi : afficher/cacher, détails, niveau, porter, insignes, conversations, bouclier, alertes, CI, astuces, pauses, son, extensions, carte, bilan, capture, visite, nouveautés, anniversaire, langue, petit/grand, exporter, réinitialiser, avis, maj, statut',
+    hint: '[détails | niveau | porter [nom] | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue [code] | petit | grand | cacher | afficher | exporter | réinitialiser | avis | maj | statut]',
     small: 'Mochi sur une ligne.',
     big: 'Mochi en grand.',
     detailOpened: 'Panneau de détails ouvert.',
@@ -629,7 +645,7 @@ export const fr: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Astuces : ${tips ? 'activées' : 'désactivées'} · Pauses : ${breaks ? 'activées' : 'désactivées'} · Réactions des plugins : ${plugins ? 'activées' : 'désactivées'}`,
     peersLine: (level, peers) => `Niveau ${level} · autres conversations : ${peers}`,
-    commands: 'Commandes : /mochi (afficher/cacher) | détails | niveau | porter | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue | petit | grand | exporter | réinitialiser | avis | statut',
+    commands: 'Commandes : /mochi (afficher/cacher) | détails | niveau | porter | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue | petit | grand | exporter | réinitialiser | avis | maj | statut',
     langNow: (name, list) => `Langue : ${name}. Disponibles : ${list} · /mochi langue <code> ou auto`,
     langSet: name => `Langue : ${name}.`,
     langAuto: name => `La langue suit Claude Code et le système : ${name}.`,

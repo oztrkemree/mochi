@@ -777,6 +777,7 @@ async function tick($: Dollar) {
   if (now - chat.peersAt > PEERS_EVERY_MS) void readPeers($).catch(() => undefined)
   if (now - chat.historyAt > HISTORY_EVERY_MS) void refreshHistory($).catch(() => undefined)
   if (now - chat.samplesAt > SAMPLES_EVERY_MS) void saveSamples($).catch(() => undefined)
+  if (now - chat.latestAt > 60 * 60_000) void noteLatest($, now).catch(() => undefined)
   void watchChats($, now).catch(() => undefined)
   if (chat.ciSha !== '' && !chat.isCiAsking && now - chat.ciAt > CI_EVERY_MS) void pollCi($).catch(() => undefined)
   if (now - chat.detailAt > 3000) {
@@ -935,10 +936,10 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
 
 type Word = keyof Dict['cmd']['words'] | keyof Dict['data']['words'] | 'chats'
 /** A subcommand's name: the key of its words in each language, or a name the same in every language. */
-type Name = Word | 'ci'
+type Name = Word | 'ci' | 'update'
 
 /** A command's words in the language in use: in `cmd.words`, or, for a newer command, in its own section; none for a name the same in every language. */
-const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' ? [] : { ...t().cmd.words, ...t().data.words }[key])
+const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
 
 /** Whether `value` names the command: its English words, or the words of the language in use. */
 const names = (value: string, key: Name, ...english: string[]) => english.includes(value) || wordsFor(key).some(w => plain(w) === value)
@@ -971,6 +972,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'tips', english: ['tips', 'tip'], run: arg => toggleTips($, arg) },
     { name: 'tour', english: ['tour', 'welcome'], run: () => replayTour() },
     { name: 'news', english: ['news', 'new'], run: () => Promise.resolve(newsLines(chat.coach.version)) },
+    { name: 'update', english: ['update', 'upgrade', 'version'], run: () => updateNow($) },
     { name: 'export', english: ['export'], run: () => exportAll($) },
     { name: 'reset', english: ['reset'], run: arg => reset($, arg) },
     { name: 'feedback', english: ['feedback', 'bug'], run: () => feedback($) },
@@ -1650,6 +1652,58 @@ async function mochiVersion($: Dollar): Promise<string> {
   } catch {
     return ''
   }
+}
+
+// ---------- a newer Mochi ----------
+
+/** Where the newest Mochi's manifest is read, and how long a reading is trusted. */
+const LATEST_URL = 'https://raw.githubusercontent.com/oztrkemree/mochi/main/.claude-plugin/plugin.json'
+const LATEST_EVERY_MS = 12 * 60 * 60_000
+/** What updates Mochi from a terminal: the marketplace's copy first, then the plugin. The same in every language. */
+const UPDATE_STEPS = ['claude plugin marketplace update mochi', 'claude plugin update mochi@mochi']
+
+/**
+ * The newest version on GitHub; every chat shares the reading, taken again
+ * after twelve hours (or at once, `isFresh`). The last one known when the
+ * network does not answer, '' when none ever did; nothing is asked while
+ * non-essential traffic is turned off.
+ */
+async function latestVersion($: Dollar, now: number, isFresh = false): Promise<string> {
+  const kept = (await $.store.get('latest').catch(() => undefined)) as { at?: unknown; version?: unknown } | undefined
+  const known = typeof kept?.version === 'string' ? kept.version : ''
+  if (!isFresh && typeof kept?.at === 'number' && now - kept.at < LATEST_EVERY_MS) return known
+  if (await $.env.get('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC').catch(() => undefined)) return known
+  let version = ''
+  try {
+    const r = await $.http.fetch(LATEST_URL)
+    const v = r.ok ? (JSON.parse(r.text) as { version?: unknown }).version : undefined
+    if (typeof v === 'string' && /^\d+(\.\d+)*$/.test(v)) version = v
+  } catch {
+    version = ''
+  }
+  await $.store.set('latest', { at: now, version: version || known })
+  return version || known
+}
+
+/** Once for each newer version, said when someone can see it: a toast, and Mochi's line when it is not busy. */
+async function noteLatest($: Dollar, now: number) {
+  const mine = chat.coach.version
+  if (mine === '') return
+  chat.latestAt = now
+  const latest = await latestVersion($, now)
+  if (latest === '' || !isNewer(latest, mine) || (await $.store.get('latestTold')) === latest || !(await isSeen($))) return
+  await $.store.set('latestTold', latest)
+  $.ui.toast(`Mochi: ${t().update.toast(latest, mine)}`, { timeoutMs: 12_000 })
+  if (!chat.isBusy) await show($, { mood: 'wave', line: t().update.line(latest), holdMs: 8000 })
+}
+
+/** /mochi update: whether a newer Mochi is out, read afresh, and the commands that update it. */
+async function updateNow($: Dollar): Promise<string> {
+  const mine = chat.coach.version
+  const latest = await latestVersion($, await $.clock.now(), true)
+  if (latest === '') return t().update.unknown(mine)
+  if (mine !== '' && !isNewer(latest, mine)) return t().update.current(mine)
+  return [t().update.available(latest, mine), ...UPDATE_STEPS.map(s => `  ${s}`), t().update.restart].join('\n')
 }
 
 /** The files `takes` picks in Mochi's folder and the folders in it (links never followed), by folder. */

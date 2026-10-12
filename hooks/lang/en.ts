@@ -19,6 +19,12 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.5.1': {
+      headline: 'Mochi tells you when a new version is out',
+      notes: [
+        'When a newer Mochi is out, Mochi says so once; /mochi update shows the two commands that update it.',
+      ],
+    },
     '0.5.0': {
       headline: 'a weekly forecast that learns your rhythm, soft chimes and six hard badges',
       notes: [
@@ -629,9 +635,19 @@ export const en = {
   },
 
   /** /mochi and its answers. */
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: '',
+    toast: (latest: string, mine: string) => `${latest} is out (you have ${mine}) · /mochi update`,
+    line: (latest: string) => `Mochi ${latest} is out!`,
+    available: (latest: string, mine: string) => `Mochi ${latest} is out; you have ${mine}. To update, run in a terminal:`,
+    restart: 'then restart Claude Code.',
+    current: (v: string) => `Mochi ${v} is the latest.`,
+    unknown: (v: string) => `Mochi ${v}. The latest version could not be read just now.`,
+  },
   cmd: {
-    description: 'Mochi: show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, status',
-    hint: '[details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | status]',
+    description: 'Mochi: show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, update, status',
+    hint: '[details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi on one line.',
     big: 'Mochi full size.',
     detailOpened: 'Details pane opened.',
@@ -665,7 +681,7 @@ export const en = {
     moreLine: (tips: boolean, breaks: boolean, plugins: boolean) =>
       `Tips: ${tips ? 'on' : 'off'} · Breaks: ${breaks ? 'on' : 'off'} · Plugin reactions: ${plugins ? 'on' : 'off'}`,
     peersLine: (level: number, peers: string) => `Level ${level} · other chats: ${peers}`,
-    commands: 'Commands: /mochi (show/hide) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | status',
+    commands: 'Commands: /mochi (show/hide) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name: string, list: string) => `Language: ${name}. Available: ${list} · /mochi lang <code> or auto`,
     langSet: (name: string) => `Language: ${name}.`,
     langAuto: (name: string) => `Language follows Claude Code and the system: ${name}.`,

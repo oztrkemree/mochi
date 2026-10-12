@@ -34,6 +34,12 @@ export const pl: typeof en = {
   months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
 
   news: {
+    '0.5.1': {
+      headline: 'Mochi daje znać, gdy wyjdzie nowa wersja',
+      notes: [
+        'Gdy wyjdzie nowsze Mochi, Mochi powie o tym raz; /mochi aktualizuj pokazuje dwa polecenia, które je aktualizują.',
+      ],
+    },
     '0.5.0': {
       headline: 'tygodniowa prognoza, która uczy się twojego rytmu, łagodne dźwięki i sześć trudnych odznak',
       notes: [
@@ -609,9 +615,19 @@ export const pl: typeof en = {
     seeWardrobe: ' · /mochi ubierz',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: 'aktualizuj wersja',
+    toast: (latest, mine) => `${latest} jest już dostępne (masz ${mine}) · /mochi aktualizuj`,
+    line: latest => `Mochi ${latest} już jest!`,
+    available: (latest, mine) => `Mochi ${latest} już jest; masz ${mine}. Aby zaktualizować, uruchom w terminalu:`,
+    restart: 'potem uruchom ponownie Claude Code.',
+    current: v => `Mochi ${v} to najnowsza wersja.`,
+    unknown: v => `Mochi ${v}. Nie udało się teraz odczytać najnowszej wersji.`,
+  },
   cmd: {
-    description: 'Mochi: pokaż/ukryj, szczegóły, poziom, ubierz, odznaki, czaty, tarcza, powiadomienia, CI, porady, przerwy, dźwięk, wtyczki, karta, podsumowanie, zrzut, wprowadzenie, nowości, urodziny, język, mały/duży, eksport, resetuj, opinia, stan',
-    hint: '[szczegóły | poziom | ubierz [rzecz] | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język [kod] | mały | duży | ukryj | pokaż | eksport | resetuj | opinia | stan]',
+    description: 'Mochi: pokaż/ukryj, szczegóły, poziom, ubierz, odznaki, czaty, tarcza, powiadomienia, CI, porady, przerwy, dźwięk, wtyczki, karta, podsumowanie, zrzut, wprowadzenie, nowości, urodziny, język, mały/duży, eksport, resetuj, opinia, aktualizuj, stan',
+    hint: '[szczegóły | poziom | ubierz [rzecz] | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język [kod] | mały | duży | ukryj | pokaż | eksport | resetuj | opinia | aktualizuj | stan]',
     small: 'Mochi w jednej linii.',
     big: 'Mochi w pełnym rozmiarze.',
     detailOpened: 'Panel szczegółów otwarty.',
@@ -646,7 +662,7 @@ export const pl: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Porady: ${tips ? 'wł.' : 'wył.'} · Przerwy: ${breaks ? 'wł.' : 'wył.'} · Reakcje wtyczek: ${plugins ? 'wł.' : 'wył.'}`,
     peersLine: (level, peers) => `Poziom ${level} · inne czaty: ${peers}`,
-    commands: 'Polecenia: /mochi (pokaż/ukryj) | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | eksport | resetuj | opinia | stan',
+    commands: 'Polecenia: /mochi (pokaż/ukryj) | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | eksport | resetuj | opinia | aktualizuj | stan',
     langNow: (name, list) => `Język: ${name}. Dostępne: ${list} · /mochi język <kod> lub auto`,
     langSet: name => `Język: ${name}.`,
     langAuto: name => `Język zgodny z Claude Code i systemem: ${name}.`,

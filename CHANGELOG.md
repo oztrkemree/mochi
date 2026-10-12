@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1
+
+- Mochi tells you when a new version is out. Twice a day at most it reads the version on GitHub (nothing is asked while `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set); a newer one is said once, in a toast and by Mochi. `/mochi update` reads it afresh and shows the two commands that update Mochi, since Claude Code does not refresh a GitHub marketplace by itself and its Update button can stay grey. The READMEs say the same.
+
+### Fixes
+
+- The Windows test passes on macOS and Linux again: the test engine takes `C:\…` for a relative path there.
+
 ## 0.5.0
 
 - The weekly limit's "full by" learns when you work and when you rest. It used to draw the last day's pace straight to the reset, so one busy day stood for every night and weekend after it (21% on a Monday, reset on Friday, read as full by Tuesday). Mochi now keeps the week's readings for five weeks and learns how much of the window each hour of the week usually takes; the forecast walks the hours to the reset at that rhythm, scaled by how this week and the last day compare with usual. Until three days of readings are in, it uses the week's average pace so far, nights included. The 5-hour window still reads the last hour.

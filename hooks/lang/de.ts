@@ -15,6 +15,12 @@ export const de: typeof en = {
   months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 
   news: {
+    '0.5.1': {
+      headline: 'Mochi sagt Bescheid, wenn eine neue Version da ist',
+      notes: [
+        'Ist ein neueres Mochi da, sagt Mochi es einmal; /mochi aktualisieren zeigt die zwei Befehle, die es aktualisieren.',
+      ],
+    },
     '0.5.0': {
       headline: 'eine Wochenprognose, die deinen Rhythmus lernt, sanfte Klänge und sechs schwere Abzeichen',
       notes: [
@@ -591,9 +597,19 @@ export const de: typeof en = {
     seeWardrobe: ' · /mochi tragen',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: 'aktualisieren version',
+    toast: (latest, mine) => `${latest} ist da (du hast ${mine}) · /mochi aktualisieren`,
+    line: latest => `Mochi ${latest} ist da!`,
+    available: (latest, mine) => `Mochi ${latest} ist da; du hast ${mine}. Zum Aktualisieren im Terminal ausführen:`,
+    restart: 'dann Claude Code neu starten.',
+    current: v => `Mochi ${v} ist die neueste Version.`,
+    unknown: v => `Mochi ${v}. Die neueste Version ließ sich gerade nicht lesen.`,
+  },
   cmd: {
-    description: 'Mochi: zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, status',
-    hint: '[details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | status]',
+    description: 'Mochi: zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
+    hint: '[details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
     small: 'Mochi in einer Zeile.',
     big: 'Mochi in voller Größe.',
     detailOpened: 'Detailansicht geöffnet.',
@@ -628,7 +644,7 @@ export const de: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tipps: ${tips ? 'an' : 'aus'} · Pausen: ${breaks ? 'an' : 'aus'} · Plugin-Reaktionen: ${plugins ? 'an' : 'aus'}`,
     peersLine: (level, peers) => `Level ${level} · andere Chats: ${peers}`,
-    commands: 'Befehle: /mochi (zeigen/verstecken) | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | status',
+    commands: 'Befehle: /mochi (zeigen/verstecken) | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
     langNow: (name, list) => `Sprache: ${name}. Verfügbar: ${list} · /mochi sprache <Code> oder automatisch`,
     langSet: name => `Sprache: ${name}.`,
     langAuto: name => `Sprache folgt Claude Code und dem System: ${name}.`,

@@ -14,6 +14,12 @@ export const tr: typeof en = {
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
   news: {
+    '0.5.1': {
+      headline: 'yeni bir sürüm çıktığında Mochi haber verir',
+      notes: [
+        'Daha yeni bir Mochi çıktığında Mochi bunu bir kez söyler; /mochi güncelle onu güncelleyen iki komutu gösterir.',
+      ],
+    },
     '0.5.0': {
       headline: 'ritmini öğrenen haftalık tahmin, yumuşak sesler ve altı zor rozet',
       notes: [
@@ -589,9 +595,19 @@ export const tr: typeof en = {
     seeWardrobe: ' · /mochi aksesuar',
   },
 
+  /** A newer Mochi: what is said once, and what /mochi update answers. */
+  update: {
+    words: 'güncelle sürüm',
+    toast: (latest, mine) => `${latest} çıktı (sende ${mine} var) · /mochi güncelle`,
+    line: latest => `Mochi ${latest} çıktı!`,
+    available: (latest, mine) => `Mochi ${latest} çıktı; sende ${mine} var. Güncellemek için bir terminalde çalıştır:`,
+    restart: 'sonra Claude Code’u yeniden başlat.',
+    current: v => `Mochi ${v} en yeni sürüm.`,
+    unknown: v => `Mochi ${v}. En yeni sürüm şu an okunamadı.`,
+  },
   cmd: {
-    description: 'Mochi: göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, aktar, sıfırla, geribildirim, durum',
-    hint: '[detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | aktar | sıfırla | geribildirim | durum]',
+    description: 'Mochi: göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, aktar, sıfırla, geribildirim, güncelle, durum',
+    hint: '[detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | aktar | sıfırla | geribildirim | güncelle | durum]',
     small: 'Mochi tek satır.',
     big: 'Mochi tam boy.',
     detailOpened: 'Detay paneli açıldı.',
@@ -624,7 +640,7 @@ export const tr: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `İpuçları: ${tips ? 'açık' : 'kapalı'} · Mola: ${breaks ? 'açık' : 'kapalı'} · Eklenti tepkileri: ${plugins ? 'açık' : 'kapalı'}`,
     peersLine: (level, peers) => `Seviye ${level} · diğer sohbetler: ${peers}`,
-    commands: 'Komutlar: /mochi (göster/gizle) | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | durum',
+    commands: 'Komutlar: /mochi (göster/gizle) | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | güncelle | durum',
     langNow: (name, list) => `Dil: ${name}. Seçenekler: ${list} · /mochi dil <kod> ya da otomatik`,
     langSet: name => `Dil: ${name}.`,
     langAuto: name => `Dil Claude Code’a ve sisteme göre seçiliyor: ${name}.`,
