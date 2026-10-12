@@ -12,7 +12,7 @@ context'ini, oturum ve haftalık limitlerini de hep göz önünde tutar.
 [![Lisans: MIT](https://img.shields.io/badge/lisans-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code eklentisi](https://img.shields.io/badge/Claude_Code-eklenti-D97757?style=for-the-badge)](#-10-saniyede-kurulum)
 [![16 dil](https://img.shields.io/badge/dil-16-7AA2F7?style=for-the-badge)](#-16-dil)
-[![133 aksesuar](https://img.shields.io/badge/gardırop-133_parça-B684F6?style=for-the-badge)](#-seninle-büyüyen-bir-gardırop)
+[![136 aksesuar](https://img.shields.io/badge/gardırop-136_parça-B684F6?style=for-the-badge)](#-seninle-büyüyen-bir-gardırop)
 [![Ağ yok](https://img.shields.io/badge/ağ-yok-4CC38A?style=for-the-badge)](#-neye-dokunur)
 
 [English](README.md) · **Türkçe** · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -45,7 +45,7 @@ Herhangi bir Claude Code sohbetine yaz, marketplace'i eklemek için `y` de ve **
 <td align="center" width="25%">🎭<br><b>30 ruh hali</b><br><sub>her araç çağrısını takip eder</sub></td>
 <td align="center" width="25%">🛡️<br><b>Bir kalkan</b><br><sub><code>rm -rf</code>, force push ve sızan anahtarlar için</sub></td>
 <td align="center" width="25%">📊<br><b>Limit halkaları</b><br><sub>ne zaman biteceğinin tahminiyle</sub></td>
-<td align="center" width="25%">👒<br><b>Giyilecek 133 şey</b><br><sub>gerçek işle kazanılır</sub></td>
+<td align="center" width="25%">👒<br><b>Giyilecek 136 şey</b><br><sub>gerçek işle kazanılır</sub></td>
 </tr>
 </table>
 
@@ -185,7 +185,7 @@ Aşağısında: kategorilere göre context, son turların, bütün sohbetlerinin
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi kıyafetleri birbiri ardına deniyor: kahveli bere, monokllü ve kedili taç, sihirbaz şapkası ve atkı, madalyalı ve balonlu parti şapkası, bıyıklı kovboy şapkası, gözlüklü mezuniyet kepi, güneş gözlüklü ve ördekli korsan şapkası, İngiliz anahtarlı baret, papyonlu ve pastalı aşçı şapkası ve bir kaktüsün yanında gece şapkası">
 </p>
 
-Her tur, her düzenleme, her commit ve çalıştığın her gün deneyim kazandırır. Seviyeler giyilecek şeyler açar: baş, yüz, boyun, el ve Mochi'nin yanı için **133 parça**. Hiçbiri takvimle açılmaz: çoğunu seviyeler, bir kısmını alışkanlıklar, kalanını da zor rozetler açar (yüz elli gece için cadı şapkası ve balkabağı, beş yüz commit için pasta). Bir kez kazanıldı mı, cadı şapkası Cadılar Bayramı'nda, pasta doğum gününde gelir; kahve sabahları, gece şapkası da gece yarısından sonra.
+Her tur, her düzenleme, her commit ve çalıştığın her gün deneyim kazandırır. Seviyeler giyilecek şeyler açar: baş, yüz, boyun, el ve Mochi'nin yanı için **136 parça**. Hiçbiri takvimle açılmaz: çoğunu seviyeler, bir kısmını alışkanlıklar, kalanını da zor rozetler açar (yüz elli gece için cadı şapkası ve balkabağı, beş yüz commit için pasta). Bir kez kazanıldı mı, cadı şapkası Cadılar Bayramı'nda, pasta doğum gününde gelir; kahve sabahları, gece şapkası da gece yarısından sonra.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Farklı kıyafetlerle on iki Mochi: kahveli bere, bıyıklı kovboy, sihirbaz, parti şapkası, monokllü ve kedili taç, atkılı gece şapkası ve daha fazlası">

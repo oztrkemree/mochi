@@ -17,6 +17,15 @@ export const es: typeof en = {
   months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
 
   news: {
+    '0.5.0': {
+      headline: 'un pronóstico semanal que aprende tu ritmo, sonidos suaves y seis insignias difíciles',
+      notes: [
+        'El “lleno a las” del límite semanal aprende cuándo trabajas y cuándo descansas: un día intenso ya no vale por cada noche y fin de semana siguiente.',
+        'Sonidos más suaves: campanas redondas en vez de pitidos, y un ding-dong amable cuando el escudo pregunta.',
+        'Seis insignias difíciles, y las cosas de las fiestas ahora se ganan; un brote, un conejo y un caballo acompañan a Mochi de los niveles 1 a 3.',
+        'Mochi sigue a los agentes enviados al fondo, y el tablero de chats nombra cada chat por su título.',
+      ],
+    },
     '0.4.1': {
       headline: 'el diff de un archivo cambiado, a un clic en Cambios',
       notes: [

@@ -12,7 +12,7 @@ et garde sous vos yeux vos limites de contexte, de session et de semaine.
 [![Licence : MIT](https://img.shields.io/badge/licence-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Plugin Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-installer-en-10-secondes)
 [![16 langues](https://img.shields.io/badge/langues-16-7AA2F7?style=for-the-badge)](#-16-langues)
-[![133 accessoires](https://img.shields.io/badge/garde--robe-133_accessoires-B684F6?style=for-the-badge)](#-une-garde-robe-qui-grandit-avec-vous)
+[![136 accessoires](https://img.shields.io/badge/garde--robe-136_accessoires-B684F6?style=for-the-badge)](#-une-garde-robe-qui-grandit-avec-vous)
 [![Aucun réseau](https://img.shields.io/badge/r%C3%A9seau-aucun-4CC38A?style=for-the-badge)](#-ce-que-mochi-touche)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · **Français** · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -45,7 +45,7 @@ Tapez cette commande dans n’importe quelle conversation Claude Code, répondez
 <td align="center" width="25%">🎭<br><b>30 humeurs</b><br><sub>qui suivent chaque appel d’outil</sub></td>
 <td align="center" width="25%">🛡️<br><b>Un bouclier</b><br><sub>contre <code>rm -rf</code>, les force push et les clés qui fuient</sub></td>
 <td align="center" width="25%">📊<br><b>Des anneaux de limites</b><br><sub>avec une prévision du moment où vous serez à court</sub></td>
-<td align="center" width="25%">👒<br><b>133 accessoires</b><br><sub>gagnés par du vrai travail</sub></td>
+<td align="center" width="25%">👒<br><b>136 accessoires</b><br><sub>gagnés par du vrai travail</sub></td>
 </tr>
 </table>
 
@@ -185,7 +185,7 @@ Plus bas : le contexte par catégorie, vos derniers tours, un calendrier des jou
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi qui essaie des tenues l’une après l’autre : un bonnet avec un café, une couronne avec un monocle et un chat, un chapeau de magicien et une écharpe, un chapeau de fête avec une médaille et un ballon, un chapeau de cow-boy avec une moustache, une toque de diplômé avec des lunettes, un chapeau de pirate avec des lunettes de soleil et un canard, un casque de chantier avec une clé, une toque de chef avec un nœud papillon et un gâteau, et un bonnet de nuit à côté d’un cactus">
 </p>
 
-Chaque tour, chaque modification, chaque commit et chaque journée de travail rapporte de l’expérience. Les niveaux débloquent de quoi s’habiller : **133 accessoires** pour la tête, le visage, le cou, la main et la place juste à côté de Mochi. Rien ne s’ouvre selon la date : les niveaux en ouvrent la plupart, les habitudes quelques-uns, et les badges coriaces le reste (un chapeau de sorcière et une citrouille pour cent cinquante nuits, un gâteau pour cinq cents commits). Une fois gagnés, le chapeau de sorcière sort à Halloween et le gâteau le jour de votre anniversaire ; le café arrive le matin et le bonnet de nuit après minuit.
+Chaque tour, chaque modification, chaque commit et chaque journée de travail rapporte de l’expérience. Les niveaux débloquent de quoi s’habiller : **136 accessoires** pour la tête, le visage, le cou, la main et la place juste à côté de Mochi. Rien ne s’ouvre selon la date : les niveaux en ouvrent la plupart, les habitudes quelques-uns, et les badges coriaces le reste (un chapeau de sorcière et une citrouille pour cent cinquante nuits, un gâteau pour cinq cents commits). Une fois gagnés, le chapeau de sorcière sort à Halloween et le gâteau le jour de votre anniversaire ; le café arrive le matin et le bonnet de nuit après minuit.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Douze Mochi dans des tenues différentes : un bonnet avec un café, un cow-boy moustachu, un magicien, un chapeau de fête, une couronne avec un monocle et un chat, un bonnet de nuit avec une écharpe, et bien d’autres">

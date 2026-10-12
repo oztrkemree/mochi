@@ -1,7 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
+- The weekly limit's "full by" learns when you work and when you rest. It used to draw the last day's pace straight to the reset, so one busy day stood for every night and weekend after it (21% on a Monday, reset on Friday, read as full by Tuesday). Mochi now keeps the week's readings for five weeks and learns how much of the window each hour of the week usually takes; the forecast walks the hours to the reset at that rhythm, scaled by how this week and the last day compare with usual. Until three days of readings are in, it uses the week's average pace so far, nights included. The 5-hour window still reads the last hour.
+- Mochi follows agents sent to the background from their start to their end, as it does a workflow's, and celebrates when the last one is done. The chats board and `/mochi chats` name each chat by its title in the app, with its folder beside its branch.
+- The pet's card no longer names what another chat is doing; the chats list in the details says it.
+- A sprout at level 1, a bunny at level 2 and a horse at level 3 stand beside Mochi; the wardrobe holds 136 things.
 - Mochi's sounds are soft now: round chimes that ring out instead of 8-bit square-wave beeps. The shield asks with a gentle ding-dong, not a siren.
 - The calendar keeps to days anyone can share: your birthday, the day you met Mochi, New Year, π day, sakura season, Hacktoberfest, Halloween and Friday the 13th. Religious and national holidays no longer dress Mochi, and the sprouts are gone from the wardrobe, which now holds 133 things.
 - `node scripts/video.mjs` films a three-minute tour of Mochi, and `node scripts/video.mjs short` a 25-second cut, from the same drawing code.

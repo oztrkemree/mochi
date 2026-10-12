@@ -19,6 +19,15 @@ export const it: typeof en = {
   months: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'],
 
   news: {
+    '0.5.0': {
+      headline: 'una previsione settimanale che impara il tuo ritmo, suoni morbidi e sei badge difficili',
+      notes: [
+        'Il “pieno alle” del limite settimanale impara quando lavori e quando riposi: una giornata piena non vale più per ogni notte e fine settimana dopo.',
+        'Suoni più morbidi: campanelli rotondi invece dei bip, e un ding-dong gentile quando lo scudo chiede.',
+        'Sei badge difficili, e le cose delle feste ora si guadagnano; un germoglio, un coniglio e un cavallo stanno accanto a Mochi dai livelli 1 a 3.',
+        'Mochi segue gli agenti mandati in background, e la bacheca delle chat chiama ogni chat col suo titolo.',
+      ],
+    },
     '0.4.1': {
       headline: 'il diff di un file modificato, a un clic in Modifiche',
       notes: [

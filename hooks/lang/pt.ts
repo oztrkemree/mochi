@@ -17,6 +17,15 @@ export const pt: typeof en = {
   months: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
 
   news: {
+    '0.5.0': {
+      headline: 'uma previsão semanal que aprende o seu ritmo, sons suaves e seis medalhas difíceis',
+      notes: [
+        'O “cheio às” do limite semanal aprende quando você trabalha e quando descansa: um dia cheio não vale mais por cada noite e fim de semana seguinte.',
+        'Sons mais suaves: sinos redondos em vez de bipes, e um ding-dong gentil quando o escudo pergunta.',
+        'Seis medalhas difíceis, e as coisas dos feriados agora são conquistadas; um broto, um coelho e um cavalo ficam ao lado do Mochi nos níveis 1 a 3.',
+        'O Mochi acompanha agentes enviados ao fundo, e o painel de chats chama cada chat pelo título.',
+      ],
+    },
     '0.4.1': {
       headline: 'o diff de um arquivo alterado, a um clique em Alterações',
       notes: [

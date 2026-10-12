@@ -15,6 +15,15 @@ export const de: typeof en = {
   months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 
   news: {
+    '0.5.0': {
+      headline: 'eine Wochenprognose, die deinen Rhythmus lernt, sanfte Klänge und sechs schwere Abzeichen',
+      notes: [
+        'Das „voll um“ des Wochenlimits lernt, wann du arbeitest und wann du ruhst: Ein voller Tag steht nicht mehr für jede Nacht und jedes Wochenende danach.',
+        'Sanftere Klänge: runde Glockentöne statt Pieptöne, und ein sanftes Ding-Dong, wenn der Schild fragt.',
+        'Sechs schwere Abzeichen, und die Feiertagssachen werden jetzt verdient; ein Spross, ein Hase und ein Pferd stehen ab Level 1 bis 3 neben Mochi.',
+        'Mochi folgt Agenten im Hintergrund, und die Chat-Übersicht nennt jeden Chat bei seinem Titel.',
+      ],
+    },
     '0.4.1': {
       headline: 'der Diff einer geänderten Datei, einen Klick entfernt in Änderungen',
       notes: [

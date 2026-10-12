@@ -12,7 +12,7 @@ Claude 的一举一动它都有反应，会拦下那些你事后会后悔的命�
 [![许可证: MIT](https://img.shields.io/badge/许可证-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code 插件](https://img.shields.io/badge/Claude_Code-插件-D97757?style=for-the-badge)](#-10-秒安装)
 [![16 种语言](https://img.shields.io/badge/语言-16_种-7AA2F7?style=for-the-badge)](#-16-种语言)
-[![133 件配饰](https://img.shields.io/badge/衣橱-133_件-B684F6?style=for-the-badge)](#-和你一起成长的衣橱)
+[![136 件配饰](https://img.shields.io/badge/衣橱-136_件-B684F6?style=for-the-badge)](#-和你一起成长的衣橱)
 [![不联网](https://img.shields.io/badge/网络-无-4CC38A?style=for-the-badge)](#-它会访问什么)
 
 [English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · **中文** · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -45,7 +45,7 @@ Claude 的一举一动它都有反应，会拦下那些你事后会后悔的命�
 <td align="center" width="25%">🎭<br><b>30 种心情</b><br><sub>紧跟每一次工具调用</sub></td>
 <td align="center" width="25%">🛡️<br><b>一面护盾</b><br><sub>挡住 <code>rm -rf</code>、强推和泄露的密钥</sub></td>
 <td align="center" width="25%">📊<br><b>限额圆环</b><br><sub>还能预测什么时候用完</sub></td>
-<td align="center" width="25%">👒<br><b>133 件可穿戴的配饰</b><br><sub>靠真本事赚来</sub></td>
+<td align="center" width="25%">👒<br><b>136 件可穿戴的配饰</b><br><sub>靠真本事赚来</sub></td>
 </tr>
 </table>
 
@@ -185,7 +185,7 @@ Mochi 空闲时，偶尔会针对刚发生的事给一条简短的 Claude Code �
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi 一套接一套地试穿装扮：毛线帽配咖啡、王冠配单片眼镜和猫、巫师帽配围巾、派对帽配奖牌和气球、牛仔帽配胡子、学士帽配眼镜、海盗帽配墨镜和小鸭子、安全帽配扳手、厨师帽配领结和蛋糕，还有身旁放着仙人掌的睡帽">
 </p>
 
-每一轮对话、每次编辑、每个 commit、每个工作日都会积累经验值。升级就能解锁可以穿戴的东西：头部、脸部、颈部、手持和 Mochi 身旁，一共 **133 件**。没有哪件是到了日子就自动解锁的：大部分靠升级，一些靠习惯，其余的靠那些难拿的徽章（熬过一百五十个夜晚换来女巫帽和南瓜，五百次 commit 换来蛋糕）。一旦到手，万圣节会戴上女巫帽，生日那天会有蛋糕；早上来杯咖啡，午夜之后换上睡帽。
+每一轮对话、每次编辑、每个 commit、每个工作日都会积累经验值。升级就能解锁可以穿戴的东西：头部、脸部、颈部、手持和 Mochi 身旁，一共 **136 件**。没有哪件是到了日子就自动解锁的：大部分靠升级，一些靠习惯，其余的靠那些难拿的徽章（熬过一百五十个夜晚换来女巫帽和南瓜，五百次 commit 换来蛋糕）。一旦到手，万圣节会戴上女巫帽，生日那天会有蛋糕；早上来杯咖啡，午夜之后换上睡帽。
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="十二个不同装扮的 Mochi：毛线帽配咖啡、留着胡子的牛仔、巫师、派对帽、王冠配单片眼镜和猫、睡帽配围巾，还有更多">

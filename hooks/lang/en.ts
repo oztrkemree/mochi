@@ -19,6 +19,15 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.5.0': {
+      headline: 'a weekly forecast that learns your rhythm, soft chimes and six hard badges',
+      notes: [
+        'The weekly limit’s “full by” learns when you work and when you rest: a busy day no longer stands for every night and weekend after it.',
+        'Softer sounds: round chimes instead of beeps, and a gentle ding-dong when the shield asks.',
+        'Six hard badges, and the holiday things are earned now; a sprout, a bunny and a horse stand beside Mochi from levels 1 to 3.',
+        'Mochi follows agents sent to the background, and the chats board names each chat by its title.',
+      ],
+    },
     '0.4.1': {
       headline: 'a changed file’s diff, a click away in Changes',
       notes: [

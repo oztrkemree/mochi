@@ -15,6 +15,15 @@ export const id: typeof en = {
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
 
   news: {
+    '0.5.0': {
+      headline: 'prakiraan mingguan yang mempelajari ritmemu, suara lembut, dan enam lencana sulit',
+      notes: [
+        '“Penuh pada” batas mingguan mempelajari kapan kamu bekerja dan kapan istirahat: satu hari sibuk tidak lagi mewakili setiap malam dan akhir pekan sesudahnya.',
+        'Suara lebih lembut: lonceng bulat menggantikan bunyi bip, dan ding-dong pelan saat perisai bertanya.',
+        'Enam lencana sulit, dan barang hari raya kini harus diraih; tunas, kelinci, dan kuda berdiri di samping Mochi dari level 1 sampai 3.',
+        'Mochi mengikuti agen yang dikirim ke latar belakang, dan papan obrolan menamai tiap obrolan dengan judulnya.',
+      ],
+    },
     '0.4.1': {
       headline: 'diff berkas yang berubah, sekali klik di Perubahan',
       notes: [

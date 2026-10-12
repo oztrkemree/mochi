@@ -18,6 +18,15 @@ export const fr: typeof en = {
   months: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'],
 
   news: {
+    '0.5.0': {
+      headline: 'une prévision hebdo qui apprend ton rythme, des sons doux et six badges difficiles',
+      notes: [
+        'Le « plein à » de la limite hebdomadaire apprend quand tu travailles et quand tu te reposes : une journée chargée ne vaut plus pour chaque nuit et chaque week-end suivants.',
+        'Des sons plus doux : des carillons ronds au lieu de bips, et un ding-dong discret quand le bouclier demande.',
+        'Six badges difficiles, et les objets des fêtes se gagnent désormais ; une pousse, un lapin et un cheval accompagnent Mochi des niveaux 1 à 3.',
+        'Mochi suit les agents envoyés en arrière-plan, et le tableau des chats nomme chaque chat par son titre.',
+      ],
+    },
     '0.4.1': {
       headline: 'le diff d’un fichier modifié, à un clic dans Modifications',
       notes: [

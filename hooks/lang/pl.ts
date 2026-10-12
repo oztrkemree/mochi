@@ -34,6 +34,15 @@ export const pl: typeof en = {
   months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
 
   news: {
+    '0.5.0': {
+      headline: 'tygodniowa prognoza, która uczy się twojego rytmu, łagodne dźwięki i sześć trudnych odznak',
+      notes: [
+        '„Pełny o” tygodniowego limitu uczy się, kiedy pracujesz, a kiedy odpoczywasz: jeden pracowity dzień nie liczy się już za każdą noc i weekend po nim.',
+        'Łagodniejsze dźwięki: okrągłe dzwonki zamiast piknięć i delikatne ding-dong, gdy tarcza pyta.',
+        'Sześć trudnych odznak, a rzeczy świąteczne zdobywa się teraz; kiełek, królik i koń stoją obok Mochi od poziomu 1 do 3.',
+        'Mochi śledzi agentów wysłanych w tło, a tablica czatów nazywa każdy czat jego tytułem.',
+      ],
+    },
     '0.4.1': {
       headline: 'diff zmienionego pliku, jedno kliknięcie w Zmianach',
       notes: [

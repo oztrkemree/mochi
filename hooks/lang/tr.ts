@@ -14,6 +14,15 @@ export const tr: typeof en = {
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
   news: {
+    '0.5.0': {
+      headline: 'ritmini öğrenen haftalık tahmin, yumuşak sesler ve altı zor rozet',
+      notes: [
+        'Haftalık limitin “dolar” tahmini ne zaman çalışıp ne zaman dinlendiğini öğrenir: yoğun bir gün artık sonraki her geceyi ve hafta sonunu temsil etmez.',
+        'Daha yumuşak sesler: bip yerine yuvarlak çanlar, kalkan sorduğunda da nazik bir ding-dong.',
+        'Altı zor rozet, ve bayram eşyaları artık kazanılıyor; 1. ile 3. seviye arasında Mochi’nin yanında bir filiz, bir tavşan ve bir at duruyor.',
+        'Mochi arka plana gönderilen ajanları izler, sohbet panosu da her sohbeti başlığıyla anar.',
+      ],
+    },
     '0.4.1': {
       headline: 'değişen bir dosyanın farkı, Değişiklikler’de bir tık uzakta',
       notes: [
