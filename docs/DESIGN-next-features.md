@@ -267,7 +267,7 @@ type TurnFrame = { n: number; at: number; secs: number; kinds: Record<ToolKind, 
 ### 4.1 Audit: what Mochi already has
 
 - A wardrobe of 136 things, five slots; the `ground` slot holds 31 "beside Mochi" items, among them `arcade`, `campfire`, `bonsai`, `tent`, `lavalamp`, `robot`, `chest`, plus `joystick` in the hand slot. **Only one item per slot is shown at a time.**
-- Earned progression: levels, habits, 18 badges, and hard badges that open the rest, special days; `fun.ts` for small surprises and breaks; soft sounds; the 30-mood rig; a `Scene` that already carries context % and agent count.
+- Earned progression: levels, habits, 18 badges (the hard ones open the rest of the wardrobe), special days; `fun.ts` for small surprises and breaks; soft sounds; the 30-mood rig; a `Scene` that already carries context % and agent count.
 - A tip pipeline and an idle detector (`coach.ts`, `chat.lastActivity`) that can offer something at a quiet moment, rate-limited.
 
 ### 4.2 What is genuinely missing
