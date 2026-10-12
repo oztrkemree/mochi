@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Mochi's sounds are soft now: round chimes that ring out instead of 8-bit square-wave beeps. The shield asks with a gentle ding-dong, not a siren.
 - The calendar keeps to days anyone can share: your birthday, the day you met Mochi, New Year, π day, sakura season, Hacktoberfest, Halloween and Friday the 13th. Religious and national holidays no longer dress Mochi, and the sprouts are gone from the wardrobe, which now holds 133 things.
 - `node scripts/video.mjs` films a three-minute tour of Mochi, and `node scripts/video.mjs short` a 25-second cut, from the same drawing code.
 - Nothing opens by the date any more. The twelve things that came with a holiday (witch hat, pumpkin, santa hat, sakura, red envelope, candy, lantern, songpyeon, diya, pin, rosette, cake) are earned now: three by level (26 to 38) and nine by badges (six of them new and hard). An occasion still dresses Mochi in them, once earned.

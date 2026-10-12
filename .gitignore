@@ -2,3 +2,5 @@
 .claude-plugin/types/
 node_modules/
 .DS_Store
+# Films from scripts/video.mjs; they go on a GitHub release, not in the clone.
+docs/*.mp4

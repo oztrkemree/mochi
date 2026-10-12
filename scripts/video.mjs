@@ -8,6 +8,7 @@
 //
 //   node scripts/video.mjs              the whole film
 //   node scripts/video.mjs short        a 25-second cut for X and Reddit (docs/mochi-short.mp4)
+//   node scripts/video.mjs sound        only the soundtrack again, under the films already made
 //   node scripts/video.mjs shield 4.2   one scene, or one frame of it as a PNG
 
 import { spawn, spawnSync } from 'node:child_process'
@@ -949,6 +950,8 @@ function soundtrack(scenes, bpm) {
   const n = Math.ceil(total * R)
   const mix = new Float32Array(n)
   const hz = m => 440 * 2 ** ((m - 69) / 12)
+  // The loop stays well under Mochi's own sounds.
+  const MUSIC = 0.3
   const voice = (at, dur, f, gain, shape) => {
     const from = Math.floor(at * R)
     const len = Math.floor(dur * R)
@@ -961,7 +964,7 @@ function soundtrack(scenes, bpm) {
       const v = shape === 'pad' ? Math.sin(w + 0.4 * Math.sin(w * 0.5)) * 0.6 + Math.sin(w * 1.003) * 0.4
         : shape === 'bass' ? Math.sin(w)
         : Math.sin(w) * 0.75 + Math.sin(w * 2) * 0.2 + Math.sin(w * 3) * 0.05
-      mix[from + i] += v * env * gain
+      mix[from + i] += v * env * gain * MUSIC
     }
   }
   const BEAT = 60 / bpm
@@ -985,14 +988,14 @@ function soundtrack(scenes, bpm) {
       const wav = Buffer.from(clip(sound), 'base64')
       const rate = wav.readUInt32LE(24)
       const data = wav.subarray(44)
+      const count = data.length / 2
+      const at16 = j => (j < count ? data.readInt16LE(j * 2) / 32768 : 0)
       const from = Math.floor((starts[k] + at) * R)
-      const len = Math.floor((data.length * R) / rate)
+      const len = Math.floor((count * R) / rate)
       for (let i = 0; i < len && from + i < n; i++) {
         const p = (i * rate) / R
         const j = Math.floor(p)
-        const a = (data[j] - 128) / 127
-        const b = ((data[j + 1] ?? 128) - 128) / 127
-        mix[from + i] += (a + (b - a) * (p - j)) * 0.55
+        mix[from + i] += (at16(j) + (at16(j + 1) - at16(j)) * (p - j)) * 0.8
       }
     }
   })
@@ -1120,13 +1123,16 @@ const browser = spawn(findBrowser(), ['--headless=new', `--remote-debugging-port
 try {
   mkdirSync(join(ROOT, 'docs'), { recursive: true })
   if (only === 'sound') {
-    // Only the soundtrack, laid again under the film already made.
+    // Only the soundtrack, laid again under the films already made.
     const ffmpeg = findFfmpeg()
-    const target = join(ROOT, 'docs', 'mochi-demo.mp4')
-    const silent = join(work, 'silent.mp4')
-    spawnSync(ffmpeg, ['-y', '-loglevel', 'error', '-i', target, '-an', '-c', 'copy', silent], { stdio: 'inherit' })
-    mux(ffmpeg, work, silent, target, tour)
-    console.log(`${target}: sound laid`)
+    for (const [file, scenes] of [['mochi-demo.mp4', tour], ['mochi-short.mp4', SCENES.filter(s => s.film === 'short')]]) {
+      const target = join(ROOT, 'docs', file)
+      if (!existsSync(target)) continue
+      const silent = join(work, `silent-${file}`)
+      spawnSync(ffmpeg, ['-y', '-loglevel', 'error', '-i', target, '-an', '-c', 'copy', silent], { stdio: 'inherit' })
+      mux(ffmpeg, work, silent, target, scenes)
+      console.log(`${target}: sound laid`)
+    }
   } else if (at !== undefined) {
     const t = await open(port, work, chosen[0])
     await t.send('Runtime.evaluate', { expression: `seek(${Number(at)})` })
