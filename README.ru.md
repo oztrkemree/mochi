@@ -9,6 +9,8 @@
 Он реагирует на всё, что делает Claude, останавливает команды, о которых ты пожалел бы,<br>
 и держит на виду твой контекст, сессию и недельные лимиты.
 
+<a href="https://github.com/oztrkemree/mochi/releases/download/demo-videos/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%20%D0%A1%D0%BC%D0%BE%D1%82%D1%80%D0%B5%D1%82%D1%8C%20%D0%B4%D0%B5%D0%BC%D0%BE%20%D0%B7%D0%B0%2026%20%D1%81%D0%B5%D0%BA%D1%83%D0%BD%D0%B4-D97757?style=for-the-badge" height="44" alt="▶ Смотреть демо за 26 секунд"></a>
+
 [![Лицензия: MIT](https://img.shields.io/badge/лицензия-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Плагин для Claude Code](https://img.shields.io/badge/Claude_Code-плагин-D97757?style=for-the-badge)](#-установка-за-10-секунд)
 [![16 языков](https://img.shields.io/badge/языки-16-7AA2F7?style=for-the-badge)](#-16-языков)

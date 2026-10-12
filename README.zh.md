@@ -9,6 +9,8 @@
 Claude 的一举一动它都有反应，会拦下那些你事后会后悔的命令，<br>
 还把上下文、会话和每周限额一直替你摆在眼前。
 
+<a href="https://github.com/oztrkemree/mochi/releases/download/demo-videos/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%20%E8%A7%82%E7%9C%8B%2026%20%E7%A7%92%E6%BC%94%E7%A4%BA-D97757?style=for-the-badge" height="44" alt="▶ 观看 26 秒演示"></a>
+
 [![许可证: MIT](https://img.shields.io/badge/许可证-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code 插件](https://img.shields.io/badge/Claude_Code-插件-D97757?style=for-the-badge)](#-10-秒安装)
 [![16 种语言](https://img.shields.io/badge/语言-16_种-7AA2F7?style=for-the-badge)](#-16-种语言)

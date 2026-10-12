@@ -9,6 +9,8 @@
 Claudeのすることすべてに反応し、あとで後悔しそうなコマンドは止めてくれて、<br>
 コンテキスト・セッション・週間の上限を、いつでも見えるところに置いておいてくれます。
 
+<a href="https://github.com/oztrkemree/mochi/releases/download/demo-videos/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%2026%E7%A7%92%E3%81%AE%E3%83%87%E3%83%A2%E3%82%92%E8%A6%8B%E3%82%8B-D97757?style=for-the-badge" height="44" alt="▶ 26秒のデモを見る"></a>
+
 [![ライセンス: MIT](https://img.shields.io/badge/ライセンス-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Codeプラグイン](https://img.shields.io/badge/Claude_Code-プラグイン-D97757?style=for-the-badge)](#-10秒でインストール)
 [![16言語](https://img.shields.io/badge/対応言語-16-7AA2F7?style=for-the-badge)](#-16言語に対応)

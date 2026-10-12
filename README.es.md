@@ -9,6 +9,8 @@
 Reacciona a todo lo que hace Claude, frena los comandos de los que te arrepentirías<br>
 y mantiene a la vista tu contexto y tus límites de sesión y de semana.
 
+<a href="https://github.com/oztrkemree/mochi/releases/download/demo-videos/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%20Mira%20la%20demo%20de%2026%20segundos-D97757?style=for-the-badge" height="44" alt="▶ Mira la demo de 26 segundos"></a>
+
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Plugin de Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-instalación-en-10-segundos)
 [![16 idiomas](https://img.shields.io/badge/idiomas-16-7AA2F7?style=for-the-badge)](#-16-idiomas)
