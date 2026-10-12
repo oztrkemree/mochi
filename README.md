@@ -9,7 +9,7 @@
 It reacts to everything Claude does, stops the commands you would regret,<br>
 and keeps your context, session and weekly limits in plain sight.
 
-<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%20Watch%20the%2026--second%20demo-D97757?style=for-the-badge" height="44" alt="▶ Watch the 26-second demo"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="docs/watch-en.svg" height="82" alt="▶ Watch the demo (0:26)"></a>
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-install-in-10-seconds)
