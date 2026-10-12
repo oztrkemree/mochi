@@ -9,7 +9,7 @@
 Il réagit à tout ce que fait Claude, arrête les commandes que vous regretteriez,<br>
 et garde sous vos yeux vos limites de contexte, de session et de semaine.
 
-<a href="https://github.com/oztrkemree/mochi/releases/download/demo-videos/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%20Voir%20la%20d%C3%A9mo%20de%2026%20secondes-D97757?style=for-the-badge" height="44" alt="▶ Voir la démo de 26 secondes"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%20Voir%20la%20d%C3%A9mo%20de%2026%20secondes-D97757?style=for-the-badge" height="44" alt="▶ Voir la démo de 26 secondes"></a>
 
 [![Licence : MIT](https://img.shields.io/badge/licence-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Plugin Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-installer-en-10-secondes)

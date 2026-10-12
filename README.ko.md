@@ -9,7 +9,7 @@
 Claude가 하는 모든 일에 반응하고, 나중에 후회할 명령은 막아 주고,<br>
 컨텍스트와 세션, 주간 한도를 늘 눈앞에 띄워 둬요.
 
-<a href="https://github.com/oztrkemree/mochi/releases/download/demo-videos/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%2026%EC%B4%88%20%EB%8D%B0%EB%AA%A8%20%EB%B3%B4%EA%B8%B0-D97757?style=for-the-badge" height="44" alt="▶ 26초 데모 보기"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%2026%EC%B4%88%20%EB%8D%B0%EB%AA%A8%20%EB%B3%B4%EA%B8%B0-D97757?style=for-the-badge" height="44" alt="▶ 26초 데모 보기"></a>
 
 [![라이선스: MIT](https://img.shields.io/badge/라이선스-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code 플러그인](https://img.shields.io/badge/Claude_Code-플러그인-D97757?style=for-the-badge)](#-10초-만에-설치)

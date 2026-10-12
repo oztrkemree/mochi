@@ -9,7 +9,7 @@
 Claude'un yaptığı her şeye tepki verir, sonradan pişman olacağın komutları durdurur,<br>
 context'ini, oturum ve haftalık limitlerini de hep göz önünde tutar.
 
-<a href="https://github.com/oztrkemree/mochi/releases/download/demo-videos/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%2026%20saniyelik%20demoyu%20izle-D97757?style=for-the-badge" height="44" alt="▶ 26 saniyelik demoyu izle"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="https://img.shields.io/badge/%E2%96%B6%2026%20saniyelik%20demoyu%20izle-D97757?style=for-the-badge" height="44" alt="▶ 26 saniyelik demoyu izle"></a>
 
 [![Lisans: MIT](https://img.shields.io/badge/lisans-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code eklentisi](https://img.shields.io/badge/Claude_Code-eklenti-D97757?style=for-the-badge)](#-10-saniyede-kurulum)
