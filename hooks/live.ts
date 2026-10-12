@@ -28,6 +28,9 @@ export function peerLabel(root: string, firstPrompt: string): string {
   return words
 }
 
+/** What a chat is called on the board and in news: its title in the app, else its short name. */
+export const nameOf = (p: Pick<Peer, 'label' | 'title'>): string => p.title || p.label
+
 /** A peer file's content, if it is one and still alive. */
 export function peerOf(value: unknown, now: number): Peer | null {
   if (typeof value !== 'object' || value === null) return null
@@ -37,6 +40,7 @@ export function peerOf(value: unknown, now: number): Peer | null {
   return {
     id: v.id, label: typeof v.label === 'string' && v.label !== '' ? v.label : t().word.chat, state, line: typeof v.line === 'string' ? v.line : '', since: typeof v.since === 'number' ? v.since : 0, at: v.at,
     folder: typeof v.folder === 'string' ? v.folder : '', branch: typeof v.branch === 'string' ? v.branch : '', isWorktree: v.isWorktree === true, stateAt: typeof v.stateAt === 'number' ? v.stateAt : 0,
+    title: typeof v.title === 'string' ? clip(v.title.replace(/\s+/g, ' ').trim(), 60) : '',
   }
 }
 
@@ -49,9 +53,9 @@ export function peerNews(before: readonly Peer[], after: readonly Peer[], now: n
   for (const p of after) {
     const was = before.find(b => b.id === p.id)
     if (was === undefined) continue
-    if (p.state === 'asking' && was.state !== 'asking') out.push({ kind: 'asking', line: t().peer.waiting(p.label) })
-    if (was.state === 'busy' && p.state === 'idle' && was.since > 0 && now - was.since >= 60_000) out.push({ kind: 'done', line: t().peer.done(p.label, duration((now - was.since) / 1000)) })
-    if (p.state === 'error' && was.state !== 'error') out.push({ kind: 'failed', line: t().peer.failed(p.label) })
+    if (p.state === 'asking' && was.state !== 'asking') out.push({ kind: 'asking', line: t().peer.waiting(nameOf(p)) })
+    if (was.state === 'busy' && p.state === 'idle' && was.since > 0 && now - was.since >= 60_000) out.push({ kind: 'done', line: t().peer.done(nameOf(p), duration((now - was.since) / 1000)) })
+    if (p.state === 'error' && was.state !== 'error') out.push({ kind: 'failed', line: t().peer.failed(nameOf(p)) })
   }
   return out
 }
@@ -65,9 +69,9 @@ export function peersLine(peers: readonly Peer[]): string | null {
   const busy = peers.filter(p => p.state === 'busy')
   const error = peers.filter(p => p.state === 'error')
   const d = t().peer
-  if (asking.length > 0) return d.asking(asking[0]?.label ?? '', asking.length - 1)
-  if (error.length > 0) return d.error(error[0]?.label ?? '')
-  if (busy.length === 1) return d.busyOne(busy[0]?.label ?? '')
+  if (asking.length > 0) return d.asking(asking[0] ? nameOf(asking[0]) : '', asking.length - 1)
+  if (error.length > 0) return d.error(error[0] ? nameOf(error[0]) : '')
+  if (busy.length === 1) return d.busyOne(busy[0] ? nameOf(busy[0]) : '')
   if (busy.length > 1) return d.busyMany(busy.length)
   return null
 }

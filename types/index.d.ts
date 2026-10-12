@@ -181,6 +181,8 @@ export type Sample = { kind: string; at: number; p: number }
 export type Peer = {
   id: string; label: string; state: 'busy' | 'asking' | 'idle' | 'error'; line: string; since: number; at: number
   folder?: string; branch?: string; isWorktree?: boolean; stateAt?: number
+  /** The chat's title in the app's list of chats (its custom title); '' or absent when it has none. */
+  title?: string
 }
 
 /**

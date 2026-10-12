@@ -137,6 +137,9 @@ export const chat = {
   /** This chat's short name for the others; '' until known. */
   label: '',
   isLabelFromPrompt: false,
+  /** This chat's title in the app's list of chats, '' until Claude Code gives one; and its transcript, where the app writes it. */
+  title: '',
+  transcript: '',
   /** This chat's own days, written to its file in `days/` after each turn. */
   myDays: {} as Record<string, DayRec>,
   /** The other chats' days, as last read. */
@@ -218,10 +221,10 @@ export const chat = {
   /** The badge awards in line, run one at a time. */
   awards: Promise.resolve() as Promise<void>,
   /**
-   * Ultracode: the agents a workflow script started and has not heard back from,
-   * how many ran this round, how many of those answered, and since when, when
+   * Ultracode and background agents: the agents a workflow script (or the Agent tool, in the background) started and has not heard back from,
+   * whether a workflow's are among them, how many ran this round, how many of those answered, and since when, when
    * the last one ended (0 while one runs), when any of them last did something,
    * the tool calls the subagents have open, and the finale a busy turn's end shows.
    */
-  flow: { ids: new Set<string>(), total: 0, ok: 0, startedAt: 0, idleAt: 0, at: 0, calls: 0, finale: null as Reaction | null },
+  flow: { ids: new Set<string>(), isWorkflow: false, total: 0, ok: 0, startedAt: 0, idleAt: 0, at: 0, calls: 0, finale: null as Reaction | null },
 }

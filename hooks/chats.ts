@@ -2,7 +2,7 @@ import type { Env, Limit, Peer } from '../types'
 import type { Card } from './detail'
 import { age } from './facts'
 import { t } from './i18n'
-import { PEER_INK, peerState } from './live'
+import { PEER_INK, nameOf, peerState } from './live'
 import { clip, cols } from './text'
 
 // Several chats and the usage windows they share: the board of every chat on
@@ -53,7 +53,7 @@ const RANK: Record<Peer['state'], number> = { asking: 0, error: 1, busy: 2, idle
 /** Every chat for the board: this one first, then those waiting on the person (the longest wait first), failed, working, idle. */
 export function boardOf(me: Peer | undefined, peers: readonly Peer[]): Peer[] {
   const others = peers.filter(p => p.id !== me?.id).sort((a, b) =>
-    RANK[a.state] - RANK[b.state] || (a.state === 'asking' ? (a.stateAt ?? 0) - (b.stateAt ?? 0) : 0) || a.label.localeCompare(b.label))
+    RANK[a.state] - RANK[b.state] || (a.state === 'asking' ? (a.stateAt ?? 0) - (b.stateAt ?? 0) : 0) || nameOf(a).localeCompare(nameOf(b)))
   return me ? [me, ...others] : others
 }
 
@@ -61,13 +61,15 @@ export function boardOf(me: Peer | undefined, peers: readonly Peer[]): Peer[] {
 const sinceOf = (p: Peer): number => (p.state === 'busy' && p.since > 0 ? p.since : p.stateAt ?? 0)
 
 const branchOf = (p: Peer): string => (p.branch ? (p.isWorktree ? t().chats.worktree(p.branch) : p.branch) : '')
+/** Where a chat works: its branch, after its folder's name when a title has taken the name's place. */
+const whereOf = (p: Peer): string => [p.title ? p.label : '', branchOf(p)].filter(s => s !== '').join(' · ')
 
-/** One chat in words: name, branch, state, what it does or waits for (an idle one does nothing), for how long. */
+/** One chat in words: name (its title, when it has one), folder and branch, state, what it does or waits for (an idle one does nothing), for how long. */
 function parts(p: Peer, isMe: boolean, now: number): string[] {
   const from = sinceOf(p)
   return [
-    isMe ? `${p.label} (${t().chats.here})` : p.label,
-    branchOf(p),
+    isMe ? `${nameOf(p)} (${t().chats.here})` : nameOf(p),
+    whereOf(p),
     peerState(p.state),
     p.state === 'idle' ? '' : p.line,
     from > 0 ? age(now - from) : '',
@@ -90,6 +92,8 @@ export function chatsCard(env: Env, now: number): Card | null {
   const all = boardOf(env.me, peers)
   const asking = all.filter(p => p.state === 'asking').length
   const d = t().chats
+  // A title is longer than a folder's name: the name takes more of the row when one has it.
+  const hasTitle = all.some(p => p.title)
   return {
     title: d.title, right: `${t().detail.open(all.length)}${asking > 0 ? ` · ${d.waiting(asking)}` : ''}`, content: 16 + (all.length - 1) * 22,
     body: (x, y, w) => all.map((p, i) => {
@@ -99,14 +103,14 @@ export function chatsCard(env: Env, now: number): Card | null {
       const pulse = p.state === 'asking' || p.state === 'busy'
         ? `<animate attributeName="opacity" values="1;0.35;1" dur="${p.state === 'asking' ? 1.2 : 2}s" repeatCount="indefinite"/>`
         : ''
-      // Name, branch (on a wide card), then the state and what it does, and for how long at the right.
-      const nameW = Math.min(160, w * 0.24)
-      const branchW = w >= 480 ? Math.min(140, w * 0.18) : 0
+      // Name, folder and branch (on a wide card), then the state and what it does, and for how long at the right.
+      const nameW = hasTitle ? Math.min(280, w * 0.38) : Math.min(160, w * 0.24)
+      const branchW = w >= 480 ? (hasTitle ? Math.min(180, w * 0.22) : Math.min(140, w * 0.18)) : 0
       const chars = Math.floor(nameW / 7)
       // This chat is marked where the name has room for it; a narrow card only keeps it first.
       const name = i === 0 && env.me !== undefined && chars - cols(d.here) - 1 >= 4
-        ? `${esc(clip(p.label, chars - cols(d.here) - 1))}<tspan class="faint" font-weight="400" dx="6">${esc(d.here)}</tspan>`
-        : esc(clip(p.label, chars))
+        ? `${esc(clip(nameOf(p), chars - cols(d.here) - 1))}<tspan class="faint" font-weight="400" dx="6">${esc(d.here)}</tspan>`
+        : esc(clip(nameOf(p), chars))
       const room = Math.floor((w - 16 - nameW - branchW - 44) / 6.3)
       const state = clip(peerState(p.state), room)
       const rest = room - cols(state) - 3
@@ -114,7 +118,7 @@ export function chatsCard(env: Env, now: number): Card | null {
       const span = from > 0 ? age(now - from) : ''
       return `<circle cx="${x + 4}" cy="${cy}" r="4" fill="${ink}">${pulse}</circle>` +
         `<text class="t fg" x="${x + 16}" y="${cy + 4}" font-size="12" font-weight="600">${name}</text>` +
-        (branchW > 0 && branchOf(p) ? `<text class="t faint" x="${n(x + 16 + nameW)}" y="${cy + 4}" font-size="11">${esc(clip(branchOf(p), Math.floor((branchW - 8) / 6.4)))}</text>` : '') +
+        (branchW > 0 && whereOf(p) ? `<text class="t faint" x="${n(x + 16 + nameW)}" y="${cy + 4}" font-size="11">${esc(clip(whereOf(p), Math.floor((branchW - 8) / 6.4)))}</text>` : '') +
         `<text class="t" x="${n(x + 16 + nameW + branchW)}" y="${cy + 4}" font-size="11.5"><tspan ${isIdle ? 'class="faint"' : `fill="${ink}"`}>${esc(state)}</tspan>` +
         (!isIdle && p.line !== '' && rest > 6 ? `<tspan class="faint" font-size="11"> · ${esc(clip(p.line, rest))}</tspan>` : '') + '</text>' +
         (span ? `<text class="t${p.state === 'asking' ? '' : ' faint'}" x="${n(x + w)}" y="${cy + 4}" font-size="10.5" text-anchor="end"${p.state === 'asking' ? ` fill="${ink}"` : ''}>${esc(span)}</text>` : '')

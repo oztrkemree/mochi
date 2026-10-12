@@ -117,7 +117,7 @@ test('the board puts this chat first, then the waiting ones, the longest wait fi
   ])
   // A file an older Mochi wrote has no branch and no time in its state.
   const old = peerOf({ id: 'x', label: 'old', state: 'idle', line: 'ready', since: 0, at: NOW }, NOW)
-  expect(old).toEqual({ id: 'x', label: 'old', state: 'idle', line: 'ready', since: 0, at: NOW, folder: '', branch: '', isWorktree: false, stateAt: 0 })
+  expect(old).toEqual({ id: 'x', label: 'old', state: 'idle', line: 'ready', since: 0, at: NOW, folder: '', branch: '', isWorktree: false, stateAt: 0, title: '' })
   expect(boardLines(undefined, [old!], NOW)).toEqual(['Chats: 1 open', '  ○ old · idle'])
 })
 
@@ -140,6 +140,38 @@ test('the details pane draws the board as a card, and as lines in the terminal',
   expect(narrow.indexOf('mochi') < narrow.indexOf('wiki')).toBe(true)
   expect(chatsCard({ ...env, peers: [] }, NOW)).toBe(null)
   expect(detailLines(env, NOW)).toContain('  ● wiki · fix (worktree) · waiting for you · awaiting approval · rm -rf <x> · 6m')
+})
+
+test('a chat with a title is named by it, its folder beside its branch', async () => {
+  const me = peer('mochi', 'idle', { title: 'Background agents in Mochi' })
+  const peers = [peer('web', 'asking', { title: 'Fix   the\nlogin', line: 'waiting for your answer', stateAt: NOW - 2 * MIN }), peer('api', 'idle')]
+  expect(boardLines(me, peers.map(p => peerOf(p, NOW)!), NOW)).toEqual([
+    'Chats: 3 open',
+    '  ○ Background agents in Mochi (this chat) · mochi · main · idle',
+    '  ● Fix the login · web · main · waiting for you · waiting for your answer · 2m',
+    '  ○ api · main · idle',
+  ])
+  const svg = chatsCard({ ...NO_ENV, me, peers: peers.map(p => peerOf(p, NOW)!) }, NOW)?.body(0, 0, 900) ?? ''
+  for (const part of ['Background agents in Mochi', 'this chat', 'mochi · main', 'Fix the login', 'web · main']) expect(svg).toContain(part)
+})
+
+test('the title Claude Code gives goes in this chat’s file; a new chat’s is read from its transcript at the turn’s end', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on)
+  on('turn.start', () => ({ turnId: 't' }) as never)
+  on('turn.complete', () => ({ text: '' }) as never)
+  on('classic.UserPromptSubmit', () => ({}) as never)
+  on('fs.stat', ($, e) => ({ value: { kind: 'file', size: (files.get(e.path) ?? '').length, mtimeMs: NOW, isSymlink: false } }) as never)
+  await clock.set(NOW)
+  await $.session.start(START)
+  files.set('/t/me-1.jsonl', '{"type":"user"}\n{"type":"custom-title","customTitle":"Old \\"name\\"","sessionId":"me-1"}\n{"type":"custom-title","customTitle":"Agents and subagents","sessionId":"me-1"}\n')
+  await $.classic.UserPromptSubmit({ prompt: 'go', transcript_path: '/t/me-1.jsonl', session_id: 'me-1', cwd: '/w' } as never)
+  await $.turn.start({ text: 'go', turnId: 't' } as never)
+  await $.turn.complete({ turnId: 't', reason: 'answer', answer: '', durationMs: 1000, isAborted: false } as never)
+  await clock.advance(2000)
+  expect(JSON.parse(files.get('/h/.claude/mochi/live/me-1.json') ?? '{}').title).toBe('Agents and subagents')
+  // A rename reaches the next prompt.
+  await $.classic.UserPromptSubmit({ prompt: 'more', transcript_path: '/t/me-1.jsonl', session_title: 'Renamed', session_id: 'me-1', cwd: '/w' } as never)
+  expect((await $.command.run({ command: 'mochi', args: 'chats' } as never)).text).toContain('Renamed (this chat)')
 })
 
 test('a nearly used-up session that resets is told once, by the chat that claims it', async ($, on) => {

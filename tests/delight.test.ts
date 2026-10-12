@@ -617,6 +617,30 @@ test('ultracode: the agents of a workflow show as a count, and the last one endi
   await ui.unmount()
 })
 
+test('background agents keep a count after the turn that sent them ends, without ultracode in front', async ($, on) => {
+  const clock = engine(on)
+  let n = 0
+  on('agent.spawn', () => ({ model: 'm', agentId: `b${++n}` }) as never)
+  on('turn.complete', () => ({ text: '' }) as never)
+  await clock.set(at(2026, 7, 1, 12))
+  await $.session.start(START)
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  const spawn = (background: boolean) => $.agent.spawn({ prompt: 'p', description: 'd', background } as never)
+  const finish = (agentId: string) => $.turn.complete({ agentId, turnId: `t-${agentId}`, reason: 'answer', answer: '', durationMs: 1000, isAborted: false } as never)
+  await spawn(true)
+  await spawn(true)
+  // A foreground one counts while its Agent call runs, not here.
+  await spawn(false)
+  await clock.advance(4000)
+  expect(await ui.find({ text: /^0\/2 · 2 agents/ })).toBeDefined()
+  expect(await ui.find({ text: /ultracode/ })).toBeUndefined()
+  await finish('b1')
+  await finish('b2')
+  await clock.advance(4000)
+  expect(await ui.find({ text: /^done · 2 agents/ })).toBeDefined()
+  await ui.unmount()
+})
+
 test('ultracode: agents asking at once give the count back, and a stopped run is no party', async ($, on) => {
   const clock = engine(on)
   let n = 0

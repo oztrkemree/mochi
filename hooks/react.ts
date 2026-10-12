@@ -171,16 +171,19 @@ export function onPrompt(text: string, wasAsleep: boolean): Reaction {
   return { mood: 'thinking', line: thinking, holdMs: 0 }
 }
 
-// ---------- ultracode: a workflow's agents ----------
+// ---------- ultracode, and background agents ----------
 
-/** While a workflow's agents run: how many of those started have finished, and how many work now. */
-export const flowLine = (running: number, total: number): string => `${ULTRA} · ${total - running}/${total} · ${t().st.agents(running)}`
+/** The parts that are there, joined: background agents' lines have no `ultracode` in front. */
+const parts = (...xs: string[]) => xs.filter(x => x !== '').join(' · ')
+
+/** While a workflow's agents (or background ones, `head` '') run: how many of those started have finished, and how many work now. */
+export const flowLine = (running: number, total: number, head = ULTRA): string => parts(head, `${total - running}/${total}`, t().st.agents(running))
 
 /** Once they have all finished: how many there were and how long it took; a run none of whose agents answered was stopped, not done. */
-export function flowEnd(agents: number, answered: number, seconds: number): Reaction {
+export function flowEnd(agents: number, answered: number, seconds: number, head = ULTRA): Reaction {
   const w = t().st
-  if (answered === 0) return { mood: 'shocked', line: `${ULTRA} · ${w.stopped}`, holdMs: 6000 }
-  return { mood: 'party', line: `${ULTRA} · ${w.done} · ${w.agents(agents)} · ${duration(seconds)}`, holdMs: 12_000, sound: 'party' }
+  if (answered === 0) return { mood: 'shocked', line: parts(head, w.stopped), holdMs: 6000 }
+  return { mood: 'party', line: parts(head, w.done, w.agents(agents), duration(seconds)), holdMs: 12_000, sound: 'party' }
 }
 
 // ---------- the end of a turn ----------

@@ -8,7 +8,7 @@ import { PR_FIELDS, RUN_FIELDS, ciLine, ciOf, ghTrouble, isPushing, prOf } from 
 import { exportOf, feedbackUrl, isCleared, isExported } from './data'
 import type { Scope } from './data'
 import { kaomoji, moodLabel } from './looks'
-import { afterTool, beforeTool, duration, flowEnd, flowLine, isCommit, isTest, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
+import { ULTRA, afterTool, beforeTool, duration, flowEnd, flowLine, isCommit, isTest, onPrompt, onTurnEnd, restLine, subject, waitsOnPerson } from './react'
 import type { Reaction, SoundName } from './react'
 import { boardLines, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from './chats'
 import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, ruleAsWritten, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
@@ -463,7 +463,7 @@ async function liveNow($: Dollar): Promise<Omit<Peer, 'at'>> {
     chat.stateAt = await $.clock.now()
   }
   return {
-    id: chat.sessionId, label: chat.label || t().word.chat, state, line: f.line, since: state === 'busy' ? chat.turn.startedAt : 0,
+    id: chat.sessionId, label: chat.label || t().word.chat, title: chat.title, state, line: f.line, since: state === 'busy' ? chat.turn.startedAt : 0,
     folder: chat.folder, branch: (await read($, env)).git?.branch ?? '', isWorktree: chat.isWorktree, stateAt: chat.stateAt,
   }
 }
@@ -686,6 +686,28 @@ async function startShared($: Dollar) {
   void writeLive($, true).catch(() => undefined)
 }
 
+/** The title and transcript a classic hook's input carries, kept when there is one. */
+function noteTitle(title: string | undefined, transcript: string | undefined) {
+  if (typeof transcript === 'string' && transcript !== '') chat.transcript = transcript
+  const clean = typeof title === 'string' ? title.replace(/\s+/g, ' ').trim() : ''
+  if (clean !== '') chat.title = clean
+}
+
+/** A transcript larger than this is not read for a title: a long chat has long had one from a prompt. */
+const TITLE_READ_MAX = 8 * 1024 * 1024
+
+/** The title the app last wrote in this chat's transcript, if it has written one. */
+async function readTitle($: Dollar) {
+  if (chat.transcript === '') return
+  const st = await $.fs.stat(chat.transcript)
+  if (st.size > TITLE_READ_MAX) return
+  const text = await $.fs.read(chat.transcript)
+  const found = [...text.matchAll(/"type":"custom-title","customTitle":("(?:[^"\\]|\\.)*")/g)].at(-1)?.[1]
+  if (found === undefined) return
+  noteTitle(JSON.parse(found) as string, undefined)
+  if (chat.title !== '') await writeLive($, true)
+}
+
 /** A resumed chat in a folder that names nothing takes its name from its first prompt. */
 async function firstPromptLabel($: Dollar) {
   const found = await $.session.messages()
@@ -806,8 +828,8 @@ const FLOW_SETTLE_MS = 2500
 /** Agents that report nothing for this long were stopped: let go of them. */
 const FLOW_STALE_MS = 10 * 60_000
 
-/** One of a workflow script's agents started or ended: the helpers beside Mochi follow, and three at once earn the badge. */
-async function flowMove($: Dollar, id: string, isStart: boolean, isAnswer = true) {
+/** One of a workflow script's agents (or a background one) started or ended: the helpers beside Mochi follow, and three at once earn the badge. */
+async function flowMove($: Dollar, id: string, isStart: boolean, isAnswer = true, isWorkflow = false) {
   const w = chat.flow
   if (isStart ? w.ids.has(id) : !w.ids.has(id)) return
   const now = await $.clock.now()
@@ -815,6 +837,7 @@ async function flowMove($: Dollar, id: string, isStart: boolean, isAnswer = true
   w.at = now
   if (isStart) {
     if (w.total === 0) w.startedAt = now
+    if (isWorkflow) w.isWorkflow = true
     w.ids.add(id)
     w.total += 1
     w.idleAt = 0
@@ -841,15 +864,16 @@ async function flowTick($: Dollar, now: number, f: Face): Promise<boolean> {
     await setEnv($, v => ({ ...v, agents: Math.max(0, v.agents - stopped) }))
   }
   if (w.ids.size > 0) {
-    const line = flowLine(w.ids.size, w.total)
+    const line = flowLine(w.ids.size, w.total, w.isWorkflow ? ULTRA : '')
     const isFree = !chat.isBusy && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy' || f.mood === 'agent')
     if (!isFree || f.line === line) return false
     await show($, { mood: 'agent', line, holdMs: 0 }, w.startedAt)
     return true
   }
   if (w.total === 0 || w.idleAt === 0 || now - w.idleAt < FLOW_SETTLE_MS) return false
-  const end = flowEnd(w.total, w.ok, Math.round((w.idleAt - w.startedAt) / 1000))
+  const end = flowEnd(w.total, w.ok, Math.round((w.idleAt - w.startedAt) / 1000), w.isWorkflow ? ULTRA : '')
   w.total = 0
+  w.isWorkflow = false
   w.ok = 0
   w.idleAt = 0
   // The reply to the workflow's notification is on its way: its end shows the party.
@@ -2029,10 +2053,13 @@ export const register: Register = on => {
     }
   })
 
-  // The agents a workflow script starts (ultracode): counted from their start to their turn's end.
+  // The agents a workflow script starts (ultracode), and those the Agent tool sends to the background, whose call
+  // returns at once: counted from their start to their turn's end. A foreground one counts while its call runs (tool.call).
+  // A teammate goes idle between turns, so its turn's end is no ending: it is left out.
   on('agent.spawn', async ($, e, next) => {
     const started = await next(e)
-    if (e.workflow !== undefined && started.agentId !== undefined) await flowMove($, started.agentId, true)
+    const isWorkflow = e.workflow !== undefined
+    if ((isWorkflow || (e.background && e.isTeammate !== true)) && started.agentId !== undefined) await flowMove($, started.agentId, true, true, isWorkflow)
     return started
   })
 
@@ -2165,6 +2192,17 @@ export const register: Register = on => {
     return ran
   }).catch(($, e, next) => next(e))
 
+  // The chat's title, for the board of chats: Claude Code gives it at the start and with each prompt.
+  // A new chat is named after its first prompt, once that prompt has gone: the turn's end reads it from the transcript.
+  on('classic.SessionStart', async ($, e, next) => {
+    noteTitle(e.session_title, e.transcript_path)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+  on('classic.UserPromptSubmit', async ($, e, next) => {
+    noteTitle(e.session_title, e.transcript_path)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
   on('classic.PermissionRequest', async ($, e, next) => {
     const input = typeof e.tool_input === 'object' && e.tool_input !== null ? (e.tool_input as Record<string, unknown>) : {}
     const about = subject({ ...input, tool: e.tool_name })
@@ -2194,6 +2232,7 @@ export const register: Register = on => {
     const now = await $.clock.now()
     chat.lastActivity = now
     void measure($).catch(() => undefined)
+    if (chat.title === '') void readTitle($).catch(() => undefined)
     const ended = onTurnEnd({
       reason: e.reason,
       seconds: Math.round((now - chat.turn.startedAt) / 1000),
