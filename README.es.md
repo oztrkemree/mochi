@@ -17,7 +17,7 @@ y mantiene a la vista tu contexto y tus límites de sesión y de semana.
 [![136 accesorios](https://img.shields.io/badge/armario-136_accesorios-B684F6?style=for-the-badge)](#-un-armario-que-crece-contigo)
 [![Sin red](https://img.shields.io/badge/red-ninguna-4CC38A?style=for-the-badge)](#-qué-toca)
 
-[English](README.md) · [Türkçe](README.tr.md) · **Español** · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+<sub>[English](README.md) · [Türkçe](README.tr.md) · **Español** · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
 <br>
 

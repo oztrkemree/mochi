@@ -17,7 +17,7 @@ context'ini, oturum ve haftalık limitlerini de hep göz önünde tutar.
 [![136 aksesuar](https://img.shields.io/badge/gardırop-136_parça-B684F6?style=for-the-badge)](#-seninle-büyüyen-bir-gardırop)
 [![Ağ yok](https://img.shields.io/badge/ağ-yok-4CC38A?style=for-the-badge)](#-neye-dokunur)
 
-[English](README.md) · **Türkçe** · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+<sub>[English](README.md) · **Türkçe** · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
 <br>
 

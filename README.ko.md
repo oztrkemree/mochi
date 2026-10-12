@@ -17,7 +17,7 @@ Claude가 하는 모든 일에 반응하고, 나중에 후회할 명령은 막�
 [![아이템 136개](https://img.shields.io/badge/옷장-아이템_136개-B684F6?style=for-the-badge)](#-함께-자라는-옷장)
 [![네트워크 없음](https://img.shields.io/badge/네트워크-없음-4CC38A?style=for-the-badge)](#-mochi가-손대는-것들)
 
-[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · **한국어**
+<sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · **한국어**</sub>
 
 <br>
 

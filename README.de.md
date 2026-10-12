@@ -17,7 +17,7 @@ und hat Kontext, Sitzung und Wochenlimit immer gut sichtbar für dich im Blick.
 [![136 Accessoires](https://img.shields.io/badge/Kleiderschrank-136_Teile-B684F6?style=for-the-badge)](#-ein-kleiderschrank-der-mit-dir-wächst)
 [![Kein Netzwerk](https://img.shields.io/badge/Netzwerk-keins-4CC38A?style=for-the-badge)](#-worauf-mochi-zugreift)
 
-[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · **Deutsch** · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+<sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · **Deutsch** · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
 <br>
 

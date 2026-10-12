@@ -17,7 +17,7 @@ et garde sous vos yeux vos limites de contexte, de session et de semaine.
 [![136 accessoires](https://img.shields.io/badge/garde--robe-136_accessoires-B684F6?style=for-the-badge)](#-une-garde-robe-qui-grandit-avec-vous)
 [![Aucun réseau](https://img.shields.io/badge/r%C3%A9seau-aucun-4CC38A?style=for-the-badge)](#-ce-que-mochi-touche)
 
-[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · **Français** · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+<sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · **Français** · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
 <br>
 

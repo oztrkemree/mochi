@@ -17,7 +17,7 @@ Claude 的一举一动它都有反应，会拦下那些你事后会后悔的命�
 [![136 件配饰](https://img.shields.io/badge/衣橱-136_件-B684F6?style=for-the-badge)](#-和你一起成长的衣橱)
 [![不联网](https://img.shields.io/badge/网络-无-4CC38A?style=for-the-badge)](#-它会访问什么)
 
-[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · **中文** · [日本語](README.ja.md) · [한국어](README.ko.md)
+<sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · **中文** · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
 <br>
 

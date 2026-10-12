@@ -17,7 +17,7 @@ e deixa à vista o seu contexto e os limites da sessão e da semana.
 [![136 acessórios](https://img.shields.io/badge/guarda--roupa-136_itens-B684F6?style=for-the-badge)](#-um-guarda-roupa-que-cresce-com-você)
 [![Sem rede](https://img.shields.io/badge/rede-nenhuma-4CC38A?style=for-the-badge)](#-o-que-ele-acessa)
 
-[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · **Português** · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+<sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · **Português** · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
 <br>
 

@@ -17,7 +17,7 @@ Claudeのすることすべてに反応し、あとで後悔しそうなコマ�
 [![136個のアクセサリー](https://img.shields.io/badge/着せ替え-136個-B684F6?style=for-the-badge)](#-使うほど増える着せ替え)
 [![ネットワーク通信なし](https://img.shields.io/badge/ネットワーク-なし-4CC38A?style=for-the-badge)](#-mochiがアクセスするもの)
 
-[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · **日本語** · [한국어](README.ko.md)
+<sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · **日本語** · [한국어](README.ko.md)</sub>
 
 <br>
 
