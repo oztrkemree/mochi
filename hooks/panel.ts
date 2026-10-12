@@ -4,7 +4,6 @@ import { clockAt } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { isShell } from './guard'
 import { t } from './i18n'
-import { PEER_INK, peersLine } from './live'
 import { clip, cols, rtlStyle } from './text'
 import type { Arc } from './gauge'
 import { mascotInner, shiftTimeline } from './rig'
@@ -246,20 +245,11 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
     ...(info.cost > 0 ? [`$${info.cost.toFixed(2)}`] : []),
   ]
   const metaX = git ? x0 + 14 : x0
-  // The other chats, right-aligned on the same line, when one needs a look.
-  const others = peersLine(info.peers ?? [])
-  const lead = (info.peers ?? []).find(p => p.state === 'asking') ?? (info.peers ?? []).find(p => p.state === 'error') ?? (info.peers ?? []).find(p => p.state === 'busy')
   const room3 = sepX - metaX - 12
-  const peerText = others ? clip(others, Math.max(4, Math.floor((room3 * 0.55 - 12) / 6))) : ''
-  const peerW = others ? cols(peerText) * 6 + 12 : 0
-  // A push's CI while its runs go, else the branch's pull request, just before the other chats, where it leaves the branch some room.
-  const ci = ciMark(info.ci, info.pr, sepX - 12 - (peerW > 0 ? peerW + 10 : 0), 67, room3 - (peerW > 0 ? peerW + 10 : 0) - 40)
-  const peerSvg = others && lead
-    ? `<circle cx="${n(sepX - 12 - peerW + 3.5)}" cy="63.2" r="3" fill="${PEER_INK[lead.state]}">${lead.state === 'asking' ? '<animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>' : ''}</circle>` +
-      `<text class="t" x="${n(sepX - 12 - peerW + 11)}" y="67" font-size="11" fill="${lead.state === 'busy' ? '#A59D96' : PEER_INK[lead.state]}">${esc(peerText)}</text>`
-    : ''
+  // A push's CI while its runs go, else the branch's pull request, at the right end of the line.
+  const ci = ciMark(info.ci, info.pr, sepX - 12, 67, room3 - 40)
   const third = (git ? BRANCH(x0, 67) : '') +
-    `<text class="t faint" x="${metaX}" y="67" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (peerW > 0 ? peerW + 14 : 0) - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + peerSvg + ci.svg
+    `<text class="t faint" x="${metaX}" y="67" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + ci.svg
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
     STYLE + rtlStyle() + DEFS + glow + mascot +

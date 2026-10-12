@@ -11,7 +11,6 @@ import { birthdayName } from './fun'
 import { DICTS, LANGS, t } from './i18n'
 import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, outfitNow, slotName, unlocked } from './level'
 import type { Slot } from './level'
-import { peersLine } from './live'
 import { LOOKS, asciiRows, kaomoji } from './looks'
 import { PANEL_H, limitName, panelSvg } from './panel'
 import { duration } from './react'
@@ -167,7 +166,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
           borderStyle="round" borderColor={isHere ? 'claude' : 'inactive'} borderDimColor={!isHere} hover={isHere ? undefined : { borderColor: 'claude', borderDimColor: false }}>
           {on ? <Svg source={iconSvg(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
           <Button key={`shelf:${slot}`} plain onPress={pressed}>
-            {slotName(slot)} <Text dimColor>{`${SLOT_ITEMS[slot].filter(i => ok.includes(i)).length}/${SLOT_ITEMS[slot].length}`}</Text>
+            {`${slotName(slot)} ${SLOT_ITEMS[slot].filter(i => ok.includes(i)).length}/${SLOT_ITEMS[slot].length}`}
           </Button>
           {tap(`shelf:${slot}`)}
         </Box>
@@ -581,14 +580,12 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
   const status = elapsed >= 2 ? `${f.line} · ${duration(elapsed)}` : f.line
   const now = await $.clock.now()
   const full = forecasts(v, now).five_hour
-  const others = peersLine(v.peers)
   const facts = [
     ...(v.context >= 0 ? [t().ctx.percent(v.context)] : []),
     ...(v.agents > 0 ? [t().st.agents(v.agents)] : []),
     ...(chat.isBusy && v.turnTools > 0 ? [t().st.tools(v.turnTools)] : []),
     ...(v.ci?.state === 'running' ? [ciLine(v.ci)] : v.pr ? [prLine(v.pr)] : []),
     ...(full !== undefined ? [`${limitName('five_hour')} ${t().panel.fullAt(clockAt(full, now, v.tz))}`] : []),
-    ...(others !== null ? [others] : []),
   ].join(' · ')
   const factsColor = v.context >= 80 ? 'warning' : undefined
 
