@@ -187,6 +187,7 @@ export const en = {
   panel: {
     context: 'context',
     fullAt: (time: string) => `full ${time}`,
+    turnsLeft: (n: number) => `~${plural(n, 'turn', 'turns')}`,
     lastTurn: (s: string) => `last turn · ${s}`,
     changes: (n: number) => plural(n, 'change', 'changes'),
     clean: 'clean',
@@ -235,6 +236,23 @@ export const en = {
     waitingLong: (label: string, span: string) => `${label} has been waiting ${span}`,
     /** Words this language accepts for /mochi chats besides the English ones, separated by spaces. */
     words: '',
+  },
+  /** The party: every chat as a small Mochi, its subagents beside it. */
+  party: {
+    title: 'TEAM',
+    limit: 'limit reached',
+    quiet: 'no word',
+    web: 'on the web',
+    resetsIn: (span: string) => `resets in ${span}`,
+    lastTurn: (span: string) => `last turn ended ${span} ago`,
+    context: 'context',
+    cost: 'cost',
+    agentTokens: 'Tokens per subagent are not measured.',
+    older: 'An older Mochi runs in this chat: it tells less.',
+    /** The three places on the party's floor: those that need you, those at work, those at rest. */
+    door: 'At the door',
+    shop: 'Workshop',
+    nap: 'Nap corner',
   },
 
   /** What a command that cannot be undone would do. */
@@ -451,7 +469,13 @@ export const en = {
     newFile: 'new',
     binary: 'binary',
     moreFiles: (n: number) => `+${n} more ${n === 1 ? 'file' : 'files'}`,
-    byClaude: 'changed by Claude in this chat · latest first',
+    mine: 'In this chat by Claude',
+    others: 'Other changes',
+    allChanges: 'All changes',
+    newest: 'latest first',
+    biggest: 'biggest first',
+    changed: 'changed',
+    rowHint: 'press a line to see its diff under it',
     lastEdit: 'LAST EDIT',
     fileDiff: 'FILE DIFF',
     moreLines: (n: number) => `… ${n} more ${n === 1 ? 'line' : 'lines'}`,
@@ -559,7 +583,7 @@ export const en = {
     diffPick: 'See a file’s diff:',
     tabs: { now: 'Now', past: 'History', mochi: 'Mochi', settings: 'Settings' },
     /** Each part of the pane by name, as its row shows it. */
-    names: { overview: 'Overview', chats: 'Chats', changes: 'Changes', context: 'Context', activity: 'Activity', level: 'Level', wardrobe: 'Wardrobe', badges: 'Badges', settings: 'Settings', more: 'More' },
+    names: { overview: 'Overview', chats: 'Party', changes: 'Changes', context: 'Context', activity: 'Activity', level: 'Level', wardrobe: 'Wardrobe', badges: 'Badges', settings: 'Settings', more: 'More' },
     arrange: 'Arrange',
     done: 'Done',
     layoutReset: 'Default order',

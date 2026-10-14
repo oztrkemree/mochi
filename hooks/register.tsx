@@ -13,15 +13,16 @@ import type { Reaction, SoundName } from './react'
 import { boardLines, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from './chats'
 import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, ruleAsWritten, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
 import type { TipId } from './coach'
-import { detailHeight, detailSvg } from './detail'
-import { addSample, keepSamples, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, warnLevel, withLines } from './facts'
+import { detailHeight, detailSvg, relPath } from './detail'
+import { addSample, keepSamples, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, turnsLeft, warnLevel, withLines } from './facts'
 import { BREAK_AFTER, birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, workFrom } from './fun'
 import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
 import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
-import { peerLabel, peerNews, peerOf } from './live'
+import { CREW_MAX, activityOf, appLink, appSessionOf, peerLabel, peerNews, peerOf } from './live'
+import { floorOf, partyOf, spotAt } from './party'
 import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
 import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdds, isMild, leavesRepo, parseRules, repoKey, shellSecrets, shieldLines, weigh } from './shield'
@@ -30,7 +31,7 @@ import { SNAP_W, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffe
 import type { ChatDays } from './share'
 import { clip } from './sound'
 import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_DIFF, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
-import { alertCommand, langCodes, langCommand, openCommand, pngCommands, removeCommand } from './system'
+import { alertCommands, langCodes, langCommand, openCommand, pngCommands, removeCommand } from './system'
 import type { Platform } from './system'
 
 // Everything that acts through `$` lives in this file: the engine follows `$`
@@ -52,6 +53,8 @@ const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
 const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
 const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
 const diff = atom({ plugin: 'mochi', key: 'diff' } as const, NO_DIFF)
+const party = atom({ plugin: 'mochi', key: 'party' } as const, { pick: '' })
+const dirs = atom({ plugin: 'mochi', key: 'dirs' } as const, { open: [] as string[] })
 
 const TICK_MS = 450
 /** While Mochi dozes or is hidden, the timer does its rounds on one beat in this many, about every 2 seconds. */
@@ -70,6 +73,8 @@ const INFO_EVERY_MS = 2500
 const LONG_TURN_S = 120
 const ASKS_AFTER_MS = 60_000
 const PEERS_EVERY_MS = 3000
+/** How often Claude Code's files of running sessions are read again, for their names in the app. */
+const APPS_EVERY_MS = 15_000
 const LIVE_EVERY_MS = 15_000
 const HISTORY_EVERY_MS = 10 * 60_000
 const SAMPLES_EVERY_MS = 5 * 60_000
@@ -130,6 +135,15 @@ async function pressed($: Dollar, element: string, surface?: RenderSurface) {
   if (element === 'bday:off') await birthday($, 'none')
   if (element.startsWith('do:')) await act($, element.slice(3))
   if (element.startsWith('diff:')) await pickDiff($, element.slice(5))
+  if (element.startsWith('dir:')) await toggleDir($, element.slice(4))
+  // The party: a Mochi pressed opens its chat in the desktop app; one the app cannot open (this chat, or one
+  // in a terminal) shows its card under the floor, put away when pressed again.
+  if (element.startsWith('crew:') && element !== 'crew:') {
+    const id = element.slice(5)
+    const link = id === chat.sessionId ? '' : appLink((await read($, env)).peers.find(p => p.id === id)?.app)
+    if (link !== '') void $.process.run(openCommand(chat.platform, link), { timeoutMs: 10_000 }).catch(() => undefined)
+    else await update($, party, v => ({ pick: id === 'close' || v.pick === id ? '' : id }))
+  }
   // Arranging the pane: in and out, back to the default, a block moved a place or shown and hidden.
   if (element === 'arrange') await setPrefs($, p => ({ ...p, isArranging: !p.isArranging }))
   if (element === 'arrange:reset') await setPrefs($, p => ({ ...p, order: [...BLOCKS], hidden: [] }))
@@ -203,6 +217,7 @@ async function statusText($: Dollar): Promise<string | undefined> {
 async function infoNow($: Dollar): Promise<Info> {
   const f = await read($, face)
   const v = await read($, env)
+  const left = turnsLeft(v)
   return {
     label: moodLabel(f.mood),
     detail: f.line,
@@ -218,6 +233,7 @@ async function infoNow($: Dollar): Promise<Info> {
     warn: warnLevel(v),
     git: v.git ? { branch: v.git.branch, changed: v.git.changed, ahead: v.git.ahead, behind: v.git.behind, lastCommit: v.git.lastCommit } : null,
     forecast: forecasts(v, await $.clock.now()),
+    ...(left !== null ? { turnsLeft: left } : {}),
     tz: v.tz,
     peers: v.peers,
     ci: v.ci ?? null,
@@ -414,15 +430,27 @@ async function loadDiff($: Dollar, git: Git, path: string): Promise<FileDiff> {
   return parseDiff(path, ran?.exitCode === 0 ? ran.stdout : '')
 }
 
-/** A file pressed in Changes: its diff shown in the pane, or put away when it already is. */
+/**
+ * A file pressed in Changes: its diff opened under its line, or put away when
+ * it already shows there (the last edit too, until the next one).
+ */
 async function pickDiff($: Dollar, path: string) {
-  const git = (await read($, env)).git
-  if ((await read($, diff)).path === path || git === null) {
-    await update($, diff, () => NO_DIFF)
+  const v = await read($, env)
+  const git = v.git
+  const shown = await read($, diff)
+  const last = v.lastEdit
+  const isLast = shown.path === '' && last !== null && shown.hidden !== last.at && relPath(git?.root ?? '', last.path) === path
+  if (shown.path === path || isLast || git === null) {
+    await update($, diff, () => (last === null ? NO_DIFF : { ...NO_DIFF, hidden: last.at }))
     return
   }
-  const shown = await loadDiff($, git, path)
-  await update($, diff, () => shown)
+  const loaded = await loadDiff($, git, path)
+  await update($, diff, () => loaded)
+}
+
+/** A folder pressed in Changes: its files listed under it, or folded back into its line. */
+async function toggleDir($: Dollar, path: string) {
+  await update($, dirs, d => ({ open: d.open.includes(path) ? d.open.filter(x => x !== path) : [...d.open, path] }))
 }
 
 /** What an edit is about to change, in lines; a Write is compared with the file as it stands before it. */
@@ -448,8 +476,16 @@ async function editDelta($: Dollar, tool: string, args: Record<string, unknown>,
 async function notify($: Dollar, text: string) {
   if (!(await read($, prefs)).hasAlert) return
   $.ui.toast(`Mochi: ${text}`, { timeoutMs: 8000 })
-  const alert = alertCommand(chat.platform, 'Mochi', chat.label, text)
-  void $.process.run(alert.argv, { env: alert.env, timeoutMs: 10_000 }).catch(() => undefined)
+  const alerts = alertCommands(chat.platform, 'Mochi', chat.label, text, { group: chat.sessionId, link: appLink(chat.apps[chat.sessionId]?.app) })
+  void sendAlert($, alerts).catch(() => undefined)
+}
+
+/** The first of the notification's commands that runs; the ones after it are for a machine without it. */
+async function sendAlert($: Dollar, alerts: ReturnType<typeof alertCommands>) {
+  for (const alert of alerts) {
+    const ran = await $.process.run(alert.argv, { env: alert.env, timeoutMs: 10_000 }).catch(() => null)
+    if (ran?.exitCode === 0) return
+  }
 }
 
 /** Where this chat stands, for the other chats: working, asking, idle or failed. */
@@ -462,10 +498,49 @@ async function liveNow($: Dollar): Promise<Omit<Peer, 'at'>> {
     chat.state = state
     chat.stateAt = await $.clock.now()
   }
+  const now = await $.clock.now()
+  // A subagent silent this long, with no call of its own open and no question waiting, was stopped: as for the helpers (flowTick).
+  if (chat.flow.calls === 0 && chat.perm === null && !chat.isAsking) for (const [id, c] of chat.crew) if (now - c.at > FLOW_STALE_MS) chat.crew.delete(id)
+  const v = await read($, env)
+  const used = v.limits.find(l => l.percent >= 100)
+  const app = chat.apps[chat.sessionId]
   return {
-    id: chat.sessionId, label: chat.label || t().word.chat, title: chat.title, state, line: f.line, since: state === 'busy' ? chat.turn.startedAt : 0,
-    folder: chat.folder, branch: (await read($, env)).git?.branch ?? '', isWorktree: chat.isWorktree, stateAt: chat.stateAt,
+    id: chat.sessionId, label: chat.label || t().word.chat, title: chat.title || app?.name || '', state, line: f.line, since: state === 'busy' ? chat.turn.startedAt : 0,
+    folder: chat.folder, branch: v.git?.branch ?? '', isWorktree: chat.isWorktree, stateAt: chat.stateAt,
+    v: 2,
+    activity: state === 'busy' ? activityOf(f.mood) : '',
+    // Claude Code's permission question or the shield's own; else the tool on the face that waits on the person.
+    waitingFor: state !== 'asking' ? '' : chat.perm !== null || chat.isAsking ? 'permission' : chat.waitTool === 'AskUserQuestion' ? 'question' : chat.waitTool === 'ExitPlanMode' ? 'plan' : '',
+    lastTurn: chat.lastTurn,
+    agents: [...chat.crew.values()].sort((a, b) => a.since - b.since).slice(0, CREW_MAX).map(({ id, type, task, activity, since }) => ({ id, type, task, activity, since })),
+    // In steps, so that a token or a cent more does not rewrite the file.
+    context: v.context < 0 ? -1 : Math.round(v.context / 5) * 5,
+    cost: Math.round(v.cost * 100) / 100,
+    limit: used === undefined ? null : { kind: used.kind, resetsAt: used.resetsAt },
+    app: app?.app ?? '',
   }
+}
+
+/**
+ * Claude Code's own files of the sessions running now: each one's name in the
+ * app (what its list of chats shows) and its session in the desktop app, which
+ * a link opens. A file it may change or drop: one that reads as nothing is left out.
+ */
+async function readApps($: Dollar) {
+  if (chat.dataDir === '') return
+  chat.appsAt = await $.clock.now()
+  const dir = chat.dataDir.replace(/\/mochi$/, '/sessions')
+  const apps: Record<string, { name: string; app: string }> = {}
+  for (const entry of await $.fs.list(dir).catch(() => [])) {
+    if (!entry.name.endsWith('.json')) continue
+    try {
+      const s = appSessionOf(JSON.parse(await $.fs.read(`${dir}/${entry.name}`)))
+      if (s) apps[s.id] = { name: s.name, app: s.app }
+    } catch {
+      // Caught mid-write, or not one: read it next time.
+    }
+  }
+  chat.apps = apps
 }
 
 /** Writes this chat's file when where it stands changed (at most every 1.5 s), and every 15 s so the others know it is alive. */
@@ -501,7 +576,9 @@ async function readPeers($: Dollar) {
   }
   chat.peerMtimes = seen
   for (const path of Object.keys(chat.peerCache)) if (seen[path] === undefined) delete chat.peerCache[path]
+  // A chat's name in the app and its desktop session, from Claude Code's files, where its own file (an older Mochi's) leaves them out.
   const peers = Object.values(chat.peerCache).filter(p => now - p.at <= 45_000).sort((a, b) => a.label.localeCompare(b.label))
+    .map(p => (chat.apps[p.id] === undefined ? p : { ...p, title: p.title || chat.apps[p.id]?.name || '', app: p.app || chat.apps[p.id]?.app || '' }))
   const before = (await read($, env)).peers
   if (JSON.stringify(before) === JSON.stringify(peers)) return
   await setEnv($, v => ({ ...v, peers }))
@@ -774,6 +851,7 @@ async function tick($: Dollar) {
   chat.lastEnv = v
   if ((chat.isGitWanted && now - chat.gitAt > 4000) || now - chat.gitAt > GIT_EVERY_MS) void refreshGit($).catch(() => undefined)
   void writeLive($).catch(() => undefined)
+  if (now - chat.appsAt > APPS_EVERY_MS) void readApps($).catch(() => undefined)
   if (now - chat.peersAt > PEERS_EVERY_MS) void readPeers($).catch(() => undefined)
   if (now - chat.historyAt > HISTORY_EVERY_MS) void refreshHistory($).catch(() => undefined)
   if (now - chat.samplesAt > SAMPLES_EVERY_MS) void saveSamples($).catch(() => undefined)
@@ -2114,6 +2192,14 @@ export const register: Register = on => {
     const started = await next(e)
     const isWorkflow = e.workflow !== undefined
     if ((isWorkflow || (e.background && e.isTeammate !== true)) && started.agentId !== undefined) await flowMove($, started.agentId, true, true, isWorkflow)
+    if (started.agentId !== undefined && e.isTeammate !== true) {
+      const now = await $.clock.now()
+      const spawn = e as unknown as { description?: unknown; subagentType?: unknown }
+      chat.crew.set(started.agentId, {
+        id: started.agentId, type: typeof spawn.subagentType === 'string' ? spawn.subagentType : '', task: typeof spawn.description === 'string' ? spawn.description : '',
+        activity: 'thinking', since: now, at: now, isBackground: isWorkflow || e.background === true,
+      })
+    }
     return started
   })
 
@@ -2137,6 +2223,11 @@ export const register: Register = on => {
     const countHasFace = !chat.isBusy && chat.flow.ids.size > 0
 
     let token = -1
+    if (isSub && e.agentId !== undefined) {
+      // A subagent first seen by its call (one started before this load) is listed from then on, its type and task unknown.
+      const was = chat.crew.get(e.agentId)
+      chat.crew.set(e.agentId, { ...(was ?? { id: e.agentId, type: '', task: '', since: startedAt, isBackground: false }), activity: activityOf(beforeTool(args).mood) || 'thinking', at: startedAt })
+    }
     if (isSub) {
       const f = await read($, face)
       if (f.mood === 'agent' && !countHasFace) await update($, face, v => ({ ...v, line: `${t().st.agent} · ${beforeTool(args).line}` }))
@@ -2172,9 +2263,11 @@ export const register: Register = on => {
 
     let ran
     if (isSub) chat.flow.calls += 1
+    if (!isSub && waitsOnPerson(e.tool)) chat.waitTool = e.tool
     try {
       ran = await next(e)
     } finally {
+      if (!isSub && chat.waitTool === e.tool) chat.waitTool = ''
       if (isSub) {
         chat.flow.calls = Math.max(0, chat.flow.calls - 1)
         chat.flow.at = await $.clock.now()
@@ -2278,6 +2371,7 @@ export const register: Register = on => {
   on('turn.complete', async ($, e, next) => {
     const done = await next(e)
     if (e.agentId !== undefined) {
+      chat.crew.delete(e.agentId)
       await flowMove($, e.agentId, false, e.reason === 'answer')
       return done
     }
@@ -2285,17 +2379,23 @@ export const register: Register = on => {
     chat.stream = null
     const now = await $.clock.now()
     chat.lastActivity = now
+    // A turn whose start this chat never saw (Mochi loaded mid-turn) has no length, not one since 1970.
+    const turnSecs = chat.turn.startedAt === 0 ? 0 : Math.round((now - chat.turn.startedAt) / 1000)
+    chat.lastTurn = { at: now, reason: e.reason, seconds: turnSecs }
+    // A foreground subagent's call is over once its turn is: only the background ones run on.
+    for (const [id, c] of chat.crew) if (!c.isBackground) chat.crew.delete(id)
     void measure($).catch(() => undefined)
     if (chat.title === '') void readTitle($).catch(() => undefined)
     const ended = onTurnEnd({
       reason: e.reason,
-      seconds: Math.round((now - chat.turn.startedAt) / 1000),
+      seconds: turnSecs,
       tools: chat.turn.tools,
       edits: chat.turn.edits,
       errors: chat.turn.errors,
     })
-    const spent = Math.max(0, (await read($, env)).cost - chat.costAtStart)
-    const rec = { at: now, seconds: Math.round((now - chat.turn.startedAt) / 1000), tools: chat.turn.tools, edits: chat.turn.edits, errors: chat.turn.errors, cost: spent }
+    const before = await read($, env)
+    const spent = Math.max(0, before.cost - chat.costAtStart)
+    const rec = { at: now, seconds: turnSecs, tools: chat.turn.tools, edits: chat.turn.edits, errors: chat.turn.errors, cost: spent, ctx: before.tokens }
     // The panel's last turn is the line without its "done".
     const head = `${t().st.done} · `
     const last = ended.line.startsWith(head) ? ended.line.slice(head.length) : ended.line
@@ -2409,6 +2509,13 @@ export const register: Register = on => {
     // A wardrobe card or tab is clickable all over: a clear region on it, keyed `tap:` and the button's own key.
     if (e.element.startsWith('tap:')) await pressed($, e.element.slice(4))
     if (e.element === 'arrange') await arranged($, data)
+    // A press on the party's floor: how far across it landed, turned into the chat standing there, as the pane drew it.
+    if (e.element === 'party' && typeof data === 'object' && data !== null && typeof (data as { fx?: unknown }).fx === 'number') {
+      const v = await read($, detail)
+      const now = await $.clock.now()
+      const key = v.me ? spotAt(floorOf(partyOf({ ...v.me, at: now }, v.peers ?? [], now), now), (data as { fx: number }).fx) : ''
+      if (key !== '') await pressed($, `crew:${key}`)
+    }
     return next(e)
   })
 

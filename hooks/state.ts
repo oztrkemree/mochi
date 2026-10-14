@@ -1,4 +1,4 @@
-import type { Block, DayRec, Env, Face, FileDiff, Info, Outfit, Panel, Peer, Prefs, Section, Shot, Tab } from '../types'
+import type { Block, Crew, DayRec, Env, Face, FileDiff, Info, Outfit, Panel, Peer, Prefs, Section, Shot, Tab } from '../types'
 import type { GhTrouble } from './ci'
 import type { Pending, TipId } from './coach'
 import type { Reaction } from './react'
@@ -229,4 +229,17 @@ export const chat = {
    * the tool calls the subagents have open, and the finale a busy turn's end shows.
    */
   flow: { ids: new Set<string>(), isWorkflow: false, total: 0, ok: 0, startedAt: 0, idleAt: 0, at: 0, calls: 0, finale: null as Reaction | null },
+  /**
+   * Every subagent running now, for the other chats: what it is, when it last did
+   * something, and whether it runs in the background (a foreground one ends with
+   * the turn that started it). A teammate is left out, as in `flow`.
+   */
+  crew: new Map<string, Crew & { at: number; isBackground: boolean }>(),
+  /** The main loop's tool that waits on the person (AskUserQuestion, ExitPlanMode) while its call runs; '' otherwise. */
+  waitTool: '',
+  /** Every running session's name in the app and its desktop session, by session id, from Claude Code's files; and when they were last read. */
+  apps: {} as Record<string, { name: string; app: string }>,
+  appsAt: 0,
+  /** The last finished turn of the main loop, for the other chats. */
+  lastTurn: null as { at: number; reason: string; seconds: number } | null,
 }

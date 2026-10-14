@@ -4,7 +4,9 @@ import { expect, mock, test } from 'claude-code/testing'
 import { boardLines, boardOf, chatsCard, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from '../hooks/chats'
 import { detailLines } from '../hooks/detail'
 import { setLang } from '../hooks/i18n'
-import { peerOf } from '../hooks/live'
+import { appLink, appSessionOf, peerOf } from '../hooks/live'
+import { floorOf, partyOf } from '../hooks/party'
+import { openCommand } from '../hooks/system'
 import { NO_ENV } from '../hooks/state'
 
 // These read the English lines.
@@ -15,7 +17,7 @@ const MIN = 60_000
 const START = { cwd: '/tmp', surface: 'terminal', isInteractive: true } as never
 
 /** A session's engine beneath the plugin, its files kept in memory; returns the files, the system notifications' texts and the clock. */
-function machine(on: On, limits: { kind: string; percentUsed: number; resetsAt: string }[] = []) {
+function machine(on: On, limits: { kind: string; percentUsed: number; resetsAt: string }[] = [], isListing = false) {
   mock.store(on, { prefs: { lang: 'en' } })
   mock.env(on, { HOME: '/h' })
   const clock = mock.clock(on)
@@ -23,6 +25,7 @@ function machine(on: On, limits: { kind: string; percentUsed: number; resetsAt: 
   // The engine writes a path with the separators (and on Windows the drive) of the system the test runs on.
   const slashed = (path: string) => path.replaceAll('\\', '/').replace(/^[A-Za-z]:/, '')
   const alerts: string[] = []
+  const runs: string[][] = []
   on('session.start', () => ({ cwd: '/tmp' }))
   on('session.id', () => ({ value: 'me-1' }) as never)
   on('session.root', () => ({ value: '/home/dev/web-app' }) as never)
@@ -36,8 +39,12 @@ function machine(on: On, limits: { kind: string; percentUsed: number; resetsAt: 
     files.set(slashed(e.path), e.text)
     return { value: undefined }
   })
-  on('fs.list', () => ({ value: [] }))
+  // Listing is off unless asked: then a folder lists the files kept under it, each changed now.
+  on('fs.list', ($, e) => ({
+    value: isListing ? [...files.keys()].filter(k => k.startsWith(`${slashed(e.path)}/`)).map(k => ({ name: k.slice(slashed(e.path).length + 1), kind: 'file', size: 0, mtimeMs: NOW })) : [],
+  }) as never)
   on('process.run', ($, e) => {
+    runs.push(e.argv)
     if (e.argv[0] === 'notify-send') alerts.push(e.argv[3] ?? '')
     return { value: { exitCode: 0, stdout: '', stderr: '' } } as never
   })
@@ -49,7 +56,7 @@ function machine(on: On, limits: { kind: string; percentUsed: number; resetsAt: 
     const { Box } = $.ui.resolve(e)
     return h(Box, {}) as RenderElement
   })
-  return { clock, files, alerts }
+  return { clock, files, alerts, runs }
 }
 
 const peer = (id: string, state: 'busy' | 'asking' | 'idle' | 'error', more: Record<string, unknown> = {}) =>
@@ -270,4 +277,151 @@ test('a subagent’s approved permission gives the face back to the agent; its w
   expect(board).toContain('working · agent · reading · a.ts')
   expect(board).not.toContain('waiting for you')
   expect(alerts).toEqual([])
+})
+
+/** This chat's file as it was last written. */
+const liveFile = (files: Map<string, string>) => JSON.parse(files.get('/h/.claude/mochi/live/me-1.json') ?? '{}')
+
+test('this chat’s file lists its subagents and what each does; a foreground one ends with its turn, a background one with its own', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on)
+  let n = 0
+  on('agent.spawn', () => ({ model: 'm', agentId: `a${++n}` }) as never)
+  on('turn.start', () => ({ turnId: 't' }) as never)
+  on('turn.complete', () => ({ text: '' }) as never)
+  on('tool.call', { tool: 'Read' }, () => ({ result: 'ok', text: 'ok' }) as never)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await $.turn.start({ text: 'go', turnId: 't' } as never)
+  await $.agent.spawn({ prompt: 'the secret plan, word for word', description: 'Write the tests', subagentType: 'general-purpose', background: false } as never)
+  await $.agent.spawn({ prompt: 'p', description: 'Watch the build', subagentType: 'Explore', background: true } as never)
+  await $.tool.call({ tool: 'Read', file_path: '/w/a.ts', agentId: 'a1' } as never)
+  await clock.advance(2000)
+  const busy = liveFile(files)
+  expect(busy.v).toBe(2)
+  expect(busy.agents).toEqual([
+    { id: 'a1', type: 'general-purpose', task: 'Write the tests', activity: 'reading', since: NOW },
+    { id: 'a2', type: 'Explore', task: 'Watch the build', activity: 'thinking', since: NOW },
+  ])
+  // A subagent's prompt never leaves the chat.
+  expect(files.get('/h/.claude/mochi/live/me-1.json')).not.toContain('secret plan')
+  await $.turn.complete({ turnId: 't', reason: 'answer', answer: '', durationMs: 4000, isAborted: false } as never)
+  await clock.advance(2000)
+  const after = liveFile(files)
+  expect(after.agents.map((a: { id: string }) => a.id)).toEqual(['a2'])
+  expect(after.lastTurn).toEqual({ at: NOW + 2000, reason: 'answer', seconds: 2 })
+  await $.turn.complete({ agentId: 'a2', turnId: 't-a2', reason: 'answer', answer: '', durationMs: 1000, isAborted: false } as never)
+  await clock.advance(2000)
+  expect(liveFile(files).agents).toEqual([])
+})
+
+test('a subagent that says nothing for ten minutes is let go from the file', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on)
+  on('agent.spawn', () => ({ model: 'm', agentId: 'b1' }) as never)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await $.agent.spawn({ prompt: 'p', description: 'Long wait', subagentType: 'Explore', background: true } as never)
+  await clock.advance(9 * MIN)
+  expect(liveFile(files).agents.length).toBe(1)
+  await clock.advance(2 * MIN)
+  expect(liveFile(files).agents).toEqual([])
+})
+
+test('this chat’s file says what it waits on the person for, and what its main loop does', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on)
+  on('classic.PermissionRequest', () => ({}) as never)
+  on('turn.start', () => ({ turnId: 't' }) as never)
+  on('tool.call', { tool: 'AskUserQuestion' }, () => new Promise(() => {}) as never)
+  const bash = pendingBash(on)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await $.turn.start({ text: 'go', turnId: 't' } as never)
+  const call = $.tool.call({ tool: 'Bash', command: 'npm test' })
+  await clock.advance(2000)
+  expect(liveFile(files)).toMatchObject({ state: 'busy', activity: 'testing', waitingFor: '' })
+  await $.classic.PermissionRequest({ tool_name: 'Bash', tool_input: { command: 'npm test' } } as never)
+  await clock.advance(2000)
+  expect(liveFile(files)).toMatchObject({ state: 'asking', activity: '', waitingFor: 'permission' })
+  bash.finish()
+  await call
+  void $.tool.call({ tool: 'AskUserQuestion', questions: [{ question: 'Which one?', header: 'Pick', options: [], multiSelect: false }] } as never).catch(() => undefined)
+  await clock.advance(2000)
+  expect(liveFile(files)).toMatchObject({ state: 'asking', waitingFor: 'question' })
+})
+
+test('this chat’s file gives its context in steps, its cost to the cent and a used-up window', { timeoutMs: 20_000 }, async ($, on) => {
+  const resetsAt = NOW + 60 * MIN
+  const { clock, files } = machine(on, [{ kind: 'five_hour', percentUsed: 100, resetsAt: new Date(resetsAt).toISOString() }, { kind: 'seven_day', percentUsed: 40, resetsAt: new Date(resetsAt).toISOString() }])
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(2000)
+  expect(liveFile(files)).toMatchObject({ context: 0, cost: 0, limit: { kind: 'five_hour', resetsAt } })
+})
+
+test('a peer file is read field by field: an older one has none of the new fields, a bad entry is dropped and long words are cut', async () => {
+  const v1 = peerOf({ id: 'x', label: 'old', state: 'busy', line: '', since: 0, at: NOW, agents: [{ id: 'a' }] }, NOW)
+  expect(v1?.v).toBeUndefined()
+  expect(v1?.agents).toBeUndefined()
+  const v2 = peerOf({
+    id: 'y', label: 'new', state: 'idle', line: '', since: 0, at: NOW, v: 2, activity: 'juggling', waitingFor: 'coffee', lastTurn: { at: NOW, reason: 'answer', seconds: 'many' },
+    agents: [{ id: 'a', type: 'Explore', task: 'x'.repeat(200), activity: 'reading', since: NOW }, { type: 'no id' }, 'nonsense', ...Array.from({ length: 12 }, (_, i) => ({ id: `z${i}` }))],
+    context: 230, cost: -3, limit: { kind: 'five_hour' },
+  }, NOW)
+  expect(v2).toMatchObject({ v: 2, activity: '', waitingFor: '', lastTurn: null, context: 100, cost: 0, limit: null })
+  expect(v2?.agents?.length).toBe(8)
+  expect(v2?.agents?.[0]).toMatchObject({ id: 'a', type: 'Explore', activity: 'reading' })
+  expect(v2?.agents?.[0]?.task.length).toBeLessThanOrEqual(40)
+  expect(v2?.agents?.[1]).toEqual({ id: 'z0', type: '', task: '', activity: 'thinking', since: 0 })
+})
+
+test('the details pane shows every chat as a Mochi: one the app can open opens its chat, one it cannot shows its card', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files, runs } = machine(on, [], true)
+  const opened = () => runs.filter(argv => argv[0] === 'xdg-open')
+  const agent = { id: 's1', type: 'Explore', task: 'Look around', activity: 'reading', since: NOW - MIN }
+  files.set('/h/.claude/mochi/live/other-1.json', JSON.stringify({
+    ...peer('other-1', 'asking', { label: 'api', line: 'awaiting approval · npm test', stateAt: NOW - 2 * MIN }), at: NOW + 60 * MIN,
+    v: 2, activity: '', waitingFor: 'permission', lastTurn: null, context: 40, cost: 1.5, limit: null, agents: [agent], app: '',
+  }))
+  files.set('/h/.claude/mochi/live/other-2.json', JSON.stringify({ ...peer('other-2', 'busy', { label: 'web' }), at: NOW + 60 * MIN }))
+  // Claude Code's file of a running session: its name in the app and its desktop session, for a chat whose Mochi leaves them out.
+  files.set('/h/.claude/sessions/4242.json', JSON.stringify({ pid: 4242, sessionId: 'other-2', name: 'Fix the login page', entrypoint: 'claude-desktop', hostSessionId: 'local_abc-123' }))
+  await clock.set(NOW)
+  await $.session.start(START)
+  for (let i = 0; i < 12; i++) await clock.advance(450)
+  const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
+  // Where each stands on the floor: the asking one by the door, the busy one at the bench, this chat asleep in the corner.
+  const floor = floorOf(partyOf(peer('me-1', 'idle'), [peer('other-1', 'asking'), peer('other-2', 'busy')], NOW), NOW)
+  const across = (key: string) => {
+    const spot = floor.spots.find(x => x.key === key)
+    return spot ? (spot.x0 + spot.x1) / 2 / floor.width : -1
+  }
+  await pane.post({ fx: across('other-2') }, { in: 'party' })
+  expect(opened()).toEqual([['xdg-open', 'claude://code/continue?session=local_abc-123']])
+  expect(await pane.find({ key: 'crew:close' })).toBeUndefined()
+  // The app cannot open this one: its card shows.
+  await pane.post({ fx: across('other-1') }, { in: 'party' })
+  expect(opened().length).toBe(1)
+  expect(await pane.find({ text: 'api' })).toBeDefined()
+  expect(await pane.find({ text: /^awaiting approval · npm test · \d+m$/ })).toBeDefined()
+  expect(await pane.find({ text: '  Explore · Look around · reading · 1m' })).toBeDefined()
+  expect(await pane.find({ text: 'Tokens per subagent are not measured.' })).toBeDefined()
+  expect(await pane.find({ text: 'context 40% · cost $1.50' })).toBeDefined()
+  await pane.press({ key: 'crew:close' })
+  expect(await pane.find({ key: 'crew:close' })).toBeUndefined()
+  await pane.unmount()
+  // The name in the app reaches the board too.
+  expect((await $.command.run({ command: 'mochi', args: 'chats' } as never)).text).toContain('Fix the login page')
+})
+
+test('Claude Code’s file of a session is read for its name and desktop session, and nothing else opens', async () => {
+  expect(appSessionOf({ sessionId: 's', name: 'A  name', entrypoint: 'claude-desktop', hostSessionId: 'local_ab-1' })).toEqual({ id: 's', name: 'A name', app: 'local_ab-1' })
+  // A terminal session has no desktop session; an id of another shape opens nothing.
+  expect(appSessionOf({ sessionId: 's', name: 'x', entrypoint: 'cli', hostSessionId: 'local_ab' })?.app).toBe('')
+  expect(appSessionOf({ sessionId: 's', entrypoint: 'claude-desktop', hostSessionId: 'local_a&b=c' })?.app).toBe('')
+  expect(appSessionOf({ name: 'no id' })).toBeNull()
+  expect(appLink('local_ab-1')).toBe('claude://code/continue?session=local_ab-1')
+  expect(appLink('local_a b')).toBe('')
+  expect(appLink(undefined)).toBe('')
+  // Windows opens an app's link as a link, not as a path.
+  expect(openCommand('windows', 'claude://code/continue?session=local_ab-1')).toEqual(['explorer.exe', 'claude://code/continue?session=local_ab-1'])
+  expect(openCommand('windows', 'C:/x/y')).toEqual(['explorer.exe', 'C:\\x\\y'])
 })

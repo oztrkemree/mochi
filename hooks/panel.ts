@@ -1,6 +1,6 @@
 import type { Info, Limit, Mood, Panel, Recent } from '../types'
 import { ciMark } from './ci'
-import { clockAt } from './facts'
+import { clockAt, timeGone } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { isShell } from './guard'
 import { t } from './i18n'
@@ -121,6 +121,7 @@ function whole(info: Partial<Info> | undefined): Info {
     warn: info?.warn ?? 0,
     git: info?.git ?? null,
     forecast: info?.forecast ?? {},
+    ...(info?.turnsLeft !== undefined ? { turnsLeft: info.turnsLeft } : {}),
     tz: info?.tz ?? 0,
     peers: info?.peers ?? [],
     ci: info?.ci ?? null,
@@ -128,7 +129,7 @@ function whole(info: Partial<Info> | undefined): Info {
   }
 }
 
-type Gauge = { key: string; label: string; sub: string; subInk?: string; arcs: Arc[]; was: Arc[]; center: string; mark?: number; halo?: string }
+type Gauge = { key: string; label: string; sub: string; subInk?: string; arcs: Arc[]; was: Arc[]; center: string; mark?: number; pace?: number; halo?: string }
 
 const contextArcs = (info: Info): Arc[] => {
   const { window, slices, percent } = info.context
@@ -142,7 +143,8 @@ function gauges(info: Info, was: Info, now: number): Gauge[] {
   const out: Gauge[] = [{
     key: 'context',
     label: t().panel.context,
-    sub: ctx.window > 0 ? `${tokens(ctx.tokens)}/${tokens(ctx.window)}` : '—',
+    // About how many turns are left reads better than tokens; the tokens stay in the detail pane.
+    sub: info.turnsLeft !== undefined ? t().panel.turnsLeft(info.turnsLeft) : ctx.window > 0 ? `${tokens(ctx.tokens)}/${tokens(ctx.window)}` : '—',
     arcs: contextArcs(info),
     was: contextArcs(was),
     center: ctx.percent >= 0 ? `${Math.round(ctx.percent)}%` : '—',
@@ -155,6 +157,7 @@ function gauges(info: Info, was: Info, now: number): Gauge[] {
     const before = byKind(was.limits, kind) ?? l
     // At this pace the window runs out before its reset: say when, instead of the reset.
     const full = info.forecast?.[kind]
+    const gone = l ? timeGone(l, now) : null
     out.push({
       key: kind,
       label: limitName(kind),
@@ -163,6 +166,7 @@ function gauges(info: Info, was: Info, now: number): Gauge[] {
       arcs: l ? [{ key: 'u', value: Math.min(100, l.percent), color: usageInk(l.percent) }] : [],
       was: before ? [{ key: 'u', value: Math.min(100, before.percent), color: usageInk(before.percent) }] : [],
       center: l ? `${Math.round(l.percent)}%` : '—',
+      ...(gone !== null ? { pace: gone } : {}),
       ...(l && l.percent >= 80 ? { halo: '#F0645A' } : {}),
     })
   }
@@ -206,7 +210,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const rings = list.map((g, i) => {
     const cx = gX + colW * i + colW / 2
     return ring({ id: g.key, cx, cy: 28.5, r: 16.5, width: 4.6, arcs: g.arcs, was: g.was, center: esc(g.center), centerSize: 11.5,
-      ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) }) +
+      ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.pace !== undefined ? { pace: g.pace } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) }) +
       `<text class="t ${g.halo ? '' : 'dim'}" x="${n(cx)}" y="61" font-size="10.5" font-weight="${g.halo ? 650 : 500}" text-anchor="middle"${g.halo ? ` fill="${g.halo}"` : ''}>${esc(g.label)}</text>` +
       `<text class="t${g.subInk ? '' : ' faint'}" x="${n(cx)}" y="72.5" font-size="10" text-anchor="middle" font-variant-numeric="tabular-nums"${g.subInk ? ` fill="${g.subInk}" font-weight="600"` : ''}>${esc(g.sub)}</text>`
   }).join('')

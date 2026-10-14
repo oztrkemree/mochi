@@ -4,7 +4,7 @@ import type { MatchedHook } from 'claude-code'
 import type { Badge, Block, Env, Item, Prefs, Section } from '../types'
 import { BADGES, badgeHint, badgeName, badgeSvg } from './badges'
 import { ciLine, prLine } from './ci'
-import { detailHeight, detailParts, diffable, levelSummary, levelSvg, metersSvg, partLines, partSvg, ruleSvg, switchSvg } from './detail'
+import { changesPieces, detailHeight, detailParts, diffable, levelSummary, levelSvg, metersSvg, partLines, partSvg, pieceSvg, ruleSvg, switchSvg } from './detail'
 import type { Part, Parts } from './detail'
 import { baseName, clockAt, forecasts } from './facts'
 import { birthdayName } from './fun'
@@ -12,7 +12,9 @@ import { DICTS, LANGS, t } from './i18n'
 import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, outfitNow, slotName, unlocked } from './level'
 import type { Slot } from './level'
 import { LOOKS, asciiRows, kaomoji } from './looks'
+import { nameOf } from './live'
 import { PANEL_H, limitName, panelSvg } from './panel'
+import { SHOWN, floorOf, memberLines, membersOf, partyOf, statusLine } from './party'
 import { duration } from './react'
 import { VECTOR_WEAR, svgFor } from './rig'
 import { ALL_ITEMS, DEFAULT_PREFS, NO_DIFF, NO_ENV, NO_FACE, NO_PANEL, NO_SAID, TABS, TAB_OF, chat, inTab } from './state'
@@ -32,6 +34,8 @@ const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
 const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
 const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
 const diff = atom({ plugin: 'mochi', key: 'diff' } as const, NO_DIFF)
+const party = atom({ plugin: 'mochi', key: 'party' } as const, { pick: '' })
+const dirs = atom({ plugin: 'mochi', key: 'dirs' } as const, { open: [] as string[] })
 
 const width = (s: string) => [...s].length
 const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0, Math.max(1, max - 1)).join('')}…`)
@@ -110,10 +114,11 @@ const langOptions = () => [{ value: 'auto', label: t().pane.langAuto(t().name) }
  * of /mochi are here too, as buttons. Lines and buttons in the terminal.
  */
 export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async ($, e) => {
-  const v = { ...NO_ENV, ...(await read($, detail)), diff: await read($, diff) }
+  const v = { ...NO_ENV, ...(await read($, detail)), diff: await read($, diff), dirs: (await read($, dirs)).open }
   const now = await $.clock.now()
   const p = await read($, prefs)
   const answer = await read($, said)
+  const crewPick = (await read($, party)).pick
   const d = t().pane
   const diffs = diffable(v)
   if (e.surface === 'desktop' || e.surface === 'mobile' || e.surface === 'vscode') {
@@ -222,6 +227,29 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         return under === null ? card : <Box flexDirection="column" gap={1}>{card}{under}</Box>
       })
     }
+    // On the desktop each line of Changes is a drawing of its own with a clear region on it: a file pressed opens
+    // its diff under it, a folder its files. Elsewhere the drawing hears no clicks, and the buttons below it do.
+    const changes = () => {
+      if (!Client) return drawn('changes', diffPicks)
+      const part = parts.changes
+      if (part.cards.length === 0) return null
+      const pieces = part.cards[0]?.title === CARD_TITLE.changes() ? changesPieces(v, now, true) : []
+      const others = part.cards.slice(pieces.length > 0 ? 1 : 0)
+      return item('changes', part.gist, () => (
+        <Box flexDirection="column">
+          {pieces.map((piece, i) => (
+            <Box key={`chg:${i}:${piece.key}`} overflow="hidden">
+              <Svg source={pieceSvg(piece, secW)} alt={piece.key.replace(/^(diff|dir):/, '')} width={secW} height={piece.h} />
+              {piece.key !== '' ? tap(piece.key, 3) : null}
+            </Box>
+          ))}
+          {others.length > 0 ? <Box key="chg:ci" marginTop={1}>{(() => {
+            const svg = partSvg(others, secW, '')
+            return <Svg source={svg} alt={names.changes} width={secW} height={Math.round(detailHeight(svg))} />
+          })()}</Box> : null}
+        </Box>
+      ))
+    }
     // The drawing hears no clicks: a button for each changed file it lists shows that file's diff in it.
     const diffPicks = diffs.length === 0 ? null : (
       <Box key="diffs" flexDirection="row" flexWrap="wrap" alignItems="center" columnGap={1} rowGap={0.5}>
@@ -289,13 +317,52 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       </Box>
     )
 
+    // The party: every chat as a small Mochi on one floor, those that need the person by the door, those at work
+    // at the bench, the rest asleep in the corner. A Mochi pressed opens its chat in the app, or shows its card under the floor.
+    const chats = () => {
+      const crew = v.me ? partyOf({ ...v.me, at: now }, v.peers ?? [], now) : null
+      if (crew === null || !crew.isShown) return drawn('chats')
+      // Every Mochi in the party wears what the person dressed Mochi in, as the band's does in that mood.
+      const floor = floorOf(crew, now, crewPick, mood => outfitNow(p, v, mood, now))
+      // As wide as it needs, never wider than the pane: a crowded floor shrinks to fit.
+      const floorW = Math.min(secW, floor.width)
+      const floorH = Math.round((floor.height * floorW) / floor.width)
+      const all = membersOf(crew)
+      const chosen = all.find(m => m.peer.id === crewPick)
+      // Those a place has no room for, and everyone where the floor hears no clicks, as buttons.
+      const unseen = Client ? (['door', 'shop', 'nap'] as const).flatMap(z => crew[z].slice(SHOWN[z])) : all
+      const gist = parts.chats.gist || t().st.agents(v.me?.agents?.length ?? 0)
+      return item('chats', gist, () => (
+        <Box flexDirection="column" gap={1}>
+          <Box key="party" flexDirection="row">
+            <Box>
+              <Svg source={floor.svg} alt={all.map(m => `${nameOf(m.peer)}: ${statusLine(m)}`).join(', ')} width={floorW} height={floorH} />
+              {Client ? <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key="party" module="./floor.tsx" props={{ rows: Math.ceil(floorH / 14) + 1 }} width="100%" height="100%" /></Box> : null}
+            </Box>
+          </Box>
+          {unseen.length > 0 ? (
+            <Box key="party:more" flexDirection="row" flexWrap="wrap" columnGap={1} rowGap={0.5}>
+              {unseen.map(m => <Button key={`crew:${m.peer.id}`} variant="secondary" onPress={pressed}>{nameOf(m.peer)}</Button>)}
+            </Box>
+          ) : null}
+          {chosen ? (
+            <Box key="party:pick" flexDirection="column" borderStyle="round" borderColor="inactive" paddingX={1} gap={0.5}>
+              <Text bold wrap="wrap">{chosen.isSelf ? `${nameOf(chosen.peer)} (${t().chats.here})` : nameOf(chosen.peer)}</Text>
+              {memberLines(chosen, now).map((line, i) => <Text key={`pick:${i}`} dimColor wrap="truncate">{line}</Text>)}
+              <Box flexDirection="row"><Button key="crew:close" variant="secondary" onPress={pressed}>{t().ui.close}</Button></Box>
+            </Box>
+          ) : null}
+        </Box>
+      ))
+    }
+
     const blocks: Record<Block, () => JSX.Element | null> = {
       overview: () => {
         const meters = metersSvg(v, now, secW)
         return <Box key="overview"><Svg source={meters} alt={t().detail.title} width={secW} height={Math.round(detailHeight(meters))} /></Box>
       },
-      chats: () => drawn('chats'),
-      changes: () => drawn('changes', diffPicks),
+      chats: () => chats(),
+      changes,
       context: () => drawn('context'),
       activity: () => drawn('activity'),
       level: () => item('level', gists.level, () => {

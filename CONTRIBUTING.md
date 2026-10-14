@@ -47,6 +47,7 @@ Open an issue with the **Feature request** form, saying what you would like Moch
 | `hooks/guard.ts` | The shield's dangerous-command rules and the loop watch |
 | `hooks/shield.ts` | Force pushes by branch, “Always allow here”, `shield.json` and the secret guard |
 | `hooks/chats.ts` | The board of every chat, long waits and the limit coming back |
+| `hooks/party.ts` | The party: where each chat stands, in what order, which Mochis move and how a crowd is grouped |
 | `hooks/ci.ts` | Reading `gh` about a push's runs and the branch's pull request |
 | `hooks/coach.ts` | Tips, the instructions worth adding to `CLAUDE.md`, the tour and what is new |
 | `hooks/share.ts` | The card, the wrapped and the snapshots |
@@ -58,7 +59,7 @@ Open an issue with the **Feature request** form, saying what you would like Moch
 | `hooks/system.ts` | The commands that differ by system: notifications, deleting files, the system's language |
 | `hooks/lang/*.ts` | Every text, one file per language |
 | `types/index.d.ts` | The shared types, and `$.mochi`'s contract for other plugins |
-| `tests/*.test.ts` | The tests, one file per feature: `mochi`, `shield`, `chats`, `ci`, `coach`, `share`, `delight`, `data` |
+| `tests/*.test.ts` | The tests, one file per feature: `mochi`, `shield`, `chats`, `party`, `ci`, `coach`, `share`, `delight`, `data` |
 | `docs/API.md` | How another plugin makes Mochi react |
 | `docs/OUTFITS.md` | How to add something for Mochi to wear |
 

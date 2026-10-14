@@ -26,6 +26,31 @@ export function warnLevel(env: Pick<Env, 'tokens' | 'window' | 'compactAt'>): nu
   return r >= 0.95 ? 3 : r >= 0.85 ? 2 : r >= 0.7 ? 1 : 0
 }
 
+/**
+ * About how many more turns fit before compaction (or the window's end), at
+ * the context's growth over the last turns; null until two turns grew it, or
+ * when it is 100 or more. A drop between turns is a compaction or a clear, not growth.
+ */
+export function turnsLeft(env: Pick<Env, 'turns' | 'tokens' | 'window' | 'compactAt'>): number | null {
+  const limit = env.compactAt > 0 ? env.compactAt : env.window
+  if (limit <= 0 || env.tokens <= 0) return null
+  const seen = env.turns.map(r => r.ctx ?? 0).filter(c => c > 0).slice(-7)
+  const growth = seen.slice(1).map((c, i) => c - (seen[i] ?? c)).filter(d => d > 0)
+  if (growth.length < 2) return null
+  const each = growth.reduce((a, b) => a + b, 0) / growth.length
+  const left = Math.max(0, Math.round((limit - env.tokens) / each))
+  return left < 100 ? left : null
+}
+
+const WINDOW_MS: Record<string, number> = { five_hour: 5 * 60 * 60_000, seven_day: 7 * 24 * 60 * 60_000 }
+
+/** How much of a usage window's time has gone, in percent; null for a window of unknown length or reset. */
+export function timeGone(limit: Limit, now: number): number | null {
+  const span = WINDOW_MS[limit.kind]
+  if (span === undefined || limit.resetsAt <= now) return null
+  return Math.min(100, Math.max(0, (1 - (limit.resetsAt - now) / span) * 100))
+}
+
 /** The largest category in use, with its share of the window. */
 export function biggest(env: Pick<Env, 'slices' | 'window'>): { name: string; percent: number } | null {
   const top = [...env.slices].sort((a, b) => b.tokens - a.tokens)[0]

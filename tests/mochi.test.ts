@@ -1,15 +1,16 @@
 import type { On, RenderElement } from 'claude-code'
+import type { FileDiff } from '../types'
 import { expect, mock, test } from 'claude-code/testing'
 
 import { asciiRows, kaomoji, LOOKS } from '../hooks/looks'
-import { detailSvg, levelSummary, levelSvg } from '../hooks/detail'
-import { addSample, clockAt, contextWarning, dayKey, dirOf, forecastFull, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, shiftDay, warnLevel, weekHabit, withLines } from '../hooks/facts'
+import { changesPieces, detailSvg, levelSummary, levelSvg, pieceSvg } from '../hooks/detail'
+import { addSample, clockAt, contextWarning, dayKey, dirOf, forecastFull, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, shiftDay, timeGone, turnsLeft, warnLevel, weekHabit, withLines } from '../hooks/facts'
 import { NEW_WATCH, danger, watchCall } from '../hooks/guard'
 import { itemOf, levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
 import { peerLabel, peerNews, peersLine } from '../hooks/live'
 import { DICTS, LANGS, pickLang, setLang } from '../hooks/i18n'
-import { NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
-import { alertCommand, langCodes, langCommand, openCommand, removeCommand } from '../hooks/system'
+import { NO_DIFF, NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
+import { alertCommands, langCodes, langCommand, openCommand, removeCommand } from '../hooks/system'
 import { clip, cols } from '../hooks/text'
 
 // Most of these read the Turkish lines; one test below speaks English.
@@ -256,9 +257,25 @@ test('the context warns in three steps and names the largest part', async () => 
   expect(contextWarning(ENV, 2)).toBe('context %88 · en büyük: mesajlar %80 · /compact iyi olur')
 })
 
+test('the context says about how many turns are left, and a window how much of its time has gone', async () => {
+  const turn = (ctx: number) => ({ at: 0, seconds: 1, tools: 0, edits: 0, errors: 0, cost: 0, ctx })
+  const at = { tokens: 400_000, window: 1_000_000, compactAt: 960_000 }
+  // 20k a turn, a compaction drop in between that is not counted: (960k - 400k) / 20k.
+  expect(turnsLeft({ ...at, turns: [turn(300_000), turn(320_000), turn(90_000), turn(110_000), turn(130_000)] })).toBe(28)
+  expect(turnsLeft({ ...at, turns: [turn(300_000), turn(320_000)] })).toBe(null)
+  expect(turnsLeft({ ...at, turns: [turn(1000), turn(1100), turn(1200)] })).toBe(null)
+  expect(timeGone({ kind: 'five_hour', percent: 50, resetsAt: 60 * 60_000 }, 0)).toBe(80)
+  expect(timeGone({ kind: 'seven_day', percent: 50, resetsAt: 0 }, 5)).toBe(null)
+  const info = { ...NO_INFO, context: { percent: 40, tokens: 400_000, window: 1_000_000, slices: [] }, turnsLeft: 14, limits: [{ kind: 'five_hour', percent: 68, resetsAt: 60 * 60_000 }] }
+  const shot = { mood: 'idle' as const, scene: { context: 40, agents: 0 }, at: 1, from: null }
+  const { svg } = panelSvg({ panel: { shot, info, infoFrom: info, infoAt: 1 }, now: 0, width: 770 })
+  expect(svg).toContain('~14 tur')
+  expect(svg).toContain('class="tick"')
+})
+
 test('the detail pane draws every section', async () => {
   const svg = detailSvg(ENV, 5_000_000, 520)
-  for (const part of ['BU OTURUM', 'CONTEXT', 'oturum · 5 saat', 'hafta · 7 gün', 'SON TURLAR', 'DEĞİŞİKLİKLER', 'ARAÇLAR', 'rig.ts', 'mesajlar', 'Sıkıştırmaya yaklaşıyor', 'main  ·  ↑1']) {
+  for (const part of ['BU OTURUM', 'CONTEXT', 'oturum · 5 saat', 'hafta · 7 gün', 'SON TURLAR', 'DEĞİŞİKLİKLER', 'ARAÇLAR', 'rig.ts', 'mesajlar', 'Sıkıştırmaya yaklaşıyor', '>main</text>', '↑1  ·  henüz commit yok']) {
     expect(svg).toContain(part)
   }
   expect(/<[^a-zA-Z/!?]/.test(svg)).toBe(false)
@@ -519,6 +536,9 @@ test('what an older version saved under the Turkish item ids carries over', asyn
 test('the other chats are named and their news is told once', async () => {
   expect(peerLabel('/home/dev/projects/web-app', '')).toBe('web-app')
   expect(peerLabel('/home/dev/x/scratch-2026-10-09-a9bcb5', 'show me every animation on one page')).toBe('show me every')
+  // A note Claude Code put in the prompt is not the person's words.
+  expect(peerLabel('/home/dev/x/scratch-2026-10-09-a9bcb5', '<system-reminder>The user is\nhere</system-reminder>\nfix the login page')).toBe('fix the login page')
+  expect(peerLabel('/home/dev/x/scratch-2026-10-09-a9bcb5', '<system-reminder>only a note</system-reminder>')).toBe('')
   expect(peerLabel('C:\\Users\\dev\\Projects\\web-app', '')).toBe('web-app')
   expect(peerLabel('C:\\Users\\dev', 'fix the build please now')).toBe('fix the build please')
   expect(peerLabel('C:\\Users\\dev\\', 'fix it')).toBe('fix it')
@@ -575,14 +595,14 @@ test('git line counts reach the changes', async () => {
     lastEdit: { path: '/r/hooks/rig.ts', at: 4_000_000, ctx: 'const a = 1', old: ['const b = 2'], new: ['const b = 3', 'const c = <4>'], add: 2, del: 1 },
   }
   const svg = detailSvg(env, 5_000_000, 640)
-  for (const part of ['DEĞİŞİKLİKLER', '2 dosya · +22 −3', '+12', 'new.ts', 'SON DÜZENLEME', 'const b = 3', 'const c = &lt;4&gt;', 'bu sohbette Claude değiştirdi']) {
+  for (const part of ['DEĞİŞİKLİKLER', '2 dosya · +22 −3', '+12', 'new.ts', 'SON DÜZENLEME', 'const b = 3', 'const c = &lt;4&gt;', 'Bu sohbette Claude', 'Diğer değişiklikler']) {
     expect(svg).toContain(part)
   }
   expect(/<[^a-zA-Z/!?]/.test(svg)).toBe(false)
   // On Windows git writes the root with `/`, Claude the files with `\`.
   const windows = { ...env, git: { ...full, root: 'C:/r' }, files: [{ ...env.files[0]!, path: 'C:\\r\\hooks\\rig.ts' }], lastEdit: { ...env.lastEdit, path: 'C:\\r\\hooks\\rig.ts' } }
   const drawn = detailSvg(windows, 5_000_000, 640)
-  expect(drawn).toContain('bu sohbette Claude değiştirdi')
+  expect(drawn).toContain('Bu sohbette Claude')
   expect(drawn).toContain('>rig.ts</tspan>')
 })
 
@@ -610,7 +630,7 @@ test('a file pressed in Changes shows its diff until pressed again', async ($, o
   await pane.press({ key: 'diff:hooks/rig.ts' } as never)
   expect(await pane.find({ type: 'Text', text: '  − const b = 2' })).toBeDefined()
   expect(await pane.find({ type: 'Text', text: '  + const b = 3' })).toBeDefined()
-  expect((await pane.find({ key: 'diff:hooks/rig.ts' }))?.text).toBe('• rig.ts ✕')
+  expect((await pane.find({ key: 'diff:hooks/rig.ts' }))?.text).toBe('~ rig.ts ✕')
   // Another file takes its place; pressed again, it is put away.
   await pane.press({ key: 'diff:new.ts' } as never)
   expect(await pane.find({ type: 'Text', text: '  + const b = 3' })).toBeUndefined()
@@ -620,7 +640,30 @@ test('a file pressed in Changes shows its diff until pressed again', async ($, o
   await pane.unmount()
   // On the desktop the drawing shows it in the last edit's place.
   const svg = detailSvg({ ...ENV, git: { branch: 'main', ahead: 0, behind: 0, changed: 1, lastCommit: 1, files: [{ code: ' M', path: 'a.ts', add: 1, del: 1 }] }, diff: parsed }, 5_000_000, 640)
-  for (const part of ['DOSYA FARKI', '>keep<', '… 2 satır daha']) expect(svg).toContain(part)
+  for (const part of ['>keep<', '… 2 satır daha']) expect(svg).toContain(part)
+})
+
+test('Changes groups Claude’s files apart, folds a crowded folder, and opens a diff under its line', async () => {
+  const langs = ['ar', 'de', 'en', 'tr', 'zh'].map(l => ({ code: ' M', path: `hooks/lang/${l}.ts`, add: 17, del: 1 }))
+  const git = { branch: 'main', ahead: 0, behind: 0, changed: 8, lastCommit: 1, root: '/r', files: [{ code: ' M', path: 'hooks/rig.ts', add: 12, del: 3 }, { code: '??', path: 'hooks/new.ts', add: 40, del: 0 }, { code: ' M', path: 'README.md', add: 2, del: 0 }, ...langs] }
+  const env = {
+    ...ENV, git,
+    files: [{ path: '/r/hooks/rig.ts', reads: 1, edits: 2, at: 4_000_000, add: 12, del: 3 }],
+    lastEdit: { path: '/r/hooks/rig.ts', at: 4_000_000, ctx: '', old: ['const b = 2'], new: ['const b = 3'], add: 1, del: 1 },
+  }
+  const keys = (v: typeof env & { diff?: FileDiff; dirs?: string[] }) => changesPieces(v, 5_000_000).map(p => p.key)
+  // Claude's file first, its last edit open under it; the five language files one line, the biggest first.
+  expect(keys(env)).toEqual(['', '', 'diff:hooks/rig.ts', '', '', 'dir:hooks/lang', 'diff:hooks/new.ts', 'diff:README.md', ''])
+  const drawn = changesPieces(env, 5_000_000).map(p => p.draw(0, 0, 600)).join('')
+  for (const part of ['Bu sohbette Claude', 'Diğer değişiklikler', '>hooks/lang/</tspan>', '5 dosya', '+85', 'const b = 3']) expect(drawn).toContain(part)
+  // Put away, the last edit stays shut until the next one; a folder opened lists its files under it.
+  expect(keys({ ...env, diff: { ...NO_DIFF, hidden: 4_000_000 } })).toEqual(['', '', 'diff:hooks/rig.ts', '', 'dir:hooks/lang', 'diff:hooks/new.ts', 'diff:README.md', ''])
+  expect(keys({ ...env, diff: { ...NO_DIFF, hidden: 4_000_000 }, dirs: ['hooks/lang'] })).toContain('diff:hooks/lang/zh.ts')
+  // The file picked opens under its own line.
+  const picked = { path: 'README.md', lines: [{ kind: 'new' as const, text: 'hello' }], more: 0 }
+  const withPick = keys({ ...env, diff: picked })
+  expect(withPick.slice(withPick.indexOf('diff:README.md'), withPick.indexOf('diff:README.md') + 2)).toEqual(['diff:README.md', ''])
+  expect(pieceSvg(changesPieces({ ...env, diff: picked }, 5_000_000)[2]!, 600)).toContain('viewBox="0 0 600 26"')
 })
 
 test('the level folds open and shut, and stays as left', async ($, on) => {
@@ -771,12 +814,16 @@ test('dozing or hidden, the timer makes its rounds on every fifth beat; work wak
 test('each system is asked its own way, and no word is spliced into a script', async () => {
   const text = 'onay bekliyor · rm -rf "$HOME"; `x` $(y)'
   for (const platform of ['mac', 'windows'] as const) {
-    const alert = alertCommand(platform, 'Mochi', 'web-app', text)
+    const alert = alertCommands(platform, 'Mochi', 'web-app', text).at(-1)!
     expect(alert.argv[0]).toBe(platform === 'mac' ? 'osascript' : 'powershell')
     expect(alert.argv.some(a => a.includes('rm -rf') || a.includes('web-app'))).toBe(false)
     expect(alert.env).toEqual({ MOCHI_TITLE: 'Mochi', MOCHI_SUBTITLE: 'web-app', MOCHI_TEXT: text })
   }
-  expect(alertCommand('linux', 'Mochi', 'web-app', '-x').argv).toEqual(['notify-send', '--', 'Mochi · web-app', '-x'])
+  // On macOS terminal-notifier comes first: one notification per chat, a click opens the chat, and a leading dash is no option.
+  const link = 'claude://code/continue?session=local_1'
+  expect(alertCommands('mac', 'Mochi', 'web-app', '-x', { group: 's1', link })[0]?.argv)
+    .toEqual(['terminal-notifier', '-title', 'Mochi', '-message', '\\-x', '-sound', 'Glass', '-subtitle', 'web-app', '-group', 'mochi-s1', '-open', link])
+  expect(alertCommands('linux', 'Mochi', 'web-app', '-x')[0]?.argv).toEqual(['notify-send', '--', 'Mochi · web-app', '-x'])
   expect(removeCommand('windows', ['a-1.json', 'b&calc.json', '..\\c.json', 'd_2.json'])).toEqual(['cmd', '/d', '/c', 'del', '/f', '/q', 'a-1.json', 'd_2.json'])
   expect(removeCommand('mac', ['a-1.json'])).toEqual(['rm', '-f', '--', 'a-1.json'])
   expect(removeCommand('linux', ['x y.json'])).toBe(null)

@@ -27,16 +27,26 @@ const WINDOWS_ALERT = [
   '[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($id).Show([Windows.UI.Notifications.ToastNotification]::new($xml))',
 ].join('; ')
 
+/** terminal-notifier reads a value that starts with a dash as its next option, unless a backslash leads it. */
+const notifierWord = (s: string) => (s.startsWith('-') ? `\\${s}` : s)
+
 /**
- * A system notification: the command, and the environment that carries its
- * words to the script. Linux's notify-send takes them as its arguments, after
- * `--`, so none reads as an option.
+ * The commands for a system notification, the first that runs wins: each with
+ * the environment that carries its words to the script. On macOS terminal-notifier
+ * comes first, where it is installed: osascript's notification belongs to Script
+ * Editor, which shows its icon and opens when it is clicked. terminal-notifier's
+ * replaces the chat's last one (`group`) and opens the chat (`link`). Linux's
+ * notify-send takes the words as its arguments, after `--`, so none reads as an option.
  */
-export function alertCommand(platform: Platform, title: string, subtitle: string, text: string): { argv: string[]; env: Record<string, string> } {
+export function alertCommands(platform: Platform, title: string, subtitle: string, text: string, opts: { group?: string; link?: string } = {}): { argv: string[]; env: Record<string, string> }[] {
   const env = { MOCHI_TITLE: title, MOCHI_SUBTITLE: subtitle, MOCHI_TEXT: text }
-  if (platform === 'mac') return { argv: ['osascript', '-l', 'JavaScript', '-e', MAC_ALERT], env }
-  if (platform === 'windows') return { argv: ['powershell', '-NoProfile', '-NonInteractive', '-Command', WINDOWS_ALERT], env }
-  return { argv: ['notify-send', '--', subtitle === '' ? title : `${title} · ${subtitle}`, text], env }
+  if (platform === 'windows') return [{ argv: ['powershell', '-NoProfile', '-NonInteractive', '-Command', WINDOWS_ALERT], env }]
+  if (platform === 'linux') return [{ argv: ['notify-send', '--', subtitle === '' ? title : `${title} · ${subtitle}`, text], env }]
+  const notifier = ['terminal-notifier', '-title', notifierWord(title), '-message', notifierWord(text), '-sound', 'Glass']
+  if (subtitle !== '') notifier.push('-subtitle', notifierWord(subtitle))
+  if (opts.group) notifier.push('-group', notifierWord(`mochi-${opts.group}`))
+  if (opts.link) notifier.push('-open', opts.link)
+  return [{ argv: notifier, env }, { argv: ['osascript', '-l', 'JavaScript', '-e', MAC_ALERT], env }]
 }
 
 /**
@@ -73,9 +83,9 @@ export const pngCommands = (svg: string, png: string): string[][] => [
   ['magick', '-density', '192', '-background', 'none', svg, png],
 ]
 
-/** The command that opens a file, a folder or a web link with the app the system picks for it; Windows's explorer reads no shell syntax. */
+/** The command that opens a file, a folder or a link (web, or an app's own such as claude://) with the app the system picks for it; Windows's explorer reads no shell syntax. */
 export function openCommand(platform: Platform, target: string): string[] {
   if (platform === 'mac') return ['open', target]
-  if (platform === 'windows') return ['explorer.exe', /^https?:\/\//.test(target) ? target : target.replaceAll('/', '\\')]
+  if (platform === 'windows') return ['explorer.exe', /^[a-z][a-z0-9+.-]*:\/\//i.test(target) ? target : target.replaceAll('/', '\\')]
   return ['xdg-open', target]
 }

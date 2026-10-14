@@ -17,6 +17,8 @@ export type Ring = {
   /** A notch at this percent (the compaction point). */
   mark?: number
   markColor?: string
+  /** A thin tick at this percent: how much of the window's time has gone, so the arc reads ahead of or behind it. */
+  pace?: number
   /** A halo that breathes around the ring, for a warning. */
   halo?: string
   /** Text in the middle. */
@@ -69,6 +71,15 @@ export function ring(g: Ring): string {
       })()
     : ''
 
+  const pace = g.pace !== undefined && g.pace > 0 && g.pace < 100
+    ? (() => {
+        const t = (g.pace / 100) * 2 * Math.PI
+        const r1 = g.r - g.width / 2 - 1
+        const r2 = g.r + g.width / 2 + 2.5
+        return `<line class="tick" x1="${n(g.cx + r1 * Math.cos(t))}" y1="${n(g.cy + r1 * Math.sin(t))}" x2="${n(g.cx + r2 * Math.cos(t))}" y2="${n(g.cy + r2 * Math.sin(t))}" stroke-width="1.5" stroke-linecap="round"/>`
+      })()
+    : ''
+
   const halo = g.halo
     ? `<circle cx="${n(g.cx)}" cy="${n(g.cy)}" r="${n(g.r)}" fill="none" stroke="${g.halo}" stroke-width="${n(g.width + 7)}" filter="url(#soft)" opacity="0.25"><animate attributeName="opacity" values="0.12;0.5;0.12" dur="1.8s" repeatCount="indefinite"/></circle>`
     : ''
@@ -78,7 +89,7 @@ export function ring(g: Ring): string {
     : ''
 
   return `<g>${halo}<circle class="track" cx="${n(g.cx)}" cy="${n(g.cy)}" r="${n(g.r)}" fill="none" stroke-width="${n(g.width)}"/>` +
-    `<g transform="rotate(-90 ${n(g.cx)} ${n(g.cy)})">${arcs}${mark}</g>${center}</g>`
+    `<g transform="rotate(-90 ${n(g.cx)} ${n(g.cy)})">${arcs}${mark}${pace}</g>${center}</g>`
 }
 
 /** Severity colours for a usage window. */
@@ -93,9 +104,9 @@ export const STYLE = '<style>:root{color-scheme:light dark}' +
   '.t{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif}' +
   '.m{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace}' +
   '.fg{fill:#F1ECE7}.dim{fill:#A59D96}.faint{fill:#77706A}.track{stroke:#fff;stroke-opacity:.09}.trackf{fill:#fff;fill-opacity:.07}' +
-  '.card{fill:#fff;fill-opacity:.03;stroke:#fff;stroke-opacity:.06}.rule{stroke:#fff;stroke-opacity:.08}' +
+  '.card{fill:#fff;fill-opacity:.03;stroke:#fff;stroke-opacity:.06}.rule{stroke:#fff;stroke-opacity:.08}.tick{stroke:#F1ECE7}' +
   '@media (prefers-color-scheme:light){.fg{fill:#26211D}.dim{fill:#776E68}.faint{fill:#A49B95}.track{stroke:#000;stroke-opacity:.08}.trackf{fill:#000;fill-opacity:.06}' +
-  '.card{fill:#000;fill-opacity:.025;stroke:#000;stroke-opacity:.06}.rule{stroke:#000;stroke-opacity:.08}}' +
+  '.card{fill:#000;fill-opacity:.025;stroke:#000;stroke-opacity:.06}.rule{stroke:#000;stroke-opacity:.08}.tick{stroke:#26211D}}' +
   'html,body{margin:0;background:transparent}</style>'
 
 export const DEFS = '<defs>' +

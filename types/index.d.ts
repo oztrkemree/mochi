@@ -141,6 +141,8 @@ export type Env = {
   lastEdit: Hunk | null
   /** The changed file picked in the details pane, with its diff; absent or `path` '' when none is. */
   diff?: FileDiff
+  /** The folders opened in Changes, from the repository's root. */
+  dirs?: string[]
   /** This chat as the others see it, for the board of chats; absent until first written. */
   me?: Peer
   /** The last push's CI and the branch's open pull request, as gh last told them. */
@@ -183,7 +185,35 @@ export type Peer = {
   folder?: string; branch?: string; isWorktree?: boolean; stateAt?: number
   /** The chat's title in the app's list of chats (its custom title); '' or absent when it has none. */
   title?: string
+  /** 2 from a Mochi that writes the fields below; absent from an older one, which leaves them all out. */
+  v?: 2
+  /** What the chat's main loop does while busy; '' when it is not busy or does nothing this names. */
+  activity?: Activity | ''
+  /** What the chat waits on the person for while asking; '' when not asking or when Mochi cannot tell. */
+  waitingFor?: 'permission' | 'question' | 'plan' | ''
+  /** The chat's last finished turn: when it ended, why (Claude Code's reason: answer, aborted, error…) and how long it ran; null before the first. */
+  lastTurn?: { at: number; reason: string; seconds: number } | null
+  /** The chat's subagents running now, at most 8. */
+  agents?: Crew[]
+  /** Context window use in 5% steps, -1 until measured. */
+  context?: number
+  /** The session's cost so far in US dollars, to the cent. */
+  cost?: number
+  /** A usage window used up: which, and when it resets (epoch ms); null when none is. */
+  limit?: { kind: string; resetsAt: number } | null
+  /** The chat's session in the desktop app (local_…), which a link opens; '' when it runs elsewhere or the app does not say. */
+  app?: string
 }
+
+/** What an agent is doing, by the kind of its current tool call. */
+export type Activity = 'thinking' | 'talking' | 'reading' | 'searching' | 'writing' | 'running' | 'testing' | 'web' | 'agent' | 'waiting'
+
+/**
+ * One of a chat's subagents: its id, its agent type ('' when Claude Code does
+ * not say), its task in the few words the Agent tool was given, what it does
+ * now, and when it started.
+ */
+export type Crew = { id: string; type: string; task: string; activity: Activity; since: number }
 
 /**
  * One day of work, in one chat or all of them: besides the counts, the lines
@@ -268,7 +298,7 @@ export type Git = {
 }
 
 /** One finished turn, for the detail pane's chart. */
-export type TurnRec = { at: number; seconds: number; tools: number; edits: number; errors: number; cost: number }
+export type TurnRec = { at: number; seconds: number; tools: number; edits: number; errors: number; cost: number; /** Context tokens when the turn ended. */ ctx?: number }
 
 /** How often a file was read and changed this session, and the lines its edits added and removed. */
 export type FileRec = { path: string; reads: number; edits: number; at: number; add?: number; del?: number }
@@ -276,8 +306,12 @@ export type FileRec = { path: string; reads: number; edits: number; at: number; 
 /** The last edit, as the detail pane shows it: the changed lines with one line of context before them. */
 export type Hunk = { path: string; at: number; ctx: string; old: string[]; new: string[]; add: number; del: number }
 
-/** A changed file's diff against the last commit as the pane shows it: its first lines marked, and how many more there are. */
-export type FileDiff = { path: string; lines: { kind: 'ctx' | 'old' | 'new'; text: string }[]; more: number }
+/**
+ * A changed file's diff against the last commit as the pane shows it: its
+ * first lines marked, and how many more there are; `hidden`, while no file
+ * is picked, the last edit put away (by when it was made).
+ */
+export type FileDiff = { path: string; lines: { kind: 'ctx' | 'old' | 'new'; text: string }[]; more: number; hidden?: number }
 
 /** A usage window: the 5-hour session or the 7-day week. */
 export type Limit = { kind: string; percent: number; resetsAt: number }
@@ -301,6 +335,8 @@ export type Info = {
   git: { branch: string; changed: number; ahead: number; behind: number; lastCommit: number } | null
   /** When each usage window runs out at the present pace (epoch ms), where it would before its reset. */
   forecast?: Record<string, number>
+  /** About how many turns fit before compaction; absent until known. */
+  turnsLeft?: number
   tz?: number
   peers?: Peer[]
   ci?: Ci | null
@@ -364,6 +400,10 @@ declare module 'claude-code' {
       said: { text: string; copy: string; open?: string }
       /** The changed file picked in the details pane's Changes, with its diff; `path` '' when none is. */
       diff: FileDiff
+      /** The chat picked on the details pane's party, by session id; '' when none is. */
+      party: { pick: string }
+      /** The folders opened in the details pane's Changes, from the repository's root. */
+      dirs: { open: string[] }
     }
   }
 }

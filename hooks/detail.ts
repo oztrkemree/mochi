@@ -1,7 +1,7 @@
 import type { Env, FileDiff, Recent } from '../types'
 import { boardLines, chatsCard } from './chats'
 import { ciCard, ciLine, ciLines, prLine } from './ci'
-import { age, ago, baseName, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, warnLevel } from './facts'
+import { age, ago, baseName, biggest, categoryName, clockAt, dayKey, dirOf, forecastFull, local, shiftDay, timeGone, turnsLeft, warnLevel } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { t } from './i18n'
 import { UNLOCKS, hintFor, itemName, levelOf, unlocked, xpOf } from './level'
@@ -47,19 +47,21 @@ export function detailParts(env: Env, now: number, innerW: number): Parts {
 
   // ---- hero: three rings ----
   const pct = env.window > 0 ? (env.tokens / env.window) * 100 : env.context
+  const left = turnsLeft(env)
   const five = env.limits.find(l => l.kind === 'five_hour')
   const week = env.limits.find(l => l.kind === 'seven_day')
   const heroes = [
     {
-      label: t().detail.context, sub: env.window > 0 ? `${tokens(env.tokens)} / ${tokens(env.window)}` : '—', center: pct >= 0 ? `${Math.round(pct)}%` : '—',
+      label: t().detail.context, sub: env.window > 0 ? `${tokens(env.tokens)} / ${tokens(env.window)}${left !== null ? ` · ${t().panel.turnsLeft(left)}` : ''}` : '—', center: pct >= 0 ? `${Math.round(pct)}%` : '—',
       arcs: env.slices.map(s => ({ key: s.name, value: (s.tokens / total) * 100, color: sliceInk(s.name) })),
       mark: env.compactAt > 0 ? (env.compactAt / total) * 100 : undefined, halo: level >= 2 ? '#F0645A' : level >= 1 ? '#F2B84B' : undefined,
-      full: null as number | null,
+      full: null as number | null, pace: null as number | null,
     },
     ...[five, week].map((l, i) => ({
       label: i === 0 ? t().detail.session5h : t().detail.week7d,
       sub: l && l.resetsAt > now ? t().detail.resetsIn(until(l.resetsAt - now)) : '—',
       full: l ? forecastFull(env.samples ?? [], l, now, env.tz ?? 0) : null,
+      pace: l ? timeGone(l, now) : null,
       center: l ? `${Math.round(l.percent)}%` : '—',
       arcs: l ? [{ key: 'u', value: Math.min(100, l.percent), color: usageInk(l.percent) }] : [],
       mark: undefined, halo: l && l.percent >= 80 ? '#F0645A' : undefined,
@@ -78,7 +80,7 @@ export function detailParts(env: Env, now: number, innerW: number): Parts {
           : ''
         const cx = x + col * i + col / 2
         return ring({ id: `hero${i}`, cx, cy: y + 34, r: 30, width: 7.5, arcs: g.arcs, center: esc(g.center), centerSize: 16,
-          ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) }) +
+          ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.pace !== null ? { pace: g.pace } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) }) +
           `<text class="t ${g.halo ? '' : 'fg'}" x="${n(cx)}" y="${y + 87}" font-size="12" font-weight="600" text-anchor="middle"${g.halo ? ` fill="${g.halo}"` : ''}>${esc(g.label)}</text>` +
           `<text class="t faint" x="${n(cx)}" y="${y + 104}" font-size="10.5" text-anchor="middle">${esc(clip(g.sub, Math.floor(col / 5.6)))}</text>` + forecast
       }).join('')
@@ -114,7 +116,7 @@ export function detailParts(env: Env, now: number, innerW: number): Parts {
   const board = chatsCard(env, now)
 
   // ---- what changed in the files ----
-  const changes = changesCard(env, now, innerW)
+  const changes = changesCard(env, now)
   if (changes) cards.push(changes)
   const ci = ciCard(env, now)
   if (ci) cards.push(ci)
@@ -127,7 +129,7 @@ export function detailParts(env: Env, now: number, innerW: number): Parts {
   const legendRows = Math.ceil(legend.length / legendCols)
   cards.push({
     title: t().detail.contextTitle,
-    right: `${tokens(env.tokens)} / ${tokens(env.window)}${env.compactAt > 0 ? ` · ${t().detail.compactsAt(tokens(env.compactAt))}` : ''}`,
+    right: `${tokens(env.tokens)} / ${tokens(env.window)}${env.compactAt > 0 ? ` · ${t().detail.compactsAt(tokens(env.compactAt))}` : ''}${left !== null ? ` · ${t().panel.turnsLeft(left)}` : ''}`,
     content: 34 + (legendRows - 1) * 19 + (level >= 1 ? 40 : 6),
     body: (x, y, w) => {
       let at = x
@@ -435,15 +437,16 @@ function paint(cards: Card[], W: number): string {
 
 const ADD_INK = '#4CC38A'
 const DEL_INK = '#F0645A'
+const MOD_INK = '#7AA2F7'
 const ME_INK = '#E08A6A'
 /** A change's kind, from git's two letters: its colour and its sign. */
 function changeKind(code: string): { ink: string; sign: string } {
   const c = code.trim()
   if (c === '??' || c.startsWith('A')) return { ink: ADD_INK, sign: '+' }
   if (c.includes('D')) return { ink: DEL_INK, sign: '−' }
-  if (c.startsWith('R')) return { ink: '#7AA2F7', sign: '→' }
+  if (c.startsWith('R')) return { ink: MOD_INK, sign: '→' }
   if (c.includes('U')) return { ink: DEL_INK, sign: '!' }
-  return { ink: '#F2B84B', sign: '•' }
+  return { ink: MOD_INK, sign: '~' }
 }
 
 /** "+12 −3" as tspans, a zero side left out ("+146", "−212"); "0" when nothing changed. */
@@ -452,144 +455,288 @@ function counts(add: number, del: number): string {
   return (add > 0 ? `<tspan fill="${ADD_INK}">+${thousands(add)}</tspan>` : '') + (del > 0 ? `<tspan fill="${DEL_INK}"${add > 0 ? ' dx="6"' : ''}>−${thousands(del)}</tspan>` : '')
 }
 
-/** Five squares, as GitHub draws a change: as many filled as the change is big beside the biggest, green for added, red for removed. */
-function blocks(x: number, cy: number, add: number | null, del: number | null, most: number): string {
-  const total = (add ?? 0) + (del ?? 0)
-  const filled = add === null || total === 0 ? 0 : Math.max(1, Math.min(5, Math.ceil((5 * total) / Math.max(1, most))))
-  const green = filled === 0 ? 0 : Math.round((filled * (add ?? 0)) / total)
-  return Array.from({ length: 5 }, (_, i) => {
-    const fill = i < green ? `fill="${ADD_INK}"` : i < filled ? `fill="${DEL_INK}"` : 'class="trackf"'
-    return `<rect x="${n(x + i * 10)}" y="${n(cy - 4)}" width="8" height="8" rx="2" ${fill}/>`
-  }).join('')
+/** A change's size as one bar: as long as it is beside the biggest, green for what came, red for what went. */
+function sizeBar(x: number, cy: number, w: number, add: number, del: number, most: number): string {
+  const total = add + del
+  const len = total === 0 ? 0 : Math.max(3, (w * total) / Math.max(1, most))
+  const green = total === 0 ? 0 : (len * add) / total
+  return `<rect class="trackf" x="${n(x)}" y="${n(cy - 3)}" width="${n(w)}" height="6" rx="3"/>` +
+    (green > 0 ? `<rect x="${n(x)}" y="${n(cy - 3)}" width="${n(green)}" height="6" rx="3" fill="${ADD_INK}"/>` : '') +
+    (len - green > 0 ? `<rect x="${n(x + green)}" y="${n(cy - 3)}" width="${n(len - green)}" height="6" rx="${green > 0 ? 0 : 3}" fill="${DEL_INK}"/>` : '')
 }
 
 type ChangeRow = { path: string; code: string; add: number | null; del: number | null; at: number }
 
-/** The changed files as Changes lists them: those Claude edited in this chat first, latest first, then the biggest. */
+/** A path as git writes it, from the repository's root; git writes `/`, Claude's own paths on Windows `\`. */
+export function relPath(root: string, abs: string): string {
+  const path = abs.replaceAll('\\', '/')
+  return root !== '' && path.startsWith(`${root}/`) ? path.slice(root.length + 1) : abs
+}
+
+/** The changed files: those Claude edited in this chat first, latest first, then the biggest. */
 function changeRows(env: Env): ChangeRow[] {
   const git = env.git
   const root = git?.root ?? ''
-  // git writes `/`; Claude's own paths on Windows `\`.
-  const rel = (abs: string) => {
-    const path = abs.replaceAll('\\', '/')
-    return root !== '' && path.startsWith(`${root}/`) ? path.slice(root.length + 1) : abs
-  }
   const edited = env.files.filter(f => f.edits > 0)
-  const mine = new Map(edited.map(f => [rel(f.path), f]))
+  const mine = new Map(edited.map(f => [relPath(root, f.path), f]))
   const all: ChangeRow[] = git
     ? git.files.map(f => ({ path: f.path, code: f.code, add: f.add ?? (f.code === '??' ? null : 0), del: f.del ?? (f.code === '??' ? null : 0), at: mine.get(f.path)?.at ?? 0 }))
     : edited.map(f => ({ path: f.path, code: ' M', add: f.add ?? 0, del: f.del ?? 0, at: f.at }))
-  return all.sort((a, b) => b.at - a.at || ((b.add ?? 0) + (b.del ?? 0)) - ((a.add ?? 0) + (a.del ?? 0)))
+  return all.sort((a, b) => b.at - a.at || size(b) - size(a))
 }
+const size = (r: ChangeRow) => (r.add ?? 0) + (r.del ?? 0)
 
-/** The files Changes shows whose diff can be picked: in a repository, with lines to show; `sign` as the card marks them. */
+/** The files Changes shows a button for where its rows hear no clicks: in a repository, with lines to show; `sign` as the card marks them. */
 export const diffable = (env: Env): { path: string; sign: string }[] =>
   env.git ? changeRows(env).slice(0, 10).filter(r => r.add !== null).map(r => ({ path: r.path, sign: changeKind(r.code).sign })) : []
 
+/** A folder with at least this many of the other changes in it, all of about one size (siblings, as a file per language), shows as one line, which opens to them. */
+const FOLD_AT = 4
+const MINE_MAX = 8
+const REST_MAX = 6
+
+/** A line of the list: a file, a folder of files folded into one (`files`), or one of an opened folder's files (`isChild`). */
+type Entry = { row: ChangeRow; files?: ChangeRow[]; isOpen?: boolean; isChild?: boolean }
+
+/** The changes in two groups: Claude's in this chat, latest first; the rest by size, a crowded folder folded into one line. */
+function changeGroups(env: Env): { mine: Entry[]; rest: Entry[]; restCount: number; hidden: ChangeRow[] } {
+  const rows = changeRows(env)
+  const mineAll = rows.filter(r => r.at > 0)
+  const restAll = rows.filter(r => r.at === 0)
+  const folderOf = (path: string) => path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''
+  const byFolder = new Map<string, ChangeRow[]>()
+  for (const r of restAll) byFolder.set(folderOf(r.path), [...(byFolder.get(folderOf(r.path)) ?? []), r])
+  const open = env.dirs ?? []
+  const tops: Entry[] = []
+  const folded = new Set<string>()
+  for (const r of restAll) {
+    const dir = folderOf(r.path)
+    const kin = byFolder.get(dir) ?? []
+    const sizes = kin.map(size)
+    const isKin = kin.length >= FOLD_AT && Math.max(...sizes) <= 2 * Math.max(1, Math.min(...sizes))
+    if (dir === '' || !isKin) {
+      tops.push({ row: r })
+    } else if (!folded.has(dir)) {
+      folded.add(dir)
+      const known = kin.filter(f => f.add !== null)
+      const codes = new Set(kin.map(f => changeKind(f.code).sign))
+      tops.push({
+        row: {
+          path: dir, code: codes.size === 1 ? kin[0]!.code : ' M', at: 0,
+          add: known.length === 0 ? null : known.reduce((a, f) => a + (f.add ?? 0), 0),
+          del: known.length === 0 ? null : known.reduce((a, f) => a + (f.del ?? 0), 0),
+        },
+        files: kin, isOpen: open.includes(dir),
+      })
+    }
+  }
+  tops.sort((a, b) => size(b.row) - size(a.row))
+  const shownTops = tops.slice(0, REST_MAX)
+  const rest = shownTops.flatMap(e => e.files && e.isOpen ? [e, ...e.files.map(f => ({ row: f, isChild: true }))] : [e])
+  const hidden = [...mineAll.slice(MINE_MAX), ...tops.slice(REST_MAX).flatMap(e => e.files ?? [e.row])]
+  return { mine: mineAll.slice(0, MINE_MAX).map(row => ({ row })), rest, restCount: restAll.length, hidden }
+}
+
 /**
- * The repository's changes against the last commit, line by line, the files
- * Claude edited in this chat marked and first; under them the file picked
- * below the card, or else the last edit itself. Outside a repository, the
- * files edited in this chat.
+ * A strip of Changes, `h` tall, drawn from (x, y) across `w`; `key` is the
+ * press it answers to where its rows hear clicks ('' for none).
  */
-function changesCard(env: Env, now: number, innerW: number): Card | null {
+export type Piece = { key: string; h: number; draw: (x: number, y: number, w: number) => string }
+
+type Line = FileDiff['lines'][number]
+
+/** A diff's lines in a box, `x` in from the left; a caption over them when it has one. */
+function diffBox(lines: Line[], more: number, caption: string): Piece {
+  const capH = caption === '' ? 0 : 20
+  const h = capH + 8 + lines.length * 16 + (more > 0 ? 16 : 0) + 6
+  return {
+    key: '', h,
+    draw: (x, y, w) => {
+      const bx = x + 30
+      const bw = w - 30
+      const chars = Math.max(10, Math.floor((bw - 34) / 6.5))
+      let out = `<rect class="trackf" x="${n(bx)}" y="${y + 2}" width="${n(bw)}" height="${h - 8}" rx="8"/>`
+      if (caption !== '') out += `<text class="t faint" x="${n(bx + 10)}" y="${y + 16}" font-size="9.5" font-weight="650" letter-spacing="1">${esc(caption)}</text>`
+      let ly = y + 2 + capH + 4
+      for (const l of lines) {
+        const ink = l.kind === 'old' ? DEL_INK : l.kind === 'new' ? ADD_INK : ''
+        if (ink !== '') out += `<rect x="${n(bx)}" y="${ly}" width="${n(bw)}" height="16" fill="${ink}" fill-opacity="0.1"/>`
+        if (ink !== '') out += `<text class="m" x="${n(bx + 9)}" y="${ly + 11.5}" font-size="10.5" fill="${ink}">${l.kind === 'old' ? '−' : '+'}</text>`
+        out += `<text class="m ${l.kind === 'ctx' ? 'faint' : 'fg'}" x="${n(bx + 23)}" y="${ly + 11.5}" font-size="10.5" xml:space="preserve">${esc(clip(l.text.replace(/\t/g, '  '), chars))}</text>`
+        ly += 16
+      }
+      if (more > 0) out += `<text class="t faint" x="${n(bx + 23)}" y="${ly + 11.5}" font-size="10.5">${esc(t().detail.moreLines(more))}</text>`
+      return out
+    },
+  }
+}
+
+/**
+ * Changes as strips, top to bottom: the branch, the files Claude edited in
+ * this chat, the rest (a crowded folder as one line), and what is not shown.
+ * The file picked opens under its own line; with none picked, the last edit
+ * under the file it was made in, until put away. `hint` says the lines can
+ * be pressed, where they can.
+ */
+export function changesPieces(env: Env, now: number, hint = false): Piece[] {
+  const git = env.git
+  const { mine, rest, restCount, hidden } = changeGroups(env)
+  const d = t().detail
+  const pieces: Piece[] = []
+  const all = [...mine, ...rest]
+  const most = Math.max(1, ...all.filter(e => !e.isChild).map(e => size(e.row)))
+
+  // The branch, how far it is from its remote, the last commit; under it what came against what went.
+  const added = (git?.files ?? []).reduce((a, f) => a + (f.add ?? 0), 0)
+  const removed = (git?.files ?? []).reduce((a, f) => a + (f.del ?? 0), 0)
+  pieces.push({
+    key: '', h: git && added + removed > 0 ? 34 : 24,
+    draw: (x, y, w) => {
+      if (!git) return `<text class="t faint" x="${x}" y="${y + 14}" font-size="11.5">${esc(clip(d.notRepo, Math.floor(w / 6.2)))}</text>`
+      const name = clip(git.branch, 40)
+      const chipW = cols(name) * 6.6 + 14
+      const after = [...(git.ahead > 0 ? [`↑${git.ahead}`] : []), ...(git.behind > 0 ? [`↓${git.behind}`] : []), git.lastCommit > 0 ? t().st.lastCommit(ago(now - git.lastCommit)) : t().st.noCommits].join('  ·  ')
+      const total = added + removed
+      return `<g transform="translate(${x} ${y + 10})" stroke="#A59D96" stroke-width="1.3" fill="none" stroke-linecap="round"><circle cx="2" cy="-4" r="1.6"/><circle cx="2" cy="4" r="1.6"/><circle cx="8" cy="-2" r="1.6"/><path d="M2 -2.4V2.4M8 -0.4C8 2 2 1 2 2.4"/></g>` +
+        `<rect class="trackf" x="${x + 16}" y="${y + 1}" width="${n(chipW)}" height="18" rx="5"/>` +
+        `<text class="m fg" x="${x + 23}" y="${y + 14}" font-size="11.5">${esc(name)}</text>` +
+        `<text class="t faint" x="${n(x + 16 + chipW + 8)}" y="${y + 14}" font-size="11">${esc(clip(after, Math.max(6, Math.floor((w - chipW - 30) / 6))))}</text>` +
+        (total > 0
+          ? `<rect class="trackf" x="${x}" y="${y + 27}" width="${w}" height="3" rx="1.5"/>` +
+            `<rect x="${x}" y="${y + 27}" width="${n((w * added) / total)}" height="3" rx="1.5" fill="${ADD_INK}"/>` +
+            (removed > 0 ? `<rect x="${n(x + (w * added) / total)}" y="${y + 27}" width="${n((w * removed) / total)}" height="3" rx="1.5" fill="${DEL_INK}"/>` : '')
+          : '')
+    },
+  })
+  if (all.length === 0 && git) {
+    pieces.push({ key: '', h: 26, draw: (x, y) => `<text class="t faint" x="${x}" y="${y + 18}" font-size="11.5">${esc(d.cleanTree)}</text>` })
+  }
+
+  // What opens under a line: the file picked, else the last edit while it is not put away.
+  const picked = env.diff && env.diff.path !== '' && all.some(e => e.row.path === env.diff?.path) ? env.diff : null
+  const hunk = env.lastEdit
+  const root = git?.root ?? ''
+  const lastAt = picked === null && hunk !== null && env.diff?.hidden !== hunk.at ? relPath(root, hunk.path) : ''
+  const lastLines = (): Line[] => hunk
+    ? [...(hunk.ctx ? [{ kind: 'ctx', text: hunk.ctx }] : []), ...hunk.old.map(text => ({ kind: 'old', text })), ...hunk.new.map(text => ({ kind: 'new', text }))] as Line[]
+    : []
+  const lastBox = () => diffBox(lastLines(), hunk ? (hunk.add - hunk.new.length) + (hunk.del - hunk.old.length) : 0, hunk ? `${d.lastEdit} · ${ago(now - hunk.at)}` : '')
+  let isLastShown = false
+
+  const head = (dot: boolean, label: string, count: number, right: string, isRuled: boolean): Piece => ({
+    key: '', h: isRuled ? 34 : 24,
+    draw: (x, y, w) => {
+      const top = y + (isRuled ? 10 : 0)
+      return (isRuled ? `<path class="rule" d="M${x} ${y + 4}H${x + w}"/>` : '') +
+        (dot ? `<circle cx="${x + 4}" cy="${top + 13}" r="3" fill="${ME_INK}"/>` : '') +
+        `<text class="t" x="${x + (dot ? 13 : 0)}" y="${top + 17}" font-size="11"><tspan class="fg" font-weight="600">${esc(label)}</tspan><tspan class="faint" dx="6">· ${esc(d.files(count))}</tspan></text>` +
+        `<text class="t faint" x="${x + w}" y="${top + 17}" font-size="10.5" text-anchor="end">${esc(right)}</text>`
+    },
+  })
+
+  const line = (e: Entry): Piece => {
+    const r = e.row
+    const isPicked = picked !== null && picked.path === r.path
+    const k = changeKind(r.code)
+    const key = e.files ? `dir:${r.path}` : git && r.add !== null ? `diff:${r.path}` : ''
+    return {
+      key, h: e.isChild ? 22 : 26,
+      draw: (x, y, w) => {
+        const cy = y + (e.isChild ? 11 : 13)
+        const timeW = mine.length > 0 ? 40 : 0
+        const numR = x + w - timeW
+        const barW = Math.max(48, Math.min(110, w * 0.16))
+        const barX = numR - 84 - barW
+        const nameX = x + 30 + (e.isChild ? 16 : 0)
+        let out = isPicked ? `<rect class="trackf" x="${x - 2}" y="${y + 1}" width="${w + 4}" height="${(e.isChild ? 22 : 26) - 2}" rx="6"/><rect x="${x - 2}" y="${y + 4}" width="2.5" height="${(e.isChild ? 22 : 26) - 8}" rx="1" fill="${ME_INK}"/>` : ''
+        if (!e.isChild) {
+          out += `<rect x="${x}" y="${cy - 9}" width="20" height="18" rx="5" fill="${k.ink}" fill-opacity="0.16"/>` +
+            `<text class="m" x="${x + 10}" y="${cy + 4}" font-size="11.5" font-weight="700" text-anchor="middle" fill="${k.ink}">${k.sign}</text>`
+        }
+        const room = Math.max(8, Math.floor((barX - nameX - 14) / 6.7))
+        if (e.files) {
+          const chevron = e.isOpen ? 'M0 0L4 4L8 0' : 'M0 0L4 4L0 8'
+          out += `<path d="${chevron}" transform="translate(${nameX} ${cy - (e.isOpen ? 2 : 4)})" stroke="#A59D96" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+            `<text class="t" x="${nameX + 14}" y="${cy + 4}" font-size="12"><tspan class="fg">${esc(clip(r.path, room - 10))}/</tspan><tspan class="faint" font-size="11" dx="7">${esc(d.files(e.files.length))}</tspan></text>`
+        } else {
+          const name = baseName(r.path)
+          const dir = e.isChild ? '' : dirOf(r.path, Math.max(4, room - cols(name) - 2))
+          out += `<text class="t" x="${nameX}" y="${cy + 4}" font-size="${e.isChild ? 11.5 : 12}"><tspan class="${e.isChild ? 'dim' : 'fg'}">${esc(clip(name, room))}</tspan><tspan class="faint" font-size="11" dx="6">${esc(dir)}</tspan></text>`
+        }
+        out += r.add === null
+          ? `<text class="t faint" x="${n(numR)}" y="${cy + 4}" font-size="11" text-anchor="end">${esc(r.code === '??' ? d.newFile : d.binary)}</text>`
+          : sizeBar(barX, cy, barW, r.add, r.del ?? 0, most) +
+            `<text class="m" x="${n(numR)}" y="${cy + 4}" font-size="11.5" font-weight="600" text-anchor="end">${counts(r.add, r.del ?? 0)}</text>`
+        if (r.at > 0) out += `<text class="t faint" x="${n(x + w)}" y="${cy + 4}" font-size="10.5" text-anchor="end">${esc(age(now - r.at) || t().justNow)}</text>`
+        return out
+      },
+    }
+  }
+  const lines = (entries: Entry[]) => {
+    for (const e of entries) {
+      pieces.push(line(e))
+      if (picked !== null && picked.path === e.row.path && !e.files) pieces.push(diffBox(picked.lines, picked.more, ''))
+      else if (lastAt !== '' && lastAt === e.row.path && !isLastShown) {
+        isLastShown = true
+        pieces.push(lastBox())
+      }
+    }
+  }
+
+  if (mine.length > 0) {
+    pieces.push(head(true, d.mine, mine.length, d.newest, false))
+    lines(mine)
+  }
+  if (rest.length > 0) {
+    pieces.push(head(false, mine.length > 0 ? d.others : d.allChanges, restCount, d.biggest, mine.length > 0))
+    lines(rest)
+  }
+  if (hidden.length > 0) {
+    const names = hidden.slice(0, 3).map(r => baseName(r.path)).join(', ') + (hidden.length > 3 ? '…' : '')
+    pieces.push({ key: '', h: 20, draw: (x, y, w) => `<text class="t faint" x="${x + 30}" y="${y + 13}" font-size="11">${esc(clip(`${d.moreFiles(hidden.length)} · ${names}`, Math.floor((w - 30) / 6)))}</text>` })
+  }
+  // The last edit in a file the list does not show (or outside a repository's lines): under the list.
+  if (lastAt !== '' && !isLastShown) pieces.push(lastBox())
+  if (all.length > 0) {
+    pieces.push({
+      key: '', h: 26,
+      draw: (x, y, w) => {
+        const sign = (sx: number, s: string, ink: string) => `<rect x="${sx}" y="${y + 9}" width="16" height="14" rx="4" fill="${ink}" fill-opacity="0.16"/><text class="m" x="${sx + 8}" y="${y + 20}" font-size="10" font-weight="700" text-anchor="middle" fill="${ink}">${s}</text>`
+        return sign(x, '+', ADD_INK) + `<text class="t faint" x="${x + 22}" y="${y + 20}" font-size="10.5">${esc(d.newFile)}</text>` +
+          sign(x + 34 + cols(d.newFile) * 6, '~', MOD_INK) + `<text class="t faint" x="${n(x + 56 + cols(d.newFile) * 6)}" y="${y + 20}" font-size="10.5">${esc(d.changed)}</text>` +
+          (hint ? `<text class="t faint" x="${x + w}" y="${y + 20}" font-size="10.5" text-anchor="end">${esc(d.rowHint)}</text>` : '')
+      },
+    })
+  }
+  return pieces
+}
+
+/** A strip of Changes as its own drawing, `width` wide, for a line the desktop makes pressable. */
+export function pieceSvg(piece: Piece, width: number): string {
+  const W = Math.max(280, Math.round(width))
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${piece.h}" width="100%" height="100%" preserveAspectRatio="xMidYMin meet">${STYLE}${rtlStyle()}${DEFS}${piece.draw(2, 0, W - 4)}</svg>`
+}
+
+/** Changes as one card, as the section, the snapshot and a surface without pressable lines draw it. */
+function changesCard(env: Env, now: number): Card | null {
   const git = env.git
   const all = changeRows(env)
-  const hunk = env.lastEdit
-  if (all.length === 0 && hunk === null && git === null) return null
-  const rows = all.slice(0, 10)
+  if (all.length === 0 && env.lastEdit === null && git === null) return null
+  const pieces = changesPieces(env, now)
   const count = git ? git.changed : all.length
   const added = all.reduce((a, r) => a + (r.add ?? 0), 0)
   const removed = all.reduce((a, r) => a + (r.del ?? 0), 0)
-  const most = Math.max(1, ...rows.map(r => (r.add ?? 0) + (r.del ?? 0)))
-  const hasMine = rows.some(r => r.at > 0)
-  const more = count - rows.length
-  // The file picked below the card, while it is still changed; else the last edit: the line before it, then what went and what came.
-  const picked = env.diff
-  const pick = picked && picked.path !== '' ? all.find(r => r.path === picked.path) : undefined
-  type Line = FileDiff['lines'][number]
-  const box = pick && picked
-    ? { label: t().detail.fileDiff, path: pick.path, when: '', add: pick.add ?? 0, del: pick.del ?? 0, lines: picked.lines, more: picked.more }
-    : hunk
-      ? {
-        label: t().detail.lastEdit, path: hunk.path, when: `${ago(now - hunk.at)} · `, add: hunk.add, del: hunk.del,
-        lines: [...(hunk.ctx ? [{ kind: 'ctx', text: hunk.ctx }] : []), ...hunk.old.map(text => ({ kind: 'old', text })), ...hunk.new.map(text => ({ kind: 'new', text }))] as Line[],
-        more: (hunk.add - hunk.new.length) + (hunk.del - hunk.old.length),
-      }
-      : null
-  const shown = box?.lines ?? []
-  const longer = box?.more ?? 0
-  const hunkH = box ? 14 + 20 + 8 + shown.length * 16 + 8 + (longer > 0 ? 16 : 0) : 0
-  const rowsH = rows.length * 24 + (more > 0 ? 18 : 0) + (hasMine ? 20 : 0)
   return {
     title: t().detail.changes,
     right: count > 0 ? `${t().detail.files(count)} · +${thousands(added)} −${thousands(removed)}` : git ? t().detail.clean : '',
-    content: 24 + (rows.length === 0 ? 18 : rowsH) + hunkH,
+    content: pieces.reduce((a, p) => a + p.h, 0) - 12,
     body: (x, y, w) => {
-      let out = ''
-      // The branch, how far it is from its remote, the last commit.
-      const head = git
-        ? [git.branch, ...(git.ahead > 0 ? [`↑${git.ahead}`] : []), ...(git.behind > 0 ? [`↓${git.behind}`] : []), git.lastCommit > 0 ? t().st.lastCommit(ago(now - git.lastCommit)) : t().st.noCommits].join('  ·  ')
-        : t().detail.notRepo
-      out += (git ? `<g transform="translate(${x} ${y + 9})" stroke="#A59D96" stroke-width="1.3" fill="none" stroke-linecap="round"><circle cx="2" cy="-4" r="1.6"/><circle cx="2" cy="4" r="1.6"/><circle cx="8" cy="-2" r="1.6"/><path d="M2 -2.4V2.4M8 -0.4C8 2 2 1 2 2.4"/></g>` : '') +
-        `<text class="t ${git ? 'fg' : 'faint'}" x="${x + (git ? 16 : 0)}" y="${y + 13}" font-size="12" font-weight="${git ? 600 : 400}">${esc(clip(head, Math.floor(w / 6.6)))}</text>`
-      let cy = y + 24 + 12
-      if (rows.length === 0) {
-        out += `<text class="t faint" x="${x}" y="${cy + 4}" font-size="11.5">${esc(t().detail.cleanTree)}</text>`
-      }
-      const numX = x + w - 50
-      const blockX = numX - 74 - 50
-      for (const r of rows) {
-        const k = changeKind(r.code)
-        const name = baseName(r.path)
-        const room = Math.max(8, Math.floor((blockX - (x + 34) - 10) / 6.7))
-        const dir = dirOf(r.path, Math.max(4, room - cols(name) - 2))
-        out += `<rect x="${x}" y="${cy - 8}" width="18" height="16" rx="5" fill="${k.ink}" fill-opacity="0.16"/>` +
-          `<text class="t" x="${x + 9}" y="${cy + 4}" font-size="11" font-weight="700" text-anchor="middle" fill="${k.ink}">${k.sign}</text>` +
-          (r.at > 0 ? `<circle cx="${x + 27}" cy="${cy}" r="2.8" fill="${ME_INK}"/>` : '') +
-          `<text class="t" x="${x + 34}" y="${cy + 4}" font-size="12"><tspan class="fg">${esc(clip(name, room))}</tspan><tspan class="faint" font-size="11" dx="6">${esc(dir)}</tspan></text>` +
-          blocks(blockX, cy, r.add, r.del, most) +
-          (r.add === null
-            ? `<text class="t faint" x="${n(numX)}" y="${cy + 4}" font-size="11" text-anchor="end">${esc(r.code === '??' ? t().detail.newFile : t().detail.binary)}</text>`
-            : `<text class="t" x="${n(numX)}" y="${cy + 4}" font-size="11.5" font-weight="600" text-anchor="end" font-variant-numeric="tabular-nums">${counts(r.add, r.del ?? 0)}</text>`) +
-          (r.at > 0 ? `<text class="t faint" x="${n(x + w)}" y="${cy + 4}" font-size="10.5" text-anchor="end">${esc(age(now - r.at) || t().justNow)}</text>` : '')
-        cy += 24
-      }
-      if (more > 0) {
-        out += `<text class="t faint" x="${x + 34}" y="${cy - 6}" font-size="11">${esc(t().detail.moreFiles(more))}</text>`
-        cy += 18
-      }
-      if (hasMine) {
-        out += `<circle cx="${x + 4}" cy="${cy - 5}" r="2.8" fill="${ME_INK}"/><text class="t faint" x="${x + 12}" y="${cy - 1.5}" font-size="10.5">${esc(t().detail.byClaude)}</text>`
-        cy += 20
-      }
-      if (rows.length === 0) cy += 6
-      if (box) {
-        const top = cy - 12 + 14
-        out += `<path class="rule" d="M${x} ${top - 8}H${x + w}"/>` +
-          `<text class="t" x="${x}" y="${top + 8}" font-size="10" font-weight="650" letter-spacing="1"><tspan class="faint">${esc(box.label)}</tspan>` +
-          `<tspan class="fg" dx="10" font-size="12" letter-spacing="0">${esc(clip(baseName(box.path), 40))}</tspan>` +
-          `<tspan class="faint" dx="8" font-size="11" letter-spacing="0">${esc(box.when)}</tspan><tspan fill="${ADD_INK}" font-size="11" letter-spacing="0">+${box.add}</tspan><tspan fill="${DEL_INK}" font-size="11" dx="5" letter-spacing="0">−${box.del}</tspan></text>`
-        const boxY = top + 20
-        const boxH = shown.length * 16 + 8 + (longer > 0 ? 16 : 0)
-        const chars = Math.max(10, Math.floor((w - 40) / 6.5))
-        out += `<rect class="trackf" x="${x}" y="${boxY}" width="${w}" height="${boxH}" rx="8"/>`
-        let ly = boxY + 4
-        const line = (text: string, kind: 'ctx' | 'old' | 'new') => {
-          const ink = kind === 'old' ? DEL_INK : kind === 'new' ? ADD_INK : ''
-          const bg = kind === 'ctx' ? '' : `<rect x="${x}" y="${ly}" width="${w}" height="16" fill="${ink}" fill-opacity="0.1"/>`
-          const sign = kind === 'old' ? '−' : kind === 'new' ? '+' : ' '
-          const shownText = clip(text.replace(/\t/g, '  '), chars)
-          const row = bg +
-            `<text class="m${kind === 'ctx' ? ' faint' : ''}" x="${x + 8}" y="${ly + 11.5}" font-size="10.5"${ink ? ` fill="${ink}"` : ''}>${sign}</text>` +
-            `<text class="m${kind === 'ctx' ? ' faint' : ' fg'}" x="${x + 22}" y="${ly + 11.5}" font-size="10.5" xml:space="preserve">${esc(shownText)}</text>`
-          ly += 16
-          return row
-        }
-        for (const l of shown) out += line(l.text, l.kind)
-        if (longer > 0) out += `<text class="t faint" x="${x + 22}" y="${ly + 11.5}" font-size="10.5">${esc(t().detail.moreLines(longer))}</text>`
-      }
-      return out
+      let at = y
+      return pieces.map(p => {
+        const out = p.draw(x, at, w)
+        at += p.h
+        return out
+      }).join('')
     },
   }
 }
