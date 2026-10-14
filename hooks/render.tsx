@@ -552,15 +552,15 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
         </Box>
       )
     }
-    // A clear region pulled back over the gauges: a click there opens the
-    // detail pane. Columns are the band's own unit, about 8.1 pixels here;
-    // 3.8 rows (lines) is the panel's height, so the band does not grow.
-    const cardCols = Math.max(8, Math.round(drawn.card.w / 8.1))
+    // A clear region pulled back over the whole panel: a click anywhere on it
+    // opens the detail pane. Columns are the band's own unit, about 8.1 pixels
+    // here; 3.8 rows (lines) is the panel's height, so the band does not grow.
+    const panelCols = Math.max(8, Math.round(drawn.width / 8.1))
     let hit: JSX.Element | null = null
     if (e.surface === 'desktop') {
       const { Client } = $.ui.resolve(e)
       hit = (
-        <Box marginLeft={-cardCols} width={cardCols} height={3.8} flexShrink={0}>
+        <Box marginLeft={-panelCols} width={panelCols} height={3.8} flexShrink={0}>
           <Client key="hit" module="./hit.tsx" props={{ rows: 6 }} width="100%" height="100%" />
         </Box>
       )
