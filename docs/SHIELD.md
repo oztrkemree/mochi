@@ -65,6 +65,7 @@ The list is of what is hard to undo, not of every deletion.
 | Single-file deletions and truncation | `rm -f x`, `rm x`, `mv x /dev/null`, `> file`, `: > file`, `truncate -s 0 x` |
 | `find -exec rm` without `-r` | `find . -name '*.log' -exec rm {} +` |
 | Dangerous words after `ssh host` that are not at a command start | `ssh host reboot` (`ssh host "rm -rf x"` and `ssh host sudo ls` are caught; a bare `reboot` after the host is not) |
+| `rsync --delete` with an `-n` token anywhere | `rsync -a --delete -e 'ssh -n' a/ b/` is read as a dry run and let by |
 | Text that only looks like a command | `echo rm -rf x`, `git commit -m "rm -rf docs"` ask anyway: the older rules do not know quoting |
 
 ## Not reliably interceptable: the words are not in the text
