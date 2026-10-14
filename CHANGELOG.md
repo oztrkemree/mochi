@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Shield
+
+- The shield sees through more wrapping. A flag, a table name or a `.` directly before a closing quote, parenthesis, brace or backtick no longer hides a command (`bash -c "rm x -rf"`, `powershell -Command "Remove-Item x -Recurse"`, `psql -c 'delete from t'`, `git checkout .` inside a string). `sudo`, `shutdown`, `reboot` and `format d:` are found at the start of a shell's `-c` string or a backtick, and `chmod`/`chown -R` in any argument order. A quote elsewhere starts no command, so `git commit -m "reboot the router"` is let be.
+- New: `shred`, `unlink`, `rsync --delete` (and its `--delete-*`, `--del` and `--remove-source-files` forms, not as a dry run) and `wipefs -a` ask like other deletions.
+- New `docs/SHIELD.md` says plainly what the shield catches, what it misses and what no pattern can see. The READMEs now call it a safety net, not a sandbox.
+
 ## 0.5.1
 
 - Mochi tells you when a new version is out. Twice a day at most it reads the version on GitHub (nothing is asked while `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set); a newer one is said once, in a toast and by Mochi. `/mochi update` reads it afresh and shows the two commands that update Mochi, since Claude Code does not refresh a GitHub marketplace by itself and its Update button can stay grey. The READMEs say the same.
