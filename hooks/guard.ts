@@ -11,14 +11,28 @@ export const RULES_FILE = /\.claude[\\/]+mochi[\\/]+shield\.json/i
 /** A git subcommand, after any of git's own options before it (`git -C ../app`, `git -c x=y`, `git --no-pager`, `git.exe`). */
 const git = (sub: string): RegExp => new RegExp(String.raw`\bgit(?:\.exe)?(?:\s+(?:-[Cc]\s+\S+|--?[\w-]+(?:=\S+)?))*\s+` + sub)
 
+/**
+ * Where a command can start in the text: the start of a line, after `;` `&` `|` `(` `{`, a backtick or `$(`,
+ * or just inside the quote of a shell's `-c` string (`bash -c "…"`, `pwsh -Command '…'`, `cmd /c "…"`, `eval "…"`).
+ * A quote anywhere else starts no command, so `git commit -m "reboot the router"` is let be.
+ */
+const SH_C = String.raw`\b(?:ba|z|da|k|a|fi)?sh(?:\.exe)?\s+(?:-[a-z]+\s+)*-[a-z]*c[a-z]*\s+["']|\b(?:pwsh|powershell)(?:\.exe)?\s+(?:-\S+\s+)*-c(?:ommand)?\s+["']|\bcmd(?:\.exe)?\s+(?:\/\S+\s+)*\/[ck]\s+["']?|\beval\s+["']`
+/** A command's start as above, then any wrappers before it (`sudo -u x`, `env A=1`, `nohup`, `xargs`, `find -exec`). */
+const CMD = String.raw`(?:^|[;&|({\n`+'`'+String.raw`]|\$\(|\s-exec(?:dir)?(?=\s)|${SH_C})\s*(?:(?:sudo|env|nohup|nice|time|command|exec|xargs|timeout\s+\S+|\w+=\S*)\s+(?:-\S+\s+){0,4}){0,6}`
+/** What may follow a flag or a word that ends a command: space, a closing quote, parenthesis or brace, a backtick, or the end. */
+const END = String.raw`(?=[\s"')}`+'`'+String.raw`]|$)`
+
 /** Commands that cannot be undone, each with what it would do, in plain words. */
 const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [/:\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}/, 'forkBomb'],
   // rm's own short options only, so PowerShell's `rm x -Force` is not taken for -r; cloud storage's rm is a bucket's.
-  [/(?<!\b(?:s3|gsutil(?:\s+-m)?|storage)\s+)\brm\s(?:[^|;&\n]*\s)?(-[dfiIv]*[rR][dfiIvrR]*|--recursive)(?=\s|$)/, 'rm'],
+  [/(?<!\b(?:s3|gsutil(?:\s+-m)?|storage)\s+)\brm\s(?:[^|;&\n]*\s)?["']?(-[dfiIv]*[rR][dfiIvrR]*|--recursive)(?=[\s"')}`]|$)/, 'rm'],
+  // Other ways of deleting files for good: shred, unlink, and rsync making a folder match another (not as a dry run).
+  [new RegExp(String.raw`${CMD}(?:shred|unlink)(?:\s|$)`), 'rm'],
+  [new RegExp(String.raw`${CMD}rsync\b(?![^|;&\n]*\s(--dry-run|-[a-z]*n[a-z]*)(?=\s|$))[^|;&\n]*\s--(delete(-[a-z]+)?|del|remove-source-files)(?=[\s="')}`+'`'+String.raw`]|$)`), 'rm'],
   [/(^|[\s;&|("'])(remove-item(property)?|ri|rp|rm|del)\b[^|;&\n]*\bhk(lm|cu|cr|u|cc):|\breg(\.exe)?\s+delete\b/i, 'registry'],
   // PowerShell's Remove-Item and its aliases with -Recurse or any prefix of it; cmd's del, rd and rmdir with /s.
-  [/(^|[\s;&|("'])(?<!\b(?:s3|gsutil(?:\s+-m)?|storage)\s+)(remove-item|ri|rm|rmdir|rd|del|erase)\b[^|;&\n]*\s(-r(e(c(u(r(se?)?)?)?)?)?|\/s)(?=[\s:]|$)/i, 'rm'],
+  [/(^|[\s;&|("'])(?<!\b(?:s3|gsutil(?:\s+-m)?|storage)\s+)(remove-item|ri|rm|rmdir|rd|del|erase)\b[^|;&\n]*\s["']?(-r(e(c(u(r(se?)?)?)?)?)?|\/s)(?=[\s:"')}`]|$)/i, 'rm'],
   [/\bfind\b[^|;&]*\s-delete\b/, 'findDelete'],
   [/\s-r(e(c(u(r(se?)?)?)?)?)?\b[^;&\n]*\|\s*(remove-item|ri|rm|del|erase)\b/i, 'findDelete'],
   [git(String.raw`push\b[^|;&]*(\s--force\b|\s-[a-zA-Z]*f[a-zA-Z]*\b|\s--force-with-lease\b|\s\+\S)`), 'forcePush'],
@@ -27,17 +41,17 @@ const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [git(String.raw`filter-(branch|repo)\b`), 'rewrite'],
   [git(String.raw`reset\s+[^|;&]*--hard\b`), 'resetHard'],
   [git(String.raw`clean\s+-[a-z]*f`), 'clean'],
-  [git(String.raw`(checkout|restore)\s+(--\s+)?\.(\s|$)`), 'checkoutDot'],
+  [git(String.raw`(checkout|restore)\s+(--\s+)?\.${END}`), 'checkoutDot'],
   [git(String.raw`branch\s+(-D|--delete\s+--force)\b`), 'branchDelete'],
   [git(String.raw`stash\s+(drop|clear)\b`), 'stashDrop'],
   [/\b(drop\s+(table|database|schema)|truncate\s+table)\b/i, 'dropTable'],
-  [/\bdelete\s+from\s+\w+\s*(;|$|")/i, 'deleteAll'],
+  [/\bdelete\s+from\s+\w+\s*(;|$|["')`])/i, 'deleteAll'],
   [/\b(rails|rake)\s+db:(drop|reset|purge|migrate:reset)\b|\bprisma\s+(migrate\s+reset|db\s+push\b[^|;&\n]*--force-reset)\b|\bsupabase\s+db\s+reset\b|\bredis-cli\b[^|;&\n]*\bflush(all|db)\b|\bdropDatabase\s*\(|(^|[\s;&|(])dropdb\s|\bmanage\.py\s+(flush|reset_db)\b|\bheroku\s+pg:reset\b/i, 'dbWipe'],
   [/\bmkfs\b|\bdd\s+if=/, 'disk'],
   // cmd's format only at the start of a command, on a bare drive: `dotnet format C:\src` is no wipe.
-  [/\b(format-volume|clear-disk|remove-partition)\b|(^|[;&|(\n])\s*format(\.com)?\s+[a-z]:(?=[\s/]|$)/i, 'wipe'],
-  [/\b(stop-computer|restart-computer)\b|(^|[;&|(\n])\s*(sudo\s+)?(shutdown(\.exe)?|reboot|poweroff)\b/i, 'shutdown'],
-  [/\bch(mod|own)\s+-R\b/, 'chmod'],
+  [new RegExp(String.raw`\b(format-volume|clear-disk|remove-partition)\b|${CMD}format(\.com)?\s+[a-z]:(?=[\s/]|$)|\bwipefs\s+(?:[^|;&\n]*\s)?(-[a-z]*a[a-z]*|--all)\b`, 'i'), 'wipe'],
+  [new RegExp(String.raw`\b(stop-computer|restart-computer)\b|${CMD}(shutdown(\.exe)?|reboot|poweroff)\b`, 'i'), 'shutdown'],
+  [/\bch(mod|own|grp)\s(?:[^|;&\n]*\s)?(-[a-zA-Z]*R[a-zA-Z]*|--recursive)(?=[\s"')}`]|$)/, 'chmod'],
   [/\bkubectl\s+delete\s+(ns|namespaces?)\b/, 'namespace'],
   [/\bdocker\s+system\s+prune\b[^|;&\n]*\s(-[a-z]*a[a-z]*|--all)\b/, 'pruneAll'],
   [/\b(kubectl\s+delete\b(?!\s+(ns|namespaces?)\b)|(terraform|pulumi|cdk)\s+destroy|terraform\s+apply\b[^|;&\n]*\s-destroy|docker\s+(system\s+prune\b(?![^|;&\n]*\s(-[a-z]*a[a-z]*|--all)\b)|volume\s+(rm|prune)))\b/, 'infra'],
@@ -51,7 +65,7 @@ const DANGERS: [RegExp, keyof Dict['danger']][] = [
   [/\b(npm|pnpm|yarn)\s+publish\b|\bcargo\s+publish\b/, 'publish'],
   [/\b(npm|pnpm|yarn)\s+unpublish\b/, 'unpublish'],
   [/\b(curl|wget|iwr|irm|invoke-webrequest|invoke-restmethod)\b[^;&\n]*\|\s*(sudo\s+)?((ba|z|da|k|fi)?sh|iex|invoke-expression)\b|\b(ba|z)?sh\s+(-c\s+)?["']?(\$\(|<\()\s*(curl|wget)\b|\b(iex|invoke-expression)\b[^;&\n]*\b(iwr|irm|invoke-webrequest|invoke-restmethod|downloadstring)\b/i, 'pipeShell'],
-  [/(^|[\s;&|(])sudo\s/, 'sudo'],
+  [new RegExp(String.raw`(^|[\s;&|(])sudo\s|${CMD}sudo\s`), 'sudo'],
   [RULES_FILE, 'shieldRules'],
 ]
 

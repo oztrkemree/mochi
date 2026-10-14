@@ -294,6 +294,52 @@ test('a destructive command is found inside shells, subshells, substitutions and
   setLang('tr')
 })
 
+test('a closing quote, parenthesis, brace or backtick, or another order of arguments, hides nothing', () => {
+  setLang('en')
+  const rm = [
+    'bash -c "rm fixture -rf"', "sh -c 'rm fixture -r'", 'bash -c "rm -r -f fixture"', 'bash -c "rm --force --recursive fixture"', 'rm "-rf" fixture', 'echo $(rm fixture -rf)', 'echo `rm fixture -rf`', '(rm fixture -rf)',
+    'powershell -Command "Remove-Item x -Recurse"', "pwsh -c 'Remove-Item x -Recurse'", '$(Remove-Item x -Recurse)', '& { Remove-Item x -Recurse}', 'iex "Remove-Item x -Recurse"', 'cmd /c "rd x /s"', 'cmd /c "del x /s"',
+  ]
+  for (const cmd of rm) expect([cmd, keys(cmd)]).toEqual([cmd, ['rm']])
+  const others: [string, string][] = [
+    ['bash -c "git checkout ."', 'checkoutDot'], ["sh -c 'git restore .'", 'checkoutDot'], ['(git checkout .)', 'checkoutDot'],
+    ["psql -c 'delete from users'", 'deleteAll'], ['psql -c "delete from users"', 'deleteAll'],
+    ['bash -c "chmod 777 -R fixture"', 'chmod'], ['chmod -Rv 755 fixture', 'chmod'], ['chown fixture --recursive me', 'chmod'], ['chgrp -R staff fixture', 'chmod'],
+    ['bash -c "shutdown now"', 'shutdown'], ['sh -c "reboot"', 'shutdown'], ['bash -c "format d: /q"', 'wipe'], ['wipefs -a /dev/loop0', 'wipe'],
+  ]
+  for (const [cmd, key] of others) expect([cmd, keys(cmd)]).toEqual([cmd, [key]])
+  // sudo asks as it always did; now also inside a shell's string or a backtick.
+  for (const cmd of ['sudo ls', 'bash -c "sudo ls"', "sh -c 'sudo ls'", 'echo `sudo ls`', 'echo $(sudo ls)', 'zsh -lc "sudo -u bob ls"']) expect([cmd, keys(cmd)]).toEqual([cmd, ['sudo']])
+  setLang('tr')
+})
+
+test('shred, unlink, rsync that deletes, and wiping a filesystem ask; their harmless look-alikes do not', () => {
+  setLang('en')
+  for (const cmd of [
+    'shred -u fixture', 'unlink fixture', 'ls && shred fixture', 'bash -c "unlink fixture"', 'echo fixture | xargs unlink', 'find . -name x -exec shred {} +', 'sudo -n shred fixture' ,
+    'rsync -a --delete empty/ fixture/', 'rsync -a --delete-after empty/ fixture/', 'rsync -a --del empty/ fixture/', 'rsync -a --remove-source-files a/ b/', 'bash -c "rsync -a --delete empty/ fixture/"', 'env A=1 rsync -a --delete empty/ fixture/',
+  ]) expect([cmd, keys(cmd).includes('rm')]).toEqual([cmd, true])
+  const harmless = [
+    // words that are only text, or other programs
+    'git commit -m "reboot the router docs"', 'git commit -m "shutdown handling"', 'echo "sudo is needed"', 'echo "rsync is great --delete"', 'grep shred notes.txt', 'grep -rn unlink src',
+    'npm unlink my-pkg', 'pnpm unlink', 'yarn unlink pkg', 'cat shredder.txt', 'ls unlinked/', 'echo unlink', 'bash -c "echo reboot"', "python3 -c \"print('shred')\"",
+    // the same programs, harmlessly
+    'rsync -av src/ dest/', 'rsync -avn --delete src/ dest/', 'rsync --dry-run --delete a/ b/', 'rsync -a --exclude=delete a/ b/',
+    'wipefs /dev/loop0', 'wipefs -n /dev/loop0', 'chmod 755 script.sh', 'chmod -x script.sh', 'chmod g-R fixture', 'chown me fixture',
+    'git checkout .gitignore', 'git checkout feature', 'git restore --staged .gitignore', 'psql -c "select * from users"', 'psql -c "delete from users where id=1"',
+    'bash -c "ls -la"', 'bash -c "rm fixture.txt"', 'bash -c "rm -f fixture.txt"', "sh -c 'git status'", 'pwsh -c "Get-ChildItem -Recurse"', 'pwsh -c "Remove-Item x"', 'cmd /c "dir /s"', 'dotnet format .', 'echo `date`', 'echo $(pwd)',
+  ]
+  for (const cmd of harmless) expect([cmd, keys(cmd)]).toEqual([cmd, []])
+  setLang('tr')
+})
+
+test('long runs of wrappers, flags and quotes are read at once', () => {
+  const runs = ['; ' + '-exec '.repeat(4000) + 'x', 'env -i nohup -exec time timeout 5 '.repeat(3000), '; ' + 'A=1 '.repeat(5000), 'bash -c "'.repeat(3000), 'rsync ' + '-a '.repeat(20_000), '; '.repeat(20_000)]
+  const started = performance.now()
+  for (const cmd of runs) dangers(cmd)
+  expect(performance.now() - started < 1000).toBe(true)
+})
+
 // ---------- in a session ----------
 
 /** What a session's engine answers beneath the plugin; `git` answers git's commands by their words, null for a failure. */
