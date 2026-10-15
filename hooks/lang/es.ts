@@ -17,6 +17,15 @@ export const es: typeof en = {
   months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
 
   news: {
+    '0.6.0': {
+      headline: 'la fiesta: cada chat como un pequeño Mochi en un mismo suelo',
+      notes: [
+        'Party en el panel de detalles muestra cada chat de tu equipo como un pequeño Mochi, con sus subagentes al lado: en la puerta los que te esperan, en el taller los que trabajan o acaban de terminar, en el rincón de siesta el resto.',
+        'Pulsa un Mochi para abrir su chat en la app de escritorio; uno que la app no puede abrir muestra su tarjeta bajo el suelo.',
+        'El escudo ve a través de más comillas y pregunta antes de shred, unlink y rsync --delete; docs/SHIELD.md dice qué atrapa y qué se le escapa.',
+        'Un clic en cualquier parte de la banda abre los detalles, no solo en los indicadores.',
+      ],
+    },
     '0.5.1': {
       headline: 'Mochi avisa cuando sale una versión nueva',
       notes: [

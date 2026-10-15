@@ -18,6 +18,15 @@ export const fr: typeof en = {
   months: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'],
 
   news: {
+    '0.6.0': {
+      headline: 'la fête : chaque conversation en petit Mochi sur un même sol',
+      notes: [
+        'Party, dans le panneau des détails, montre chaque conversation de ta machine en petit Mochi, ses sous-agents à côté : à la porte ceux qui t’attendent, à l’atelier ceux qui travaillent ou viennent de finir, au coin sieste les autres.',
+        'Appuie sur un Mochi pour ouvrir sa conversation dans l’app de bureau ; celle que l’app ne peut pas ouvrir montre sa carte sous le sol.',
+        'Le bouclier voit à travers plus de guillemets et demande avant shred, unlink et rsync --delete ; docs/SHIELD.md dit ce qu’il attrape et ce qu’il manque.',
+        'Un clic n’importe où sur le bandeau ouvre les détails, pas seulement sur les jauges.',
+      ],
+    },
     '0.5.1': {
       headline: 'Mochi te prévient quand une nouvelle version sort',
       notes: [

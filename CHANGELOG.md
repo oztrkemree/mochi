@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
+
+- The party: Party in the details pane draws every Claude Code chat on your machine as a small Mochi on one floor, its subagents beside it, in three places: at the door those that need you (asking, failed, or held by a used-up limit), in the workshop those at work or done in the last ten minutes, in the nap corner the rest. A chat whose file has gone quiet shows as "no word", never as idle, since it may still be waiting on you. At most six Mochis move at once; those waiting on you always do.
+- Press a Mochi to open its chat in the desktop app. One the app cannot open (this chat, or one in a terminal) shows its card under the floor, put away when pressed again.
+- A click anywhere on the band opens the details, not only on the gauges.
 
 ### Shield
 

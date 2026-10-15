@@ -15,6 +15,15 @@ export const id: typeof en = {
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
 
   news: {
+    '0.6.0': {
+      headline: 'pesta: setiap chat jadi Mochi kecil di satu lantai',
+      notes: [
+        'Party di panel detail menampilkan setiap chat di mesinmu sebagai Mochi kecil, subagennya di sampingnya: di pintu yang menunggumu, di bengkel yang sedang bekerja atau baru selesai, di pojok tidur sisanya.',
+        'Tekan sebuah Mochi untuk membuka chat-nya di aplikasi desktop; yang tidak bisa dibuka aplikasi menampilkan kartunya di bawah lantai.',
+        'Perisai melihat menembus lebih banyak tanda kutip dan bertanya sebelum shred, unlink, dan rsync --delete; docs/SHIELD.md menjelaskan apa yang ditangkap dan apa yang terlewat.',
+        'Klik di mana saja pada pita membuka detail, tidak hanya pada pengukur.',
+      ],
+    },
     '0.5.1': {
       headline: 'Mochi memberi tahu saat versi baru rilis',
       notes: [

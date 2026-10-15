@@ -19,6 +19,15 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.6.0': {
+      headline: 'the party: every chat as a small Mochi on one floor',
+      notes: [
+        'Party in the details pane shows every chat on your machine as a small Mochi, its subagents beside it: at the door those waiting for you, in the workshop those at work or just done, in the nap corner the rest.',
+        'Press a Mochi to open its chat in the desktop app; one the app cannot open shows its card under the floor.',
+        'The shield sees through more quoting and asks before shred, unlink and rsync --delete; docs/SHIELD.md says what it catches and what it misses.',
+        'A click anywhere on the band opens the details, not only on the gauges.',
+      ],
+    },
     '0.5.1': {
       headline: 'Mochi tells you when a new version is out',
       notes: [

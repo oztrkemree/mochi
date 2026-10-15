@@ -14,6 +14,15 @@ export const tr: typeof en = {
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
   news: {
+    '0.6.0': {
+      headline: 'parti: her sohbet tek bir zeminde küçük bir Mochi',
+      notes: [
+        'Ayrıntılar panelindeki Party, makinendeki her sohbeti yanında alt ajanlarıyla küçük bir Mochi olarak gösterir: seni bekleyenler kapı önünde, çalışanlar ya da yeni bitirenler atölyede, kalanlar kestirmede.',
+        'Bir Mochi’ye bas, sohbeti masaüstü uygulamasında açılsın; uygulamanın açamadığı bir sohbetin kartı zeminin altında görünür.',
+        'Kalkan tırnak içindeki daha çok komutu görür ve shred, unlink ile rsync --delete öncesinde sorar; docs/SHIELD.md neyi yakalayıp neyi kaçırdığını anlatır.',
+        'Bandın herhangi bir yerine tıklamak ayrıntıları açar, yalnızca göstergelere değil.',
+      ],
+    },
     '0.5.1': {
       headline: 'yeni bir sürüm çıktığında Mochi haber verir',
       notes: [

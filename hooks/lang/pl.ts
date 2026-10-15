@@ -34,6 +34,15 @@ export const pl: typeof en = {
   months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
 
   news: {
+    '0.6.0': {
+      headline: 'impreza: każdy czat jako mały Mochi na jednej podłodze',
+      notes: [
+        'Party w panelu szczegółów pokazuje każdy czat na twoim komputerze jako małego Mochi, z jego subagentami obok: przy drzwiach te, które czekają na ciebie, w warsztacie te, które pracują lub właśnie skończyły, w kąciku drzemki reszta.',
+        'Naciśnij Mochi, by otworzyć jego czat w aplikacji desktopowej; czat, którego aplikacja nie otworzy, pokazuje swoją kartę pod podłogą.',
+        'Tarcza widzi przez więcej cudzysłowów i pyta przed shred, unlink i rsync --delete; docs/SHIELD.md mówi, co łapie, a co jej umyka.',
+        'Kliknięcie w dowolnym miejscu paska otwiera szczegóły, nie tylko na wskaźnikach.',
+      ],
+    },
     '0.5.1': {
       headline: 'Mochi daje znać, gdy wyjdzie nowa wersja',
       notes: [

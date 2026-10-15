@@ -15,6 +15,15 @@ export const de: typeof en = {
   months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 
   news: {
+    '0.6.0': {
+      headline: 'die Party: jeder Chat als kleiner Mochi auf einem Boden',
+      notes: [
+        'Party im Detailbereich zeigt jeden Chat auf deinem Rechner als kleinen Mochi, seine Subagenten daneben: an der Tür, wer auf dich wartet, in der Werkstatt, wer arbeitet oder gerade fertig ist, in der Ruheecke der Rest.',
+        'Drück auf einen Mochi, um seinen Chat in der Desktop-App zu öffnen; einer, den die App nicht öffnen kann, zeigt seine Karte unter dem Boden.',
+        'Der Schutzschild sieht durch mehr Anführungszeichen und fragt vor shred, unlink und rsync --delete; docs/SHIELD.md sagt, was er fängt und was nicht.',
+        'Ein Klick irgendwo auf das Band öffnet die Details, nicht nur auf die Anzeigen.',
+      ],
+    },
     '0.5.1': {
       headline: 'Mochi sagt Bescheid, wenn eine neue Version da ist',
       notes: [
