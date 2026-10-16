@@ -109,7 +109,7 @@ test('the details show the last CI and the pull request; the panel shows runs go
 })
 
 const BAND = {
-  plugin: 'mochi',
+  plugin: 'mochi-buddy',
   component: 'AbovePrompt' as const,
   props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 120, scroll: { offset: 0, bodyRows: 11 }, view: {} },
 }

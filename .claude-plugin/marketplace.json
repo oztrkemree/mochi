@@ -1,14 +1,23 @@
 {
   "name": "mochi",
-  "description": "Mochi, a mascot for Claude Code",
+  "description": "Mochi Buddy, a mascot for Claude Code",
   "owner": {
     "name": "Emre Öztürk"
   },
   "plugins": [
     {
-      "name": "mochi",
+      "name": "mochi-buddy",
       "source": "./",
       "description": "A clay mascot above the prompt that reacts to everything Claude Code does, in 16 languages"
+    },
+    {
+      "name": "mochi",
+      "source": {
+        "source": "github",
+        "repo": "oztrkemree/mochi",
+        "ref": "mochi-legacy"
+      },
+      "description": "Mochi is now Mochi Buddy: this version moves you over, with your settings"
     }
   ]
 }

@@ -643,7 +643,8 @@ export const pl: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about}). Naciśnij Esc, aby zatrzymać.`,
     detailFailed: reason => `Nie udało się otworzyć panelu szczegółów: ${reason}`,
-    clickFailed: reason => `kliknięcie po szczegóły tu nie działa (${reason}); wpisz /mochi szczegóły`,
+    moved: 'Mochi to teraz Mochi Buddy, a twoje ustawienia przeszły razem z nim.',
+    oldStillOn: cmd => `Stary Mochi nadal jest zainstalowany, możesz widzieć dwa: ${cmd}`,
     seeWardrobe: ' · /mochi ubierz',
   },
 

@@ -645,7 +645,8 @@ export const ru: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about}). Нажми Esc, чтобы остановить.`,
     detailFailed: reason => `Не удалось открыть панель деталей: ${reason}`,
-    clickFailed: reason => `клик для деталей здесь не работает (${reason}); введи /mochi детали`,
+    moved: 'Mochi теперь Mochi Buddy, и твои настройки переехали вместе с ним.',
+    oldStillOn: cmd => `Старый Mochi всё ещё установлен, и ты можешь видеть двоих: ${cmd}`,
     seeWardrobe: ' · /mochi надеть',
   },
 

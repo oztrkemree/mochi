@@ -282,7 +282,7 @@ test('“never for this” leaves CLAUDE.md alone and is not asked again', { tim
 })
 
 test('the first start ever takes the tour, and says nothing of what is new; /mochi tour replays it', async ($, on) => {
-  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.3.0' }) }
+  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi-buddy', version: '0.3.0' }) }
   const store: Record<string, unknown> = {}
   const fresh = world(on, store, manifest)
   await fresh.clock.set(NOW)
@@ -299,7 +299,7 @@ test('the first start ever takes the tour, and says nothing of what is new; /moc
 })
 
 test('after an update, the new version is told once in a toast, and /mochi news prints its notes', async ($, on) => {
-  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.3.0' }) }
+  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi-buddy', version: '0.3.0' }) }
   const store: Record<string, unknown> = { prefs: { lang: 'en' }, version: '0.2.0' }
   const w = world(on, store, manifest)
   await w.clock.set(NOW)
@@ -313,7 +313,7 @@ test('after an update, the new version is told once in a toast, and /mochi news 
 })
 
 test('a newer Mochi on GitHub is told once, and /mochi update reads afresh and gives the commands', async ($, on) => {
-  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.5.0' }) }
+  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi-buddy', version: '0.5.0' }) }
   const store: Record<string, unknown> = { prefs: { lang: 'en' }, version: '0.5.0' }
   const w = world(on, store, manifest)
   let latest: string | null = '0.5.1'
@@ -321,7 +321,7 @@ test('a newer Mochi on GitHub is told once, and /mochi update reads afresh and g
   on('http.fetch', ($, e) => {
     urls.push(e.url)
     if (latest === null) throw new Error('offline')
-    return { value: { status: 200, ok: true, headers: {}, text: JSON.stringify({ name: 'mochi', version: latest }) } } as never
+    return { value: { status: 200, ok: true, headers: {}, text: JSON.stringify({ name: 'mochi-buddy', version: latest }) } } as never
   })
   await w.clock.set(NOW)
   await $.session.start(START)
@@ -333,7 +333,7 @@ test('a newer Mochi on GitHub is told once, and /mochi update reads afresh and g
   expect(await update()).toBe([
     'Mochi 0.5.1 is out; you have 0.5.0. To update, run in a terminal:',
     '  claude plugin marketplace update mochi',
-    '  claude plugin update mochi@mochi',
+    '  claude plugin update mochi-buddy@mochi',
     'then restart Claude Code.',
   ].join('\n'))
   expect(urls).toHaveLength(2)
@@ -346,7 +346,7 @@ test('a newer Mochi on GitHub is told once, and /mochi update reads afresh and g
 })
 
 test('a run that draws nowhere uses up nothing said once: the greeting and the news wait for a surface', async ($, on) => {
-  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.3.0' }) }
+  const manifest = { '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi-buddy', version: '0.3.0' }) }
   const store: Record<string, unknown> = { prefs: { lang: 'en' }, version: '0.2.0' }
   const surfaces: string[] = []
   const w = world(on, store, manifest, 'Add', surfaces)
@@ -366,7 +366,7 @@ test('a run that draws nowhere uses up nothing said once: the greeting and the n
 
 test('someone who used an older version and never changed a preference hears what is new, not the tour', async ($, on) => {
   const files = {
-    '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi', version: '0.3.0' }),
+    '/.claude-plugin/plugin.json': JSON.stringify({ name: 'mochi-buddy', version: '0.3.0' }),
     '/home/me/.claude/mochi/days/old.json': JSON.stringify({ id: 'old', days: {} }),
   }
   const w = world(on, {}, files)
@@ -388,4 +388,31 @@ test('a stopped turn calls for the rewind tip once Mochi is idle, in a toast tha
   // Within the hour, the next stop says nothing.
   await answer($, w.clock, 'aborted')
   expect(w.toasts.filter(x => x.includes('/mochi tips turns these off'))).toHaveLength(1)
+})
+
+test('what the old mochi plugin kept comes over once, and an old Mochi still on is named', async ($, on) => {
+  // Claude Code's own file for the store of mochi@mochi, as it names it.
+  const old = { prefs: { lang: 'tr', hasSound: true }, allowed: { '/work/app': ['rm'] }, version: '0.6.0', birthday: '03-14' }
+  const files: Record<string, string> = { '/home/me/.claude/plugins/store/mochi_mochi-b151f2ad2289.json': JSON.stringify(old) }
+  const store: Record<string, unknown> = { version: '0.7.0' }
+  const enabled: Record<string, boolean> = { 'mochi-buddy@mochi': true, 'mochi@mochi': true }
+  on('settings.read', () => ({ value: { enabledPlugins: enabled } }) as never)
+  const { clock, toasts } = world(on, store, files)
+  await clock.set(NOW)
+  await $.session.start(START)
+  expect(store.movedFrom).toBe('mochi@mochi')
+  expect(store.allowed).toEqual(old.allowed)
+  expect((store.prefs as { lang: string; hasSound: boolean }).lang).toBe('tr')
+  expect((store.prefs as { lang: string; hasSound: boolean }).hasSound).toBe(true)
+  // What this store had already stays.
+  expect(store.version).toBe('0.7.0')
+  expect(toasts).toContain('Mochi artık Mochi Buddy; ayarların da onunla geldi.')
+  expect(toasts).toContain('Eski Mochi hâlâ kurulu, iki tane görebilirsin: claude plugin uninstall mochi@mochi')
+  // Once only: a later change is not undone by the old file.
+  store.allowed = {}
+  enabled['mochi@mochi'] = false
+  toasts.length = 0
+  await $.session.start(START)
+  expect(store.allowed).toEqual({})
+  expect(toasts.filter(x => x.includes('Mochi Buddy') || x.includes('mochi@mochi'))).toEqual([])
 })

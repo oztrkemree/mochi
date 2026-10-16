@@ -39,22 +39,22 @@ import type { Platform } from './system'
 // uses from that file's own consts. What needs no `$` lives in the other
 // modules, and the drawing hooks in render.tsx.
 
-const face = atom({ plugin: 'mochi', key: 'face' } as const, NO_FACE)
-const shot = atom({ plugin: 'mochi', key: 'shot' } as const, FIRST_SHOT)
-const panel = atom({ plugin: 'mochi', key: 'panel' } as const, NO_PANEL)
-const detail = atom({ plugin: 'mochi', key: 'detail' } as const, NO_ENV)
+const face = atom({ plugin: 'mochi-buddy', key: 'face' } as const, NO_FACE)
+const shot = atom({ plugin: 'mochi-buddy', key: 'shot' } as const, FIRST_SHOT)
+const panel = atom({ plugin: 'mochi-buddy', key: 'panel' } as const, NO_PANEL)
+const detail = atom({ plugin: 'mochi-buddy', key: 'detail' } as const, NO_ENV)
 const DETAIL = 'mochi-detay'
 const GIT_EVERY_MS = 60_000
 const NUDGE_EVERY_MS = 45 * 60_000
 const COMMIT_STALE_MS = 90 * 60_000
-const frame = atom({ plugin: 'mochi', key: 'frame' } as const, 0)
-const sec = atom({ plugin: 'mochi', key: 'sec' } as const, 0)
-const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
-const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
-const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
-const diff = atom({ plugin: 'mochi', key: 'diff' } as const, NO_DIFF)
-const party = atom({ plugin: 'mochi', key: 'party' } as const, { pick: '' })
-const dirs = atom({ plugin: 'mochi', key: 'dirs' } as const, { open: [] as string[] })
+const frame = atom({ plugin: 'mochi-buddy', key: 'frame' } as const, 0)
+const sec = atom({ plugin: 'mochi-buddy', key: 'sec' } as const, 0)
+const env = atom({ plugin: 'mochi-buddy', key: 'env' } as const, NO_ENV)
+const prefs = atom({ plugin: 'mochi-buddy', key: 'prefs' } as const, DEFAULT_PREFS)
+const said = atom({ plugin: 'mochi-buddy', key: 'said' } as const, NO_SAID)
+const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
+const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
+const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
 
 const TICK_MS = 450
 /** While Mochi dozes or is hidden, the timer does its rounds on one beat in this many, about every 2 seconds. */
@@ -1732,12 +1732,55 @@ async function mochiVersion($: Dollar): Promise<string> {
   }
 }
 
+// ---------- from Mochi to Mochi Buddy ----------
+
+/** The old plugin's id, and what takes it away. */
+const OLD_ID = 'mochi@mochi'
+const OLD_UNINSTALL = 'claude plugin uninstall mochi@mochi'
+
+/**
+ * Until 0.7.0 this plugin was `mochi`, and Claude Code keeps a plugin's store
+ * under its id. What the person kept there (settings, what is always allowed,
+ * their birthday, the tips seen) is copied over once, key by key, where this
+ * store has nothing yet. The file is the engine's own, named after the id:
+ * `<name>_<marketplace>-` and the first 12 hex digits of the id's SHA-256.
+ * Should it be missing or moved, nothing is copied and Mochi starts fresh.
+ * True when something was copied.
+ */
+async function moveFromMochi($: Dollar): Promise<boolean> {
+  if ((await $.store.get('movedFrom')) !== undefined) return false
+  await $.store.set('movedFrom', OLD_ID)
+  const home = chat.platform === 'windows' ? await $.env.get('USERPROFILE').catch(() => undefined) : await $.env.get('HOME').catch(() => undefined)
+  const config = (await $.env.get('CLAUDE_CONFIG_DIR').catch(() => undefined)) || (home ? `${home}/.claude` : '')
+  if (config === '') return false
+  let old: unknown
+  try {
+    old = JSON.parse(await $.fs.read(`${config}/plugins/store/mochi_mochi-b151f2ad2289.json`))
+  } catch {
+    return false
+  }
+  if (typeof old !== 'object' || old === null || Array.isArray(old)) return false
+  let copied = 0
+  for (const [key, value] of Object.entries(old)) {
+    if (key === 'movedFrom' || (await $.store.get(key)) !== undefined) continue
+    await $.store.set(key, value)
+    copied += 1
+  }
+  return copied > 0
+}
+
+/** True while the old `mochi` plugin is still turned on beside this one: two mascots, two shields. */
+async function isOldOn($: Dollar): Promise<boolean> {
+  const s = (await $.settings.read().catch(() => undefined)) as { enabledPlugins?: Record<string, unknown> } | undefined
+  return s?.enabledPlugins?.[OLD_ID] === true
+}
+
 // ---------- a newer Mochi ----------
 
 /** How long a reading of the newest Mochi's version is trusted. */
 const LATEST_EVERY_MS = 12 * 60 * 60_000
 /** What updates Mochi from a terminal: the marketplace's copy first, then the plugin. The same in every language. */
-const UPDATE_STEPS = ['claude plugin marketplace update mochi', 'claude plugin update mochi@mochi']
+const UPDATE_STEPS = ['claude plugin marketplace update mochi', 'claude plugin update mochi-buddy@mochi']
 
 /**
  * The newest version on GitHub; every chat shares the reading, taken again
@@ -2103,10 +2146,14 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     // The system, then the language: everything after speaks it.
     chat.platform = await findPlatform($)
+    // Before anything reads the store: what the old `mochi` kept comes over once.
+    const isMoved = await moveFromMochi($).catch(() => false)
     const saved = (await $.store.get('prefs')) as (Partial<Prefs> & { wear?: unknown }) | undefined
     const p = await update($, prefs, () => restorePrefs(saved))
     if (saved !== undefined) await $.store.set('prefs', p)
     await applyLang($, p)
+    if (isMoved) $.ui.toast(t().note.moved, { timeoutMs: 8000 })
+    if (await isOldOn($)) $.ui.toast(t().note.oldStillOn(OLD_UNINSTALL), { timeoutMs: 12000 })
     await $.command.register({ name: 'mochi', description: t().cmd.description, argumentHint: t().cmd.hint })
     // State outlives a reload: a value an older version wrote may lack fields
     // this one reads, so every value is completed with its defaults first.
@@ -2510,18 +2557,18 @@ export const register: Register = on => {
   })
 
   on('ui.press', async ($, e, next) => {
-    if (e.plugin === 'mochi') await pressed($, e.element, e.surface)
+    if (e.plugin === 'mochi-buddy') await pressed($, e.element, e.surface)
     return next(e)
   })
 
   // The details pane's language picker and birthday field.
   on('ui.select', async ($, e, next) => {
-    if (e.plugin === 'mochi' && e.element === 'lang') $.ui.toast(await language($, plain(e.value), e.value))
+    if (e.plugin === 'mochi-buddy' && e.element === 'lang') $.ui.toast(await language($, plain(e.value), e.value))
     return next(e)
   })
 
   on('ui.input', async ($, e, next) => {
-    if (e.plugin === 'mochi' && e.element === 'bday' && e.kind === 'submit') $.ui.toast(await birthday($, plain(e.value) === '' ? 'none' : plain(e.value)))
+    if (e.plugin === 'mochi-buddy' && e.element === 'bday' && e.kind === 'submit') $.ui.toast(await birthday($, plain(e.value) === '' ? 'none' : plain(e.value)))
     return next(e)
   })
 

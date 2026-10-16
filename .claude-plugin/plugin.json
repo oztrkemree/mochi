@@ -1,7 +1,8 @@
 {
-  "name": "mochi",
-  "version": "0.6.0",
-  "description": "Mochi: a clay mascot above the prompt that reacts to everything Claude Code does, in 16 languages",
+  "name": "mochi-buddy",
+  "displayName": "Mochi Buddy",
+  "version": "0.7.0",
+  "description": "Mochi Buddy: a clay mascot above the prompt that reacts to everything Claude Code does, in 16 languages",
   "author": {
     "name": "Emre Öztürk"
   },

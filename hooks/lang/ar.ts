@@ -652,7 +652,8 @@ export const ar: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about}). اضغط Esc للإيقاف.`,
     detailFailed: reason => `تعذّر فتح لوحة التفاصيل: ${reason}`,
-    clickFailed: reason => `النقر لعرض التفاصيل لا يعمل هنا (${reason})؛ اكتب /mochi تفاصيل`,
+    moved: 'أصبح Mochi الآن Mochi Buddy، وانتقلت إعداداتك معه.',
+    oldStillOn: cmd => `ما زال Mochi القديم مثبتًا، فقد ترى اثنين: ${cmd}`,
     seeWardrobe: ' · /mochi البس',
   },
 

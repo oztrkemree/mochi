@@ -623,7 +623,8 @@ export const ko: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about}). 멈추려면 Esc.`,
     detailFailed: reason => `상세 패널을 열 수 없습니다: ${reason}`,
-    clickFailed: reason => `여기서는 클릭으로 상세를 열 수 없습니다 (${reason}); /mochi details 입력`,
+    moved: 'Mochi가 이제 Mochi Buddy입니다. 설정도 그대로 옮겨 왔습니다.',
+    oldStillOn: cmd => `예전 Mochi가 아직 설치되어 있어 둘이 보일 수 있습니다: ${cmd}`,
     seeWardrobe: ' · /mochi wear',
   },
 

@@ -628,7 +628,8 @@ export const hi: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about})। रोकने के लिए Esc दबाएँ।`,
     detailFailed: reason => `विवरण पैनल नहीं खुल सका: ${reason}`,
-    clickFailed: reason => `यहाँ क्लिक से विवरण नहीं खुलता (${reason}); /mochi details लिखें`,
+    moved: 'Mochi अब Mochi Buddy है, और आपकी सेटिंग्स भी साथ आ गईं।',
+    oldStillOn: cmd => `पुराना Mochi अब भी इंस्टॉल है, इसलिए आपको दो दिख सकते हैं: ${cmd}`,
     seeWardrobe: ' · /mochi wear',
   },
 

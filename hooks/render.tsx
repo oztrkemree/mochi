@@ -25,17 +25,17 @@ import { WEAR } from './wear'
 // wardrobe and badges. It only reads the values register.tsx keeps, named here
 // again because the engine reads the state a file uses from that file's own consts.
 
-const face = atom({ plugin: 'mochi', key: 'face' } as const, NO_FACE)
-const panel = atom({ plugin: 'mochi', key: 'panel' } as const, NO_PANEL)
-const detail = atom({ plugin: 'mochi', key: 'detail' } as const, NO_ENV)
-const frame = atom({ plugin: 'mochi', key: 'frame' } as const, 0)
-const sec = atom({ plugin: 'mochi', key: 'sec' } as const, 0)
-const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
-const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
-const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
-const diff = atom({ plugin: 'mochi', key: 'diff' } as const, NO_DIFF)
-const party = atom({ plugin: 'mochi', key: 'party' } as const, { pick: '' })
-const dirs = atom({ plugin: 'mochi', key: 'dirs' } as const, { open: [] as string[] })
+const face = atom({ plugin: 'mochi-buddy', key: 'face' } as const, NO_FACE)
+const panel = atom({ plugin: 'mochi-buddy', key: 'panel' } as const, NO_PANEL)
+const detail = atom({ plugin: 'mochi-buddy', key: 'detail' } as const, NO_ENV)
+const frame = atom({ plugin: 'mochi-buddy', key: 'frame' } as const, 0)
+const sec = atom({ plugin: 'mochi-buddy', key: 'sec' } as const, 0)
+const env = atom({ plugin: 'mochi-buddy', key: 'env' } as const, NO_ENV)
+const prefs = atom({ plugin: 'mochi-buddy', key: 'prefs' } as const, DEFAULT_PREFS)
+const said = atom({ plugin: 'mochi-buddy', key: 'said' } as const, NO_SAID)
+const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
+const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
+const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
 
 const width = (s: string) => [...s].length
 const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0, Math.max(1, max - 1)).join('')}…`)

@@ -624,7 +624,8 @@ export const id: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about}). Tekan Esc untuk menghentikan.`,
     detailFailed: reason => `Panel detail tidak bisa dibuka: ${reason}`,
-    clickFailed: reason => `klik untuk detail tidak berfungsi di sini (${reason}); ketik /mochi detail`,
+    moved: 'Mochi sekarang menjadi Mochi Buddy, dan pengaturanmu ikut pindah.',
+    oldStillOn: cmd => `Mochi yang lama masih terpasang, jadi kamu mungkin melihat dua: ${cmd}`,
     seeWardrobe: ' · /mochi pakai',
   },
 

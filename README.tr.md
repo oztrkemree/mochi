@@ -2,7 +2,7 @@
 
 <img src="docs/hero.webp" width="260" alt="Kilden küçük bir maskot olan Mochi: el sallıyor, düşünüyor, okuyor, yazıyor, kutluyor ve uyuyakalıyor">
 
-# Mochi
+# Mochi Buddy
 
 ### Claude Code'un yazı alanının hemen üstünde yaşayan kilden küçük bir arkadaş.
 
@@ -32,7 +32,7 @@ context'ini, oturum ve haftalık limitlerini de hep göz önünde tutar.
 ## ⚡ 10 saniyede kurulum
 
 ```
-/plugin install mochi --marketplace oztrkemree/mochi
+/plugin install mochi-buddy --marketplace oztrkemree/mochi
 ```
 
 Herhangi bir Claude Code sohbetine yaz, marketplace'i eklemek için `y` de ve **user** kapsamını seç. Bu kadar: Mochi hemen gelir, sonra açtığın her sohbette de orada olur. Ayarlanacak hiçbir şey yok.
@@ -45,10 +45,21 @@ Herhangi bir Claude Code sohbetine yaz, marketplace'i eklemek için `y` de ve **
 >
 > ```
 > claude plugin marketplace update mochi
-> claude plugin update mochi@mochi
+> claude plugin update mochi-buddy@mochi
 > ```
 >
 > sonra Claude Code’u yeniden başlat.
+
+> [!IMPORTANT]
+> **0.7.0'dan önce Mochi'yi kurmuş muydun?** Artık adı Mochi Buddy. Bir terminalde:
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin install mochi-buddy@mochi
+> claude plugin uninstall mochi@mochi
+> ```
+>
+> sonra Claude Code'u yeniden başlat. Ayarların da gelir; seviyen, geçmişin ve gardırobun olduğu gibi kalır. Bunun yerine `claude plugin update mochi@mochi` çalıştırırsan eski Mochi aynı işi yapan bir **Geç** düğmesi gösterir.
 
 <br>
 
@@ -309,7 +320,7 @@ Claude Code'un `language` ayarı bunlardan biriyse Mochi o dili konuşur; değil
 - **`~/.claude/mochi/` altındaki dosyalar**: her açık sohbetin durumu, günlük sayılar, seviyen ve rozetlerin, tahmin için kullanım ölçümleri, her ipucunun kaç kez gösterildiği ve tekrarladığın kısa talimatlar (asla prompt'un tamamı değil), bir limit sıfırlanmasını tek bir sohbetin duyurmasını sağlayan işaretler, yazdıysan `shield.json`'ın ve `/mochi kart`, `özet`, `fotoğraf` ve `aktar`'ın kaydettikleri. Ayarlar, hep izin verilenler ve doğum günün Claude Code'un eklentiler için tuttuğu depoda durur.
 - **Projen**: Mochi bir talimat önermeden önce `CLAUDE.md`'yi okur ve yalnızca sen **Ekle**'yi seçince sonuna tek bir satır ekler. Kartı projene yalnızca `/mochi kart`'a oradaki bir yolu verirsen yazar. Satırları saymak ve gizli bilgileri yakalamak için Claude'un üzerine yazmak üzere olduğu dosyayı, aynı anda ekleyip commit eden bir komut için de ekleyeceği yeni dosyaları (en fazla 20 tane, her biri 1 MB'tan küçük) okur. Okuduğu hiçbir şeyi saklamaz.
 - **Diğer eklentiler** Mochi aracılığıyla bir ruh hali ve kısa bir satır gösterebilir; satır eklentinin adıyla imzalanır, her eklenti için en fazla 10 saniyede bir. `/mochi eklentiler` bunu kapatır. `/mochi geribildirim` yalnızca bir bağlantı yazdırır: hiçbir şey gönderilmez.
-- **Claude Code'un kendi kancaları**: Mochi yüzünü seçmek ve günün sayılarını tutmak için araç çağrılarını, istemleri, alt ajanları ve turları izler, her birini olduğu gibi geçirir; sohbetin mesajlarını yalnızca başlığını bulmak için okur. Bir izin isteğinde yalnızca Claude'un seni beklediğini gösterir, isteği hiç yanıtlamaz. Bir şey yapan tek kanca kalkandır: geri alınamaz saydığı bir komut ya da düzenlemeden önce sana sorar ve o çağrıyı yalnızca **Durdur**'u seçersen ya da soru sonuna kadar gösterilemezse reddeder. Senin yerine hiçbir şeye izin vermez. Mochi `/mochi` komutunu ve ona bağlı eklentiler için `$.mochi`'yi ekler. Kendi eklenti klasörüne hiçbir şey yazmaz, kendi dosyaları dışında kod yüklemez.
+- **Claude Code'un kendi kancaları**: Mochi yüzünü seçmek ve günün sayılarını tutmak için araç çağrılarını, istemleri, alt ajanları ve turları izler, her birini olduğu gibi geçirir; sohbetin mesajlarını yalnızca başlığını bulmak için okur. Bir izin isteğinde yalnızca Claude'un seni beklediğini gösterir, isteği hiç yanıtlamaz. Bir şey yapan tek kanca kalkandır: geri alınamaz saydığı bir komut ya da düzenlemeden önce sana sorar ve o çağrıyı yalnızca **Durdur**'u seçersen ya da soru sonuna kadar gösterilemezse reddeder. Senin yerine hiçbir şeye izin vermez. Mochi `/mochi` komutunu ve ona bağlı eklentiler için `$.mochi`'yi ekler. Kendi eklenti klasörüne hiçbir şey yazmaz, kendi dosyaları dışında kod yüklemez. İlk açılışta, ayarlarını taşımak için eski `mochi` eklentisinin ayarlarını Claude Code'un `~/.claude/plugins/store/` deposundan bir kez okur.
 
 </details>
 
@@ -353,7 +364,7 @@ Yalnızca geri alınamayacak şeylerden önce sorar, **Burada hep izin ver** de 
 
 ## 🧩 Eklenti yazarları için
 
-Eklentin Mochi'nin tepki vermesini sağlayabilir: bir deploy bitince sevinsin, bir kontrol kalınca endişelensin. `dependencies` altına `mochi` ekle ve `$.mochi.react({ mood, line })` ya da `$.mochi.celebrate({ line })` çağır. Çağrılar, sınırlar ve eksiksiz bir örnek eklenti [docs/API.md](docs/API.md)'de.
+Eklentin Mochi'nin tepki vermesini sağlayabilir: bir deploy bitince sevinsin, bir kontrol kalınca endişelensin. `dependencies` altına `mochi-buddy` ekle ve `$.mochi.react({ mood, line })` ya da `$.mochi.celebrate({ line })` çağır. Çağrılar, sınırlar ve eksiksiz bir örnek eklenti [docs/API.md](docs/API.md)'de.
 
 ## 🤝 Katkı
 

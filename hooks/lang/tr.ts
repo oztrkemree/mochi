@@ -623,7 +623,8 @@ export const tr: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about}). Durdurmak için Esc.`,
     detailFailed: reason => `Detay paneli açılamadı: ${reason}`,
-    clickFailed: reason => `detay tıklaması çalışmıyor (${reason}); /mochi detay yazabilirsin`,
+    moved: 'Mochi artık Mochi Buddy; ayarların da onunla geldi.',
+    oldStillOn: cmd => `Eski Mochi hâlâ kurulu, iki tane görebilirsin: ${cmd}`,
     seeWardrobe: ' · /mochi aksesuar',
   },
 

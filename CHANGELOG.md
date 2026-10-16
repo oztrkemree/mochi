@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
+- Mochi is now **Mochi Buddy**: the plugin is `mochi-buddy`, installed as `mochi-buddy@mochi` from the same marketplace. "mochi" is already a name in Claude's plugin directory. The mascot is still Mochi, `/mochi` is still its command, and `$.mochi` is still its noun for other plugins; those plugins now list `mochi-buddy` under `dependencies`.
+- Moving over: on its first start Mochi Buddy copies what the old `mochi` plugin kept (language and every other setting, what is always allowed, your birthday) and says so. Your level, history and wardrobe in `~/.claude/mochi/` are the same files. While the old one is still on, Mochi Buddy says how to remove it. Anyone who updates the old `mochi@mochi` gets a last version of it (the `mochi-legacy` branch) that shows a **Move** button: it installs Mochi Buddy and uninstalls `mochi`.
 - Ready for the Claude plugin directory: the code reads the way the directory's checks expect (no name a hook uses is used for anything else, each clickable region of the details pane names its file as fixed text, the version check's address is written out at the call), the wardrobe's pictures sit in short lines across two files, the plugin has an icon, and the READMEs say what Mochi's hooks do. Nothing you see changes, except one thing: a clickable region that fails to load no longer says so in a toast, since the directory does not know that event yet.
 - The tests' sample keys are made as the tests run, so no file holds anything that looks like a real key.
 

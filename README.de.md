@@ -2,7 +2,7 @@
 
 <img src="docs/hero.webp" width="260" alt="Mochi, ein kleines Maskottchen aus Knete, winkt, denkt nach, liest, tippt, feiert und schläft ein">
 
-# Mochi
+# Mochi Buddy
 
 ### Ein kleiner Freund aus Knete, der über deinem Claude-Code-Prompt wohnt.
 
@@ -32,7 +32,7 @@ und hat Kontext, Sitzung und Wochenlimit immer gut sichtbar für dich im Blick.
 ## ⚡ In 10 Sekunden installiert
 
 ```
-/plugin install mochi --marketplace oztrkemree/mochi
+/plugin install mochi-buddy --marketplace oztrkemree/mochi
 ```
 
 Tipp das in einen beliebigen Claude-Code-Chat, antworte mit `y`, um den Marketplace hinzuzufügen, und wähle den Scope **user**. Das war's: Mochi ist sofort da und ab dann in jedem Chat dabei, den du öffnest. Einrichten musst du nichts.
@@ -45,10 +45,21 @@ Tipp das in einen beliebigen Claude-Code-Chat, antworte mit `y`, um den Marketpl
 >
 > ```
 > claude plugin marketplace update mochi
-> claude plugin update mochi@mochi
+> claude plugin update mochi-buddy@mochi
 > ```
 >
 > dann Claude Code neu starten.
+
+> [!IMPORTANT]
+> **Hattest du Mochi schon vor 0.7.0?** Es heißt jetzt Mochi Buddy. Im Terminal:
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin install mochi-buddy@mochi
+> claude plugin uninstall mochi@mochi
+> ```
+>
+> und starte Claude Code dann neu. Deine Einstellungen kommen mit, Level, Verlauf und Garderobe bleiben, wie sie sind. Führst du stattdessen `claude plugin update mochi@mochi` aus, zeigt das alte Mochi einen Button **Wechseln**, der dasselbe tut.
 
 <br>
 
@@ -309,7 +320,7 @@ Mochi spricht die Sprache aus der `language`-Einstellung von Claude Code, wenn s
 - **Dateien unter `~/.claude/mochi/`**: der Stand jedes offenen Chats, Tageszählungen, dein Level und deine Abzeichen, Verbrauchswerte für die Prognose, wie oft jeder Tipp gezeigt wurde und die kurzen Anweisungen, die du wiederholst (nie ganze Prompts), die Markierungen, mit denen nur ein Chat ein zurückgesetztes Limit meldet, deine `shield.json`, falls du eine schreibst, und was `/mochi karte`, `rückblick`, `foto` und `exportieren` speichern. Einstellungen, was immer erlaubt ist, und dein Geburtstag liegen im Plugin-Speicher von Claude Code.
 - **Dein Projekt**: Mochi liest die `CLAUDE.md`, bevor er eine Anweisung vorschlägt, und hängt erst dann eine Zeile an, wenn du **Aufnehmen** wählst. Die Karte schreibt er nur dorthin, wenn du `/mochi karte` einen Pfad dorthin gibst. Um Zeilen zu zählen und Geheimnisse zu erkennen, liest er eine Datei, die Claude gleich überschreiben will, und bei einem Befehl, der in einem Rutsch hinzufügt und committet, die neuen Dateien, die dabei hinzukämen (bis zu 20, jeweils unter 1 MB). Nichts davon wird gespeichert.
 - **Andere Plugins** können über Mochi eine Stimmung und eine kurze Zeile zeigen, mit ihrem Namen unterschrieben, jedes höchstens einmal alle 10 Sekunden; `/mochi erweiterungen` schaltet das aus. `/mochi rückmeldung` gibt nur einen Link aus: Gesendet wird nichts.
-- **Die Hooks von Claude Code**: Mochi beobachtet Tool-Aufrufe, Prompts, Subagenten und Turns, um sein Gesicht zu wählen und die Zahlen des Tages zu führen, und gibt jedes Ereignis unverändert weiter; die Nachrichten des Chats liest es nur, um seinen Titel zu finden. Bei einer Berechtigungsanfrage zeigt es nur, dass Claude auf dich wartet, und beantwortet sie nie. Der Schutzschild ist der einzige Hook, der handelt: Vor einem Befehl oder einer Änderung, die er für unumkehrbar hält, fragt er dich, und nur wenn du **Abbrechen** wählst oder die Frage nicht zu Ende gestellt werden kann, lehnt er diesen Aufruf ab. Er erlaubt nie etwas für dich. Mochi fügt den Befehl `/mochi` hinzu und, für Plugins, die von ihm abhängen, `$.mochi`. Es schreibt nichts in seinen eigenen Plugin-Ordner und lädt keinen Code außer seinen eigenen Dateien.
+- **Die Hooks von Claude Code**: Mochi beobachtet Tool-Aufrufe, Prompts, Subagenten und Turns, um sein Gesicht zu wählen und die Zahlen des Tages zu führen, und gibt jedes Ereignis unverändert weiter; die Nachrichten des Chats liest es nur, um seinen Titel zu finden. Bei einer Berechtigungsanfrage zeigt es nur, dass Claude auf dich wartet, und beantwortet sie nie. Der Schutzschild ist der einzige Hook, der handelt: Vor einem Befehl oder einer Änderung, die er für unumkehrbar hält, fragt er dich, und nur wenn du **Abbrechen** wählst oder die Frage nicht zu Ende gestellt werden kann, lehnt er diesen Aufruf ab. Er erlaubt nie etwas für dich. Mochi fügt den Befehl `/mochi` hinzu und, für Plugins, die von ihm abhängen, `$.mochi`. Es schreibt nichts in seinen eigenen Plugin-Ordner und lädt keinen Code außer seinen eigenen Dateien. Beim ersten Start liest es einmal die Einstellungen des alten Plugins `mochi` aus dem Speicher von Claude Code in `~/.claude/plugins/store/`, um sie zu übernehmen.
 
 </details>
 
@@ -353,7 +364,7 @@ Er fragt nur vor dem nach, was sich nicht rückgängig machen lässt, und **Hier
 
 ## 🧩 Für Plugin-Autoren
 
-Dein Plugin kann Mochi reagieren lassen: jubeln, wenn ein Deploy fertig ist, besorgt schauen, wenn ein Check fehlschlägt. Trag `mochi` unter `dependencies` ein und ruf `$.mochi.react({ mood, line })` oder `$.mochi.celebrate({ line })` auf. In [docs/API.md](docs/API.md) findest du die Aufrufe, die Grenzen und ein komplettes Beispiel-Plugin.
+Dein Plugin kann Mochi reagieren lassen: jubeln, wenn ein Deploy fertig ist, besorgt schauen, wenn ein Check fehlschlägt. Trag `mochi-buddy` unter `dependencies` ein und ruf `$.mochi.react({ mood, line })` oder `$.mochi.celebrate({ line })` auf. In [docs/API.md](docs/API.md) findest du die Aufrufe, die Grenzen und ein komplettes Beispiel-Plugin.
 
 ## 🤝 Mitmachen
 

@@ -186,7 +186,7 @@ test('a nearly used-up session that resets is told once, by the chat that claims
   const { clock, files, alerts } = machine(on, [{ kind: 'five_hour', percentUsed: 97, resetsAt: new Date(at).toISOString() }])
   await clock.set(NOW)
   await $.session.start(START)
-  const ui = await $.ui.mount({ plugin: 'mochi', component: 'AbovePrompt', surface: 'terminal', props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} } } as never)
+  const ui = await $.ui.mount({ plugin: 'mochi-buddy', component: 'AbovePrompt', surface: 'terminal', props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} } } as never)
   for (let i = 0; i < 20; i++) await clock.advance(450)
   expect(await ui.find({ text: 'session limit reset · you can carry on' })).toBeDefined()
   expect(JSON.parse(files.get('/h/.claude/mochi/reset-five_hour.json') ?? '{}')).toEqual({ at, id: 'me-1' })
@@ -202,7 +202,7 @@ test('a reset another chat claimed is shown here but told only there', async ($,
   files.set('/h/.claude/mochi/reset-five_hour.json', JSON.stringify({ at, id: 'other' }))
   await clock.set(NOW)
   await $.session.start(START)
-  const ui = await $.ui.mount({ plugin: 'mochi', component: 'AbovePrompt', surface: 'terminal', props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} } } as never)
+  const ui = await $.ui.mount({ plugin: 'mochi-buddy', component: 'AbovePrompt', surface: 'terminal', props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} } } as never)
   for (let i = 0; i < 20; i++) await clock.advance(450)
   expect(await ui.find({ text: 'session limit reset · you can carry on' })).toBeDefined()
   expect(alerts).toEqual([])
@@ -390,7 +390,7 @@ test('the details pane shows every chat as a Mochi: one the app can open opens i
   await clock.set(NOW)
   await $.session.start(START)
   for (let i = 0; i < 12; i++) await clock.advance(450)
-  const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
+  const pane = await $.ui.mount({ plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   // Where each stands on the floor: the asking one by the door, the busy one at the bench, this chat asleep in the corner.
   const floor = floorOf(partyOf(peer('me-1', 'idle'), [peer('other-1', 'asking'), peer('other-2', 'busy')], NOW), NOW)
   const across = (key: string) => {
