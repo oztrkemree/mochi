@@ -168,7 +168,7 @@ test('/mochi card, wrapped and snap write under ~/.claude/mochi/share; a new mon
   await clock.set(OCT2)
   await $.session.start({ cwd: '/proj', surface: 'terminal', isInteractive: true } as never)
   await clock.advance(1000)
-  expect(toasts.filter(x => x.includes('wrapped'))).toEqual(['Mochi: your September wrapped is ready · /mochi wrapped'])
+  expect(toasts.filter(x => x.includes('wrapped'))).toEqual(['your September wrapped is ready · /mochi wrapped'])
 
   const card = await $.command.run({ command: 'mochi', args: 'card' } as never)
   expect(card.text).toContain('/home/me/.claude/mochi/share/mochi-card.svg')

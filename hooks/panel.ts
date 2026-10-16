@@ -28,7 +28,7 @@ export function toolKind(tool: string): Recent['kind'] {
 }
 
 export const KIND_INK: Record<Recent['kind'], string> = {
-  read: '#7AA2F7', search: '#7DCFFF', edit: '#B794F6', bash: '#F07CB8', web: '#73DACA', agent: '#9ECE6A', ask: '#F2C14E', other: '#9D958F',
+  read: '#7AA2F7', search: '#7DCFFF', edit: '#B794F6', bash: '#F07CB8', web: '#73DACA', agent: '#9ECE6A', ask: '#F2C14E', other: '#9A9994',
 }
 
 /** A 10×10 icon for a tool family, drawn around (0, 0). */
@@ -51,8 +51,8 @@ export const MOOD_INK: Record<Mood, string> = {
   idle: '#E08A6A', wave: '#E08A6A', listening: '#E08A6A', thinking: '#A9B4F5', talking: '#E08A6A',
   reading: '#7AA2F7', searching: '#7AA2F7', writing: '#B794F6', running: '#F07CB8', waiting: '#F07CB8',
   web: '#7AA2F7', agent: '#B794F6', asking: '#A9B4F5', success: '#5CC97A', proud: '#5CC97A', party: '#F2C14E',
-  error: '#F0707A', dizzy: '#F0707A', scared: '#F2C14E', denied: '#9A918B', shocked: '#F2C14E',
-  nervous: '#F2C14E', pleased: '#E08A6A', tired: '#9A918B', sleepy: '#9A918B', sleeping: '#9A918B', squeezed: '#5FB3A8',
+  error: '#F0707A', dizzy: '#F0707A', scared: '#F2C14E', denied: '#97968F', shocked: '#F2C14E',
+  nervous: '#F2C14E', pleased: '#E08A6A', tired: '#97968F', sleepy: '#97968F', sleeping: '#97968F', squeezed: '#5FB3A8',
   stretch: '#5FB3A8', love: '#F07CB8', wink: '#E08A6A',
 }
 
@@ -190,7 +190,7 @@ function timeline(recent: Recent[], seen: Set<number>, x: number, cy: number, ro
 }
 
 const BRANCH = (x: number, y: number) =>
-  `<g transform="translate(${n(x)} ${n(y)})" stroke="#A59D96" stroke-width="1.3" fill="none" stroke-linecap="round"><circle cx="2" cy="-7" r="1.6"/><circle cx="2" cy="1" r="1.6"/><circle cx="8" cy="-5" r="1.6"/><path d="M2 -5.4V-0.6M8 -3.4C8 -1 2 -2 2 -0.6"/></g>`
+  `<g transform="translate(${n(x)} ${n(y)})" stroke="#A1A09B" stroke-width="1.3" fill="none" stroke-linecap="round"><circle cx="2" cy="-7" r="1.6"/><circle cx="2" cy="1" r="1.6"/><circle cx="8" cy="-5" r="1.6"/><path d="M2 -5.4V-0.6M8 -3.4C8 -1 2 -2 2 -0.6"/></g>`
 
 /** The panel's drawing, and where its gauges sit (in the drawing's pixels) so a click region can lie over them. */
 export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card: { x: number; w: number }; width: number } {

@@ -491,7 +491,7 @@ test('shield.json adds rules and turns built-in ones off, read again when it cha
   on('fs.read', ($, e, next) => (isRules(e.path) ? { value: JSON.stringify(rules) } as never : next(e)))
   await clock.set(1_760_000_000_000)
   await $.session.start(START)
-  expect(said.toasts.filter(x => x.includes('shield.json'))).toEqual(['Mochi: shield.json: skipped what could not be read · (['])
+  expect(said.toasts.filter(x => x.includes('shield.json'))).toEqual(['shield.json: skipped what could not be read · (['])
   await $.tool.call({ tool: 'Bash', command: 'npm publish' } as never)
   expect(said.asked.length).toBe(0)
   await $.tool.call({ tool: 'Bash', command: 'terraform apply -auto-approve' } as never)
@@ -502,7 +502,7 @@ test('shield.json adds rules and turns built-in ones off, read again when it cha
   await $.tool.call({ tool: 'Bash', command: 'npm publish' } as never)
   expect(said.asked[1]?.question).toContain('publishes the package to everyone')
   // A change after the start is said, so no change to the shield goes unseen.
-  expect(said.toasts.filter(x => x.includes('shield.json')).at(-1)).toBe('Mochi: Your rules (~/.claude/mochi/shield.json): 0 added · 0 turned off')
+  expect(said.toasts.filter(x => x.includes('shield.json')).at(-1)).toBe('Your rules (~/.claude/mochi/shield.json): 0 added · 0 turned off')
   expect(said.toasts.filter(x => x.includes('shield.json')).length).toBe(2)
   setRules({ mine: [], off: [] })
   chat.rulesAt = -1

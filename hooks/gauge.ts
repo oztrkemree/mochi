@@ -103,14 +103,14 @@ export function usageInk(p: number): string {
 export const STYLE = '<style>:root{color-scheme:light dark}' +
   '.t{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif}' +
   '.m{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace}' +
-  '.fg{fill:#F1ECE7}.dim{fill:#A59D96}.faint{fill:#77706A}.track{stroke:#fff;stroke-opacity:.09}.trackf{fill:#fff;fill-opacity:.07}' +
-  '.card{fill:#fff;fill-opacity:.03;stroke:#fff;stroke-opacity:.06}.rule{stroke:#fff;stroke-opacity:.08}.tick{stroke:#F1ECE7}' +
-  '@media (prefers-color-scheme:light){.fg{fill:#26211D}.dim{fill:#776E68}.faint{fill:#A49B95}.track{stroke:#000;stroke-opacity:.08}.trackf{fill:#000;fill-opacity:.06}' +
-  '.card{fill:#000;fill-opacity:.025;stroke:#000;stroke-opacity:.06}.rule{stroke:#000;stroke-opacity:.08}.tick{stroke:#26211D}}' +
+  '.fg{fill:#F0EFEC}.dim{fill:#A1A09B}.faint{fill:#6E6D69}.track{stroke:#fff;stroke-opacity:.09}.trackf{fill:#fff;fill-opacity:.07}' +
+  '.card{fill:#fff;fill-opacity:.03;stroke:#fff;stroke-opacity:.06}.rule{stroke:#fff;stroke-opacity:.08}.tick{stroke:#F0EFEC}' +
+  '@media (prefers-color-scheme:light){.fg{fill:#1F1E1D}.dim{fill:#73726C}.faint{fill:#A3A29C}.track{stroke:#000;stroke-opacity:.08}.trackf{fill:#000;fill-opacity:.06}' +
+  '.card{fill:#000;fill-opacity:.025;stroke:#000;stroke-opacity:.06}.rule{stroke:#000;stroke-opacity:.08}.tick{stroke:#1F1E1D}}' +
   'html,body{margin:0;background:transparent}</style>'
 
 export const DEFS = '<defs>' +
   '<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4"/></filter>' +
   '<filter id="haze" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>' +
-  '<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="4" fill="#9D958F" opacity="0.55"/></pattern>' +
+  '<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="4" fill="#9A9994" opacity="0.55"/></pattern>' +
   '</defs>'

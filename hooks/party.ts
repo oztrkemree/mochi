@@ -79,7 +79,7 @@ export const membersOf = (party: Party): Member[] => [...party.door, ...party.sh
 // ---------- the drawing ----------
 
 /** The ink of each status, as the board's dots. */
-export const STATUS_INK: Record<Status, string> = { asking: '#F2C14E', error: '#F0645A', limit: '#C08BE8', busy: '#7AA2F7', done: '#4CC38A', idle: '#77706A', quiet: '#77706A' }
+export const STATUS_INK: Record<Status, string> = { asking: '#F2C14E', error: '#F0645A', limit: '#C08BE8', busy: '#7AA2F7', done: '#4CC38A', idle: '#6E6D69', quiet: '#6E6D69' }
 
 /** An idle chat dozes off after this long, as Mochi itself does. */
 const SLEEPS_AFTER_MS = 8 * 60_000

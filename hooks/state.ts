@@ -48,8 +48,8 @@ export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | unde
   const { wear: _old, ...rest } = saved ?? {}
   const was = (saved?.open ?? {}) as Partial<Record<Section, unknown>>
   const open = Object.fromEntries(SECTIONS.map(s => [s, typeof was[s] === 'boolean' ? was[s] : OPEN[s]])) as Record<Section, boolean>
-  // Choices saved before there were languages were made in Turkish, its only one then.
-  const lang = typeof saved?.lang === 'string' && (saved.lang === 'auto' || pickLang(saved.lang) !== null) ? saved.lang : saved !== undefined ? 'tr' : 'auto'
+  // No language saved, or one Mochi no longer speaks: the system's and Claude Code's, as for a new chat.
+  const lang = typeof saved?.lang === 'string' && (saved.lang === 'auto' || pickLang(saved.lang) !== null) ? saved.lang : 'auto'
   const shelf = SLOTS.find(slot => slot === saved?.shelf) ?? 'head'
   const tab = TABS.find(x => x === saved?.tab) ?? 'now'
   return { ...DEFAULT_PREFS, ...rest, pick, open, shelf, lang, ...layoutOf(saved?.order, saved?.hidden), isArranging: false, tab }

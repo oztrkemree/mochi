@@ -107,7 +107,7 @@ export function ciLine(ci: Ci): string {
   return d.waiting
 }
 
-export const CI_INK: Record<Ci['state'], string> = { waiting: '#A59D96', running: '#F2B84B', passed: '#4CC38A', failed: '#F0645A', cancelled: '#9A918B' }
+export const CI_INK: Record<Ci['state'], string> = { waiting: '#A1A09B', running: '#F2B84B', passed: '#4CC38A', failed: '#F0645A', cancelled: '#97968F' }
 
 const REVIEW_INK: Record<Pr['review'], string> = { approved: '#4CC38A', changes: '#F0645A', required: '#F2B84B', '': '' }
 

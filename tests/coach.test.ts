@@ -326,7 +326,7 @@ test('a newer Mochi on GitHub is told once, and /mochi update reads afresh and g
   await w.clock.set(NOW)
   await $.session.start(START)
   await wait(w.clock, 20_000)
-  expect(w.toasts.filter(x => x.includes('/mochi update'))).toEqual(['Mochi: 0.5.1 is out (you have 0.5.0) · /mochi update'])
+  expect(w.toasts.filter(x => x.includes('/mochi update'))).toEqual(['0.5.1 is out (you have 0.5.0) · /mochi update'])
   // One reading serves the twelve hours.
   expect(urls).toEqual(['https://raw.githubusercontent.com/oztrkemree/mochi/main/.claude-plugin/plugin.json'])
   const update = async () => (await $.command.run({ command: 'mochi', args: 'update' } as never)).text

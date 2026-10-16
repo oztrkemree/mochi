@@ -16,7 +16,7 @@ import { WEAR } from './wear'
 const n = (v: number) => String(Math.round(v * 100) / 100)
 const esc = (s: string) => s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 
-const GIT_INK: Record<string, string> = { M: '#F2B84B', A: '#4CC38A', D: '#F0645A', R: '#7AA2F7', '?': '#A59D96', U: '#F0645A' }
+const GIT_INK: Record<string, string> = { M: '#F2B84B', A: '#4CC38A', D: '#F0645A', R: '#7AA2F7', '?': '#A1A09B', U: '#F0645A' }
 
 const PAD = 14
 const IN = 16
@@ -147,8 +147,8 @@ export function detailParts(env: Env, now: number, innerW: number): Parts {
       const items = legend.map((s, i) => {
         const lx = x + colW * (i % legendCols)
         const ly = y + 34 + Math.floor(i / legendCols) * 19
-        const sw = s.kind === 'free' ? `<rect x="${n(lx)}" y="${ly - 8}" width="9" height="9" rx="2.5" fill="none" stroke="#A59D96"/>`
-          : `<rect x="${n(lx)}" y="${ly - 8}" width="9" height="9" rx="2.5" fill="${s.kind === 'buffer' ? '#77706A' : sliceInk(s.name)}"/>`
+        const sw = s.kind === 'free' ? `<rect x="${n(lx)}" y="${ly - 8}" width="9" height="9" rx="2.5" fill="none" stroke="#A1A09B"/>`
+          : `<rect x="${n(lx)}" y="${ly - 8}" width="9" height="9" rx="2.5" fill="${s.kind === 'buffer' ? '#6E6D69' : sliceInk(s.name)}"/>`
         const share = (s.tokens / total) * 100
         const amount = `${tokens(s.tokens)} · ${share < 0.1 ? '<0.1' : share < 10 ? n(Math.round(share * 10) / 10) : Math.round(share)}%`
         return sw + `<text class="t" x="${n(lx + 15)}" y="${ly}" font-size="11.5"><tspan class="fg">${esc(clip(categoryName(s.name), 17))}</tspan><tspan class="faint" dx="6">${esc(amount)}</tspan></text>`
@@ -408,7 +408,7 @@ export function ruleSvg(width: number): string {
 /** A setting's switch: the clay track with the knob at the right when on, a quiet one at the left when off. */
 export function switchSvg(isOn: boolean): string {
   const track = isOn ? '<rect x="1" y="1" width="30" height="17" rx="8.5" fill="#D97757"/>' : '<rect class="trackf" x="1" y="1" width="30" height="17" rx="8.5" style="fill-opacity:.16"/>'
-  const knob = `<circle cx="${isOn ? 22.5 : 9.5}" cy="9.5" r="6.5" fill="${isOn ? '#FFF4EE' : '#D8D2CA'}"/>`
+  const knob = `<circle cx="${isOn ? 22.5 : 9.5}" cy="9.5" r="6.5" fill="${isOn ? '#FFFFFF' : '#D6D5D1'}"/>`
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 19" width="100%" height="100%">${STYLE}${track}${knob}</svg>`
 }
 
@@ -597,7 +597,7 @@ export function changesPieces(env: Env, now: number, hint = false): Piece[] {
       const chipW = cols(name) * 6.6 + 14
       const after = [...(git.ahead > 0 ? [`↑${git.ahead}`] : []), ...(git.behind > 0 ? [`↓${git.behind}`] : []), git.lastCommit > 0 ? t().st.lastCommit(ago(now - git.lastCommit)) : t().st.noCommits].join('  ·  ')
       const total = added + removed
-      return `<g transform="translate(${x} ${y + 10})" stroke="#A59D96" stroke-width="1.3" fill="none" stroke-linecap="round"><circle cx="2" cy="-4" r="1.6"/><circle cx="2" cy="4" r="1.6"/><circle cx="8" cy="-2" r="1.6"/><path d="M2 -2.4V2.4M8 -0.4C8 2 2 1 2 2.4"/></g>` +
+      return `<g transform="translate(${x} ${y + 10})" stroke="#A1A09B" stroke-width="1.3" fill="none" stroke-linecap="round"><circle cx="2" cy="-4" r="1.6"/><circle cx="2" cy="4" r="1.6"/><circle cx="8" cy="-2" r="1.6"/><path d="M2 -2.4V2.4M8 -0.4C8 2 2 1 2 2.4"/></g>` +
         `<rect class="trackf" x="${x + 16}" y="${y + 1}" width="${n(chipW)}" height="18" rx="5"/>` +
         `<text class="m fg" x="${x + 23}" y="${y + 14}" font-size="11.5">${esc(name)}</text>` +
         `<text class="t faint" x="${n(x + 16 + chipW + 8)}" y="${y + 14}" font-size="11">${esc(clip(after, Math.max(6, Math.floor((w - chipW - 30) / 6))))}</text>` +
@@ -656,7 +656,7 @@ export function changesPieces(env: Env, now: number, hint = false): Piece[] {
         const room = Math.max(8, Math.floor((barX - nameX - 14) / 6.7))
         if (e.files) {
           const chevron = e.isOpen ? 'M0 0L4 4L8 0' : 'M0 0L4 4L0 8'
-          out += `<path d="${chevron}" transform="translate(${nameX} ${cy - (e.isOpen ? 2 : 4)})" stroke="#A59D96" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+          out += `<path d="${chevron}" transform="translate(${nameX} ${cy - (e.isOpen ? 2 : 4)})" stroke="#A1A09B" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
             `<text class="t" x="${nameX + 14}" y="${cy + 4}" font-size="12"><tspan class="fg">${esc(clip(r.path, room - 10))}/</tspan><tspan class="faint" font-size="11" dx="7">${esc(d.files(e.files.length))}</tspan></text>`
         } else {
           const name = baseName(r.path)

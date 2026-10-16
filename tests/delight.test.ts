@@ -253,6 +253,10 @@ test('two hours of work without a quiet gap earn a suggested stretch, at most ev
   expect(workFrom(from, t0 + 120 * 60_000, t0 + 135 * 60_000)).toBe(0)
   expect(isBreakDue(0, 0, t0 + 200 * 60_000)).toBe(false)
   expect(restorePrefs({ lang: 'en' }).hasBreaks).toBe(true)
+  // Saved choices with no language, or one Mochi does not speak, follow the system and Claude Code.
+  expect(restorePrefs({ isCompact: true } as never).lang).toBe('auto')
+  expect(restorePrefs({ lang: 'xx' } as never).lang).toBe('auto')
+  expect(restorePrefs({ lang: 'tr' }).lang).toBe('tr')
   expect(restorePrefs({ lang: 'en', open: { level: true, chats: false } } as never).open).toEqual({
     chats: false, changes: true, context: false, activity: true, level: true, wardrobe: true, badges: false, settings: true, more: true,
   })
@@ -445,7 +449,7 @@ test('badges are earned from real work, kept in a file of Mochi’s own, and cel
   await $.tool.call({ tool: 'Bash', command: 'npm test' })
   isRed = false
   await $.tool.call({ tool: 'Bash', command: 'npm test' })
-  expect(toasts.filter(x => x.includes('badge'))).toEqual(['Mochi: new badge: first green, comeback · /mochi badges'])
+  expect(toasts.filter(x => x.includes('badge'))).toEqual(['new badge: first green, comeback · /mochi badges'])
   expect(JSON.parse(files['mochi/badges.json'] ?? '')).toEqual(['green', 'comeback'])
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect(await ui.find({ text: 'new badge: first green, comeback' })).toBeDefined()
@@ -472,7 +476,7 @@ test('a badge earned while a question is open is told in a toast; the question k
   void $.tool.call({ tool: 'AskUserQuestion', questions: [{ question: 'Which one?', header: 'Pick', options: [], multiSelect: false }] } as never).catch(() => undefined)
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   for (let i = 0; i < 11; i++) await clock.advance(60_000)
-  expect(toasts.filter(x => x.includes('tidy day'))).toEqual(['Mochi: new badge: tidy day · /mochi badges'])
+  expect(toasts.filter(x => x.includes('tidy day'))).toEqual(['new badge: tidy day · /mochi badges'])
   expect(await ui.find({ text: /waiting for your answer/ })).toBeDefined()
   await ui.unmount()
 })
@@ -502,7 +506,7 @@ test('awards at once celebrate a badge once, and a file that cannot be read a mo
   await clock.advance(60_000)
   await Promise.all(agents)
   expect(JSON.parse(files['mochi/badges.json'] ?? '')).toEqual(['push', 'team'])
-  expect(toasts.filter(x => x.includes('badge'))).toEqual(['Mochi: new badge: team lead · /mochi badges'])
+  expect(toasts.filter(x => x.includes('badge'))).toEqual(['new badge: team lead · /mochi badges'])
 })
 
 test('a turn of half an hour that ends well is a marathon', async ($, on) => {
@@ -519,7 +523,7 @@ test('a turn of half an hour that ends well is a marathon', async ($, on) => {
   await $.turn.start({ text: 'build it', turnId: 't1' })
   await clock.set(at(2026, 7, 1, 12, 31))
   await $.turn.complete({ turnId: 't1', reason: 'answer', answer: 'done', durationMs: 31 * 60_000, isAborted: false } as never)
-  expect(toasts).toContain('Mochi: new badge: marathon · /mochi badges')
+  expect(toasts).toContain('new badge: marathon · /mochi badges')
 })
 
 test('a subagent starting its own turn does not start the chat\'s turn over', async ($, on) => {
@@ -539,7 +543,7 @@ test('a subagent starting its own turn does not start the chat\'s turn over', as
   await $.turn.complete({ agentId: 'a1', turnId: 't-a1', reason: 'answer', answer: '', durationMs: 60_000, isAborted: false } as never)
   await clock.set(at(2026, 7, 1, 12, 31))
   await $.turn.complete({ turnId: 't1', reason: 'answer', answer: 'done', durationMs: 31 * 60_000, isAborted: false } as never)
-  expect(toasts).toContain('Mochi: new badge: marathon · /mochi badges')
+  expect(toasts).toContain('new badge: marathon · /mochi badges')
 })
 
 // Two hours of the timer's beats take a few seconds.

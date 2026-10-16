@@ -129,7 +129,7 @@ async function pressed($: Dollar, element: string, surface?: RenderSurface) {
     if (shelf !== undefined) await setPrefs($, p => ({ ...p, shelf }))
   }
   if (element.startsWith('set:')) await turn($, element.slice(4))
-  if (element === 'shield:forget') $.ui.toast(`Mochi: ${await shieldNow($, 'reset')}`)
+  if (element === 'shield:forget') $.ui.toast(await shieldNow($, 'reset'))
   if (element === 'size:big' || element === 'size:small') await resize($, element === 'size:small')
   if (element === 'visible') await setHidden($, !(await read($, prefs)).isHidden)
   if (element === 'bday:off') await birthday($, 'none')
@@ -298,7 +298,7 @@ async function noteLimits($: Dollar) {
     const line = t().limit.pace(name, clockAt(at, now, v.tz), clockAt(l.resetsAt, now, v.tz))
     if (chat.isBusy) chat.pendingLimit = line
     else await show($, { mood: 'nervous', line, holdMs: 10_000, sound: 'alarm' })
-    $.ui.toast(`Mochi: ${line}`, { timeoutMs: 8000 })
+    $.ui.toast(line, { timeoutMs: 8000 })
   }
 }
 
@@ -475,7 +475,7 @@ async function editDelta($: Dollar, tool: string, args: Record<string, unknown>,
  */
 async function notify($: Dollar, text: string) {
   if (!(await read($, prefs)).hasAlert) return
-  $.ui.toast(`Mochi: ${text}`, { timeoutMs: 8000 })
+  $.ui.toast(text, { timeoutMs: 8000 })
   const alerts = alertCommands(chat.platform, 'Mochi', chat.label, text, { group: chat.sessionId, link: appLink(chat.apps[chat.sessionId]?.app) })
   void sendAlert($, alerts).catch(() => undefined)
 }
@@ -585,7 +585,7 @@ async function readPeers($: Dollar) {
   const news = peerNews(before, peers, now)
   const first = news[0]
   if (first === undefined) return
-  for (const n of news) $.ui.toast(`Mochi: ${n.line}`, { timeoutMs: 6000 })
+  for (const n of news) $.ui.toast(n.line, { timeoutMs: 6000 })
   const f = await read($, face)
   if (!chat.isBusy && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy' || f.mood === 'sleeping')) {
     await show($, { mood: first.kind === 'asking' ? 'asking' : first.kind === 'failed' ? 'nervous' : 'pleased', line: first.line, holdMs: 5000 })
@@ -668,7 +668,7 @@ async function checkLevel($: Dollar) {
   if (saved === null) return
   const parts = [...((saved.level ?? 1) < level ? [t().st.level(level)] : []), ...(fresh.length > 0 ? [t().st.newItems([...fresh.slice(0, 4).map(itemName), ...(fresh.length > 4 ? [`+${fresh.length - 4}`] : [])].join(', '))] : [])]
   if (mayCelebrate(await read($, face), await $.clock.now())) await show($, { mood: 'party', line: parts.join(' · '), holdMs: 8000, sound: 'party' })
-  $.ui.toast(`Mochi: ${parts.join(' · ')}${fresh.length > 0 ? t().note.seeWardrobe : ''}`, { timeoutMs: 8000 })
+  $.ui.toast(`${parts.join(' · ')}${fresh.length > 0 ? t().note.seeWardrobe : ''}`, { timeoutMs: 8000 })
 }
 
 /** The usage readings are the account's, so every chat shares one file of them. */
@@ -961,7 +961,7 @@ async function flowTick($: Dollar, now: number, f: Face): Promise<boolean> {
     return false
   }
   if (!mayCelebrate(f, now)) {
-    $.ui.toast(`Mochi: ${end.line}`, { timeoutMs: 9000 })
+    $.ui.toast(end.line, { timeoutMs: 9000 })
     return false
   }
   await show($, end)
@@ -1412,7 +1412,7 @@ async function ciDone($: Dollar, ci: Ci) {
   }
   // Mid-turn the face moves on with the work, so a toast keeps the news; a failure reaches someone away as a notification.
   if (ci.state === 'failed' && !chat.isBusy) await notify($, line)
-  else if (chat.isBusy || isAsking) $.ui.toast(`Mochi: ${line}`, { timeoutMs: 8000 })
+  else if (chat.isBusy || isAsking) $.ui.toast(line, { timeoutMs: 8000 })
   void refreshPr($).catch(() => undefined)
 }
 
@@ -1520,7 +1520,7 @@ async function offerWrapped($: Dollar) {
   const key = monthToOffer(dayKey(await $.clock.now(), v.tz), v.history.days, await $.store.get('wrapped'))
   if (key === null || !(await isSeen($))) return
   await $.store.set('wrapped', key)
-  $.ui.toast(`Mochi: ${t().share.ready(monthName(key))}`, { timeoutMs: 10_000 })
+  $.ui.toast(t().share.ready(monthName(key)), { timeoutMs: 10_000 })
 }
 
 // ---------- coach ----------
@@ -1632,7 +1632,7 @@ async function coach($: Dollar, now: number, f: Face) {
   // The commit tip says what the commit nudge would: it counts as one.
   if (id === 'commit') chat.lastNudge = now
   await show($, { mood: 'pleased', line: `${t().coach.tip} · ${tip.line}`, holdMs: 10_000 })
-  $.ui.toast(`Mochi: ${tip.text} (${t().coach.off})`, { timeoutMs: 12_000 })
+  $.ui.toast(`${tip.text} (${t().coach.off})`, { timeoutMs: 12_000 })
 }
 
 /** The tour's next step, on the face and in a toast in Mochi's own voice. */
@@ -1771,7 +1771,7 @@ async function noteLatest($: Dollar, now: number) {
   const latest = await latestVersion($, now)
   if (latest === '' || !isNewer(latest, mine) || (await $.store.get('latestTold')) === latest || !(await isSeen($))) return
   await $.store.set('latestTold', latest)
-  $.ui.toast(`Mochi: ${t().update.toast(latest, mine)}`, { timeoutMs: 12_000 })
+  $.ui.toast(t().update.toast(latest, mine), { timeoutMs: 12_000 })
   if (!chat.isBusy) await show($, { mood: 'wave', line: t().update.line(latest), holdMs: 8000 })
 }
 
@@ -1887,8 +1887,8 @@ async function loadRules($: Dollar) {
   chat.rulesAt = at
   const rules = parseRules(at === 0 ? '' : await $.fs.read(path).catch(() => ''))
   setRules(rules)
-  if (rules.bad.length > 0) $.ui.toast(`Mochi: ${t().guard.badRules(rules.bad.join(', '))}`, { timeoutMs: 8000 })
-  else if (isChange) $.ui.toast(`Mochi: ${t().guard.rules(rules.mine.length, rules.off.length)}`, { timeoutMs: 8000 })
+  if (rules.bad.length > 0) $.ui.toast(t().guard.badRules(rules.bad.join(', ')), { timeoutMs: 8000 })
+  else if (isChange) $.ui.toast(t().guard.rules(rules.mine.length, rules.off.length), { timeoutMs: 8000 })
 }
 
 /** Where "always allow here" holds: the repository's top folder, else the session's. */
@@ -2015,7 +2015,7 @@ async function awardNow($: Dollar, fresh: Badge[]) {
   if (told.length === 0) return
   const line = t().fun.newBadge(told.map(badgeName).join(', '))
   if (mayCelebrate(await read($, face), await $.clock.now())) await show($, { mood: 'party', line, holdMs: 8000, sound: 'party' })
-  $.ui.toast(`Mochi: ${line}${t().fun.seeBadges}`, { timeoutMs: 8000 })
+  $.ui.toast(`${line}${t().fun.seeBadges}`, { timeoutMs: 8000 })
 }
 
 /** A finished shell command: a failing test run marks the turn red; a passing one, or a push, may earn a badge. */
@@ -2299,7 +2299,7 @@ export const register: Register = on => {
     if (looked.alarm !== null && !waitsOnPerson(e.tool)) {
       const about = subject(args)
       await show($, { mood: 'dizzy', line: `${t().st.loop} · ${looked.alarm} · ${about}`, holdMs: 10_000, sound: 'alarm' })
-      $.ui.toast(`Mochi: ${t().note.loop(looked.alarm, about)}`, { timeoutMs: 9000 })
+      $.ui.toast(t().note.loop(looked.alarm, about), { timeoutMs: 9000 })
       if (isSub) return ran
     }
     if (isSub) return ran
@@ -2422,7 +2422,7 @@ export const register: Register = on => {
       await show($, ended)
     }
     // A workflow's end that no face could show reaches the person as a toast.
-    if (finale !== null) $.ui.toast(`Mochi: ${finale.line}`, { timeoutMs: 9000 })
+    if (finale !== null) $.ui.toast(finale.line, { timeoutMs: 9000 })
     chat.pendingLimit = ''
     chat.isGoodNight = false
     if (rec.seconds >= LONG_TURN_S && e.reason !== 'aborted') await notify($, ended.line)
@@ -2498,7 +2498,7 @@ export const register: Register = on => {
   on('ui.fault', async ($, e, next) => {
     if (!saidFault) {
       saidFault = true
-      $.ui.toast(`Mochi: ${t().note.clickFailed(e.reason)}`)
+      $.ui.toast(t().note.clickFailed(e.reason))
     }
     return next(e)
   })
@@ -2528,12 +2528,12 @@ export const register: Register = on => {
 
   // The details pane's language picker and birthday field.
   on('ui.select', async ($, e, next) => {
-    if (e.plugin === 'mochi' && e.element === 'lang') $.ui.toast(`Mochi: ${await language($, plain(e.value), e.value)}`)
+    if (e.plugin === 'mochi' && e.element === 'lang') $.ui.toast(await language($, plain(e.value), e.value))
     return next(e)
   })
 
   on('ui.input', async ($, e, next) => {
-    if (e.plugin === 'mochi' && e.element === 'bday' && e.kind === 'submit') $.ui.toast(`Mochi: ${await birthday($, plain(e.value) === '' ? 'none' : plain(e.value))}`)
+    if (e.plugin === 'mochi' && e.element === 'bday' && e.kind === 'submit') $.ui.toast(await birthday($, plain(e.value) === '' ? 'none' : plain(e.value)))
     return next(e)
   })
 

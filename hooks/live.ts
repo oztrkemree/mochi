@@ -120,7 +120,7 @@ export function peerNews(before: readonly Peer[], after: readonly Peer[], now: n
   return out
 }
 
-export const PEER_INK: Record<Peer['state'], string> = { busy: '#7AA2F7', asking: '#F2C14E', idle: '#77706A', error: '#F0645A' }
+export const PEER_INK: Record<Peer['state'], string> = { busy: '#7AA2F7', asking: '#F2C14E', idle: '#6E6D69', error: '#F0645A' }
 export const peerState = (state: Peer['state']): string => t().peer.state[state]
 
 /** One line about the other chats for the panel, or null when none needs a look. */
