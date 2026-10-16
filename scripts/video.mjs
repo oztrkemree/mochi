@@ -7,7 +7,7 @@
 // pointing at one; `pip install imageio-ffmpeg` ships one too):
 //
 //   node scripts/video.mjs              the whole film
-//   node scripts/video.mjs short        a 25-second cut for X and Reddit (docs/mochi-short.mp4)
+//   node scripts/video.mjs short        a 31-second cut for X and Reddit (docs/mochi-short.mp4)
 //   node scripts/video.mjs sound        only the soundtrack again, under the films already made
 //   node scripts/video.mjs shield 4.2   one scene, or one frame of it as a PNG
 
@@ -45,6 +45,7 @@ const { BADGES, badgeSvg, badgeName, badgeHint } = await import('../hooks/badges
 const { cardSvg, wrappedOf, wrappedSvg } = await import('../hooks/share.ts')
 const { greeting } = await import('../hooks/fun.ts')
 const { contextWarning } = await import('../hooks/facts.ts')
+const { floorOf, partyOf } = await import('../hooks/party.ts')
 
 setLang('en')
 const st = t().st
@@ -790,7 +791,7 @@ window.scene = s => {
   })
 }
 
-// ---------- the short cut: 25 seconds for X and Reddit ----------
+// ---------- the short cut: 31 seconds for X and Reddit ----------
 
 /** A big line across the top, readable with the sound off; <em> marks the word in Mochi's orange. */
 const caption = (html, at = 0.05) => `<div data-in="${at}" data-d="0.35" style="position:absolute;left:0;right:0;top:30px;text-align:center;font-weight:800;font-size:46px;letter-spacing:-.025em;line-height:1.15">${html.replace(/<em>/g, '<em style="font-style:normal;color:#D97757">')}</div>`
@@ -895,6 +896,45 @@ window.scene = s => {
 <div style="position:absolute;left:0;right:0;top:${150 + Math.round(76 * Z) + 60}px;display:flex;justify-content:center;gap:12px"><span class="pill" data-in="0.3" data-fx="pop">🧠 <b>context</b></span><span class="pill" data-in="0.45" data-fx="pop">⏱️ <b>5-hour</b> session</span><span class="pill" data-in="0.6" data-fx="pop">📅 <b>week</b></span></div>`,
     script: `const M = ${JSON.stringify(M)}
 window.scene = s => play($('band'), M, s)`,
+  })
+}
+
+{
+  // Five chats on one floor; one stops to ask, another finishes, as the party draws them.
+  const SEC = 1000
+  const chat = (id, title, more) => ({ id, label: id, title, line: '', since: NOW - 4 * MIN, at: NOW, stateAt: NOW - 2 * MIN, v: 2, lastTurn: null, agents: [], context: 30, ...more })
+  const busy = (activity, more = {}) => ({ state: 'busy', activity, ...more })
+  const asking = { state: 'asking', waitingFor: 'permission', activity: '' }
+  const done = { state: 'idle', activity: '', lastTurn: { at: NOW - 40 * SEC, reason: 'answer', seconds: 210 } }
+  const napping = { state: 'idle', activity: '', stateAt: NOW - 40 * MIN, lastTurn: { at: NOW - 40 * MIN, reason: 'answer', seconds: 90 } }
+  const crew = [{ id: 'a1', type: 'Explore', task: 'find the routes', activity: 'searching', since: NOW - MIN }, { id: 'a2', type: 'Explore', task: 'read the tests', activity: 'reading', since: NOW - MIN }]
+  const at = [
+    { at: 0, checkout: busy('writing'), landing: busy('testing', { agents: crew }), flaky: busy('running'), deploy: asking },
+    { at: 1.6, checkout: asking, landing: busy('testing', { agents: crew }), flaky: busy('running'), deploy: asking },
+    { at: 3.1, checkout: asking, landing: done, flaky: busy('writing'), deploy: busy('running') },
+  ]
+  const F = at.map(m => {
+    const self = chat('checkout', 'checkout api', m.checkout)
+    const peers = [
+      chat('landing', 'landing page', m.landing),
+      chat('flaky', 'fix flaky test', m.flaky),
+      chat('deploy', 'deploy script', m.deploy),
+      chat('auth', 'refactor auth', napping),
+      chat('notes', 'release notes', napping),
+    ]
+    const floor = floorOf(partyOf(self, peers, NOW), NOW)
+    return { at: m.at, svg: floor.svg, w: floor.width, h: floor.height }
+  })
+  const K = 1.45
+  scene({
+    name: 'short-party', chapter: '', film: 'short', fade: 0.12, dur: 4.8, bare: true, tag: '', title: '', sub: '', sfx: [{ at: 1.6, sound: 'ding' }, { at: 3.1, sound: 'ding' }],
+    body: caption('Every chat gets its own <em>Mochi</em>.') + `<div class="vc" data-in="0.05" id="fl" style="top:200px;padding:0"></div>
+<div style="position:absolute;left:0;right:0;top:500px;display:flex;justify-content:center;gap:12px"><span class="pill" data-in="0.3" data-fx="pop">🚪 <b>at the door</b> when it needs you</span><span class="pill" data-in="0.45" data-fx="pop">🔨 <b>at work</b></span><span class="pill" data-in="0.6" data-fx="pop">💤 <b>napping</b></span></div>`,
+    script: `const F = ${JSON.stringify(F)}
+window.scene = s => {
+  const el = $('fl'), i = play(el, F, s), w = F[i].w * ${K}, h = F[i].h * ${K}
+  el.style.width = w + 'px'; el.style.height = h + 'px'; el.style.left = (${W} - w) / 2 + 'px'
+}`,
   })
 }
 

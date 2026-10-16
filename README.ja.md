@@ -9,7 +9,7 @@
 Claudeのすることすべてに反応し、あとで後悔しそうなコマンドは止めてくれて、<br>
 コンテキスト・セッション・週間の上限を、いつでも見えるところに置いておいてくれます。
 
-<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="docs/watch-ja.svg" height="82" alt="▶ デモを見る (0:26)"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="docs/watch-ja.svg" height="82" alt="▶ デモを見る (0:31)"></a>
 
 [![ライセンス: MIT](https://img.shields.io/badge/ライセンス-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Codeプラグイン](https://img.shields.io/badge/Claude_Code-プラグイン-D97757?style=for-the-badge)](#-10秒でインストール)

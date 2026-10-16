@@ -9,7 +9,7 @@
 Он реагирует на всё, что делает Claude, останавливает команды, о которых ты пожалел бы,<br>
 и держит на виду твой контекст, сессию и недельные лимиты.
 
-<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="docs/watch-ru.svg" height="82" alt="▶ Смотреть демо (0:26)"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="docs/watch-ru.svg" height="82" alt="▶ Смотреть демо (0:31)"></a>
 
 [![Лицензия: MIT](https://img.shields.io/badge/лицензия-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Плагин для Claude Code](https://img.shields.io/badge/Claude_Code-плагин-D97757?style=for-the-badge)](#-установка-за-10-секунд)
