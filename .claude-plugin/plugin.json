@@ -1,0 +1,10 @@
+{
+  "name": "mochi",
+  "version": "0.7.0",
+  "description": "Mochi is now Mochi Buddy: this last version of mochi moves you over, with your settings",
+  "author": {
+    "name": "Emre Öztürk"
+  },
+  "repository": "https://github.com/oztrkemree/mochi",
+  "license": "MIT"
+}
