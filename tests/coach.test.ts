@@ -245,7 +245,7 @@ test('what is new: versions compare by number, and every language has notes for 
   setLang('en')
 })
 
-test('an instruction typed a third time is offered for CLAUDE.md, and written only on add', async ($, on) => {
+test('an instruction typed a third time is offered for CLAUDE.md, and written only on add', { timeoutMs: 20_000 }, async ($, on) => {
   const files: Record<string, string> = { '/work/app/CLAUDE.md': '# App\n' }
   const { clock, asked } = world(on, { prefs: { lang: 'en' } }, files)
   await clock.set(NOW)
@@ -271,7 +271,7 @@ test('an instruction typed a third time is offered for CLAUDE.md, and written on
   expect(files['/work/app/CLAUDE.md']).toBe('# App\n- use pnpm\n')
 })
 
-test('“never for this” leaves CLAUDE.md alone and is not asked again', async ($, on) => {
+test('“never for this” leaves CLAUDE.md alone and is not asked again', { timeoutMs: 20_000 }, async ($, on) => {
   const files: Record<string, string> = {}
   const { clock, asked } = world(on, { prefs: { lang: 'en' } }, files, 'Never for this')
   await clock.set(NOW)

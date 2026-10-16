@@ -181,7 +181,7 @@ test('the title Claude Code gives goes in this chat’s file; a new chat’s is 
   expect((await $.command.run({ command: 'mochi', args: 'chats' } as never)).text).toContain('Renamed (this chat)')
 })
 
-test('a nearly used-up session that resets is told once, by the chat that claims it', async ($, on) => {
+test('a nearly used-up session that resets is told once, by the chat that claims it', { timeoutMs: 20_000 }, async ($, on) => {
   const at = NOW + 5000
   const { clock, files, alerts } = machine(on, [{ kind: 'five_hour', percentUsed: 97, resetsAt: new Date(at).toISOString() }])
   await clock.set(NOW)

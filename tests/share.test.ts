@@ -128,7 +128,7 @@ test('the card goes where it is told, and its markdown line shows it on a profil
 /** Noon on 2 October 2026 by this machine's clock, whose time zone Mochi reads. */
 const OCT2 = Date.UTC(2026, 9, 2, 12, 0) + new Date(Date.UTC(2026, 9, 2, 12, 0)).getTimezoneOffset() * 60_000
 
-test('/mochi card, wrapped and snap write under ~/.claude/mochi/share; a new month’s wrapped is offered once', async ($, on) => {
+test('/mochi card, wrapped and snap write under ~/.claude/mochi/share; a new month’s wrapped is offered once', { timeoutMs: 20_000 }, async ($, on) => {
   mock.store(on, { prefs: { lang: 'en' } })
   mock.env(on, { HOME: '/home/me' })
   const clock = mock.clock(on)

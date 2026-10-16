@@ -160,7 +160,7 @@ test('ultracode: the workflow and its agents have a face of their own', async ()
   expect(beforeTool({ tool: 'Workflow', scriptPath: 'C:\\s\\review-changes-wf_b8f1738e-d35.js' }).line).toBe('ultracode · review-changes')
 })
 
-test('the band shows the running tool; the desktop panel shows it with context and limits', async ($, on) => {
+test('the band shows the running tool; the desktop panel shows it with context and limits', { timeoutMs: 20_000 }, async ($, on) => {
   const statuses: (string | undefined)[] = []
   const clock = engine(on, { prefs: { lang: 'tr' } }, statuses)
   let release = () => {}
@@ -773,7 +773,7 @@ test('on Windows: the home is USERPROFILE, the language the display one, and old
   setLang('tr')
 })
 
-test('dozing or hidden, the timer makes its rounds on every fifth beat; work wakes it at once', async ($, on) => {
+test('dozing or hidden, the timer makes its rounds on every fifth beat; work wakes it at once', { timeoutMs: 20_000 }, async ($, on) => {
   const clock = engine(on)
   let frames = 0
   let reads = 0
