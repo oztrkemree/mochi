@@ -236,7 +236,8 @@ function pendingBash(on: On) {
 
 test('an approved permission leaves the face once its call is over: no wait is told', { timeoutMs: 20_000 }, async ($, on) => {
   const { clock, alerts } = machine(on)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   const bash = pendingBash(on)
   await clock.set(NOW)
   await $.session.start(START)
@@ -254,7 +255,8 @@ test('an approved permission leaves the face once its call is over: no wait is t
 
 test('a subagent’s approved permission gives the face back to the agent; its work goes on, no wait is told', { timeoutMs: 20_000 }, async ($, on) => {
   const { clock, alerts } = machine(on)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   on('turn.start', () => ({ turnId: 't' }) as never)
   on('tool.call', { tool: 'Agent' }, () => new Promise(() => {}) as never)
   on('tool.call', { tool: 'Read' }, () => ({ result: 'ok', text: 'ok' }) as never)
@@ -328,7 +330,8 @@ test('a subagent that says nothing for ten minutes is let go from the file', { t
 
 test('this chat’s file says what it waits on the person for, and what its main loop does', { timeoutMs: 20_000 }, async ($, on) => {
   const { clock, files } = machine(on)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   on('turn.start', () => ({ turnId: 't' }) as never)
   on('tool.call', { tool: 'AskUserQuestion' }, () => new Promise(() => {}) as never)
   const bash = pendingBash(on)

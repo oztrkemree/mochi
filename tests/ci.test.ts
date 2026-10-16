@@ -231,7 +231,8 @@ test('/mochi ci turns it all off and on; without gh Mochi stays quiet and the st
 test('a question held open keeps its face; the news of the CI comes as a notification', async ($, on) => {
   const gh = { runs: runs(run('completed', 'failure', 'test')), pr: '' }
   const { clock, ran } = machine(on, gh)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   await clock.set(PUSH)
   await $.session.start(START)
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })

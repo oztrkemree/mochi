@@ -671,7 +671,8 @@ test('ultracode: agents asking at once give the count back, and a stopped run is
   const gates: Record<string, () => void> = {}
   on('agent.spawn', () => ({ model: 'm', agentId: `w${++n}` }) as never)
   on('turn.complete', () => ({ text: '' }) as never)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   on('tool.call', ($, e) => new Promise(resolve => {
     gates[String(e.agentId)] = () => resolve({ result: 'ok', text: 'ok' } as never)
   }) as never)
