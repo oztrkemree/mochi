@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Ready for the Claude plugin directory: the code reads the way the directory's checks expect (no name a hook uses is used for anything else, each clickable region of the details pane names its file as fixed text, the version check's address is written out at the call), the wardrobe's pictures sit in short lines across two files, the plugin has an icon, and the READMEs say what Mochi's hooks do. Nothing you see changes, except one thing: a clickable region that fails to load no longer says so in a toast, since the directory does not know that event yet.
+- The tests' sample keys are made as the tests run, so no file holds anything that looks like a real key.
+
 ## 0.6.0
 
 - The party: Party in the details pane draws every Claude Code chat on your machine as a small Mochi on one floor, its subagents beside it, in three places: at the door those that need you (asking, failed, or held by a used-up limit), in the workshop those at work or done in the last ten minutes, in the nap corner the rest. A chat whose file has gone quiet shows as "no word", never as idle, since it may still be waiting on you. At most six Mochis move at once; those waiting on you always do.
