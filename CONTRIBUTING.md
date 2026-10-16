@@ -62,6 +62,7 @@ Open an issue with the **Feature request** form, saying what you would like Moch
 | `tests/*.test.ts` | The tests, one file per feature: `mochi`, `shield`, `chats`, `party`, `ci`, `coach`, `share`, `delight`, `data` |
 | `docs/API.md` | How another plugin makes Mochi react |
 | `docs/OUTFITS.md` | How to add something for Mochi to wear |
+| the `art` branch | The source pictures `hooks/assets.ts` and `hooks/wear.ts` are generated from, with their drafts and prompts; kept off `main` so the plugin stays small (`git worktree add ../mochi-art art`) |
 
 The engine follows `$` only into functions declared in the same file, and reads the state a file uses from that file's own consts. So code that acts through `$` goes in `register.tsx`, in its feature's block (`// ---------- shield ----------` and the like), and a `/mochi` subcommand is one more entry in its `commands` list. Code that does not touch `$` goes in its own module, where its feature's test file can call it directly.
 
