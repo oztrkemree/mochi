@@ -15,7 +15,7 @@ et garde sous vos yeux vos limites de contexte, de session et de semaine.
 [![Plugin Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-installer-en-10-secondes)
 [![16 langues](https://img.shields.io/badge/langues-16-7AA2F7?style=for-the-badge)](#-16-langues)
 [![136 accessoires](https://img.shields.io/badge/garde--robe-136_accessoires-B684F6?style=for-the-badge)](#-une-garde-robe-qui-grandit-avec-vous)
-[![Aucun réseau](https://img.shields.io/badge/r%C3%A9seau-aucun-4CC38A?style=for-the-badge)](#-ce-que-mochi-touche)
+[![Aucune télémétrie](https://img.shields.io/badge/t%C3%A9l%C3%A9m%C3%A9trie-aucune-4CC38A?style=for-the-badge)](#-ce-que-mochi-touche)
 
 <sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · **Français** · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
@@ -295,7 +295,7 @@ Mochi parle la langue définie par le réglage `language` de Claude Code quand c
 
 ## 🔒 Ce que Mochi touche
 
-**Tout reste sur votre machine.** Mochi lui-même n’effectue **aucune requête réseau** ; la seule chose qui parle à internet, c’est votre propre `gh`, pour le suivi de la CI, et `/mochi ci` le coupe.
+**Tout reste sur votre machine.** Mochi n’envoie rien sur vous ni sur votre travail, nulle part. Sa seule requête à lui lit son numéro de version sur GitHub, au plus toutes les 12 heures, pour vous prévenir quand une mise à jour sort ; tant que `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` est défini, il s’en passe. La seule autre chose qui parle à internet, c’est votre propre `gh`, pour le suivi de la CI, et `/mochi ci` le coupe.
 
 <details>
 <summary><b>La liste complète</b></summary>
@@ -304,6 +304,7 @@ Mochi parle la langue définie par le réglage `language` de Claude Code quand c
 
 - **git**, dans le dossier de la conversation, en lecture seule : `git status`, `git log`, `git diff --numstat` et `git rev-parse` pour le bandeau et le panneau de détails. Quand le bouclier doit y regarder de plus près, il demande la branche et la branche par défaut, les fichiers qu’ajouterait un `git add` (`git ls-files`) et ce que committerait un `git commit` (`git diff`).
 - **gh**, seulement quand le suivi de la CI est activé, avec votre propre connexion (Mochi ne voit jamais votre jeton) : `gh pr view` au démarrage d’une conversation, à l’ouverture du panneau de détails et autour d’un push ; `gh run list` uniquement après un push dans cette conversation, toutes les 30 secondes jusqu’à la fin des exécutions, une demi-heure au plus. `/mochi ci` coupe les deux.
+- **GitHub, pour les mises à jour** : au plus toutes les 12 heures, et quand vous lancez `/mochi update`, un simple téléchargement de `.claude-plugin/plugin.json` depuis `raw.githubusercontent.com/oztrkemree/mochi` pour comparer les numéros de version. Il ne transporte rien sur vous ni sur votre travail, et n’a pas lieu tant que `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` est défini.
 - **Les outils du système** : les notifications passent par `osascript` sur macOS, PowerShell sur Windows et `notify-send` sur Linux. Pour la langue, `defaults read -g AppleLanguages` sur macOS et `reg query` sur Windows ; `uname` distingue macOS de Linux. Pour les PNG de `/mochi capture`, `rsvg-convert` ou le `magick` d’ImageMagick, si vous en avez un. Les fichiers des conversations fermées, et ce qu’efface `/mochi réinitialiser`, sont supprimés par leur nom avec `rm`, ou le `del` de `cmd` sous Windows, uniquement dans `~/.claude/mochi/`.
 - **Des fichiers dans `~/.claude/mochi/`** : l’état de chaque conversation ouverte, les compteurs du jour, votre niveau et vos badges, les relevés d’utilisation pour la prévision, combien de fois chaque astuce a été montrée et les courtes consignes que vous répétez (jamais des prompts entiers), les marqueurs qui désignent la conversation chargée d’annoncer qu’une limite s’est réinitialisée, votre `shield.json` si vous en écrivez un, et ce qu’enregistrent `/mochi carte`, `bilan`, `capture` et `exporter`. Les réglages, ce qui est toujours autorisé et votre anniversaire sont rangés dans l’espace de stockage que Claude Code réserve aux plugins.
 - **Votre projet** : Mochi lit `CLAUDE.md` avant de suggérer une consigne et n’y ajoute une ligne qu’après que vous avez choisi **Ajouter**. Il n’y écrit la carte que si vous donnez à `/mochi carte` un chemin qui s’y trouve. Pour compter les lignes et repérer les secrets, il lit un fichier que Claude s’apprête à écraser et, pour une commande qui ajoute et commite d’un coup, les nouveaux fichiers qu’elle ajouterait (20 au plus, de moins de 1 Mo chacun). Rien de ce qu’il lit n’est conservé.
@@ -336,7 +337,7 @@ Vérifiez `claude --version` : Mochi demande **2.1.293 ou plus récent**. Les ve
 
 <br>
 
-Non. Mochi n’effectue aucune requête réseau. Il garde de courts compteurs dans `~/.claude/mochi/`, jamais des prompts entiers. Voir [ce que Mochi touche](#-ce-que-mochi-touche).
+Non. Mochi n’envoie rien sur votre code ni vos prompts, nulle part ; sa seule requête lit son propre numéro de version sur GitHub. Il garde de courts compteurs dans `~/.claude/mochi/`, jamais des prompts entiers. Voir [ce que Mochi touche](#-ce-que-mochi-touche).
 
 </details>
 

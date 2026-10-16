@@ -15,7 +15,7 @@ Claude 的一举一动它都有反应，会拦下那些你事后会后悔的命�
 [![Claude Code 插件](https://img.shields.io/badge/Claude_Code-插件-D97757?style=for-the-badge)](#-10-秒安装)
 [![16 种语言](https://img.shields.io/badge/语言-16_种-7AA2F7?style=for-the-badge)](#-16-种语言)
 [![136 件配饰](https://img.shields.io/badge/衣橱-136_件-B684F6?style=for-the-badge)](#-和你一起成长的衣橱)
-[![不联网](https://img.shields.io/badge/网络-无-4CC38A?style=for-the-badge)](#-它会访问什么)
+[![无遥测](https://img.shields.io/badge/遥测-无-4CC38A?style=for-the-badge)](#-它会访问什么)
 
 <sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · **中文** · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
@@ -295,7 +295,7 @@ English · Türkçe · Español · Deutsch · Français · Português · Рус�
 
 ## 🔒 它会访问什么
 
-**一切都留在你的电脑上。** Mochi 自己**不发起任何网络请求**；唯一会联网的是你自己的 `gh`，用于跟踪 CI，`/mochi ci` 就能把它关掉。
+**一切都留在你的电脑上。** Mochi 不会把任何关于你或你工作的内容发到任何地方。它自己唯一的请求，是最多每 12 小时从 GitHub 读一次版本号，好在有更新时告诉你；设置了 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` 时连这个也不做。除此之外唯一会联网的是你自己的 `gh`，用于跟踪 CI，`/mochi ci` 就能把它关掉。
 
 <details>
 <summary><b>完整清单</b></summary>
@@ -304,6 +304,7 @@ English · Türkçe · Español · Deutsch · Français · Português · Рус�
 
 - **git**：只在对话所在的文件夹里读取，为状态栏和详情面板运行 `git status`、`git log`、`git diff --numstat` 和 `git rev-parse`。护盾需要细看时，会查询当前分支和默认分支、`git add` 会添加哪些文件（`git ls-files`），以及 `git commit` 会提交什么（`git diff`）。
 - **gh**：只在 CI 跟踪开启时运行，用的是你自己的登录（Mochi 从不经手你的令牌）。`gh pr view` 在对话开始时、你打开详情面板时以及 push 前后运行；`gh run list` 只在本对话 push 之后运行，每 30 秒一次，直到运行结束，最多半小时。`/mochi ci` 会把两者都关掉。
+- **GitHub，用于检查更新**：最多每 12 小时一次，以及你运行 `/mochi update` 时，从 `raw.githubusercontent.com/oztrkemree/mochi` 直接下载 `.claude-plugin/plugin.json`，用来比较版本号。它不带任何关于你或你工作的内容；设置了 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` 时不会发生。
 - **系统自带的工具**：通知在 macOS 上用 `osascript`，Windows 上用 PowerShell，Linux 上用 `notify-send`。获取语言时，macOS 上运行 `defaults read -g AppleLanguages`，Windows 上运行 `reg query`；用 `uname` 区分 macOS 和 Linux。`/mochi 快照` 的 PNG 由 `rsvg-convert` 或 ImageMagick 的 `magick` 生成（如果装了的话）。已关闭对话的文件，以及 `/mochi 重置` 清除的内容，都按文件名用 `rm`（Windows 上用 `cmd` 的 `del`）删除，且只限于 `~/.claude/mochi/` 之内。
 - **`~/.claude/mochi/` 下的文件**：每个打开的对话进行到哪一步、每日计数、你的等级和徽章、用于预测的用量读数、每条提示显示过几次、你反复给出的简短指示（绝不保存完整的 prompt）、决定由哪个对话来播报限额重置的标记、你写的 `shield.json`（如果有的话），以及 `/mochi 卡片`、`回顾`、`快照` 和 `导出` 保存的文件。设置、始终允许的项和你的生日，存放在 Claude Code 为插件提供的存储里。
 - **你的项目**：Mochi 在建议一条指示之前会读取 `CLAUDE.md`，只有你选了**加入**之后，才会在末尾追加一行。只有你给 `/mochi 卡片` 指定了项目里的路径，它才会把卡片写到那里。为了统计行数和发现密钥，它会读取 Claude 即将覆盖的文件；遇到一次完成添加和提交的命令，还会读取它将要添加的新文件（最多 20 个，每个不超过 1 MB）。读到的内容一概不保留。
@@ -336,7 +337,7 @@ English · Türkçe · Español · Deutsch · Français · Português · Рус�
 
 <br>
 
-不会。Mochi 完全不发起任何网络请求。它只在 `~/.claude/mochi/` 下保存简短的计数，绝不保存完整的 prompt。详见[它会访问什么](#-它会访问什么)。
+不会。Mochi 不会把你的代码或 prompt 发到任何地方；它唯一的请求是从 GitHub 读取自己的版本号。它只在 `~/.claude/mochi/` 下保存简短的计数，绝不保存完整的 prompt。详见[它会访问什么](#-它会访问什么)。
 
 </details>
 

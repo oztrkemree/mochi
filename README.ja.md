@@ -15,7 +15,7 @@ Claudeのすることすべてに反応し、あとで後悔しそうなコマ�
 [![Claude Codeプラグイン](https://img.shields.io/badge/Claude_Code-プラグイン-D97757?style=for-the-badge)](#-10秒でインストール)
 [![16言語](https://img.shields.io/badge/対応言語-16-7AA2F7?style=for-the-badge)](#-16言語に対応)
 [![136個のアクセサリー](https://img.shields.io/badge/着せ替え-136個-B684F6?style=for-the-badge)](#-使うほど増える着せ替え)
-[![ネットワーク通信なし](https://img.shields.io/badge/ネットワーク-なし-4CC38A?style=for-the-badge)](#-mochiがアクセスするもの)
+[![テレメトリなし](https://img.shields.io/badge/テレメトリ-なし-4CC38A?style=for-the-badge)](#-mochiがアクセスするもの)
 
 <sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · **日本語** · [한국어](README.ko.md)</sub>
 
@@ -295,7 +295,7 @@ Claude Codeの`language`設定がこのどれかなら、Mochiはその言語で
 
 ## 🔒 Mochiがアクセスするもの
 
-**すべてはあなたのマシンの中で完結します。** Mochi自身は**ネットワーク通信を一切行いません**。インターネットとやりとりするのは、CI監視のために使うあなた自身の`gh`だけで、それも`/mochi ci`でOFFにできます。
+**すべてはあなたのマシンの中で完結します。** Mochiは、あなたやあなたの作業についての情報をどこにも送りません。Mochi自身が行う通信はひとつだけで、アップデートが出たことを知らせるために、最大12時間に1回GitHubからバージョン番号を読み取ります。`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`が設定されているあいだは、それも行いません。ほかにインターネットとやりとりするのは、CI監視のために使うあなた自身の`gh`だけで、それも`/mochi ci`でオフにできます。
 
 <details>
 <summary><b>すべての一覧</b></summary>
@@ -304,6 +304,7 @@ Claude Codeの`language`設定がこのどれかなら、Mochiはその言語で
 
 - **git**: チャットのフォルダで、読み取りにだけ使います。バーと詳細パネルのために`git status`、`git log`、`git diff --numstat`、`git rev-parse`を実行します。シールドがもう少し詳しく調べる必要があるときは、今のブランチとデフォルトブランチ、`git add`で追加されるファイル（`git ls-files`）、`git commit`でコミットされる内容（`git diff`）を確認します。
 - **gh**: CI監視がONのときだけ、あなた自身のログインで使います（Mochiがトークンを目にすることはありません）。`gh pr view`はチャットの開始時、詳細パネルを開いたとき、そしてpushの前後に実行します。`gh run list`はこのチャットでpushしたあとだけ、実行が終わるまで30秒ごとに、長くても30分まで実行します。`/mochi ci`でどちらもOFFにできます。
+- **アップデート確認のためのGitHub**: 最大12時間に1回と、`/mochi update`を実行したときに、バージョン番号を比べるため`raw.githubusercontent.com/oztrkemree/mochi`から`.claude-plugin/plugin.json`をそのままダウンロードします。あなたやあなたの作業についての情報は何も含まず、`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`が設定されているあいだは行いません。
 - **システムの仕組み**: 通知にはmacOSでは`osascript`、WindowsではPowerShell、Linuxでは`notify-send`を使います。言語の判定には、macOSで`defaults read -g AppleLanguages`、Windowsで`reg query`を使い、macOSとLinuxの区別には`uname`を使います。`/mochi スナップ`のPNGには、入っていれば`rsvg-convert`かImageMagickの`magick`を使います。閉じたチャットのファイルや`/mochi リセット`で消すものは、`~/.claude/mochi/`の中だけで、名前を指定して`rm`（Windowsでは`cmd`の`del`）で削除します。
 - **`~/.claude/mochi/`の下のファイル**: 開いている各チャットの状況、日ごとの集計、レベルとバッジ、予測に使う使用量の記録、各ヒントを表示した回数とあなたが繰り返す短い指示（プロンプト全体は保存しません）、上限のリセットを1つのチャットにだけ知らせてもらうための目印、自分で書いた場合は`shield.json`、そして`/mochi カード`・`まとめ`・`スナップ`・`エクスポート`で保存したもの。設定、常に許可したもの、誕生日は、Claude Codeのプラグイン用のストアに保存されます。
 - **あなたのプロジェクト**: 指示の追加を提案する前に`CLAUDE.md`を読み、あなたが**追加**を選んだときだけ1行を書き足します。カードをプロジェクトに書き込むのは、`/mochi カード`にそこのパスを渡したときだけです。行数を数えたり秘密情報を見つけたりするために、Claudeが上書きしようとしているファイルを読みます。追加とコミットを一度に行うコマンドなら、追加される新しいファイルも読みます（最大20個、それぞれ1 MB未満）。読んだものは何も残しません。
@@ -336,7 +337,7 @@ Claude Codeの`language`設定がこのどれかなら、Mochiはその言語で
 
 <br>
 
-いいえ。Mochiはネットワーク通信を一切行いません。`~/.claude/mochi/`の下に短い集計を残すだけで、プロンプト全体を保存することはありません。詳しくは[Mochiがアクセスするもの](#-mochiがアクセスするもの)をご覧ください。
+いいえ。Mochiはあなたのコードやプロンプトをどこにも送りません。唯一の通信は、GitHubから自分のバージョン番号を読み取ることだけです。`~/.claude/mochi/`の下に短い集計を残すだけで、プロンプト全体を保存することはありません。詳しくは[Mochiがアクセスするもの](#-mochiがアクセスするもの)を見てください。
 
 </details>
 

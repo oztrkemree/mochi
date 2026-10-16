@@ -15,7 +15,7 @@ context'ini, oturum ve haftalık limitlerini de hep göz önünde tutar.
 [![Claude Code eklentisi](https://img.shields.io/badge/Claude_Code-eklenti-D97757?style=for-the-badge)](#-10-saniyede-kurulum)
 [![16 dil](https://img.shields.io/badge/dil-16-7AA2F7?style=for-the-badge)](#-16-dil)
 [![136 aksesuar](https://img.shields.io/badge/gardırop-136_parça-B684F6?style=for-the-badge)](#-seninle-büyüyen-bir-gardırop)
-[![Ağ yok](https://img.shields.io/badge/ağ-yok-4CC38A?style=for-the-badge)](#-neye-dokunur)
+[![Telemetri yok](https://img.shields.io/badge/telemetri-yok-4CC38A?style=for-the-badge)](#-neye-dokunur)
 
 <sub>[English](README.md) · **Türkçe** · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
@@ -295,7 +295,7 @@ Claude Code'un `language` ayarı bunlardan biriyse Mochi o dili konuşur; değil
 
 ## 🔒 Neye dokunur
 
-**Her şey bilgisayarında kalır.** Mochi'nin kendisi **hiçbir ağ isteği yapmaz**; internetle konuşan tek şey, CI takibi için senin kendi `gh`'ın, onu da `/mochi ci` kapatır.
+**Her şey bilgisayarında kalır.** Mochi senin ya da işin hakkında hiçbir yere hiçbir şey göndermez. Kendi yaptığı tek istek, yeni bir sürüm çıktığında haber verebilmek için en fazla 12 saatte bir GitHub'dan sürüm numarasını okumaktır; `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` ayarlıyken bunu da yapmaz. İnternetle konuşan diğer tek şey, CI takibi için senin kendi `gh`'ın, onu da `/mochi ci` kapatır.
 
 <details>
 <summary><b>Tam liste</b></summary>
@@ -304,6 +304,7 @@ Claude Code'un `language` ayarı bunlardan biriyse Mochi o dili konuşur; değil
 
 - **git**, sohbetin klasöründe ve yalnızca okumak için: bant ve detay ekranı için `git status`, `git log`, `git diff --numstat` ve `git rev-parse`. Kalkanın daha yakından bakması gerektiğinde dalı ve varsayılan dalı, bir `git add`'in ekleyeceği dosyaları (`git ls-files`) ve bir `git commit`'in commit edeceklerini (`git diff`) sorar.
 - **gh**, yalnızca CI takibi açıkken ve senin kendi oturumunla (Mochi token'ını hiç görmez): bir sohbet başladığında, detay ekranını açtığında ve bir push'un çevresinde `gh pr view`; `gh run list` ise yalnızca bu sohbette bir push'tan sonra, çalıştırmalar bitene kadar 30 saniyede bir, en fazla yarım saat. `/mochi ci` ikisini de kapatır.
+- **Güncellemeler için GitHub**: en fazla 12 saatte bir ve `/mochi update` yazdığında, sürüm numaralarını karşılaştırmak için `raw.githubusercontent.com/oztrkemree/mochi` adresinden `.claude-plugin/plugin.json` dosyasının düz bir indirmesi. Senin ya da işin hakkında hiçbir şey taşımaz; `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` ayarlıyken yapılmaz.
 - **Sistemin kendi araçları**: bildirimler için macOS'te `osascript`, Windows'ta PowerShell, Linux'ta `notify-send`. Dil için macOS'te `defaults read -g AppleLanguages`, Windows'ta `reg query`; macOS ile Linux'u `uname` ayırır. `/mochi fotoğraf`'ın PNG'leri için, kuruluysa `rsvg-convert` ya da ImageMagick'in `magick`'i. Kapanmış sohbetlerin dosyaları ve `/mochi sıfırla`'nın temizledikleri, yalnızca `~/.claude/mochi/` içinde ve adıyla, `rm` ile (Windows'ta `cmd`'nin `del`'i ile) silinir.
 - **`~/.claude/mochi/` altındaki dosyalar**: her açık sohbetin durumu, günlük sayılar, seviyen ve rozetlerin, tahmin için kullanım ölçümleri, her ipucunun kaç kez gösterildiği ve tekrarladığın kısa talimatlar (asla prompt'un tamamı değil), bir limit sıfırlanmasını tek bir sohbetin duyurmasını sağlayan işaretler, yazdıysan `shield.json`'ın ve `/mochi kart`, `özet`, `fotoğraf` ve `aktar`'ın kaydettikleri. Ayarlar, hep izin verilenler ve doğum günün Claude Code'un eklentiler için tuttuğu depoda durur.
 - **Projen**: Mochi bir talimat önermeden önce `CLAUDE.md`'yi okur ve yalnızca sen **Ekle**'yi seçince sonuna tek bir satır ekler. Kartı projene yalnızca `/mochi kart`'a oradaki bir yolu verirsen yazar. Satırları saymak ve gizli bilgileri yakalamak için Claude'un üzerine yazmak üzere olduğu dosyayı, aynı anda ekleyip commit eden bir komut için de ekleyeceği yeni dosyaları (en fazla 20 tane, her biri 1 MB'tan küçük) okur. Okuduğu hiçbir şeyi saklamaz.
@@ -336,7 +337,7 @@ Claude Code'un `language` ayarı bunlardan biriyse Mochi o dili konuşur; değil
 
 <br>
 
-Hayır. Mochi hiçbir ağ isteği yapmaz. `~/.claude/mochi/` altında kısa sayılar tutar, asla prompt'un tamamını değil. Bkz. [neye dokunur](#-neye-dokunur).
+Hayır. Mochi kodun ya da prompt'ların hakkında hiçbir yere bir şey göndermez; yaptığı tek istek GitHub'dan kendi sürüm numarasını okumaktır. `~/.claude/mochi/` altında kısa sayılar tutar, asla prompt'un tamamını değil. Bkz. [neye dokunur](#-neye-dokunur).
 
 </details>
 

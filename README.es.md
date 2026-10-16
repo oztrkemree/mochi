@@ -15,7 +15,7 @@ y mantiene a la vista tu contexto y tus límites de sesión y de semana.
 [![Plugin de Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-instalación-en-10-segundos)
 [![16 idiomas](https://img.shields.io/badge/idiomas-16-7AA2F7?style=for-the-badge)](#-16-idiomas)
 [![136 accesorios](https://img.shields.io/badge/armario-136_accesorios-B684F6?style=for-the-badge)](#-un-armario-que-crece-contigo)
-[![Sin red](https://img.shields.io/badge/red-ninguna-4CC38A?style=for-the-badge)](#-qué-toca)
+[![Sin telemetría](https://img.shields.io/badge/telemetr%C3%ADa-ninguna-4CC38A?style=for-the-badge)](#-qué-toca)
 
 <sub>[English](README.md) · [Türkçe](README.tr.md) · **Español** · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
 
@@ -295,7 +295,7 @@ Mochi habla el idioma del ajuste `language` de Claude Code si es uno de estos; s
 
 ## 🔒 Qué toca
 
-**Todo se queda en tu máquina.** Mochi en sí **no hace ninguna petición de red**; lo único que habla con internet es tu propio `gh`, para la vigilancia de CI, y `/mochi ci` la desactiva.
+**Todo se queda en tu máquina.** Mochi no envía nada sobre ti ni sobre tu trabajo a ningún sitio. Su única petición propia lee su número de versión en GitHub, como mucho cada 12 horas, para avisarte cuando hay una actualización; mientras `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` esté definida, ni eso. Lo único más que habla con internet es tu propio `gh`, para la vigilancia de CI, y `/mochi ci` la desactiva.
 
 <details>
 <summary><b>La lista completa</b></summary>
@@ -304,6 +304,7 @@ Mochi habla el idioma del ajuste `language` de Claude Code si es uno de estos; s
 
 - **git**, en la carpeta del chat y solo para leer: `git status`, `git log`, `git diff --numstat` y `git rev-parse` para la franja y el panel de detalles. Cuando el escudo necesita mirar más de cerca, consulta la rama y la rama por defecto, los archivos que añadiría un `git add` (`git ls-files`) y lo que entraría en un `git commit` (`git diff`).
 - **gh**, solo mientras la vigilancia de CI está activada y con tu propia sesión (Mochi nunca ve tu token): `gh pr view` cuando empieza un chat, cuando abres el panel de detalles y en torno a un push; `gh run list` solo después de un push en este chat, cada 30 segundos hasta que terminan las ejecuciones, media hora como mucho. `/mochi ci` desactiva los dos.
+- **GitHub, para las actualizaciones**: como mucho cada 12 horas, y cuando ejecutas `/mochi update`, una simple descarga de `.claude-plugin/plugin.json` desde `raw.githubusercontent.com/oztrkemree/mochi` para comparar números de versión. No lleva nada sobre ti ni sobre tu trabajo y no se hace mientras `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` esté definida.
 - **Las herramientas del propio sistema**: notificaciones con `osascript` en macOS, PowerShell en Windows y `notify-send` en Linux. Para el idioma, `defaults read -g AppleLanguages` en macOS y `reg query` en Windows; `uname` distingue macOS de Linux. Para los PNG de `/mochi captura`, `rsvg-convert` o el `magick` de ImageMagick, si lo tienes. Los archivos de los chats cerrados, y lo que borra `/mochi restablecer`, se eliminan por nombre con `rm`, o con el `del` de `cmd` en Windows, y solo dentro de `~/.claude/mochi/`.
 - **Archivos en `~/.claude/mochi/`**: cómo va cada chat abierto, recuentos diarios, tu nivel y tus insignias, lecturas de uso para el pronóstico, cuántas veces se ha mostrado cada consejo y las instrucciones cortas que repites (nunca prompts enteros), las marcas que le indican a un chat que anuncie el reinicio de un límite, tu `shield.json` si escribes uno, y lo que guardan `/mochi tarjeta`, `resumen`, `captura` y `exportar`. Los ajustes, lo que está siempre permitido y tu cumpleaños se guardan en el almacén que Claude Code reserva a los plugins.
 - **Tu proyecto**: Mochi lee `CLAUDE.md` antes de sugerir una instrucción y solo añade una línea después de que elijas **Añadir**. Solo guarda ahí la tarjeta si le das a `/mochi tarjeta` una ruta dentro del proyecto. Para contar líneas y detectar secretos, lee el archivo que Claude está a punto de sobrescribir y, si un comando añade y hace commit a la vez, los archivos nuevos que añadiría (hasta 20, de menos de 1 MB cada uno). No conserva nada de lo que lee.
@@ -336,7 +337,7 @@ Comprueba `claude --version`: Mochi necesita **2.1.293 o posterior**. Las versio
 
 <br>
 
-No. Mochi no hace ninguna petición de red. Guarda recuentos cortos en `~/.claude/mochi/`, nunca prompts enteros. Mira [qué toca](#-qué-toca).
+No. Mochi no envía nada sobre tu código ni tus prompts a ningún sitio; su única petición lee su propio número de versión en GitHub. Guarda recuentos cortos en `~/.claude/mochi/`, nunca prompts enteros. Mira [qué toca](#-qué-toca).
 
 </details>
 

@@ -15,7 +15,7 @@ Claude가 하는 모든 일에 반응하고, 나중에 후회할 명령은 막�
 [![Claude Code 플러그인](https://img.shields.io/badge/Claude_Code-플러그인-D97757?style=for-the-badge)](#-10초-만에-설치)
 [![16개 언어](https://img.shields.io/badge/언어-16개-7AA2F7?style=for-the-badge)](#-16개-언어)
 [![아이템 136개](https://img.shields.io/badge/옷장-아이템_136개-B684F6?style=for-the-badge)](#-함께-자라는-옷장)
-[![네트워크 없음](https://img.shields.io/badge/네트워크-없음-4CC38A?style=for-the-badge)](#-mochi가-손대는-것들)
+[![텔레메트리 없음](https://img.shields.io/badge/텔레메트리-없음-4CC38A?style=for-the-badge)](#-mochi가-손대는-것들)
 
 <sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · **한국어**</sub>
 
@@ -295,7 +295,7 @@ Claude Code의 `language` 설정이 이 중 하나라면 Mochi는 그 언어로 
 
 ## 🔒 Mochi가 손대는 것들
 
-**모든 건 내 컴퓨터 안에만 머물러요.** Mochi 자체는 **네트워크 요청을 전혀 보내지 않아요**. 인터넷과 통신하는 건 CI 추적에 쓰는 내 `gh` 하나뿐이고, `/mochi ci`로 그것도 끌 수 있어요.
+**모든 건 내 컴퓨터 안에만 머물러요.** Mochi는 나나 내 작업에 관한 어떤 것도 어디로도 보내지 않아요. Mochi가 직접 보내는 요청은 하나뿐인데, 업데이트가 나오면 알려 주려고 최대 12시간에 한 번 GitHub에서 버전 번호를 읽어요. `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`가 설정돼 있으면 그것도 하지 않아요. 그 밖에 인터넷과 통신하는 건 CI 추적에 쓰는 내 `gh` 하나뿐이고, `/mochi ci`로 그것도 끌 수 있어요.
 
 <details>
 <summary><b>전체 목록</b></summary>
@@ -304,6 +304,7 @@ Claude Code의 `language` 설정이 이 중 하나라면 Mochi는 그 언어로 
 
 - **git**: 채팅 폴더에서 읽기만 해요. 밴드와 상세 패널을 위해 `git status`, `git log`, `git diff --numstat`, `git rev-parse`를 실행해요. 보호막이 더 자세히 봐야 할 때는 현재 브랜치와 기본 브랜치, `git add`가 추가할 파일(`git ls-files`), `git commit`이 커밋할 내용(`git diff`)을 확인해요.
 - **gh**: CI 추적이 켜져 있을 때만, 내 로그인으로 실행해요(Mochi는 토큰을 볼 수 없어요). `gh pr view`는 채팅이 시작될 때, 상세 패널을 열 때, 그리고 푸시 전후로 실행해요. `gh run list`는 이 채팅에서 푸시한 뒤에만, 실행이 끝날 때까지 30초마다, 길어야 30분 동안 실행해요. `/mochi ci`로 둘 다 끌 수 있어요.
+- **업데이트 확인용 GitHub**: 최대 12시간에 한 번, 그리고 `/mochi update`를 실행할 때, 버전 번호를 비교하려고 `raw.githubusercontent.com/oztrkemree/mochi`에서 `.claude-plugin/plugin.json`을 그대로 내려받아요. 나나 내 작업에 관한 건 아무것도 담기지 않고, `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`가 설정돼 있으면 하지 않아요.
 - **시스템 도구**: 알림은 macOS에서 `osascript`, Windows에서 PowerShell, Linux에서 `notify-send`로 보내요. 언어 확인에는 macOS에서 `defaults read -g AppleLanguages`, Windows에서 `reg query`를 쓰고, macOS와 Linux는 `uname`으로 구분해요. `/mochi 스냅샷`의 PNG에는 설치되어 있으면 `rsvg-convert`나 ImageMagick의 `magick`을 써요. 닫힌 채팅의 파일과 `/mochi 초기화`가 지우는 파일은 `~/.claude/mochi/` 안에서만, 이름을 하나하나 지정해 `rm`(Windows에서는 `cmd`의 `del`)으로 지워요.
 - **`~/.claude/mochi/` 아래 파일**: 열려 있는 채팅별 상태, 일별 카운트, 내 레벨과 배지, 소진 예측에 쓰는 사용량 기록, 팁마다 보여 준 횟수와 내가 반복한 짧은 지시(프롬프트 전체는 저장하지 않아요), 한도 초기화를 한 채팅에서만 알리도록 하는 표시, 직접 만들었다면 `shield.json`, 그리고 `/mochi 카드`, `결산`, `스냅샷`, `내보내기`가 저장하는 파일. 설정, 항상 허용한 항목, 생일은 Claude Code의 플러그인용 저장소에 보관해요.
 - **내 프로젝트**: 지시를 제안하기 전에 `CLAUDE.md`를 읽고, **추가**를 고른 뒤에만 한 줄을 덧붙여요. 카드는 `/mochi 카드`에 프로젝트 안의 경로를 줬을 때만 거기에 저장해요. 줄 수를 세고 비밀 정보를 찾으려고 Claude가 덮어쓰려는 파일을 읽고, 추가와 커밋을 한 번에 하는 명령이라면 새로 추가될 파일도 읽어요(최대 20개, 각각 1MB 미만). 읽은 내용은 하나도 남기지 않아요.
@@ -336,7 +337,7 @@ Claude Code의 `language` 설정이 이 중 하나라면 Mochi는 그 언어로 
 
 <br>
 
-아니요. Mochi는 네트워크 요청을 전혀 보내지 않아요. `~/.claude/mochi/` 아래에 짧은 카운트만 남기고, 프롬프트 전체는 절대 저장하지 않아요. 자세한 건 [Mochi가 손대는 것들](#-mochi가-손대는-것들)을 보세요.
+아니요. Mochi는 내 코드나 프롬프트를 어디로도 보내지 않아요. 유일한 요청은 GitHub에서 자기 버전 번호를 읽는 것뿐이에요. `~/.claude/mochi/` 아래에 짧은 카운트만 남기고, 프롬프트 전체는 절대 저장하지 않아요. 자세한 건 [Mochi가 손대는 것들](#-mochi가-손대는-것들)을 보세요.
 
 </details>
 
