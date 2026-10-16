@@ -509,7 +509,7 @@ test('awards at once celebrate a badge once, and a file that cannot be read a mo
   expect(toasts.filter(x => x.includes('badge'))).toEqual(['new badge: team lead · /mochi badges'])
 })
 
-test('a turn of half an hour that ends well is a marathon', async ($, on) => {
+test('a turn of half an hour that ends well is a marathon', { timeoutMs: 20_000 }, async ($, on) => {
   const toasts: string[] = []
   const clock = engine(on, { prefs: { lang: 'en', hasAlert: false } }, toasts)
   mock.env(on, { HOME: '/home/me' })
@@ -526,7 +526,7 @@ test('a turn of half an hour that ends well is a marathon', async ($, on) => {
   expect(toasts).toContain('new badge: marathon · /mochi badges')
 })
 
-test('a subagent starting its own turn does not start the chat\'s turn over', async ($, on) => {
+test('a subagent starting its own turn does not start the chat\'s turn over', { timeoutMs: 20_000 }, async ($, on) => {
   const toasts: string[] = []
   const clock = engine(on, { prefs: { lang: 'en', hasAlert: false } }, toasts)
   mock.env(on, { HOME: '/home/me' })

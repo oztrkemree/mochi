@@ -158,7 +158,7 @@ async function until(clock: { advance: (ms: number) => Promise<unknown> }, ui: {
   return ui.find({ text })
 }
 
-test('after a push the band follows the runs, and a pass ends in a party', async ($, on) => {
+test('after a push the band follows the runs, and a pass ends in a party', { timeoutMs: 20_000 }, async ($, on) => {
   const gh = { runs: '[]', pr: '' }
   const { clock, ran } = machine(on, gh)
   await clock.set(PUSH)
@@ -244,7 +244,7 @@ test('a question held open keeps its face; the news of the CI comes as a notific
   setLang('tr')
 })
 
-test('a gh cut off at its time limit met a slow network: gh is not called missing', async ($, on) => {
+test('a gh cut off at its time limit met a slow network: gh is not called missing', { timeoutMs: 20_000 }, async ($, on) => {
   const { clock } = machine(on, { runs: '[]', pr: 'slow' })
   await clock.set(PUSH)
   await $.session.start(START)

@@ -1,0 +1,46 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    env:
+      # CONTRIBUTING.md asks for 2.1.293 or later. Pinned so a new release
+      # cannot turn a pull request red on its own; raise it on purpose.
+      CLAUDE_CODE_VERSION: 2.1.296
+      DISABLE_AUTOUPDATER: 1
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1
+    steps:
+      # Keep the files byte for byte as committed on Windows too.
+      - run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Neither command needs an API key, a login or the network.
+      - run: npm install -g @anthropic-ai/claude-code@${{ env.CLAUDE_CODE_VERSION }}
+
+      - run: claude --version
+
+      - run: claude plugin validate .
+
+      - run: claude plugin test .

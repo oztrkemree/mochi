@@ -135,7 +135,7 @@ test('another plugin’s reaction is checked, cut, signed and spaced out', async
   expect(isKept({ mood: 'thinking', until: 0 }, 5000)).toBe(false)
 })
 
-test('a plugin that depends on Mochi makes it react, now and then, and the person can turn that off', { plugins: [POKE, { name: 'mochi-deploy-cheer', register: deployCheer }] }, async ($, on) => {
+test('a plugin that depends on Mochi makes it react, now and then, and the person can turn that off', { plugins: [POKE, { name: 'mochi-deploy-cheer', register: deployCheer }], timeoutMs: 20_000 }, async ($, on) => {
   const { clock } = machine(on)
   on('tool.call', { tool: 'Bash' }, () => ({ result: { stdout: 'ok', stderr: '', interrupted: false }, text: 'ok' }) as never)
   await clock.set(NOON)

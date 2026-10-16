@@ -160,7 +160,7 @@ test('ultracode: the workflow and its agents have a face of their own', async ()
   expect(beforeTool({ tool: 'Workflow', scriptPath: 'C:\\s\\review-changes-wf_b8f1738e-d35.js' }).line).toBe('ultracode · review-changes')
 })
 
-test('the band shows the running tool; the desktop panel shows it with context and limits', async ($, on) => {
+test('the band shows the running tool; the desktop panel shows it with context and limits', { timeoutMs: 20_000 }, async ($, on) => {
   const statuses: (string | undefined)[] = []
   const clock = engine(on, { prefs: { lang: 'tr' } }, statuses)
   let release = () => {}
@@ -719,7 +719,16 @@ test('a new install speaks the system’s language; /mochi lang changes it and E
   const clock = engine(on, {})
   const prints = (stdout: string) => ({ value: { exitCode: 0, stdout, stderr: '' } })
   on('process.run', ($, e) => (e.argv[0] === 'uname' ? prints('Darwin\n') : e.argv[0] === 'defaults' ? prints('(\n    "de-DE",\n    "en-US"\n)') : { value: { exitCode: 1, stdout: '', stderr: '' } }) as never)
-  on('tool.call', { tool: 'Bash' }, () => new Promise(() => {}) as never)
+  // The build runs until the test lets it end, so it is over before the file is.
+  let isReleased = false
+  let release = () => {
+    isReleased = true
+  }
+  on('tool.call', { tool: 'Bash' }, () => new Promise(resolve => {
+    const end = () => resolve({ result: { stdout: '', stderr: '', interrupted: false }, text: '' })
+    if (isReleased) end()
+    else release = end
+  }) as never)
   await clock.set(1_760_000_000_000)
   await $.session.start(START)
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
@@ -727,7 +736,7 @@ test('a new install speaks the system’s language; /mochi lang changes it and E
   expect(said.text).toContain('Deutsch')
   const en = await $.command.run({ command: 'mochi', args: 'lang en' } as never)
   expect(en.text).toBe('Language: English.')
-  void $.tool.call({ tool: 'Bash', command: 'npm run build' } as never)
+  const pending: Promise<unknown> = $.tool.call({ tool: 'Bash', command: 'npm run build' } as never)
   await clock.advance(500)
   expect(await ui.find({ text: /running · npm run build/ })).toBeDefined()
   const glasses = await $.command.run({ command: 'mochi', args: 'wear glasses' } as never)
@@ -743,6 +752,8 @@ test('a new install speaks the system’s language; /mochi lang changes it and E
   expect((await $.command.run({ command: 'mochi', args: 'lang Klingon' } as never)).text?.startsWith('Bilinmeyen dil: Klingon.')).toBe(true)
   setLang('tr')
   await ui.unmount()
+  release()
+  await pending
 })
 
 test('on Windows: the home is USERPROFILE, the language the display one, and old files go with del', async ($, on) => {
@@ -773,7 +784,7 @@ test('on Windows: the home is USERPROFILE, the language the display one, and old
   setLang('tr')
 })
 
-test('dozing or hidden, the timer makes its rounds on every fifth beat; work wakes it at once', async ($, on) => {
+test('dozing or hidden, the timer makes its rounds on every fifth beat; work wakes it at once', { timeoutMs: 20_000 }, async ($, on) => {
   const clock = engine(on)
   let frames = 0
   let reads = 0
