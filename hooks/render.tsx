@@ -1,5 +1,5 @@
 import { atom, read } from 'claude-code'
-import type { MatchedHook } from 'claude-code'
+import type { EngineInterface, MatchedHook } from 'claude-code'
 
 import type { Badge, Block, Env, Item, Prefs, Section } from '../types'
 import { BADGES, badgeHint, badgeName, badgeSvg } from './badges'
@@ -25,17 +25,17 @@ import { WEAR } from './wear'
 // wardrobe and badges. It only reads the values register.tsx keeps, named here
 // again because the engine reads the state a file uses from that file's own consts.
 
-const face = atom({ plugin: 'mochi', key: 'face' } as const, NO_FACE)
-const panel = atom({ plugin: 'mochi', key: 'panel' } as const, NO_PANEL)
-const detail = atom({ plugin: 'mochi', key: 'detail' } as const, NO_ENV)
-const frame = atom({ plugin: 'mochi', key: 'frame' } as const, 0)
-const sec = atom({ plugin: 'mochi', key: 'sec' } as const, 0)
-const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
-const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
-const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
-const diff = atom({ plugin: 'mochi', key: 'diff' } as const, NO_DIFF)
-const party = atom({ plugin: 'mochi', key: 'party' } as const, { pick: '' })
-const dirs = atom({ plugin: 'mochi', key: 'dirs' } as const, { open: [] as string[] })
+const face = atom({ plugin: 'mochi-buddy', key: 'face' } as const, NO_FACE)
+const panel = atom({ plugin: 'mochi-buddy', key: 'panel' } as const, NO_PANEL)
+const detail = atom({ plugin: 'mochi-buddy', key: 'detail' } as const, NO_ENV)
+const frame = atom({ plugin: 'mochi-buddy', key: 'frame' } as const, 0)
+const sec = atom({ plugin: 'mochi-buddy', key: 'sec' } as const, 0)
+const env = atom({ plugin: 'mochi-buddy', key: 'env' } as const, NO_ENV)
+const prefs = atom({ plugin: 'mochi-buddy', key: 'prefs' } as const, DEFAULT_PREFS)
+const said = atom({ plugin: 'mochi-buddy', key: 'said' } as const, NO_SAID)
+const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
+const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
+const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
 
 const width = (s: string) => [...s].length
 const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0, Math.max(1, max - 1)).join('')}…`)
@@ -44,21 +44,43 @@ const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0
 const pressed = () => undefined
 const picked = () => undefined
 
+// The clear regions the desktop draws over the details pane, each from a surface
+// module of its own named here as fixed text (the directory reads which).
+type DeskPane = Extract<Parameters<MatchedHook<'ui.render', { component: 'Pane' }>>[1], { surface: 'desktop' }>
+
+/** Over a card or tab: a click presses `key` (hit.tsx). */
+function tapRegion($: EngineInterface, desk: DeskPane, key: string, rows: number) {
+  const { Box, Client } = $.ui.resolve(desk)
+  return <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key={key} module="./hit.tsx" props={{ rows }} width="100%" height="100%" /></Box>
+}
+
+/** Over the floor of chats: a click picks whoever stands there (floor.tsx). */
+function floorRegion($: EngineInterface, desk: DeskPane, rows: number) {
+  const { Box, Client } = $.ui.resolve(desk)
+  return <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key="party" module="./floor.tsx" props={{ rows }} width="100%" height="100%" /></Box>
+}
+
+/** The sections, dragged into order or out of view (arrange.tsx). */
+function arrangeRegion($: EngineInterface, desk: DeskPane, props: { rows: { id: Block; title: string; gist: string; isHidden: boolean }[]; shown: string; hidden: string }) {
+  const { Client } = $.ui.resolve(desk)
+  return <Client key="arrange" module="./arrange.tsx" props={props} width="100%" height={props.rows.length * 2} />
+}
+
 /** An item's picture for the wardrobe, faded and grey while locked. */
 function iconSvg(item: Item, isOpen: boolean): string {
   const vector = VECTOR_WEAR[item]
   if (vector) {
-    const [x, y, w, h] = vector.box
+    const [x, y, w, tall] = vector.box
     // Glasses read as glasses on a patch of Mochi's own clay, not on the dark card.
-    const skin = vector.onSkin ? `<rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" rx="${Math.min(w, h) / 2 - 1}" fill="#D97757"/>` : ''
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" width="100%" height="100%"><g opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}>${skin}${vector.svg}</g></svg>`
+    const skin = vector.onSkin ? `<rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${tall - 2}" rx="${Math.min(w, tall) / 2 - 1}" fill="#D97757"/>` : ''
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${tall}" width="100%" height="100%"><g opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}>${skin}${vector.svg}</g></svg>`
   }
   const a = WEAR[item]
   if (a === undefined) return ''
   const scale = Math.min(44 / a.w, 30 / a.h)
   const w = a.w * scale
-  const h = a.h * scale
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${a.uri}" x="${(46 - w) / 2}" y="${(32 - h) / 2}" width="${w}" height="${h}" opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}/></svg>`
+  const tall = a.h * scale
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${a.uri}" x="${(46 - w) / 2}" y="${(32 - tall) / 2}" width="${w}" height="${tall}" opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}/></svg>`
 }
 
 /** The terminal drawing's hat row, when the mood leaves it empty and something is worn on the head. */
@@ -138,10 +160,8 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     // there, and the slot's items as cards of one size filling the row, those
     // that can be worn first. On the desktop a clear region over a card or tab
     // makes all of it clickable (see hit.tsx), keyed `tap:` and its button's key.
-    const Client = e.surface === 'desktop' ? $.ui.resolve(e).Client : null
-    const tap = (key: string, rows = 8) => Client
-      ? <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key={`tap:${key}`} module="./hit.tsx" props={{ rows }} width="100%" height="100%" /></Box>
-      : null
+    const desk = e.surface === 'desktop' ? e : null
+    const tap = (key: string, rows = 8) => (desk ? tapRegion($, desk, `tap:${key}`, rows) : null)
     const room = Math.max(30, e.props.bodyColumns - 9)
     const perRow = Math.max(2, Math.floor((room + 1) / 16))
     const cardW = Math.floor((room + 1) / perRow) - 1
@@ -230,7 +250,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     // On the desktop each line of Changes is a drawing of its own with a clear region on it: a file pressed opens
     // its diff under it, a folder its files. Elsewhere the drawing hears no clicks, and the buttons below it do.
     const changes = () => {
-      if (!Client) return drawn('changes', diffPicks)
+      if (!desk) return drawn('changes', diffPicks)
       const part = parts.changes
       if (part.cards.length === 0) return null
       const pieces = part.cards[0]?.title === CARD_TITLE.changes() ? changesPieces(v, now, true) : []
@@ -270,7 +290,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         {tapKey !== '' ? tap(tapKey, 3) : null}
       </Box>
     )
-    const toggle = (key: string, isOn: boolean, name: string) => Client
+    const toggle = (key: string, isOn: boolean, name: string) => desk
       ? <Svg source={switchSvg(isOn)} alt={`${name}: ${isOn ? d.on : d.off}`} width={32} height={19} />
       : <Button key={`set:${key}`} variant={isOn ? 'primary' : 'secondary'} onPress={pressed}>{isOn ? d.on : d.off}</Button>
     const settings = () => (
@@ -330,14 +350,14 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       const all = membersOf(crew)
       const chosen = all.find(m => m.peer.id === crewPick)
       // Those a place has no room for, and everyone where the floor hears no clicks, as buttons.
-      const unseen = Client ? (['door', 'shop', 'nap'] as const).flatMap(z => crew[z].slice(SHOWN[z])) : all
+      const unseen = desk ? (['door', 'shop', 'nap'] as const).flatMap(z => crew[z].slice(SHOWN[z])) : all
       const gist = parts.chats.gist || t().st.agents(v.me?.agents?.length ?? 0)
       return item('chats', gist, () => (
         <Box flexDirection="column" gap={1}>
           <Box key="party" flexDirection="row">
             <Box>
               <Svg source={floor.svg} alt={all.map(m => `${nameOf(m.peer)}: ${statusLine(m)}`).join(', ')} width={floorW} height={floorH} />
-              {Client ? <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key="party" module="./floor.tsx" props={{ rows: Math.ceil(floorH / 14) + 1 }} width="100%" height="100%" /></Box> : null}
+              {desk ? floorRegion($, desk, Math.ceil(floorH / 14) + 1) : null}
             </Box>
           </Box>
           {unseen.length > 0 ? (
@@ -426,9 +446,9 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     const rows = inView.map(id => ({ id, title: names[id], gist: gists[id], isHidden: p.hidden.includes(id) }))
     const arranging = (
       <Box key="arranging" flexDirection="column" gap={1}>
-        <Text dimColor wrap="wrap">{Client ? d.arrangeHint : d.arrangeHintPlain}</Text>
-        {Client
-          ? <Client key="arrange" module="./arrange.tsx" props={{ rows, shown: d.shown, hidden: d.hidden }} width="100%" height={rows.length * 2} />
+        <Text dimColor wrap="wrap">{desk ? d.arrangeHint : d.arrangeHintPlain}</Text>
+        {desk
+          ? arrangeRegion($, desk, { rows, shown: d.shown, hidden: d.hidden })
           : rows.map((r, i) => (
             <Box key={`row:${r.id}`} flexDirection="row" alignItems="center" gap={1}>
               <Text bold={!r.isHidden} dimColor={r.isHidden} strikethrough={r.isHidden} wrap="truncate">{r.title}</Text>

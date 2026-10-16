@@ -6,5 +6,5 @@
     "name": "Emre Öztürk"
   },
   "license": "MIT",
-  "dependencies": ["mochi"]
+  "dependencies": ["mochi-buddy"]
 }

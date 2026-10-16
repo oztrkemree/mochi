@@ -663,7 +663,8 @@ export const en = {
   note: {
     loop: (alarm: string, about: string) => `${alarm} (${about}). Press Esc to stop.`,
     detailFailed: (reason: string) => `The details pane could not open: ${reason}`,
-    clickFailed: (reason: string) => `clicking for details does not work here (${reason}); type /mochi details`,
+    moved: 'Mochi is now Mochi Buddy, and your settings came along.',
+    oldStillOn: (cmd: string) => `The old Mochi is still installed, so you may see two: ${cmd}`,
     seeWardrobe: ' · /mochi wear',
   },
 

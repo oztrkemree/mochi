@@ -4,13 +4,13 @@ Mochi adds one noun to `$`, **`$.mochi`**, so any Claude Code plugin can make it
 
 ## Depend on Mochi
 
-List Mochi under `dependencies` in your plugin's `.claude-plugin/plugin.json`:
+List Mochi Buddy, `mochi-buddy`, under `dependencies` in your plugin's `.claude-plugin/plugin.json` (it was `mochi` before 0.7.0; the noun is still `$.mochi`):
 
 ```json
 {
   "name": "my-plugin",
   "version": "0.1.0",
-  "dependencies": ["mochi"]
+  "dependencies": ["mochi-buddy"]
 }
 ```
 

@@ -2,14 +2,14 @@
 
 <img src="docs/hero.webp" width="260" alt="小さな粘土のマスコットMochiが、手を振ったり、考えたり、読んだり、タイピングしたり、お祝いしたり、うとうと眠ってしまったりするようす">
 
-# Mochi
+# Mochi Buddy
 
 ### Claude Codeのプロンプトの上に住む、小さな粘土の相棒。
 
 Claudeのすることすべてに反応し、あとで後悔しそうなコマンドは止めてくれて、<br>
 コンテキスト・セッション・週間の上限を、いつでも見えるところに置いておいてくれます。
 
-<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="docs/watch-ja.svg" height="82" alt="▶ デモを見る (0:31)"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@art/docs/mochi-short.mp4"><img src="docs/watch-ja.svg" height="82" alt="▶ デモを見る (0:31)"></a>
 
 [![ライセンス: MIT](https://img.shields.io/badge/ライセンス-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Codeプラグイン](https://img.shields.io/badge/Claude_Code-プラグイン-D97757?style=for-the-badge)](#-10秒でインストール)
@@ -32,7 +32,7 @@ Claudeのすることすべてに反応し、あとで後悔しそうなコマ�
 ## ⚡ 10秒でインストール
 
 ```
-/plugin install mochi --marketplace oztrkemree/mochi
+/plugin install mochi-buddy --marketplace oztrkemree/mochi
 ```
 
 どのClaude Codeのチャットでもいいので、これを入力してください。マーケットプレイスを追加するか聞かれたら`y`と答え、スコープは**user**を選びます。これだけです。Mochiはすぐに現れて、それ以降に開くすべてのチャットにも顔を出します。設定は何もいりません。
@@ -45,10 +45,21 @@ Claudeのすることすべてに反応し、あとで後悔しそうなコマ�
 >
 > ```
 > claude plugin marketplace update mochi
-> claude plugin update mochi@mochi
+> claude plugin update mochi-buddy@mochi
 > ```
 >
 > そのあと Claude Code を再起動してください。
+
+> [!IMPORTANT]
+> **0.7.0 より前から Mochi を使っていますか？** 今は Mochi Buddy という名前です。ターミナルで：
+>
+> ```
+> claude plugin marketplace update mochi
+> claude plugin install mochi-buddy@mochi
+> claude plugin uninstall mochi@mochi
+> ```
+>
+> その後 Claude Code を再起動してください。設定も引き継がれ、レベル・履歴・ワードローブはそのまま残ります。代わりに `claude plugin update mochi@mochi` を実行すると、古い Mochi が同じことをする**移る**ボタンを表示します。
 
 <br>
 
@@ -309,6 +320,7 @@ Claude Codeの`language`設定がこのどれかなら、Mochiはその言語で
 - **`~/.claude/mochi/`の下のファイル**: 開いている各チャットの状況、日ごとの集計、レベルとバッジ、予測に使う使用量の記録、各ヒントを表示した回数とあなたが繰り返す短い指示（プロンプト全体は保存しません）、上限のリセットを1つのチャットにだけ知らせてもらうための目印、自分で書いた場合は`shield.json`、そして`/mochi カード`・`まとめ`・`スナップ`・`エクスポート`で保存したもの。設定、常に許可したもの、誕生日は、Claude Codeのプラグイン用のストアに保存されます。
 - **あなたのプロジェクト**: 指示の追加を提案する前に`CLAUDE.md`を読み、あなたが**追加**を選んだときだけ1行を書き足します。カードをプロジェクトに書き込むのは、`/mochi カード`にそこのパスを渡したときだけです。行数を数えたり秘密情報を見つけたりするために、Claudeが上書きしようとしているファイルを読みます。追加とコミットを一度に行うコマンドなら、追加される新しいファイルも読みます（最大20個、それぞれ1 MB未満）。読んだものは何も残しません。
 - **他のプラグイン**は、Mochiを通じて表情と短い一言を表示できます。一言にはそのプラグインの名前が添えられ、どのプラグインも10秒に1回までです。`/mochi プラグイン`でOFFにできます。`/mochi フィードバック`はリンクを表示するだけで、何も送信しません。
+- **Claude Code のフック**：Mochi は表情を選び、その日の数を数えるために、ツール呼び出し、プロンプト、サブエージェント、ターンを見ていますが、どれも変えずにそのまま渡します。チャットのメッセージを読むのはタイトルを見つけるときだけです。権限のリクエストでは、Claude があなたを待っていることを表示するだけで、答えることはありません。動作するフックは盾だけです。取り消せないと判断したコマンドや編集の前にあなたに確認し、**中止**を選んだとき、または確認を最後まで表示できなかったときだけ、その呼び出しを拒否します。あなたの代わりに何かを許可することはありません。Mochi は `/mochi` コマンドと、Mochi に依存するプラグインのための `$.mochi` を追加します。自分のプラグインフォルダには何も書き込まず、自分のファイル以外のコードは読み込みません。初回起動時に一度だけ、設定を引き継ぐために、古い `mochi` プラグインの設定を Claude Code の保存場所 `~/.claude/plugins/store/` から読み込みます。
 
 </details>
 
@@ -352,7 +364,7 @@ Claude Codeの`language`設定がこのどれかなら、Mochiはその言語で
 
 ## 🧩 プラグイン作者の方へ
 
-あなたのプラグインから、Mochiを反応させられます。デプロイが終わったら喜ぶ、チェックが落ちたら心配そうな顔をする、といった具合です。`dependencies`に`mochi`を加えて、`$.mochi.react({ mood, line })`か`$.mochi.celebrate({ line })`を呼ぶだけ。呼び出し方、制限、プラグインの完全な例は[docs/API.md](docs/API.md)にあります。
+あなたのプラグインから、Mochiを反応させられます。デプロイが終わったら喜ぶ、チェックが落ちたら心配そうな顔をする、といった具合です。`dependencies`に`mochi-buddy`を加えて、`$.mochi.react({ mood, line })`か`$.mochi.celebrate({ line })`を呼ぶだけ。呼び出し方、制限、プラグインの完全な例は[docs/API.md](docs/API.md)にあります。
 
 ## 🤝 コントリビュート
 

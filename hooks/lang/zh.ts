@@ -623,7 +623,8 @@ export const zh: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm}（${about}）。按 Esc 停止。`,
     detailFailed: reason => `无法打开详情面板：${reason}`,
-    clickFailed: reason => `此处无法点击查看详情（${reason}）；请输入 /mochi details`,
+    moved: 'Mochi 现在叫 Mochi Buddy，你的设置也一起搬过来了。',
+    oldStillOn: cmd => `旧的 Mochi 还装着，你可能会看到两个：${cmd}`,
     seeWardrobe: ' · /mochi wear',
   },
 

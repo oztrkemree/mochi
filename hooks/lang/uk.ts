@@ -645,7 +645,8 @@ export const uk: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about}). Натисни Esc, щоб зупинити.`,
     detailFailed: reason => `Не вдалося відкрити панель деталей: ${reason}`,
-    clickFailed: reason => `клік для деталей тут не працює (${reason}); введи /mochi деталі`,
+    moved: 'Mochi тепер Mochi Buddy, і твої налаштування переїхали разом із ним.',
+    oldStillOn: cmd => `Старий Mochi досі встановлений, і ти можеш бачити двох: ${cmd}`,
     seeWardrobe: ' · /mochi вдягнути',
   },
 

@@ -623,7 +623,8 @@ export const ja: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about})。Escで停止。`,
     detailFailed: reason => `詳細パネルを開けなかった: ${reason}`,
-    clickFailed: reason => `ここではクリックで詳細を開けない (${reason})。/mochi details と入力して`,
+    moved: 'Mochi は Mochi Buddy になったよ。設定もそのまま引き継いだ。',
+    oldStillOn: cmd => `古い Mochi もまだ入っているから、2 体見えるかも：${cmd}`,
     seeWardrobe: ' · /mochi wear',
   },
 

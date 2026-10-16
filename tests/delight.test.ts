@@ -16,11 +16,11 @@ import { WEAR } from '../hooks/wear'
 setLang('en')
 
 const BAND = {
-  plugin: 'mochi',
+  plugin: 'mochi-buddy',
   component: 'AbovePrompt' as const,
   props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} },
 }
-const PANE = { plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never
+const PANE = { plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never
 const START = { cwd: '/tmp', surface: 'terminal', isInteractive: true } as never
 
 /** What a session's engine answers beneath the plugin; toasts are collected, nothing is run. */
@@ -671,7 +671,8 @@ test('ultracode: agents asking at once give the count back, and a stopped run is
   const gates: Record<string, () => void> = {}
   on('agent.spawn', () => ({ model: 'm', agentId: `w${++n}` }) as never)
   on('turn.complete', () => ({ text: '' }) as never)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   on('tool.call', ($, e) => new Promise(resolve => {
     gates[String(e.agentId)] = () => resolve({ result: 'ok', text: 'ok' } as never)
   }) as never)

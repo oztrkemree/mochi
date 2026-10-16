@@ -529,7 +529,10 @@ const askHtml = (question, mark) => question.split('\n\n').map(p => (p === mark 
   })
 }
 {
-  const content = 'export const awsKey = "AKIA4HZQ7WLN3XTBPRLE"\n'
+  // A key made as the film is drawn, so that this file holds none: only its mask, AKIA••••••LE, is ever shown.
+  const pool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  const key = `AKIA${Array.from({ length: 14 }, (_, i) => pool[(i * 11 + 5) % pool.length]).join('')}LE`
+  const content = `export const awsKey = "${key}"\n`
   const found = editSecrets({ tool: 'Write', file_path: 'C:/shop/src/config.ts', content }, null)
   const what = found.map(x => sayDanger(x)).join(' · ')
   shieldAct({
