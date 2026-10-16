@@ -522,6 +522,26 @@ test('a turn of half an hour that ends well is a marathon', async ($, on) => {
   expect(toasts).toContain('Mochi: new badge: marathon · /mochi badges')
 })
 
+test('a subagent starting its own turn does not start the chat\'s turn over', async ($, on) => {
+  const toasts: string[] = []
+  const clock = engine(on, { prefs: { lang: 'en', hasAlert: false } }, toasts)
+  mock.env(on, { HOME: '/home/me' })
+  on('session.id', () => ({ value: 'chat-3' }) as never)
+  memoryFiles(on)
+  on('turn.start', ($, e) => ({ turnId: e.turnId }) as never)
+  on('turn.complete', () => ({ text: '' }) as never)
+  await clock.set(at(2026, 7, 1, 12))
+  await $.session.start(START)
+  await clock.settle()
+  await $.turn.start({ text: 'build it', turnId: 't1' })
+  await clock.set(at(2026, 7, 1, 12, 20))
+  await $.turn.start({ text: 'look around', turnId: 't-a1', agentId: 'a1' } as never)
+  await $.turn.complete({ agentId: 'a1', turnId: 't-a1', reason: 'answer', answer: '', durationMs: 60_000, isAborted: false } as never)
+  await clock.set(at(2026, 7, 1, 12, 31))
+  await $.turn.complete({ turnId: 't1', reason: 'answer', answer: 'done', durationMs: 31 * 60_000, isAborted: false } as never)
+  expect(toasts).toContain('Mochi: new badge: marathon · /mochi badges')
+})
+
 // Two hours of the timer's beats take a few seconds.
 test('after two hours of work an idle Mochi suggests a stretch, one for all the chats', { timeoutMs: 30_000 }, async ($, on) => {
   const start = at(2026, 7, 1, 9)

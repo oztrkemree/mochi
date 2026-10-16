@@ -2163,6 +2163,8 @@ export const register: Register = on => {
   }).catch(($, e, next) => next(e))
 
   on('turn.start', async ($, e, next) => {
+    // Since 2.1.299 subagents' and teammates' turns start here too; only the main loop's begins a turn of the chat.
+    if ((e as { agentId?: string }).agentId !== undefined) return next(e)
     chat.isBusy = true
     chat.stream = null
     chat.errorRun = 0
