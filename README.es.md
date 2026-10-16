@@ -9,7 +9,7 @@
 Reacciona a todo lo que hace Claude, frena los comandos de los que te arrepentirías<br>
 y mantiene a la vista tu contexto y tus límites de sesión y de semana.
 
-<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="docs/watch-es.svg" height="82" alt="▶ Mira la demo (0:31)"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@art/docs/mochi-short.mp4"><img src="docs/watch-es.svg" height="82" alt="▶ Mira la demo (0:31)"></a>
 
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Plugin de Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-instalación-en-10-segundos)

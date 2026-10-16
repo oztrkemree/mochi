@@ -9,7 +9,7 @@
 Er reagiert auf alles, was Claude tut, hält die Befehle auf, die du bereuen würdest,<br>
 und hat Kontext, Sitzung und Wochenlimit immer gut sichtbar für dich im Blick.
 
-<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@main/docs/mochi-short.mp4"><img src="docs/watch-de.svg" height="82" alt="▶ Demo ansehen (0:31)"></a>
+<a href="https://cdn.jsdelivr.net/gh/oztrkemree/mochi@art/docs/mochi-short.mp4"><img src="docs/watch-de.svg" height="82" alt="▶ Demo ansehen (0:31)"></a>
 
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude-Code-Plugin](https://img.shields.io/badge/Claude_Code-Plugin-D97757?style=for-the-badge)](#-in-10-sekunden-installiert)

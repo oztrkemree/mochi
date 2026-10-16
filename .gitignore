@@ -3,4 +3,5 @@
 node_modules/
 .DS_Store
 # Films from scripts/video.mjs; they go on a GitHub release, not in the clone.
+# The short one the READMEs play is on the art branch, served by jsDelivr (@art).
 docs/*.mp4
