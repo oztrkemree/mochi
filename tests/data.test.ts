@@ -116,7 +116,7 @@ test('another plugin’s reaction is checked, cut, signed and spaced out', async
   // One plain line: no control characters, no direction marks, at most 60 columns.
   const r = reactionOf({ mood: 'success', line: `built\n\u001b[31m ok\u202e\u061c${'x'.repeat(100)}`, holdMs: 99_999 })
   expect(r?.line.startsWith('built [31m ok ')).toBe(true)
-  expect(/[؜‮]/.test(r?.line ?? '')).toBe(false)
+  expect(/[\u061c\u202e]/.test(r?.line ?? '')).toBe(false)
   expect(cols(r?.line ?? '')).toBe(60)
   expect(r?.holdMs).toBe(15_000)
   expect(reactionOf({ mood: 'wave', line: 'x', holdMs: -5 })?.holdMs).toBe(1000)

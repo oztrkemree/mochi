@@ -20,17 +20,14 @@ const lines = (src, from) => {
   return src.slice(at, end).split('\n')
 }
 
+/** The pictures in a file, as `  id: { w, h, uri: webp(` and then the base64 in short quoted lines. */
+const pictures = src => Object.fromEntries([...src.matchAll(/^ {2}(\w+): \{ w: (\d+), h: (\d+), uri: webp\(\n((?: {4}'[^']*',\n)+) {2}\) \}/gm)]
+  .map(m => [m[1], { w: +m[2], h: +m[3], uri: `data:image/webp;base64,${m[4].replace(/[\s',]/g, '')}` }]))
+
 function state() {
-  const art = {}
-  for (const l of read('assets.ts').split('\n')) {
-    const m = /^ {2}(body|arm|foot): \{ w: (\d+), h: (\d+), uri: '([^']+)'/.exec(l)
-    if (m) art[m[1]] = { w: +m[2], h: +m[3], uri: m[4] }
-  }
-  const wear = {}
-  for (const l of read('wear.ts').split('\n')) {
-    const m = /^ {2}(\w+): \{ w: (\d+), h: (\d+), uri: '([^']+)'/.exec(l)
-    if (m) wear[m[1]] = { w: +m[2], h: +m[3], uri: m[4] }
-  }
+  const { body, arm, foot } = pictures(read('assets.ts'))
+  const art = { body, arm, foot }
+  const wear = { ...pictures(read('wear-1.ts')), ...pictures(read('wear-2.ts')) }
   const level = read('level.ts')
   const slotOf = {}
   const block = level.slice(level.indexOf('export const SLOT_ITEMS'), level.indexOf('export const SLOT:'))

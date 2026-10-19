@@ -39,22 +39,22 @@ import type { Platform } from './system'
 // uses from that file's own consts. What needs no `$` lives in the other
 // modules, and the drawing hooks in render.tsx.
 
-const face = atom({ plugin: 'mochi', key: 'face' } as const, NO_FACE)
-const shot = atom({ plugin: 'mochi', key: 'shot' } as const, FIRST_SHOT)
-const panel = atom({ plugin: 'mochi', key: 'panel' } as const, NO_PANEL)
-const detail = atom({ plugin: 'mochi', key: 'detail' } as const, NO_ENV)
+const face = atom({ plugin: 'mochi-buddy', key: 'face' } as const, NO_FACE)
+const shot = atom({ plugin: 'mochi-buddy', key: 'shot' } as const, FIRST_SHOT)
+const panel = atom({ plugin: 'mochi-buddy', key: 'panel' } as const, NO_PANEL)
+const detail = atom({ plugin: 'mochi-buddy', key: 'detail' } as const, NO_ENV)
 const DETAIL = 'mochi-detay'
 const GIT_EVERY_MS = 60_000
 const NUDGE_EVERY_MS = 45 * 60_000
 const COMMIT_STALE_MS = 90 * 60_000
-const frame = atom({ plugin: 'mochi', key: 'frame' } as const, 0)
-const sec = atom({ plugin: 'mochi', key: 'sec' } as const, 0)
-const env = atom({ plugin: 'mochi', key: 'env' } as const, NO_ENV)
-const prefs = atom({ plugin: 'mochi', key: 'prefs' } as const, DEFAULT_PREFS)
-const said = atom({ plugin: 'mochi', key: 'said' } as const, NO_SAID)
-const diff = atom({ plugin: 'mochi', key: 'diff' } as const, NO_DIFF)
-const party = atom({ plugin: 'mochi', key: 'party' } as const, { pick: '' })
-const dirs = atom({ plugin: 'mochi', key: 'dirs' } as const, { open: [] as string[] })
+const frame = atom({ plugin: 'mochi-buddy', key: 'frame' } as const, 0)
+const sec = atom({ plugin: 'mochi-buddy', key: 'sec' } as const, 0)
+const env = atom({ plugin: 'mochi-buddy', key: 'env' } as const, NO_ENV)
+const prefs = atom({ plugin: 'mochi-buddy', key: 'prefs' } as const, DEFAULT_PREFS)
+const said = atom({ plugin: 'mochi-buddy', key: 'said' } as const, NO_SAID)
+const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
+const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
+const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
 
 const TICK_MS = 450
 /** While Mochi dozes or is hidden, the timer does its rounds on one beat in this many, about every 2 seconds. */
@@ -310,9 +310,9 @@ async function refreshStatus($: Dollar) {
 }
 
 /** Writes the face; a new mood records the frame it changed on, then the drawing follows. */
-async function putFace($: Dollar, next: Omit<Face, 'frameAt'>) {
+async function putFace($: Dollar, to: Omit<Face, 'frameAt'>) {
   const n = await read($, frame)
-  await update($, face, f => ({ ...next, frameAt: f.mood === next.mood ? f.frameAt : n }))
+  await update($, face, f => ({ ...to, frameAt: f.mood === to.mood ? f.frameAt : n }))
   await sync($)
   await refreshStatus($)
   await drawPanel($)
@@ -649,10 +649,10 @@ async function addToday($: Dollar, rec: Partial<DayRec>) {
 /** A level or item earned since the last look is celebrated once, in whichever chat sees it first; over a face that must stay, by a toast alone. */
 async function checkLevel($: Dollar) {
   if (chat.dataDir === '' || !(await isSeen($))) return
-  const h = (await read($, env)).history
-  if (h === null) return
-  const level = levelOf(xpOf(h)).level
-  const items = unlocked(h)
+  const hist = (await read($, env)).history
+  if (hist === null) return
+  const level = levelOf(xpOf(hist)).level
+  const items = unlocked(hist)
   const path = `${chat.dataDir}/level.json`
   let saved: { level?: number; items?: unknown } | null = null
   try {
@@ -816,18 +816,18 @@ async function openDetail($: Dollar) {
 
 async function setPrefs($: Dollar, change: (p: Prefs) => Prefs) {
   const before = await read($, prefs)
-  const next = await update($, prefs, change)
+  const after = await update($, prefs, change)
   // The store is every chat's: only what this change altered goes in, over what the other chats saved since this one started.
-  const changed = Object.fromEntries(Object.entries(next).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(before[k as keyof Prefs])))
+  const changed = Object.fromEntries(Object.entries(after).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(before[k as keyof Prefs])))
   const stored = (await $.store.get('prefs').catch(() => undefined)) as Partial<Prefs> | undefined
-  await $.store.set('prefs', stored === undefined ? next : { ...stored, ...changed })
+  await $.store.set('prefs', stored === undefined ? after : { ...stored, ...changed })
   await refreshStatus($)
   // Shown, the drawing catches up with what the timer left alone while hidden.
-  if (!next.isHidden) {
+  if (!after.isHidden) {
     await sync($)
     await drawPanel($)
   }
-  return next
+  return after
 }
 
 async function tick($: Dollar) {
@@ -1082,18 +1082,18 @@ async function shieldNow($: Dollar, arg: string): Promise<string> {
     return t().guard.forgot
   }
   const isOn = names(arg, 'on', 'on') ? true : names(arg, 'off', 'off') ? false : null
-  const next = isOn === null ? await read($, prefs) : await setPrefs($, v => ({ ...v, hasShield: isOn }))
+  const after = isOn === null ? await read($, prefs) : await setPrefs($, v => ({ ...v, hasShield: isOn }))
   await loadRules($).catch(() => undefined)
   return [
-    next.hasShield ? t().cmd.shieldOn : t().cmd.shieldOff,
+    after.hasShield ? t().cmd.shieldOn : t().cmd.shieldOff,
     ...shieldLines(allowedOf(await $.store.get('allowed'))),
-    ...(isOn === null ? [t().cmd.shieldHow(next.hasShield)] : []),
+    ...(isOn === null ? [t().cmd.shieldHow(after.hasShield)] : []),
   ].join('\n')
 }
 
 async function toggleAlerts($: Dollar, arg: string): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasAlert: wanted(arg, v.hasAlert) }))
-  return next.hasAlert ? t().cmd.alertsOn(LONG_TURN_S / 60) : t().cmd.alertsOff
+  const after = await setPrefs($, v => ({ ...v, hasAlert: wanted(arg, v.hasAlert) }))
+  return after.hasAlert ? t().cmd.alertsOn(LONG_TURN_S / 60) : t().cmd.alertsOff
 }
 
 /** Shows the language, or sets it: by code or name, as typed or folded (folding takes the marks off ї and splits Hangul). */
@@ -1103,29 +1103,29 @@ async function language($: Dollar, arg: string, raw: string): Promise<string> {
   if (arg === '') return d.langNow(t().name, list)
   if (names(arg, 'auto', 'auto')) {
     chat.autoLang = null
-    const next = await setPrefs($, v => ({ ...v, lang: 'auto' }))
-    await applyLang($, next)
+    const after = await setPrefs($, v => ({ ...v, lang: 'auto' }))
+    await applyLang($, after)
     await rest($)
     return t().cmd.langAuto(t().name)
   }
   const chosen = pickLang(arg) ?? pickLang(raw)
   if (chosen === null) return d.langUnknown(raw.trim(), list)
-  const next = await setPrefs($, v => ({ ...v, lang: chosen }))
-  await applyLang($, next)
+  const after = await setPrefs($, v => ({ ...v, lang: chosen }))
+  await applyLang($, after)
   await rest($)
   return t().cmd.langSet(t().name)
 }
 
 async function levelNow($: Dollar): Promise<string> {
   const d = t().cmd
-  const h = (await read($, env)).history
-  const xp = xpOf(h)
+  const hist = (await read($, env)).history
+  const xp = xpOf(hist)
   const l = levelOf(xp)
-  const total = h?.total ?? EMPTY_DAY
-  const open = unlocked(h)
+  const total = hist?.total ?? EMPTY_DAY
+  const open = unlocked(hist)
   return [
     d.levelLine(l.level, xp, l.next - xp),
-    d.statsLine(total.turns, total.edits, total.commits, h?.activeDays ?? 0, h?.streak ?? 0),
+    d.statsLine(total.turns, total.edits, total.commits, hist?.activeDays ?? 0, hist?.streak ?? 0),
     d.unlocked(open.map(itemName).join(', ') || d.noneYet),
     d.locked(UNLOCKS.filter(u => !open.includes(u.item)).map(u => `${itemName(u.item)} (${hintFor(u.item)})`).join(', ') || d.none),
   ].join('\n')
@@ -1167,9 +1167,9 @@ async function wear($: Dollar, arg: string, p: Prefs): Promise<string> {
 }
 
 async function toggleSound($: Dollar, arg: string): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasSound: wanted(arg, v.hasSound) }))
-  if (next.hasSound) await play($, 'ding')
-  return next.hasSound ? t().cmd.soundOn : t().cmd.soundOff
+  const after = await setPrefs($, v => ({ ...v, hasSound: wanted(arg, v.hasSound) }))
+  if (after.hasSound) await play($, 'ding')
+  return after.hasSound ? t().cmd.soundOn : t().cmd.soundOff
 }
 
 async function setHidden($: Dollar, isHidden: boolean): Promise<string> {
@@ -1417,14 +1417,14 @@ async function ciDone($: Dollar, ci: Ci) {
 }
 
 async function toggleCi($: Dollar, arg: string): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasCi: wanted(arg, v.hasCi) }))
+  const after = await setPrefs($, v => ({ ...v, hasCi: wanted(arg, v.hasCi) }))
   // A push being followed is let go only when CI is turned off.
-  if (next.hasCi) void refreshPr($).catch(() => undefined)
+  if (after.hasCi) void refreshPr($).catch(() => undefined)
   else {
     chat.ciSha = ''
     await setEnv($, v => ({ ...v, ci: null, pr: null }))
   }
-  return next.hasCi ? t().ci.on : t().ci.off
+  return after.hasCi ? t().ci.on : t().ci.off
 }
 
 // ---------- share ----------
@@ -1455,7 +1455,7 @@ async function saveShare($: Dollar, name: string, svg: string, path = ''): Promi
   return chat.platform === 'windows' ? to.replaceAll('/', '\\') : to
 }
 
-const failed = (e: unknown) => t().share.failed(e instanceof Error ? e.message : String(e))
+const failed = (err: unknown) => t().share.failed(err instanceof Error ? err.message : String(err))
 
 /** The card for a profile README, and the line that shows it there. */
 async function card($: Dollar, raw: string): Promise<string> {
@@ -1465,8 +1465,8 @@ async function card($: Dollar, raw: string): Promise<string> {
   try {
     const shown = await saveShare($, 'mochi-card.svg', cardSvg(v.history, outfitNow(await read($, prefs), v, 'idle', now)), path)
     return [t().share.cardSaved(shown), t().share.cardHow, cardMarkdown(baseName(shown))].join('\n')
-  } catch (e) {
-    return failed(e)
+  } catch (err) {
+    return failed(err)
   }
 }
 
@@ -1478,8 +1478,8 @@ async function wrapped($: Dollar, arg: string): Promise<string> {
   const worn = outfitNow(await read($, prefs), v, w.activeDays > 0 ? 'party' : 'sleeping', now)
   try {
     return t().share.wrappedSaved(periodTitle(w.key), await saveShare($, `mochi-wrapped-${w.key}.svg`, wrappedSvg(w, worn)))
-  } catch (e) {
-    return failed(e)
+  } catch (err) {
+    return failed(err)
   }
 }
 
@@ -1498,8 +1498,8 @@ async function snap($: Dollar): Promise<string> {
     const b = await saveShare($, 'mochi-details.svg', framed(details, SNAP_W, detailHeight(details)))
     const [pa, pb] = [await toPng($, a), await toPng($, b)]
     return pa !== null && pb !== null ? t().share.snapSaved(pa, pb) : `${t().share.snapSaved(a, b)}\n${t().share.noPng}`
-  } catch (e) {
-    return failed(e)
+  } catch (err) {
+    return failed(err)
   }
 }
 
@@ -1626,8 +1626,8 @@ async function coach($: Dollar, now: number, f: Face) {
     return
   }
   const tip = tipLines(id, id === 'commit' ? String(v.git?.changed ?? 0) : (chat.coach.pending[id]?.arg ?? ''))
-  const { [id]: _shown, ...rest } = chat.coach.pending
-  chat.coach.pending = rest
+  const { [id]: _shown, ...others } = chat.coach.pending
+  chat.coach.pending = others
   await $.fs.write(coachFile(), JSON.stringify(shownTip(log, id, now, v.tz)))
   // The commit tip says what the commit nudge would: it counts as one.
   if (id === 'commit') chat.lastNudge = now
@@ -1686,8 +1686,8 @@ async function retireTip($: Dollar, id: TipId) {
 }
 
 async function toggleTips($: Dollar, arg: string): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasTips: wanted(arg, v.hasTips) }))
-  return next.hasTips ? t().coach.tipsOn : t().coach.tipsOff
+  const after = await setPrefs($, v => ({ ...v, hasTips: wanted(arg, v.hasTips) }))
+  return after.hasTips ? t().coach.tipsOn : t().coach.tipsOff
 }
 
 async function replayTour(): Promise<string> {
@@ -1711,8 +1711,8 @@ async function reactFor($: Dollar, r: Required<MochiReaction> | null, plugin: st
 }
 
 async function togglePlugins($: Dollar, arg: string): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasPlugins: wanted(arg, v.hasPlugins) }))
-  return next.hasPlugins ? t().data.pluginsOn : t().data.pluginsOff
+  const after = await setPrefs($, v => ({ ...v, hasPlugins: wanted(arg, v.hasPlugins) }))
+  return after.hasPlugins ? t().data.pluginsOn : t().data.pluginsOff
 }
 
 /** A days file this chat counted is gone, so a history reset in some chat: every chat's days are read again before this one counts or writes its own. */
@@ -1732,13 +1732,55 @@ async function mochiVersion($: Dollar): Promise<string> {
   }
 }
 
+// ---------- from Mochi to Mochi Buddy ----------
+
+/** The old plugin's id, and what takes it away. */
+const OLD_ID = 'mochi@mochi'
+const OLD_UNINSTALL = 'claude plugin uninstall mochi@mochi'
+
+/**
+ * Until 0.7.0 this plugin was `mochi`, and Claude Code keeps a plugin's store
+ * under its id. What the person kept there (settings, what is always allowed,
+ * their birthday, the tips seen) is copied over once, key by key, where this
+ * store has nothing yet. The file is the engine's own, named after the id:
+ * `<name>_<marketplace>-` and the first 12 hex digits of the id's SHA-256.
+ * Should it be missing or moved, nothing is copied and Mochi starts fresh.
+ * True when something was copied.
+ */
+async function moveFromMochi($: Dollar): Promise<boolean> {
+  if ((await $.store.get('movedFrom')) !== undefined) return false
+  await $.store.set('movedFrom', OLD_ID)
+  const home = chat.platform === 'windows' ? await $.env.get('USERPROFILE').catch(() => undefined) : await $.env.get('HOME').catch(() => undefined)
+  const config = (await $.env.get('CLAUDE_CONFIG_DIR').catch(() => undefined)) || (home ? `${home}/.claude` : '')
+  if (config === '') return false
+  let old: unknown
+  try {
+    old = JSON.parse(await $.fs.read(`${config}/plugins/store/mochi_mochi-b151f2ad2289.json`))
+  } catch {
+    return false
+  }
+  if (typeof old !== 'object' || old === null || Array.isArray(old)) return false
+  let copied = 0
+  for (const [key, value] of Object.entries(old)) {
+    if (key === 'movedFrom' || (await $.store.get(key)) !== undefined) continue
+    await $.store.set(key, value)
+    copied += 1
+  }
+  return copied > 0
+}
+
+/** True while the old `mochi` plugin is still turned on beside this one: two mascots, two shields. */
+async function isOldOn($: Dollar): Promise<boolean> {
+  const s = (await $.settings.read().catch(() => undefined)) as { enabledPlugins?: Record<string, unknown> } | undefined
+  return s?.enabledPlugins?.[OLD_ID] === true
+}
+
 // ---------- a newer Mochi ----------
 
-/** Where the newest Mochi's manifest is read, and how long a reading is trusted. */
-const LATEST_URL = 'https://raw.githubusercontent.com/oztrkemree/mochi/main/.claude-plugin/plugin.json'
+/** How long a reading of the newest Mochi's version is trusted. */
 const LATEST_EVERY_MS = 12 * 60 * 60_000
 /** What updates Mochi from a terminal: the marketplace's copy first, then the plugin. The same in every language. */
-const UPDATE_STEPS = ['claude plugin marketplace update mochi', 'claude plugin update mochi@mochi']
+const UPDATE_STEPS = ['claude plugin marketplace update mochi', 'claude plugin update mochi-buddy@mochi']
 
 /**
  * The newest version on GitHub; every chat shares the reading, taken again
@@ -1753,7 +1795,8 @@ async function latestVersion($: Dollar, now: number, isFresh = false): Promise<s
   if (await $.env.get('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC').catch(() => undefined)) return known
   let version = ''
   try {
-    const r = await $.http.fetch(LATEST_URL)
+    // The newest Mochi's manifest, written out here so the plugin directory can read where it goes.
+    const r = await $.http.fetch('https://raw.githubusercontent.com/oztrkemree/mochi/main/.claude-plugin/plugin.json')
     const v = r.ok ? (JSON.parse(r.text) as { version?: unknown }).version : undefined
     if (typeof v === 'string' && /^\d+(\.\d+)*$/.test(v)) version = v
   } catch {
@@ -2070,8 +2113,8 @@ async function badgesNow($: Dollar): Promise<string> {
 }
 
 async function toggleBreaks($: Dollar, arg: string): Promise<string> {
-  const next = await setPrefs($, v => ({ ...v, hasBreaks: wanted(arg, v.hasBreaks) }))
-  return next.hasBreaks ? t().fun.breaksOn : t().fun.breaksOff
+  const after = await setPrefs($, v => ({ ...v, hasBreaks: wanted(arg, v.hasBreaks) }))
+  return after.hasBreaks ? t().fun.breaksOn : t().fun.breaksOff
 }
 
 /** Shows, sets or removes the person's birthday, kept with the preferences; set on the day itself, it is greeted at once. */
@@ -2087,8 +2130,8 @@ async function birthday($: Dollar, arg: string): Promise<string> {
   }
   const day = parseBirthday(arg)
   if (day === null) return f.birthdayBad(arg)
-  const next = await setPrefs($, v => ({ ...v, birthday: day }))
-  const hello = await greetToday($, next)
+  const after = await setPrefs($, v => ({ ...v, birthday: day }))
+  const hello = await greetToday($, after)
   if (hello !== null) await show($, hello)
   return f.birthdaySet(birthdayName(day))
 }
@@ -2103,10 +2146,14 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     // The system, then the language: everything after speaks it.
     chat.platform = await findPlatform($)
+    // Before anything reads the store: what the old `mochi` kept comes over once.
+    const isMoved = await moveFromMochi($).catch(() => false)
     const saved = (await $.store.get('prefs')) as (Partial<Prefs> & { wear?: unknown }) | undefined
     const p = await update($, prefs, () => restorePrefs(saved))
     if (saved !== undefined) await $.store.set('prefs', p)
     await applyLang($, p)
+    if (isMoved) $.ui.toast(t().note.moved, { timeoutMs: 8000 })
+    if (await isOldOn($)) $.ui.toast(t().note.oldStillOn(OLD_UNINSTALL), { timeoutMs: 12000 })
     await $.command.register({ name: 'mochi', description: t().cmd.description, argumentHint: t().cmd.hint })
     // State outlives a reload: a value an older version wrote may lack fields
     // this one reads, so every value is completed with its defaults first.
@@ -2196,9 +2243,8 @@ export const register: Register = on => {
     if ((isWorkflow || (e.background && e.isTeammate !== true)) && started.agentId !== undefined) await flowMove($, started.agentId, true, true, isWorkflow)
     if (started.agentId !== undefined && e.isTeammate !== true) {
       const now = await $.clock.now()
-      const spawn = e as unknown as { description?: unknown; subagentType?: unknown }
       chat.crew.set(started.agentId, {
-        id: started.agentId, type: typeof spawn.subagentType === 'string' ? spawn.subagentType : '', task: typeof spawn.description === 'string' ? spawn.description : '',
+        id: started.agentId, type: typeof e.subagentType === 'string' ? e.subagentType : '', task: typeof e.description === 'string' ? e.description : '',
         activity: 'thinking', since: now, at: now, isBackground: isWorkflow || e.background === true,
       })
     }
@@ -2492,17 +2538,6 @@ export const register: Register = on => {
     return { text: command ? await command.run(arg, more.join(' ')) : await statusLines($, p) }
   })
 
-  // Should the click region ever fail to load or draw, say so once instead of
-  // leaving the gauges silently unclickable.
-  let saidFault = false
-  on('ui.fault', async ($, e, next) => {
-    if (!saidFault) {
-      saidFault = true
-      $.ui.toast(t().note.clickFailed(e.reason))
-    }
-    return next(e)
-  })
-
   on('ui.message', async ($, e, next) => {
     const data = e.data
     if (e.element === 'hit' && typeof data === 'object' && data !== null && (data as { open?: unknown }).open === 'detail') {
@@ -2522,18 +2557,18 @@ export const register: Register = on => {
   })
 
   on('ui.press', async ($, e, next) => {
-    if (e.plugin === 'mochi') await pressed($, e.element, e.surface)
+    if (e.plugin === 'mochi-buddy') await pressed($, e.element, e.surface)
     return next(e)
   })
 
   // The details pane's language picker and birthday field.
   on('ui.select', async ($, e, next) => {
-    if (e.plugin === 'mochi' && e.element === 'lang') $.ui.toast(await language($, plain(e.value), e.value))
+    if (e.plugin === 'mochi-buddy' && e.element === 'lang') $.ui.toast(await language($, plain(e.value), e.value))
     return next(e)
   })
 
   on('ui.input', async ($, e, next) => {
-    if (e.plugin === 'mochi' && e.element === 'bday' && e.kind === 'submit') $.ui.toast(await birthday($, plain(e.value) === '' ? 'none' : plain(e.value)))
+    if (e.plugin === 'mochi-buddy' && e.element === 'bday' && e.kind === 'submit') $.ui.toast(await birthday($, plain(e.value) === '' ? 'none' : plain(e.value)))
     return next(e)
   })
 

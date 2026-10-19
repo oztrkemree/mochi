@@ -386,7 +386,7 @@ declare module 'claude-code' {
     mochi: Mochi
   }
   interface PluginState {
-    mochi: {
+    'mochi-buddy': {
       face: Face
       shot: Shot
       panel: Panel

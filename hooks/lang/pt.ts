@@ -626,7 +626,8 @@ export const pt: typeof en = {
   note: {
     loop: (alarm, about) => `${alarm} (${about}). Aperte Esc para parar.`,
     detailFailed: reason => `Não foi possível abrir o painel de detalhes: ${reason}`,
-    clickFailed: reason => `clicar para ver os detalhes não funciona aqui (${reason}); digite /mochi detalhes`,
+    moved: 'O Mochi agora é Mochi Buddy, e suas configurações vieram junto.',
+    oldStillOn: cmd => `O Mochi antigo ainda está instalado, talvez você veja dois: ${cmd}`,
     seeWardrobe: ' · /mochi vestir',
   },
 

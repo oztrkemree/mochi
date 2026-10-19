@@ -11,16 +11,23 @@ import { chat } from '../hooks/state'
 
 const keys = (cmd: string) => dangers(cmd).map(x => x.key)
 
-// Secrets are put together here, so that this file holds none in one piece.
-const AWS = 'AKIA' + 'Z7Q3LMX4P2RT9WVB'
-const GITHUB = 'ghp' + '_R8f2kLq9ZtX4mN7vB1cJ6hW3yP0sD5gA8eKu'
-const ANTHROPIC = 'sk-' + 'ant-api03-q8Zr2LmX7vT4nB9cK1wY6hP3sD0fG5jA2eR8uI4oQ7'
-const SLACK = 'xox' + 'b-2846193750-5917320468-a8B3kZ9qL2mX'
-const STRIPE = 'sk_' + 'live_51HbQ2kLm9ZtX4nB7vR1cJ6h'
-const PEM = '-----BEGIN RSA ' + 'PRIVATE KEY-----\nMIIEowIBAAKCAQEA7x9Q2kLm8ZtX4nB7vR1cJ6hW3yP0sD5gA8eKuQ3m\n'
-const HEX = 'f3a9c27e1b8d4f60' + 'a5e2c9b7d1e4f8a3'
-const LIVE = 'live-' + 'a8B3kZ9qL2mX7vR1'
-const NPM = 'npm_' + 'a8B3kZ9qL2mX7vR1c4D5e6F7g8H9i0J1k2L3'
+// Secrets are made here as the tests run, so that this file holds none, not even
+// in pieces: a vendor's prefix, then `n` characters of `pool` in a scrambled
+// order (as random to the shield as a real key), then what the masks show.
+// Values that say they are examples would not do: the shield lets those pass.
+const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+const ALNUM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+const scramble = (pool: string, n: number) => Array.from({ length: n }, (_, i) => pool[(i * 7 + 3) % pool.length]).join('')
+const pemHead = () => ['-----BEGIN', 'RSA', 'PRIVATE', 'KEY-----'].join(' ')
+const AWS = `AKIA${scramble(UPPER, 14)}VB`
+const GITHUB = `ghp_${scramble(ALNUM, 34)}Ku`
+const ANTHROPIC = `sk-ant-api03-${scramble(ALNUM, 40)}`
+const SLACK = `xoxb-${scramble('0123456789', 10)}-${scramble(ALNUM, 12)}`
+const STRIPE = `sk_live_${scramble(ALNUM, 24)}`
+const PEM = `${pemHead()}\nMIIE${scramble(ALNUM, 50)}\n`
+const HEX = `f3a9${scramble('0123456789abcdef', 26)}a3`
+const LIVE = `live-${scramble(ALNUM, 16)}`
+const NPM = `npm_${scramble(ALNUM, 36)}`
 
 const diffOf = (path: string, lines: string[]) => [`diff --git a/${path} b/${path}`, 'new file mode 100644', '--- /dev/null', `+++ b/${path}`, `@@ -0,0 +1,${lines.length} @@`, ...lines.map(l => `+${l}`)].join('\n')
 
@@ -200,7 +207,7 @@ test('secrets are found by their shape and their name, shown masked, and placeho
     'const resetPasswordToken = "reset_password_token_expired_2"',
     'secret: "${{ secrets.DEPLOY_KEY }}"',
     'model = "sk-learn-pipeline-module-v2-final"',
-    "if (text.startsWith('-----BEGIN RSA PRIVATE KEY-----')) parse(text)",
+    `if (text.startsWith('${pemHead()}')) parse(text)`,
     'password = "12345678901234567890"',
   ]) {
     expect(kinds(fake)).toEqual([])

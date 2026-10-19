@@ -186,7 +186,7 @@ test('a nearly used-up session that resets is told once, by the chat that claims
   const { clock, files, alerts } = machine(on, [{ kind: 'five_hour', percentUsed: 97, resetsAt: new Date(at).toISOString() }])
   await clock.set(NOW)
   await $.session.start(START)
-  const ui = await $.ui.mount({ plugin: 'mochi', component: 'AbovePrompt', surface: 'terminal', props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} } } as never)
+  const ui = await $.ui.mount({ plugin: 'mochi-buddy', component: 'AbovePrompt', surface: 'terminal', props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} } } as never)
   for (let i = 0; i < 20; i++) await clock.advance(450)
   expect(await ui.find({ text: 'session limit reset · you can carry on' })).toBeDefined()
   expect(JSON.parse(files.get('/h/.claude/mochi/reset-five_hour.json') ?? '{}')).toEqual({ at, id: 'me-1' })
@@ -202,7 +202,7 @@ test('a reset another chat claimed is shown here but told only there', async ($,
   files.set('/h/.claude/mochi/reset-five_hour.json', JSON.stringify({ at, id: 'other' }))
   await clock.set(NOW)
   await $.session.start(START)
-  const ui = await $.ui.mount({ plugin: 'mochi', component: 'AbovePrompt', surface: 'terminal', props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} } } as never)
+  const ui = await $.ui.mount({ plugin: 'mochi-buddy', component: 'AbovePrompt', surface: 'terminal', props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} } } as never)
   for (let i = 0; i < 20; i++) await clock.advance(450)
   expect(await ui.find({ text: 'session limit reset · you can carry on' })).toBeDefined()
   expect(alerts).toEqual([])
@@ -236,7 +236,8 @@ function pendingBash(on: On) {
 
 test('an approved permission leaves the face once its call is over: no wait is told', { timeoutMs: 20_000 }, async ($, on) => {
   const { clock, alerts } = machine(on)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   const bash = pendingBash(on)
   await clock.set(NOW)
   await $.session.start(START)
@@ -254,7 +255,8 @@ test('an approved permission leaves the face once its call is over: no wait is t
 
 test('a subagent’s approved permission gives the face back to the agent; its work goes on, no wait is told', { timeoutMs: 20_000 }, async ($, on) => {
   const { clock, alerts } = machine(on)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   on('turn.start', () => ({ turnId: 't' }) as never)
   on('tool.call', { tool: 'Agent' }, () => new Promise(() => {}) as never)
   on('tool.call', { tool: 'Read' }, () => ({ result: 'ok', text: 'ok' }) as never)
@@ -328,7 +330,8 @@ test('a subagent that says nothing for ten minutes is let go from the file', { t
 
 test('this chat’s file says what it waits on the person for, and what its main loop does', { timeoutMs: 20_000 }, async ($, on) => {
   const { clock, files } = machine(on)
-  on('classic.PermissionRequest', () => ({}) as never)
+  // Beneath Mochi, a settings hook that answers: Mochi never reads the answer (the call's end tells it), so a fixed deny stands in.
+  on('classic.PermissionRequest', () => ({ decision: { behavior: 'deny' } }))
   on('turn.start', () => ({ turnId: 't' }) as never)
   on('tool.call', { tool: 'AskUserQuestion' }, () => new Promise(() => {}) as never)
   const bash = pendingBash(on)
@@ -387,7 +390,7 @@ test('the details pane shows every chat as a Mochi: one the app can open opens i
   await clock.set(NOW)
   await $.session.start(START)
   for (let i = 0; i < 12; i++) await clock.advance(450)
-  const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
+  const pane = await $.ui.mount({ plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   // Where each stands on the floor: the asking one by the door, the busy one at the bench, this chat asleep in the corner.
   const floor = floorOf(partyOf(peer('me-1', 'idle'), [peer('other-1', 'asking'), peer('other-2', 'busy')], NOW), NOW)
   const across = (key: string) => {

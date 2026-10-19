@@ -20,7 +20,7 @@ import { paramsAt, svgFor, target, TRANSITION_MS } from '../hooks/rig'
 import { afterTool, beforeTool, duration, flowEnd, flowLine, isScary, onPrompt, onTurnEnd } from '../hooks/react'
 
 const BAND = {
-  plugin: 'mochi',
+  plugin: 'mochi-buddy',
   component: 'AbovePrompt' as const,
   props: {
     hasSurvey: false,
@@ -493,7 +493,7 @@ test('the wardrobe puts on, takes off and goes back to automatic', async ($, on)
   const clock = engine(on)
   await clock.set(NOON)
   await $.session.start(START)
-  const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
+  const pane = await $.ui.mount({ plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   expect(await pane.find({ key: 'wear:glasses' })).toBeUndefined()
   await pane.press({ key: 'tab:mochi' } as never)
   expect(await pane.find({ type: 'Text', text: /^\d+\/\d+ açık$/ })).toBeDefined()
@@ -625,7 +625,7 @@ test('a file pressed in Changes shows its diff until pressed again', async ($, o
   await clock.set(NOON)
   await $.session.start(START)
   for (let i = 0; i < 10; i++) await clock.advance(450)
-  const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'terminal', props: { bodyColumns: 100, bodyRows: 40 } } as never)
+  const pane = await $.ui.mount({ plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'terminal', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   expect(await pane.find({ type: 'Text', text: '  + const b = 3' })).toBeUndefined()
   await pane.press({ key: 'diff:hooks/rig.ts' } as never)
   expect(await pane.find({ type: 'Text', text: '  − const b = 2' })).toBeDefined()
@@ -670,7 +670,7 @@ test('the level folds open and shut, and stays as left', async ($, on) => {
   const clock = engine(on)
   await clock.set(NOON)
   await $.session.start(START)
-  const pane = await $.ui.mount({ plugin: 'mochi', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
+  const pane = await $.ui.mount({ plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
   await pane.press({ key: 'tab:past' } as never)
   expect((await pane.find({ key: 'fold:level' }))?.text).toBe('▾')
   await pane.press({ key: 'fold:level' } as never)
