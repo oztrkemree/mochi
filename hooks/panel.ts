@@ -331,42 +331,78 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const [verb = '', ...rest] = info.detail.split(' · ')
   const subject = rest.join(' · ')
   // What Mochi says, in a speech bubble whose tail points back at it; the
-  // bubble pops when the line changes. The two lines under it start at its edge.
+  // bubble pops when the line changes. A line too long for one row goes on
+  // two, smaller: what Mochi does over what it does it to. The two lines
+  // under the bubble start at its edge.
   const bx = x0 + 7
-  const titleRoom = Math.max(6, Math.floor((room - 7 - 34) / 8.3))
-  const verbShown = clip(verb, titleRoom)
-  const subjectShown = subject ? clip(subject, Math.max(4, titleRoom - cols(verbShown) - 3)) : ''
-  const bw = Math.min(room - 7, 34 + (cols(verbShown) + (subjectShown ? cols(subjectShown) + 3 : 0)) * 7.7)
-  const [y0, y1, r] = [4, 34, 12]
+  const tx = bx + 22
+  const inner = room - 7 - 30
+  const [ONE, TWO] = [13.5, 12]
+  /** About how wide a letter is at this size, bold. */
+  const cw = (size: number) => size * 0.56
+  const isTwo = (cols(verb) + (subject ? cols(subject) + 3 : 0)) * cw(ONE) > inner && (subject !== '' || verb.includes(' '))
+  type Run = { text: string; ink: string; weight: number }
+  let rows: Run[][]
+  if (!isTwo) {
+    const fit = Math.max(6, Math.floor(inner / cw(ONE)))
+    const v = clip(verb, fit)
+    const said = subject ? clip(subject, Math.max(4, fit - cols(v) - 3)) : ''
+    rows = [[{ text: v, ink: 'ink', weight: 650 }, ...(said ? [{ text: ' · ', ink: 'faint', weight: 400 }, { text: said, ink: 'fg', weight: 650 }] : [])]]
+  } else {
+    const fit = Math.max(6, Math.floor(inner / cw(TWO)))
+    const cut = verb.lastIndexOf(' ', fit)
+    const first = subject ? verb : verb.slice(0, cut > 0 ? cut : fit)
+    const second = subject || verb.slice(first.length).trim()
+    rows = [[{ text: clip(first, fit), ink: 'ink', weight: 650 }], [{ text: clip(second, fit), ink: subject ? 'fg' : 'ink', weight: subject ? 550 : 650 }]]
+  }
+  const size = isTwo ? TWO : ONE
+  const rowCols = rows.map(row => row.reduce((sum, x) => sum + cols(x.text), 0))
+  const bw = Math.min(room - 7, 30 + Math.max(...rowCols) * cw(size))
+  const [y0, y1, r] = isTwo ? [2, 37, 13] : [5, 33, 12]
+  const bases = isTwo ? [16.5, 31] : [23.5]
   const bubblePath = `M${n(bx + r)} ${y0}H${n(bx + bw - r)}Q${n(bx + bw)} ${y0} ${n(bx + bw)} ${y0 + r}V${y1 - r}Q${n(bx + bw)} ${y1} ${n(bx + bw - r)} ${y1}` +
     `H${n(bx + r)}Q${bx} ${y1} ${bx} ${y1 - r}V${y1 - r + 1}L${n(bx - 7)} ${y1 - 3}L${bx} ${y0 + r + 1}V${y0 + r}Q${bx} ${y0} ${n(bx + r)} ${y0}Z`
   const pops = was.detail !== info.detail
     ? `<animateTransform attributeName="transform" type="translate" values="-3 1;0 0" dur="0.3s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.3 0 0.2 1.4"/><animate attributeName="opacity" values="0;1" dur="0.25s" fill="freeze"/>`
     : ''
+  const dotY = n(bases[0]! - size * 0.33)
   const dot = info.isBusy
-    ? `<circle cx="${bx + 13}" cy="19" r="3.5" fill="${ink}"><animate attributeName="opacity" values="1;0.25;1" dur="1.1s" repeatCount="indefinite"/></circle>`
-    : `<circle cx="${bx + 13}" cy="19" r="3.5" fill="${ink}" opacity="0.6"/>`
-  // A new line is typed out a letter at a time behind a caret, which
-  // blinks twice when it is done and goes.
-  const tx = bx + 22
-  const letters = cols(verbShown) + (subjectShown ? cols(subjectShown) + 3 : 0)
-  const typeS = Math.min(0.9, Math.max(0.25, letters * 0.03))
-  const steps = Array.from({ length: letters + 1 }, (_, k) => k)
-  const stepTimes = steps.map(k => n(k / (letters + 1))).join(';')
+    ? `<circle cx="${bx + 13}" cy="${dotY}" r="3.5" fill="${ink}"><animate attributeName="opacity" values="1;0.25;1" dur="1.1s" repeatCount="indefinite"/></circle>`
+    : `<circle cx="${bx + 13}" cy="${dotY}" r="3.5" fill="${ink}" opacity="0.6"/>`
+  // A new line is typed out a letter at a time, row after row, behind a
+  // caret, which blinks twice when it is done and goes; never longer than 1.2s.
+  const letters = rowCols.reduce((sum, k) => sum + k, 0)
+  const perLetter = Math.min(0.03, 1.2 / Math.max(1, letters))
   const typing = pops !== '' && letters > 0
-  const typed = typing
-    ? `<clipPath id="typed"><rect x="${tx - 1}" y="6" height="24" width="${n(letters * 8.3 + 4)}"><animate attributeName="width" values="${steps.map(k => n(k * 8.3 + 1)).join(';')}" keyTimes="${stepTimes}" calcMode="discrete" dur="${typeS}s" fill="freeze"/></rect></clipPath>`
-    : ''
-  const blinkS = typeS + 1
-  const p = typeS / blinkS
-  const caret = typing
-    ? `<rect x="${tx}" y="12" width="1.6" height="15" rx="0.8" fill="${ink}" opacity="0">` +
-      `<animate attributeName="x" values="${steps.map(k => n(tx + k * 8.3)).join(';')}" keyTimes="${stepTimes}" calcMode="discrete" dur="${typeS}s" fill="freeze"/>` +
-      `<animate attributeName="opacity" values="1;1;0;1;0;0" keyTimes="0;${n(p)};${n(p + (1 - p) * 0.25)};${n(p + (1 - p) * 0.5)};${n(p + (1 - p) * 0.75)};1" calcMode="discrete" dur="${n(blinkS)}s" fill="freeze"/></rect>`
-    : ''
-  const title = `<g>${pops}<path class="bub" d="${bubblePath}"/>${dot}${typed}` +
-    `<text class="t" x="${tx}" y="24.2" font-size="15" font-weight="650"${typing ? ' clip-path="url(#typed)"' : ''}><tspan fill="${ink}">${esc(verbShown)}</tspan>` +
-    (subjectShown ? `<tspan class="faint" font-weight="400"> · </tspan><tspan class="fg">${esc(subjectShown)}</tspan>` : '') + `</text>${caret}</g>`
+  // Each row's reveal runs on one timeline from the line's start: hidden
+  // until its turn, then a letter at a time. Drawn after it has ended, a
+  // browser shows a rect as written, not as the animation left it, so each
+  // is written at its full width.
+  const durs = rowCols.map(k => Math.max(0.12, k * perLetter))
+  const total = durs.reduce((sum, d) => sum + d, 0)
+  let clips = ''
+  let carets = ''
+  let at = 0
+  rows.forEach((_, i) => {
+    const k = rowCols[i]!
+    const d = durs[i]!
+    const base = bases[i]!
+    const steps = Array.from({ length: k + 1 }, (_, j) => j)
+    const times = [...(at > 0 ? [0] : []), ...steps.map(j => (at + (j * d) / (k + 1)) / total)].map(n).join(';')
+    const reveal = (from: number, each: (j: number) => number) => [...(at > 0 ? [from] : []), ...steps.map(each)].map(n).join(';')
+    const step = (key: string, values: string) => `<animate attributeName="${key}" values="${values}" keyTimes="${times}" calcMode="discrete" dur="${n(total)}s" fill="freeze"/>`
+    clips += `<rect x="${tx - 1}" y="${n(base - size)}" height="${n(size + 5)}" width="${n(k * cw(size) + 4)}">${step('width', reveal(0, j => j * cw(size) + 1))}</rect>`
+    carets += `<rect x="${tx}" y="${n(base - size * 0.82)}" width="1.5" height="${n(size)}" rx="0.75" fill="${ink}" opacity="0">${step('x', reveal(tx, j => tx + j * cw(size)))}` +
+      // Shown only while its row types, and the last one's blinks after: each
+      // with an end, so drawn later it is gone however the browser keeps time.
+      `<set attributeName="opacity" to="1" begin="${n(at)}s" dur="${n(d)}s"/>` +
+      (i === rows.length - 1 ? `<animate attributeName="opacity" values="1;0;1;0" keyTimes="0;0.25;0.5;0.75" calcMode="discrete" begin="${n(at + d)}s" dur="1s"/>` : '') + '</rect>'
+    at += d
+  })
+  const runs = (row: Run[]) => row.map(x => `<tspan font-weight="${x.weight}"${x.ink === 'ink' ? ` fill="${ink}"` : ` class="${x.ink}"`}>${esc(x.text)}</tspan>`).join('')
+  const title = `<g>${pops}<path class="bub" d="${bubblePath}"/>${dot}${typing ? `<clipPath id="typed">${clips}</clipPath>` : ''}` +
+    rows.map((row, i) => `<text class="t" x="${tx}" y="${bases[i]}" font-size="${size}"${typing ? ' clip-path="url(#typed)"' : ''}>${runs(row)}</text>`).join('') +
+    (typing ? carets : '') + '</g>'
 
   const seen = new Set(was.recent.map(r => r.id))
   const line = timeline(info.recent, seen, bx, 49, Math.min(12 * 16, Math.max(0, room - 160)))
