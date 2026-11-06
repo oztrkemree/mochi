@@ -15,7 +15,7 @@ import { clip, cols } from '../hooks/text'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
-import { panelSvg, sky } from '../hooks/panel'
+import { fireworks, panelSvg, sky } from '../hooks/panel'
 import { paramsAt, svgFor, target, TRANSITION_MS } from '../hooks/rig'
 import { afterTool, beforeTool, duration, flowEnd, flowLine, isScary, onPrompt, onTurnEnd } from '../hooks/react'
 
@@ -868,8 +868,16 @@ test('the sky behind Mochi follows the local hour', () => {
   const night = sky(23, 110, 88)
   expect(night).toContain('mask="url(#moonbite)"')
   expect(night).toContain('<animateMotion')
-  expect(sky(13, 110, 88)).toContain('#FFD36B')
-  expect(sky(6, 110, 88)).toContain('#FFC98A')
+  expect(sky(13, 110, 88)).toContain('fill="#FFFFFF"')
   expect(sky(6, 110, 88)).not.toContain('#FFF6D8')
-  expect(sky(19, 110, 88)).toContain('#FF9E63')
+  expect(sky(6, 110, 88)).not.toContain('fill="#FFFFFF"')
+  expect(sky(19, 110, 88)).toContain('#FFF6D8')
+})
+
+test('a celebration fills the band with fireworks and confetti for a few seconds, the same show on every redraw', () => {
+  const show = fireworks(1_760_000_000_000, 1, 100, 600, 740, 88)
+  expect(show.behind).toContain('<animateTransform')
+  expect(show.front).toContain('<rect')
+  expect(fireworks(1_760_000_000_000, 1.5, 100, 600, 740, 88).front).toBe(fireworks(1_760_000_000_000, 1.5, 100, 600, 740, 88).front)
+  expect(fireworks(1_760_000_000_000, 6, 100, 600, 740, 88)).toEqual({ behind: '', front: '' })
 })

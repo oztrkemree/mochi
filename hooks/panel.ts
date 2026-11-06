@@ -209,8 +209,8 @@ const BRANCH = (x: number, y: number) =>
 
 /**
  * The sky behind the mascot at the machine's local hour, `w` wide and `h`
- * tall: a moon, stars and two fireflies at night, a low sun at dawn and dusk,
- * a sun and drifting clouds by day. Within the stage: a cloud fades in and
+ * tall: a moon, stars and two fireflies at night, the first stars at dusk,
+ * drifting clouds by day. Within the stage: a cloud fades in and
  * out at its edges, so nothing drifts under the lines.
  */
 export function sky(hour: number, w: number, h: number): string {
@@ -234,18 +234,55 @@ export function sky(hour: number, w: number, h: number): string {
       firefly(`M8 ${h - 22} q10 -12 20 -2 t16 6 t-14 10 t-22 -14`, 9, 0) +
       firefly(`M${w - 10} ${h - 30} q-10 8 -18 -4 t-6 -14 t14 4 t10 14`, 11, 3)
   } else if (isLow) {
-    const isDawn = hour < 12
-    scene = `<g transform="translate(${n(w - 14)} 24)"><circle r="12" fill="${isDawn ? '#FFB37A' : '#FF8A5B'}" opacity="0.28" filter="url(#haze)"/><circle r="7" fill="${isDawn ? '#FFC98A' : '#FF9E63'}"/></g>` +
-      (isDawn ? '' : stars(2))
+    scene = hour >= 17 ? stars(2) : ''
   } else {
-    scene = `<g transform="translate(${n(w - 15)} 14)"><circle r="12" fill="#FFD36B" opacity="0.22" filter="url(#haze)"/>` +
-      `<g stroke="#FFD36B" stroke-width="1.2" stroke-linecap="round" opacity="0.7"><animateTransform attributeName="transform" type="rotate" values="0;360" dur="24s" repeatCount="indefinite"/>` +
-      [0, 45, 90, 135, 180, 225, 270, 315].map(a => `<path d="M0 -8.5V-10.5" transform="rotate(${a})"/>`).join('') + '</g>' +
-      '<circle r="5.5" fill="#FFD36B"/></g>' +
-      cloud(10, 0.8, 38, 6) + cloud(26, 0.6, 52, 30)
+    scene = cloud(10, 0.8, 38, 6) + cloud(26, 0.6, 52, 30)
   }
   return '<defs><mask id="moonbite" maskUnits="userSpaceOnUse" x="-10" y="-10" width="20" height="20"><rect x="-10" y="-10" width="20" height="20" fill="#fff"/><circle cx="3.2" cy="-2.4" r="5.6" fill="#000"/></mask></defs>' +
     scene
+}
+
+/**
+ * A celebration across the whole band, `elapsed` seconds after it began:
+ * fireworks bursting behind the lines between `x0` and `x1`, and confetti
+ * falling over everything, all gone after about four seconds. `seed` (the
+ * moment it began) picks the same show on every redraw.
+ */
+export function fireworks(seed: number, elapsed: number, x0: number, x1: number, w: number, h: number): { behind: string; front: string } {
+  if (elapsed < 0 || elapsed > 4.5) return { behind: '', front: '' }
+  let r = Math.floor(seed) % 2147483647 || 1
+  const rand = () => (r = (r * 48271) % 2147483647) / 2147483647
+  const INKS = ['#FF6B6B', '#FFD36B', '#7AA2F7', '#73DACA', '#B794F6', '#F07CB8', '#FF9E63']
+  const at = (t: number) => n(t - elapsed)
+  const bursts = Array.from({ length: 5 }, (_, i) => {
+    const cx = x0 + (x1 - x0) * ((i + 0.2 + rand() * 0.6) / 5)
+    const cy = 12 + rand() * 26
+    const ink = INKS[Math.floor(rand() * INKS.length)]!
+    const t0 = i * 0.38 + rand() * 0.2
+    const rise = `<circle cx="${n(cx)}" cy="${n(h + 4)}" r="1.4" fill="${ink}" opacity="0"><animate attributeName="cy" values="${n(h + 4)};${n(cy)}" begin="${at(t0)}s" dur="0.45s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.6 0.4 1"/>` +
+      `<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" begin="${at(t0)}s" dur="0.45s" fill="freeze"/></circle>`
+    const sparks = Array.from({ length: 18 }, (_, k) => {
+      const a = (k / 18) * Math.PI * 2 + rand() * 0.2
+      const d = 19 + rand() * 10
+      const dx = Math.cos(a) * d, dy = Math.sin(a) * d
+      return `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(1.1 + rand() * 0.7)}" fill="${k % 3 === 0 ? '#FFFFFF' : ink}" opacity="0">` +
+        `<animateTransform attributeName="transform" type="translate" values="0 0;${n(dx)} ${n(dy)};${n(dx * 1.1)} ${n(dy * 1.1 + 6)}" keyTimes="0;0.45;1" begin="${at(t0 + 0.45)}s" dur="1.3s" fill="freeze" calcMode="spline" keySplines="0.1 0.8 0.3 1;0.4 0 0.8 0.6"/>` +
+        `<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.55;1" begin="${at(t0 + 0.45)}s" dur="1.3s" fill="freeze"/></circle>`
+    }).join('')
+    const flash = `<circle cx="${n(cx)}" cy="${n(cy)}" r="14" fill="${ink}" opacity="0" filter="url(#haze)"><animate attributeName="opacity" values="0;0.45;0" begin="${at(t0 + 0.45)}s" dur="0.6s" fill="freeze"/></circle>`
+    return rise + flash + sparks
+  }).join('')
+  const confetti = Array.from({ length: 30 }, () => {
+    const x = rand() * w
+    const t0 = rand() * 1.4
+    const dur = 1.8 + rand() * 1.4
+    const ink = INKS[Math.floor(rand() * INKS.length)]!
+    const spin = rand() < 0.5 ? 360 : -360
+    return `<g opacity="0"><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.8;1" begin="${at(t0)}s" dur="${n(dur)}s" fill="freeze"/>` +
+      `<animateTransform attributeName="transform" type="translate" values="${n(x)} -6;${n(x + (rand() - 0.5) * 30)} ${n(h + 6)}" begin="${at(t0)}s" dur="${n(dur)}s" fill="freeze"/>` +
+      `<rect x="-2" y="-1" width="4" height="2.2" rx="0.6" fill="${ink}"><animateTransform attributeName="transform" type="rotate" values="0;${spin}" dur="0.9s" repeatCount="indefinite"/></rect></g>`
+  }).join('')
+  return { behind: bursts, front: confetti }
 }
 
 /** The panel's drawing, and where its gauges sit (in the drawing's pixels) so a click region can lie over them. */
@@ -286,6 +323,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   // ---- three lines of what is happening ----
   const stageEnd = Math.round(MASCOT_X + MASCOT * 0.88 + 6)
   const clock = local(now, info.tz)
+  const show = shot.mood === 'party' ? fireworks(shot.at, (now - shot.at) / 1000, stageEnd + 10, sepX - 10, W, H) : { behind: '', front: '' }
   const free = Math.max(0, sepX - stageEnd - 12)
   const room = Math.min(free, LINES_W)
   const x0 = stageEnd + Math.round((free - room) / 2)
@@ -351,7 +389,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
     `<text class="t faint" x="${metaX}" y="73" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + ci.svg
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
-    STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + glow + mascot +
+    STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + show.behind + glow + mascot +
     `<g transform="translate(0 ${n((H - ROW_H) / 2)})">` +
     // The bubble's pop and typing run from when the line changed, so a redraw
     // mid-way picks them up where they were; the rest loops on the clock.
@@ -359,6 +397,6 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
     shiftTimeline(second + third, (now / 1000) % 600) +
     `<path class="rule" d="M${n(sepX)} 14V62"/>` +
     shiftTimeline(rings, since) +
-    '</g></svg>'
+    '</g>' + show.front + '</svg>'
   return { svg, card: { x: sepX, w: W - sepX }, width: W }
 }
