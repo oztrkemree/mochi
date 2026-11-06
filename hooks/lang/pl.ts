@@ -34,6 +34,14 @@ export const pl: typeof en = {
   months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
 
   news: {
+    '0.8.0': {
+      headline: 'okulary, wąsy i broda naraz, 34 nowe rzeczy, szybsze poziomy',
+      notes: [
+        'Twarz ma teraz cztery miejsca: okulary, wąsy, brodę i resztę, wszystko naraz.',
+        'Trzydzieści cztery nowe rzeczy do założenia: 12 na szyję, 12 na twarz, 5 wąsów i 5 bród.',
+        'Poziomy przychodzą szybciej: każdy wymaga o 40% mniej doświadczenia, a twój poziom rośnie od razu po aktualizacji.',
+      ],
+    },
     '0.6.0': {
       headline: 'impreza: każdy czat jako mały Mochi na jednej podłodze',
       notes: [

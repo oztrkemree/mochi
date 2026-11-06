@@ -19,6 +19,14 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.8.0': {
+      headline: 'glasses, a mustache and a beard at once, 34 new things to wear, faster levels',
+      notes: [
+        'The face is four slots now: glasses, a mustache, a beard and the rest, all worn together.',
+        'Thirty-four new things to wear: 12 for the neck, 12 for the face, 5 mustaches and 5 beards.',
+        'Levels come faster: each needs 40% less experience, and your level rises the moment you update.',
+      ],
+    },
     '0.6.0': {
       headline: 'the party: every chat as a small Mochi on one floor',
       notes: [

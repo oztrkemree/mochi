@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0
+
+- The face is four slots: glasses, a mustache, a beard and everything else, worn together. They are drawn beard, mustache, the rest, then glasses on top. Glasses, a mustache or a beard you chose while the face was one slot move to their own slot. The wardrobe has eight tabs now, and the card you share keeps only glasses on the face.
+- Thirty-four new things to wear, drawn in the same clay style; the wardrobe holds 170 things:
+  - the neck (12): sailor collar, whistle, lanyard, camera, stethoscope, binoculars, headphones, bib, ruff, bolo tie, feather boa and locket;
+  - glasses and the face (12): aviators, pixel shades, cat-eye glasses, a masquerade mask, a diving mask, a VR headset, a face mask, gold star stickers, a lollipop, bubble gum, a wheat stalk and a rose in the teeth;
+  - mustaches (5): pencil, chevron, handlebar, horseshoe and walrus;
+  - beards (5): goatee, soul patch, chinstrap, wizard beard and braided beard.
+- Most of them come from habits: turns, active days, a streak, commits, edits and turns at night. The rest open at levels 39 and 57 to 62.
+- Levels need 40% less experience: level n now starts at 60 × (n − 1)² experience, not 100 × (n − 1)². Your level is worked out from your history every time, so it rises as soon as you update (level 10 becomes 12, 20 becomes 25, 30 becomes 38), and Mochi celebrates the new level and what it opens once.
+
 ## 0.7.0
 
 - Mochi is now **Mochi Buddy**: the plugin is `mochi-buddy`, installed as `mochi-buddy@mochi` from the same marketplace. "mochi" is already a name in Claude's plugin directory. The mascot is still Mochi, `/mochi` is still its command, and `$.mochi` is still its noun for other plugins; those plugins now list `mochi-buddy` under `dependencies`.
