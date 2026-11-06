@@ -308,9 +308,27 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const dot = info.isBusy
     ? `<circle cx="${bx + 13}" cy="19" r="3.5" fill="${ink}"><animate attributeName="opacity" values="1;0.25;1" dur="1.1s" repeatCount="indefinite"/></circle>`
     : `<circle cx="${bx + 13}" cy="19" r="3.5" fill="${ink}" opacity="0.6"/>`
-  const title = `<g>${pops}<path class="bub" d="${bubblePath}"/>${dot}` +
-    `<text class="t" x="${bx + 22}" y="24.2" font-size="15" font-weight="650"><tspan fill="${ink}">${esc(verbShown)}</tspan>` +
-    (subjectShown ? `<tspan class="faint" font-weight="400"> · </tspan><tspan class="fg">${esc(subjectShown)}</tspan>` : '') + '</text></g>'
+  // A new line is typed out a letter at a time behind a caret, which
+  // blinks twice when it is done and goes.
+  const tx = bx + 22
+  const letters = cols(verbShown) + (subjectShown ? cols(subjectShown) + 3 : 0)
+  const typeS = Math.min(0.9, Math.max(0.25, letters * 0.03))
+  const steps = Array.from({ length: letters + 1 }, (_, k) => k)
+  const stepTimes = steps.map(k => n(k / (letters + 1))).join(';')
+  const typing = pops !== '' && letters > 0
+  const typed = typing
+    ? `<clipPath id="typed"><rect x="${tx - 1}" y="6" height="24" width="${n(letters * 8.3 + 4)}"><animate attributeName="width" values="${steps.map(k => n(k * 8.3 + 1)).join(';')}" keyTimes="${stepTimes}" calcMode="discrete" dur="${typeS}s" fill="freeze"/></rect></clipPath>`
+    : ''
+  const blinkS = typeS + 1
+  const p = typeS / blinkS
+  const caret = typing
+    ? `<rect x="${tx}" y="12" width="1.6" height="15" rx="0.8" fill="${ink}" opacity="0">` +
+      `<animate attributeName="x" values="${steps.map(k => n(tx + k * 8.3)).join(';')}" keyTimes="${stepTimes}" calcMode="discrete" dur="${typeS}s" fill="freeze"/>` +
+      `<animate attributeName="opacity" values="1;1;0;1;0;0" keyTimes="0;${n(p)};${n(p + (1 - p) * 0.25)};${n(p + (1 - p) * 0.5)};${n(p + (1 - p) * 0.75)};1" calcMode="discrete" dur="${n(blinkS)}s" fill="freeze"/></rect>`
+    : ''
+  const title = `<g>${pops}<path class="bub" d="${bubblePath}"/>${dot}${typed}` +
+    `<text class="t" x="${tx}" y="24.2" font-size="15" font-weight="650"${typing ? ' clip-path="url(#typed)"' : ''}><tspan fill="${ink}">${esc(verbShown)}</tspan>` +
+    (subjectShown ? `<tspan class="faint" font-weight="400"> · </tspan><tspan class="fg">${esc(subjectShown)}</tspan>` : '') + `</text>${caret}</g>`
 
   const seen = new Set(was.recent.map(r => r.id))
   const line = timeline(info.recent, seen, bx, 49, Math.min(12 * 16, Math.max(0, room - 160)))
@@ -335,7 +353,10 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
     STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + glow + mascot +
     `<g transform="translate(0 ${n((H - ROW_H) / 2)})">` +
-    shiftTimeline(dot + title + second + third, (now / 1000) % 600) +
+    // The bubble's pop and typing run from when the line changed, so a redraw
+    // mid-way picks them up where they were; the rest loops on the clock.
+    shiftTimeline(title, since) +
+    shiftTimeline(second + third, (now / 1000) % 600) +
     `<path class="rule" d="M${n(sepX)} 14V62"/>` +
     shiftTimeline(rings, since) +
     '</g></svg>'
