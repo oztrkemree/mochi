@@ -14,6 +14,14 @@ export const tr: typeof en = {
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
   news: {
+    '0.8.0': {
+      headline: 'gözlük, bıyık ve sakal bir arada, 34 yeni parça, daha hızlı seviye',
+      notes: [
+        'Yüz artık dört slot: gözlük, bıyık, sakal ve diğerleri birlikte takılabiliyor.',
+        'Otuz dört yeni parça: boyun için 12, yüz için 12, 5 bıyık ve 5 sakal.',
+        'Seviyeler daha hızlı geliyor: her seviye %40 daha az deneyim istiyor ve seviyen güncellediğin anda yükseliyor.',
+      ],
+    },
     '0.6.0': {
       headline: 'parti: her sohbet tek bir zeminde küçük bir Mochi',
       notes: [

@@ -18,6 +18,14 @@ export const fr: typeof en = {
   months: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'],
 
   news: {
+    '0.8.0': {
+      headline: 'lunettes, moustache et barbe à la fois, 34 nouveaux accessoires, des niveaux plus rapides',
+      notes: [
+        'Le visage compte maintenant quatre places : lunettes, moustache, barbe et le reste, portés ensemble.',
+        'Trente-quatre nouveaux accessoires : 12 pour le cou, 12 pour le visage, 5 moustaches et 5 barbes.',
+        'Les niveaux viennent plus vite : chacun demande 40 % d’expérience en moins, et ton niveau monte dès la mise à jour.',
+      ],
+    },
     '0.6.0': {
       headline: 'la fête : chaque conversation en petit Mochi sur un même sol',
       notes: [

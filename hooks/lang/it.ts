@@ -19,6 +19,14 @@ export const it: typeof en = {
   months: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'],
 
   news: {
+    '0.8.0': {
+      headline: 'occhiali, baffi e barba insieme, 34 nuovi accessori, livelli più rapidi',
+      notes: [
+        'Il viso ora ha quattro posti: occhiali, baffi, barba e il resto, tutti insieme.',
+        'Trentaquattro nuove cose da indossare: 12 per il collo, 12 per il viso, 5 baffi e 5 barbe.',
+        'I livelli arrivano prima: ognuno chiede il 40% di esperienza in meno, e il tuo livello sale appena aggiorni.',
+      ],
+    },
     '0.6.0': {
       headline: 'la festa: ogni chat come un piccolo Mochi sullo stesso pavimento',
       notes: [
