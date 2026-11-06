@@ -653,9 +653,20 @@ export const zh: typeof en = {
     current: v => `Mochi ${v} 已是最新版本。`,
     unknown: v => `Mochi ${v}。暂时无法读取最新版本。`,
   },
+  standup: {
+    yesterday: '昨天',
+    today: '今天',
+    noCommits: '没有提交',
+    commits: n => `${n} 次提交`,
+    more: n => `还有 ${n} 个`,
+    stats: (turns, time, add, del) => `${turns} 轮 · ${time} · +${add} −${del} 行`,
+    copied: '已复制，粘贴到站会里吧。',
+    notCopied: '复制失败，请选中上面的文字。',
+  },
+
   cmd: {
-    description: 'Mochi：显示/隐藏、详情、等级、穿戴、徽章、对话、护盾、提醒、CI、提示、休息、声音、插件、卡片、回顾、快照、导览、新功能、生日、语言、大小、导出、重置、反馈、更新、状态',
-    hint: '[details | level | wear [物品] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [代码] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi：standup, 显示/隐藏、详情、等级、穿戴、徽章、对话、护盾、提醒、CI、提示、休息、声音、插件、卡片、回顾、快照、导览、新功能、生日、语言、大小、导出、重置、反馈、更新、状态',
+    hint: '[standup | details | level | wear [物品] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [代码] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi 单行显示。',
     big: 'Mochi 全尺寸显示。',
     detailOpened: '详情面板已打开。',
@@ -688,7 +699,7 @@ export const zh: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `提示：${tips ? '开' : '关'} · 休息提醒：${breaks ? '开' : '关'} · 插件反应：${plugins ? '开' : '关'}`,
     peersLine: (level, peers) => `等级 ${level} · 其他对话：${peers}`,
-    commands: '命令：/mochi（显示/隐藏）| details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: '命令：/mochi（显示/隐藏）| standup | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name, list) => `语言：${name}。可选：${list} · /mochi lang <代码> 或 auto`,
     langSet: name => `语言：${name}。`,
     langAuto: name => `语言跟随 Claude Code 和系统：${name}。`,

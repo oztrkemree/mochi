@@ -125,6 +125,8 @@ export const chat = {
   errorRun: 0,
   callId: 0,
   gitAt: 0,
+  /** When this chat last wrote each repository into repos.json, so it writes at most once an hour. */
+  repoSeen: {} as Record<string, number>,
   isGitWanted: true,
   lastNudge: 0,
   warned: 0,

@@ -655,9 +655,20 @@ export const de: typeof en = {
     current: v => `Mochi ${v} ist die neueste Version.`,
     unknown: v => `Mochi ${v}. Die neueste Version ließ sich gerade nicht lesen.`,
   },
+  standup: {
+    yesterday: 'Gestern',
+    today: 'Heute',
+    noCommits: 'keine Commits',
+    commits: n => n === 1 ? '1 Commit' : `${n} Commits`,
+    more: n => `${n} weitere`,
+    stats: (turns, time, add, del) => `${turns} Runden · ${time} · +${add} −${del} Zeilen`,
+    copied: 'Kopiert — füg es ins Stand-up ein.',
+    notCopied: 'Konnte nicht kopieren; markiere den Text oben.',
+  },
+
   cmd: {
-    description: 'Mochi: zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
-    hint: '[details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
+    description: 'Mochi: standup, zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
+    hint: '[standup | details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
     small: 'Mochi in einer Zeile.',
     big: 'Mochi in voller Größe.',
     detailOpened: 'Detailansicht geöffnet.',
@@ -692,7 +703,7 @@ export const de: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tipps: ${tips ? 'an' : 'aus'} · Pausen: ${breaks ? 'an' : 'aus'} · Plugin-Reaktionen: ${plugins ? 'an' : 'aus'}`,
     peersLine: (level, peers) => `Level ${level} · andere Chats: ${peers}`,
-    commands: 'Befehle: /mochi (zeigen/verstecken) | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
+    commands: 'Befehle: /mochi (zeigen/verstecken) | standup | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
     langNow: (name, list) => `Sprache: ${name}. Verfügbar: ${list} · /mochi sprache <Code> oder automatisch`,
     langSet: name => `Sprache: ${name}.`,
     langAuto: name => `Sprache folgt Claude Code und dem System: ${name}.`,

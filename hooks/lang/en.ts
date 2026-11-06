@@ -695,9 +695,21 @@ export const en = {
     current: (v: string) => `Mochi ${v} is the latest.`,
     unknown: (v: string) => `Mochi ${v}. The latest version could not be read just now.`,
   },
+  /** /mochi standup: the last day worked and today, to paste into a stand-up. */
+  standup: {
+    yesterday: 'Yesterday',
+    today: 'Today',
+    noCommits: 'no commits',
+    commits: (n: number): string => n === 1 ? '1 commit' : `${n} commits`,
+    more: (n: number): string => `${n} more`,
+    stats: (turns: number, time: string, add: number, del: number): string => `${turns} turns · ${time} · +${add} −${del} lines`,
+    copied: 'Copied — paste it into your stand-up.',
+    notCopied: 'Could not copy it; select the text above.',
+  },
+
   cmd: {
-    description: 'Mochi: show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, update, status',
-    hint: '[details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, update, status',
+    hint: '[standup | details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi on one line.',
     big: 'Mochi full size.',
     detailOpened: 'Details pane opened.',
@@ -731,7 +743,7 @@ export const en = {
     moreLine: (tips: boolean, breaks: boolean, plugins: boolean) =>
       `Tips: ${tips ? 'on' : 'off'} · Breaks: ${breaks ? 'on' : 'off'} · Plugin reactions: ${plugins ? 'on' : 'off'}`,
     peersLine: (level: number, peers: string) => `Level ${level} · other chats: ${peers}`,
-    commands: 'Commands: /mochi (show/hide) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'Commands: /mochi (show/hide) | standup | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name: string, list: string) => `Language: ${name}. Available: ${list} · /mochi lang <code> or auto`,
     langSet: (name: string) => `Language: ${name}.`,
     langAuto: (name: string) => `Language follows Claude Code and the system: ${name}.`,

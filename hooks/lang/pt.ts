@@ -656,9 +656,20 @@ export const pt: typeof en = {
     current: v => `Mochi ${v} é a versão mais recente.`,
     unknown: v => `Mochi ${v}. Não deu para ler a versão mais recente agora.`,
   },
+  standup: {
+    yesterday: 'Ontem',
+    today: 'Hoje',
+    noCommits: 'nenhum commit',
+    commits: n => n === 1 ? '1 commit' : `${n} commits`,
+    more: n => `mais ${n}`,
+    stats: (turns, time, add, del) => `${turns} turnos · ${time} · +${add} −${del} linhas`,
+    copied: 'Copiado — cole na sua daily.',
+    notCopied: 'Não deu para copiar; selecione o texto acima.',
+  },
+
   cmd: {
-    description: 'Mochi: mostrar/esconder, detalhes, nível, vestir, conquistas, conversas, escudo, alertas, CI, dicas, pausas, som, extensões, cartão, retrospectiva, captura, apresentação, novidades, aniversário, idioma, pequeno/grande, exportar, redefinir, relatar, atualizar, status',
-    hint: '[detalhes | nível | vestir [item] | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma [código] | pequeno | grande | esconder | mostrar | exportar | redefinir | relatar | atualizar | status]',
+    description: 'Mochi: standup, mostrar/esconder, detalhes, nível, vestir, conquistas, conversas, escudo, alertas, CI, dicas, pausas, som, extensões, cartão, retrospectiva, captura, apresentação, novidades, aniversário, idioma, pequeno/grande, exportar, redefinir, relatar, atualizar, status',
+    hint: '[standup | detalhes | nível | vestir [item] | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma [código] | pequeno | grande | esconder | mostrar | exportar | redefinir | relatar | atualizar | status]',
     small: 'Mochi em uma linha.',
     big: 'Mochi em tamanho completo.',
     detailOpened: 'Painel de detalhes aberto.',
@@ -692,7 +703,7 @@ export const pt: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Dicas: ${tips ? 'ligadas' : 'desligadas'} · Pausas: ${breaks ? 'ligadas' : 'desligadas'} · Reações de plugins: ${plugins ? 'ligadas' : 'desligadas'}`,
     peersLine: (level, peers) => `Nível ${level} · outros chats: ${peers}`,
-    commands: 'Comandos: /mochi (mostrar/esconder) | detalhes | nível | vestir | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma | pequeno | grande | exportar | redefinir | relatar | atualizar | status',
+    commands: 'Comandos: /mochi (mostrar/esconder) | standup | detalhes | nível | vestir | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma | pequeno | grande | exportar | redefinir | relatar | atualizar | status',
     langNow: (name, list) => `Idioma: ${name}. Disponíveis: ${list} · /mochi idioma <código> ou automático`,
     langSet: name => `Idioma: ${name}.`,
     langAuto: name => `O idioma segue o Claude Code e o sistema: ${name}.`,

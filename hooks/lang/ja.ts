@@ -653,9 +653,20 @@ export const ja: typeof en = {
     current: v => `Mochi ${v} が最新です。`,
     unknown: v => `Mochi ${v}。最新バージョンを今は読み取れませんでした。`,
   },
+  standup: {
+    yesterday: '昨日',
+    today: '今日',
+    noCommits: 'コミットなし',
+    commits: n => `${n} コミット`,
+    more: n => `ほか ${n} 件`,
+    stats: (turns, time, add, del) => `${turns} ターン · ${time} · +${add} −${del} 行`,
+    copied: 'コピーしました。スタンドアップに貼り付けてね。',
+    notCopied: 'コピーできませんでした。上のテキストを選択してね。',
+  },
+
   cmd: {
-    description: 'Mochi: 表示/非表示、詳細、レベル、着せ替え、バッジ、チャット、シールド、通知、CI、ヒント、休憩、サウンド、プラグイン、カード、まとめ、スナップ、ツアー、新機能、誕生日、言語、サイズ、エクスポート、リセット、フィードバック、更新、状態',
-    hint: '[details | level | wear [アイテム] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [コード] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, 表示/非表示、詳細、レベル、着せ替え、バッジ、チャット、シールド、通知、CI、ヒント、休憩、サウンド、プラグイン、カード、まとめ、スナップ、ツアー、新機能、誕生日、言語、サイズ、エクスポート、リセット、フィードバック、更新、状態',
+    hint: '[standup | details | level | wear [アイテム] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [コード] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochiを1行表示に。',
     big: 'Mochiをフルサイズに。',
     detailOpened: '詳細パネルを開いた。',
@@ -688,7 +699,7 @@ export const ja: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `ヒント: ${tips ? 'ON' : 'OFF'} · 休憩: ${breaks ? 'ON' : 'OFF'} · プラグインのリアクション: ${plugins ? 'ON' : 'OFF'}`,
     peersLine: (level, peers) => `レベル ${level} · 他のチャット: ${peers}`,
-    commands: 'コマンド: /mochi (表示/非表示) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'コマンド: /mochi (表示/非表示) | standup | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name, list) => `言語: ${name}。選択肢: ${list} · /mochi lang <コード> または auto`,
     langSet: name => `言語: ${name}。`,
     langAuto: name => `言語はClaude Codeとシステムに合わせる: ${name}。`,

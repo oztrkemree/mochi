@@ -13,6 +13,7 @@ import { NO_DIFF, NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
 import { alertCommands, langCodes, langCommand, openCommand, removeCommand } from '../hooks/system'
 import { clip, cols } from '../hooks/text'
 import { typingMood } from '../hooks/fun'
+import { standupText } from '../hooks/standup'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
@@ -917,4 +918,21 @@ test('the secret word turns the band into a disco, and no other celebration does
   const band = (detail: string) => panelSvg({ panel: { shot, info: { ...NO_INFO, label: 'party', detail }, infoFrom: null, infoAt: shot.at }, now: shot.at + 500, width: 740 }).svg
   expect(band('disko zamanı! 🪩')).toContain('ballclip')
   expect(band('testler geçti')).not.toContain('ballclip')
+})
+
+test('the stand-up note has the last day worked and today, commits by repository and the day’s numbers', () => {
+  setLang('tr')
+  const rec = (turns: number, secs: number, add: number, del: number) => ({ turns, tools: 0, edits: 0, errors: 0, commits: 0, cost: 0, secs, night: 0, add, del, early: 0, langs: 0 })
+  // A Monday: the last day worked is Friday, past the quiet weekend.
+  const text = standupText('2026-11-09', { '2026-11-06': rec(12, 7200, 540, 120), '2026-11-09': rec(3, 1500, 40, 2) }, [
+    { repo: 'mochi', at: 2, subject: 'Turn the band into a disco', day: '2026-11-06' },
+    { repo: 'mochi', at: 1, subject: 'Type the line out', day: '2026-11-06' },
+    { repo: 'spark', at: 3, subject: 'Fix the board', day: '2026-11-06' },
+    { repo: 'mochi', at: 4, subject: 'Add /mochi standup', day: '2026-11-09' },
+  ])
+  expect(text.split('\n')[0]).toBe('Cuma')
+  expect(text).toContain('• mochi: 2 commit\n  – Turn the band into a disco\n  – Type the line out\n• spark: 1 commit')
+  expect(text).toContain('12 tur · 2sa · +540 −120 satır')
+  expect(text).toContain('Bugün\n• mochi: 1 commit\n  – Add /mochi standup')
+  expect(standupText('2026-11-09', {}, [])).toBe('Dün\n• commit yok\n\nBugün\n• commit yok')
 })

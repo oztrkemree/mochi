@@ -654,9 +654,20 @@ export const id: typeof en = {
     current: v => `Mochi ${v} adalah versi terbaru.`,
     unknown: v => `Mochi ${v}. Versi terbaru belum bisa dibaca sekarang.`,
   },
+  standup: {
+    yesterday: 'Kemarin',
+    today: 'Hari ini',
+    noCommits: 'tidak ada commit',
+    commits: n => `${n} commit`,
+    more: n => `${n} lagi`,
+    stats: (turns, time, add, del) => `${turns} giliran · ${time} · +${add} −${del} baris`,
+    copied: 'Disalin — tempel di stand-up.',
+    notCopied: 'Gagal menyalin; pilih teks di atas.',
+  },
+
   cmd: {
-    description: 'Mochi: tampilkan/sembunyikan, detail, level, pakai, lencana, chat, perisai, notifikasi, CI, tips, istirahat, suara, plugin, kartu, rekap, jepret, tur, baru, ultah, bahasa, kecil/besar, ekspor, reset, masukan, perbarui, status',
-    hint: '[detail | level | pakai [barang] | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa [kode] | kecil | besar | sembunyikan | tampilkan | ekspor | reset | masukan | perbarui | status]',
+    description: 'Mochi: standup, tampilkan/sembunyikan, detail, level, pakai, lencana, chat, perisai, notifikasi, CI, tips, istirahat, suara, plugin, kartu, rekap, jepret, tur, baru, ultah, bahasa, kecil/besar, ekspor, reset, masukan, perbarui, status',
+    hint: '[standup | detail | level | pakai [barang] | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa [kode] | kecil | besar | sembunyikan | tampilkan | ekspor | reset | masukan | perbarui | status]',
     small: 'Mochi dalam satu baris.',
     big: 'Mochi ukuran penuh.',
     detailOpened: 'Panel detail dibuka.',
@@ -689,7 +700,7 @@ export const id: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tips: ${tips ? 'aktif' : 'nonaktif'} · Istirahat: ${breaks ? 'aktif' : 'nonaktif'} · Reaksi plugin: ${plugins ? 'aktif' : 'nonaktif'}`,
     peersLine: (level, peers) => `Level ${level} · chat lain: ${peers}`,
-    commands: 'Perintah: /mochi (tampilkan/sembunyikan) | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | ekspor | reset | masukan | perbarui | status',
+    commands: 'Perintah: /mochi (tampilkan/sembunyikan) | standup | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | ekspor | reset | masukan | perbarui | status',
     langNow: (name, list) => `Bahasa: ${name}. Tersedia: ${list} · /mochi bahasa <kode> atau otomatis`,
     langSet: name => `Bahasa: ${name}.`,
     langAuto: name => `Bahasa mengikuti Claude Code dan sistem: ${name}.`,

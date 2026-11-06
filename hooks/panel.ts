@@ -362,7 +362,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
 
   // ---- three lines of what is happening ----
   const stageEnd = Math.round(MASCOT_X + MASCOT * 0.88 + 6)
-  const clock = local(now, info.tz)
+  const clock = local(now, info.tz ?? 0)
   // The disco is the line the typing put up for the secret word; any other celebration has fireworks.
   const isDisco = shot.mood === 'party' && info.detail === t().fun.typing.disco
   const show = shot.mood === 'party' && !isDisco ? fireworks(shot.at, (now - shot.at) / 1000, stageEnd + 10, sepX - 10, W, H) : { behind: '', front: '' }

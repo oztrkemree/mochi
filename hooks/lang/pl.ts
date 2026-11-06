@@ -673,9 +673,20 @@ export const pl: typeof en = {
     current: v => `Mochi ${v} to najnowsza wersja.`,
     unknown: v => `Mochi ${v}. Nie udało się teraz odczytać najnowszej wersji.`,
   },
+  standup: {
+    yesterday: 'Wczoraj',
+    today: 'Dziś',
+    noCommits: 'brak commitów',
+    commits: n => `${n} commit.`,
+    more: n => `jeszcze ${n}`,
+    stats: (turns, time, add, del) => `${turns} tur · ${time} · +${add} −${del} linii`,
+    copied: 'Skopiowano — wklej na stand-up.',
+    notCopied: 'Nie udało się skopiować; zaznacz tekst powyżej.',
+  },
+
   cmd: {
-    description: 'Mochi: pokaż/ukryj, szczegóły, poziom, ubierz, odznaki, czaty, tarcza, powiadomienia, CI, porady, przerwy, dźwięk, wtyczki, karta, podsumowanie, zrzut, wprowadzenie, nowości, urodziny, język, mały/duży, eksport, resetuj, opinia, aktualizuj, stan',
-    hint: '[szczegóły | poziom | ubierz [rzecz] | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język [kod] | mały | duży | ukryj | pokaż | eksport | resetuj | opinia | aktualizuj | stan]',
+    description: 'Mochi: standup, pokaż/ukryj, szczegóły, poziom, ubierz, odznaki, czaty, tarcza, powiadomienia, CI, porady, przerwy, dźwięk, wtyczki, karta, podsumowanie, zrzut, wprowadzenie, nowości, urodziny, język, mały/duży, eksport, resetuj, opinia, aktualizuj, stan',
+    hint: '[standup | szczegóły | poziom | ubierz [rzecz] | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język [kod] | mały | duży | ukryj | pokaż | eksport | resetuj | opinia | aktualizuj | stan]',
     small: 'Mochi w jednej linii.',
     big: 'Mochi w pełnym rozmiarze.',
     detailOpened: 'Panel szczegółów otwarty.',
@@ -710,7 +721,7 @@ export const pl: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Porady: ${tips ? 'wł.' : 'wył.'} · Przerwy: ${breaks ? 'wł.' : 'wył.'} · Reakcje wtyczek: ${plugins ? 'wł.' : 'wył.'}`,
     peersLine: (level, peers) => `Poziom ${level} · inne czaty: ${peers}`,
-    commands: 'Polecenia: /mochi (pokaż/ukryj) | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | eksport | resetuj | opinia | aktualizuj | stan',
+    commands: 'Polecenia: /mochi (pokaż/ukryj) | standup | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | eksport | resetuj | opinia | aktualizuj | stan',
     langNow: (name, list) => `Język: ${name}. Dostępne: ${list} · /mochi język <kod> lub auto`,
     langSet: name => `Język: ${name}.`,
     langAuto: name => `Język zgodny z Claude Code i systemem: ${name}.`,

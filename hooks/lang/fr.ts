@@ -657,9 +657,20 @@ export const fr: typeof en = {
     current: v => `Mochi ${v} est la dernière version.`,
     unknown: v => `Mochi ${v}. La dernière version n’a pas pu être lue pour l’instant.`,
   },
+  standup: {
+    yesterday: 'Hier',
+    today: 'Aujourd’hui',
+    noCommits: 'aucun commit',
+    commits: n => n === 1 ? '1 commit' : `${n} commits`,
+    more: n => `${n} de plus`,
+    stats: (turns, time, add, del) => `${turns} tours · ${time} · +${add} −${del} lignes`,
+    copied: 'Copié — colle-le dans ton stand-up.',
+    notCopied: 'Copie impossible ; sélectionne le texte ci-dessus.',
+  },
+
   cmd: {
-    description: 'Mochi : afficher/cacher, détails, niveau, porter, insignes, conversations, bouclier, alertes, CI, astuces, pauses, son, extensions, carte, bilan, capture, visite, nouveautés, anniversaire, langue, petit/grand, exporter, réinitialiser, avis, maj, statut',
-    hint: '[détails | niveau | porter [nom] | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue [code] | petit | grand | cacher | afficher | exporter | réinitialiser | avis | maj | statut]',
+    description: 'Mochi : standup, afficher/cacher, détails, niveau, porter, insignes, conversations, bouclier, alertes, CI, astuces, pauses, son, extensions, carte, bilan, capture, visite, nouveautés, anniversaire, langue, petit/grand, exporter, réinitialiser, avis, maj, statut',
+    hint: '[standup | détails | niveau | porter [nom] | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue [code] | petit | grand | cacher | afficher | exporter | réinitialiser | avis | maj | statut]',
     small: 'Mochi sur une ligne.',
     big: 'Mochi en grand.',
     detailOpened: 'Panneau de détails ouvert.',
@@ -693,7 +704,7 @@ export const fr: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Astuces : ${tips ? 'activées' : 'désactivées'} · Pauses : ${breaks ? 'activées' : 'désactivées'} · Réactions des plugins : ${plugins ? 'activées' : 'désactivées'}`,
     peersLine: (level, peers) => `Niveau ${level} · autres conversations : ${peers}`,
-    commands: 'Commandes : /mochi (afficher/cacher) | détails | niveau | porter | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue | petit | grand | exporter | réinitialiser | avis | maj | statut',
+    commands: 'Commandes : /mochi (afficher/cacher) | standup | détails | niveau | porter | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue | petit | grand | exporter | réinitialiser | avis | maj | statut',
     langNow: (name, list) => `Langue : ${name}. Disponibles : ${list} · /mochi langue <code> ou auto`,
     langSet: name => `Langue : ${name}.`,
     langAuto: name => `La langue suit Claude Code et le système : ${name}.`,

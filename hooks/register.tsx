@@ -14,7 +14,7 @@ import { boardLines, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from 
 import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor, newsLines, permKey, pickTip, projectKey, readLog, ruleAsWritten, rulesOf, settleRule, shownTip, stillPending, tipLines, turnTips, withRule } from './coach'
 import type { TipId } from './coach'
 import { detailHeight, detailSvg, relPath } from './detail'
-import { addSample, keepSamples, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, turnsLeft, warnLevel, withLines } from './facts'
+import { addSample, keepSamples, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, shiftDay, turnsLeft, warnLevel, withLines } from './facts'
 import { BREAK_AFTER, birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, typingMood, workFrom } from './fun'
 import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
@@ -29,6 +29,8 @@ import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdd
 import { paramsAt } from './rig'
 import { SNAP_W, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
 import type { ChatDays } from './share'
+import { LOOK_BACK_DAYS, standupText } from './standup'
+import type { Commit } from './standup'
 import { clip } from './sound'
 import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_DIFF, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
 import { alertCommands, langCodes, langCommand, openCommand, pngCommands, removeCommand } from './system'
@@ -417,6 +419,7 @@ async function refreshGit($: Dollar) {
     if (text !== null) counts[f.path] = lineCount(text)
   }
   const git = withLines(base, parseNumstat(numstat?.stdout ?? ''), counts, root)
+  if (root !== '') void noteRepo($, root).catch(() => undefined)
   await setEnv($, v => (JSON.stringify(v.git) === JSON.stringify(git) ? v : { ...v, git }))
   // The file picked in Changes follows what it holds now, and is let go once it no longer differs.
   const picked = (await read($, diff)).path
@@ -424,6 +427,66 @@ async function refreshGit($: Dollar) {
     const kept = await loadDiff($, git, picked)
     await update($, diff, d => (d.path !== picked || JSON.stringify(d) === JSON.stringify(kept) ? d : kept))
   }
+}
+
+/**
+ * Writes a repository into the shared repos.json with when it was last
+ * seen, for /mochi standup to read the commits of every repository any chat
+ * worked in; at most once an hour per chat, and forgets those a month quiet.
+ */
+async function noteRepo($: Dollar, root: string) {
+  const now = await $.clock.now()
+  if (chat.dataDir === '' || (chat.repoSeen[root] ?? 0) > now - 60 * 60_000) return
+  chat.repoSeen[root] = now
+  const path = `${chat.dataDir}/repos.json`
+  let seen: Record<string, number> = {}
+  try {
+    seen = JSON.parse(await $.fs.read(path)) as Record<string, number>
+  } catch {
+    seen = {}
+  }
+  const kept = Object.fromEntries(Object.entries({ ...seen, [root]: now }).filter(([, at]) => typeof at === 'number' && now - at < 30 * 86_400_000))
+  await $.fs.write(path, `${JSON.stringify(kept)}\n`)
+}
+
+/**
+ * /mochi standup: the last day worked and today, from the commits of every
+ * repository seen lately (the person's own, on any branch) and Mochi's
+ * history of turns, time and lines; copied to the clipboard as well.
+ */
+async function standup($: Dollar): Promise<string> {
+  const now = await $.clock.now()
+  const v = await read($, env)
+  const tz = v.tz
+  const today = dayKey(now, tz)
+  const from = shiftDay(today, -LOOK_BACK_DAYS)
+  const [y = 1970, m = 1, d = 1] = from.split('-').map(Number)
+  const since = Math.floor((Date.UTC(y, m - 1, d) - tz * 60_000) / 1000)
+  let seen: Record<string, number> = {}
+  try {
+    seen = JSON.parse(await $.fs.read(`${chat.dataDir}/repos.json`)) as Record<string, number>
+  } catch {
+    seen = {}
+  }
+  const roots = new Set([...Object.entries(seen).filter(([, at]) => now - at < 14 * 86_400_000).map(([root]) => root), ...(v.git?.root ? [v.git.root] : [])])
+  const commits: (Commit & { day: string })[] = []
+  for (const root of roots) {
+    const run = (args: string[]) => $.process.run(['git', '-C', root, ...args], { timeoutMs: 5000 }).catch(() => undefined)
+    const email = (await run(['config', 'user.email']))?.stdout.trim() ?? ''
+    const log = await run(['log', '--all', '--no-merges', `--since=@${since}`, ...(email ? [`--author=${email}`] : []), '--format=%H%x09%ct%x09%s'])
+    if (log?.exitCode !== 0) continue
+    const hashes = new Set<string>()
+    for (const line of log.stdout.split('\n')) {
+      const [hash = '', at = '', ...rest] = line.split('\t')
+      if (hash === '' || hashes.has(hash)) continue
+      hashes.add(hash)
+      const ms = Number(at) * 1000
+      commits.push({ repo: baseName(root), at: ms, subject: rest.join('\t'), day: dayKey(ms, tz) })
+    }
+  }
+  const text = standupText(today, v.history?.days ?? {}, commits)
+  const copied = await $.ui.copy({ text }).catch(() => ({ isCopied: false }))
+  return `${text}\n\n${copied.isCopied ? t().standup.copied : t().standup.notCopied}`
 }
 
 /** A changed file's diff against the last commit (before the first, what is staged); a new file not yet added, all added. */
@@ -1020,10 +1083,10 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
 
 type Word = keyof Dict['cmd']['words'] | keyof Dict['data']['words'] | 'chats'
 /** A subcommand's name: the key of its words in each language, or a name the same in every language. */
-type Name = Word | 'ci' | 'update'
+type Name = Word | 'ci' | 'update' | 'standup'
 
 /** A command's words in the language in use: in `cmd.words`, or, for a newer command, in its own section; none for a name the same in every language. */
-const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
+const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' || key === 'standup' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
 
 /** Whether `value` names the command: its English words, or the words of the language in use. */
 const names = (value: string, key: Name, ...english: string[]) => english.includes(value) || wordsFor(key).some(w => plain(w) === value)
@@ -1050,6 +1113,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
     { name: 'chats', english: ['chats', 'board'], run: () => chatsNow($) },
+    { name: 'standup', english: ['standup', 'daily', 'stand-up'], run: () => standup($) },
     { name: 'card', english: ['card'], run: (_, raw) => card($, raw) },
     { name: 'wrapped', english: ['wrapped', 'wrap'], run: arg => wrapped($, arg) },
     { name: 'snap', english: ['snap', 'snapshot'], run: () => snap($) },

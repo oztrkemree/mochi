@@ -658,9 +658,20 @@ export const hi: typeof en = {
     current: v => `Mochi ${v} सबसे नया है।`,
     unknown: v => `Mochi ${v}। सबसे नया संस्करण अभी पढ़ा नहीं जा सका।`,
   },
+  standup: {
+    yesterday: 'कल',
+    today: 'आज',
+    noCommits: 'कोई कमिट नहीं',
+    commits: n => `${n} कमिट`,
+    more: n => `${n} और`,
+    stats: (turns, time, add, del) => `${turns} टर्न · ${time} · +${add} −${del} पंक्तियाँ`,
+    copied: 'कॉपी हो गया — स्टैंड-अप में पेस्ट करें।',
+    notCopied: 'कॉपी नहीं हो सका; ऊपर का टेक्स्ट चुनें।',
+  },
+
   cmd: {
-    description: 'Mochi: दिखाना/छिपाना, विवरण, लेवल, पहनावा, बैज, चैट, कवच, अलर्ट, CI, सुझाव, ब्रेक, आवाज़, प्लगइन, कार्ड, लेखा-जोखा, तस्वीर, परिचय, नया क्या है, जन्मदिन, भाषा, छोटा/बड़ा, एक्सपोर्ट, रीसेट, फ़ीडबैक, अपडेट, स्थिति',
-    hint: '[details | level | wear [चीज़] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [कोड] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, दिखाना/छिपाना, विवरण, लेवल, पहनावा, बैज, चैट, कवच, अलर्ट, CI, सुझाव, ब्रेक, आवाज़, प्लगइन, कार्ड, लेखा-जोखा, तस्वीर, परिचय, नया क्या है, जन्मदिन, भाषा, छोटा/बड़ा, एक्सपोर्ट, रीसेट, फ़ीडबैक, अपडेट, स्थिति',
+    hint: '[standup | details | level | wear [चीज़] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [कोड] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi एक लाइन में।',
     big: 'Mochi पूरे आकार में।',
     detailOpened: 'विवरण पैनल खुल गया।',
@@ -693,7 +704,7 @@ export const hi: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `सुझाव: ${tips ? 'चालू' : 'बंद'} · ब्रेक: ${breaks ? 'चालू' : 'बंद'} · प्लगइन प्रतिक्रियाएँ: ${plugins ? 'चालू' : 'बंद'}`,
     peersLine: (level, peers) => `लेवल ${level} · दूसरी चैट: ${peers}`,
-    commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | standup | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name, list) => `भाषा: ${name}। उपलब्ध: ${list} · /mochi lang <कोड> या auto`,
     langSet: name => `भाषा: ${name}।`,
     langAuto: name => `भाषा Claude Code और सिस्टम के हिसाब से: ${name}।`,

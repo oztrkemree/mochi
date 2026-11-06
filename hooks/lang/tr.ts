@@ -653,9 +653,20 @@ export const tr: typeof en = {
     current: v => `Mochi ${v} en yeni sürüm.`,
     unknown: v => `Mochi ${v}. En yeni sürüm şu an okunamadı.`,
   },
+  standup: {
+    yesterday: 'Dün',
+    today: 'Bugün',
+    noCommits: 'commit yok',
+    commits: n => `${n} commit`,
+    more: n => `${n} tane daha`,
+    stats: (turns, time, add, del) => `${turns} tur · ${time} · +${add} −${del} satır`,
+    copied: 'Panoya kopyalandı, standup’a yapıştırabilirsin.',
+    notCopied: 'Panoya kopyalanamadı, yukarıdaki metni seçebilirsin.',
+  },
+
   cmd: {
-    description: 'Mochi: göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, aktar, sıfırla, geribildirim, güncelle, durum',
-    hint: '[detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | aktar | sıfırla | geribildirim | güncelle | durum]',
+    description: 'Mochi: standup, göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, aktar, sıfırla, geribildirim, güncelle, durum',
+    hint: '[standup | detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | aktar | sıfırla | geribildirim | güncelle | durum]',
     small: 'Mochi tek satır.',
     big: 'Mochi tam boy.',
     detailOpened: 'Detay paneli açıldı.',
@@ -688,7 +699,7 @@ export const tr: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `İpuçları: ${tips ? 'açık' : 'kapalı'} · Mola: ${breaks ? 'açık' : 'kapalı'} · Eklenti tepkileri: ${plugins ? 'açık' : 'kapalı'}`,
     peersLine: (level, peers) => `Seviye ${level} · diğer sohbetler: ${peers}`,
-    commands: 'Komutlar: /mochi (göster/gizle) | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | güncelle | durum',
+    commands: 'Komutlar: /mochi (göster/gizle) | standup | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | güncelle | durum',
     langNow: (name, list) => `Dil: ${name}. Seçenekler: ${list} · /mochi dil <kod> ya da otomatik`,
     langSet: name => `Dil: ${name}.`,
     langAuto: name => `Dil Claude Code’a ve sisteme göre seçiliyor: ${name}.`,
