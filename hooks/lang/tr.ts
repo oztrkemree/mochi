@@ -313,7 +313,7 @@ export const tr: typeof en = {
     love: 'ben de seni',
     hello: 'merhaba',
     welcome: 'rica ederim',
-    typing: { careful: 'dikkat…', aww: 'ayy ♥', uhoh: 'eyvah…', question: 'hmm, güzel soru', bug: 'bug mı? yakalayalım', whoa: 'oha, sakin!' },
+    typing: { careful: 'dikkat…', aww: 'ayy ♥', uhoh: 'eyvah…', question: 'hmm, güzel soru', bug: 'bug mı? yakalayalım', whoa: 'oha, sakin!', secret: 'sır tutalım 🔒', conflict: 'conflict mi? ⚔️', regex: 'regex… başım döndü 🌀', sorry: 'olur öyle 😉', laugh: 'hehe 😄', wow: 'vay be 😮', birthday: 'iyi ki doğdun! 🎂', weekend: 'hafta sonu! 🎉', monday: 'pazartesi… ☕', night: 'iyi geceler 🌙', morning: 'günaydın ☀️', hi: 'selam! 👋', coffee: 'kahve molası? ☕', food: 'bana da ayır 🍕', tired: 'biraz dinlen 🥱', test: 'parmaklar çapraz 🤞', ship: 'yolla gitsin! 🚀', tidy: 'toparlayalım 🧹', fast: 'hızlandıralım ⚡', rush: 'hemen! ⏱️', help: 'buradayım, beraber çözeriz', center: 'div ortalamak mı? 🫠' },
     leet: '13:37',
     breakLine: span => `${span} aralıksız · biraz gerinelim mi?`,
     badgesTitle: 'ROZETLER',

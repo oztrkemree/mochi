@@ -335,8 +335,8 @@ export const en = {
     love: 'love you too',
     hello: 'hello',
     welcome: 'you’re welcome',
-    /** What Mochi says over your shoulder while you type: something risky, thanks, trouble, a question, a bug, shouting. */
-    typing: { careful: 'careful…', aww: 'aww ♥', uhoh: 'uh-oh…', question: 'hmm, good question', bug: 'a bug? let’s catch it', whoa: 'whoa, easy!' },
+    /** What Mochi says over your shoulder while you type: something risky, thanks, trouble, a question, a bug, shouting, and the everyday topics after them (secrets, coffee, the weekend, a release, a test…). */
+    typing: { careful: 'careful…', aww: 'aww ♥', uhoh: 'uh-oh…', question: 'hmm, good question', bug: 'a bug? let’s catch it', whoa: 'whoa, easy!', secret: 'keep it secret 🔒', conflict: 'a conflict? ⚔️', regex: 'regex… dizzy 🌀', sorry: 'happens 😉', laugh: 'hehe 😄', wow: 'whoa 😮', birthday: 'happy birthday! 🎂', weekend: 'weekend! 🎉', monday: 'Monday… ☕', night: 'good night 🌙', morning: 'good morning ☀️', hi: 'hi there! 👋', coffee: 'coffee break? ☕', food: 'save me a bite 🍕', tired: 'get some rest 🥱', test: 'fingers crossed 🤞', ship: 'ship it! 🚀', tidy: 'let’s tidy up 🧹', fast: 'let’s speed it up ⚡', rush: 'on it! ⏱️', help: 'I’m here, we’ll figure it out', center: 'centring a div? 🫠' },
     leet: '13:37',
     breakLine: (span: string) => `${span} without a break · a stretch?`,
     badgesTitle: 'BADGES',

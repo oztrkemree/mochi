@@ -314,7 +314,7 @@ export const id: typeof en = {
     love: 'aku juga sayang kamu',
     hello: 'halo',
     welcome: 'sama-sama',
-    typing: { careful: 'hati-hati…', aww: 'aww ♥', uhoh: 'waduh…', question: 'hmm, pertanyaan bagus', bug: 'bug? ayo tangkap', whoa: 'wah, santai!' },
+    typing: { careful: 'hati-hati…', aww: 'aww ♥', uhoh: 'waduh…', question: 'hmm, pertanyaan bagus', bug: 'bug? ayo tangkap', whoa: 'wah, santai!', secret: 'jaga rahasia 🔒', conflict: 'konflik? ⚔️', regex: 'regex… pusing 🌀', sorry: 'biasa terjadi 😉', laugh: 'hehe 😄', wow: 'wah 😮', birthday: 'selamat ulang tahun! 🎂', weekend: 'akhir pekan! 🎉', monday: 'Senin… ☕', night: 'selamat malam 🌙', morning: 'selamat pagi ☀️', hi: 'halo! 👋', coffee: 'rehat kopi? ☕', food: 'sisakan sedikit 🍕', tired: 'istirahat dulu 🥱', test: 'semoga lancar 🤞', ship: 'rilis! 🚀', tidy: 'ayo rapikan 🧹', fast: 'ayo percepat ⚡', rush: 'segera! ⏱️', help: 'aku di sini, kita pecahkan bareng', center: 'menengahkan div? 🫠' },
     leet: '13:37',
     breakLine: span => `${span} tanpa jeda · regangkan badan dulu?`,
     badgesTitle: 'LENCANA',

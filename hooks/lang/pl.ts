@@ -333,7 +333,7 @@ export const pl: typeof en = {
     love: 'ja ciebie też',
     hello: 'cześć',
     welcome: 'nie ma za co',
-    typing: { careful: 'ostrożnie…', aww: 'ojej ♥', uhoh: 'oj-oj…', question: 'hmm, dobre pytanie', bug: 'bug? złapmy go', whoa: 'ej, spokojnie!' },
+    typing: { careful: 'ostrożnie…', aww: 'ojej ♥', uhoh: 'oj-oj…', question: 'hmm, dobre pytanie', bug: 'bug? złapmy go', whoa: 'ej, spokojnie!', secret: 'zostaje w tajemnicy 🔒', conflict: 'konflikt? ⚔️', regex: 'regex… kręci się w głowie 🌀', sorry: 'zdarza się 😉', laugh: 'hehe 😄', wow: 'wow 😮', birthday: 'wszystkiego najlepszego! 🎂', weekend: 'weekend! 🎉', monday: 'poniedziałek… ☕', night: 'dobranoc 🌙', morning: 'dzień dobry ☀️', hi: 'cześć! 👋', coffee: 'przerwa na kawę? ☕', food: 'zostaw mi kawałek 🍕', tired: 'odpocznij trochę 🥱', test: 'trzymam kciuki 🤞', ship: 'wypuszczamy! 🚀', tidy: 'posprzątajmy 🧹', fast: 'przyspieszmy ⚡', rush: 'już! ⏱️', help: 'jestem tu, ogarniemy to', center: 'wyśrodkować diva? 🫠' },
     leet: '13:37',
     breakLine: span => `${span} bez przerwy · rozciągniemy się?`,
     badgesTitle: 'ODZNAKI',

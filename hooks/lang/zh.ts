@@ -313,7 +313,7 @@ export const zh: typeof en = {
     love: '我也爱你',
     hello: '你好',
     welcome: '不客气',
-    typing: { careful: '小心…', aww: '哇 ♥', uhoh: '糟糕…', question: '嗯，好问题', bug: '有 bug？抓住它', whoa: '哇，冷静！' },
+    typing: { careful: '小心…', aww: '哇 ♥', uhoh: '糟糕…', question: '嗯，好问题', bug: '有 bug？抓住它', whoa: '哇，冷静！', secret: '保守秘密 🔒', conflict: '冲突了？ ⚔️', regex: '正则…头晕 🌀', sorry: '常有的事 😉', laugh: '嘿嘿 😄', wow: '哇 😮', birthday: '生日快乐！ 🎂', weekend: '周末啦！ 🎉', monday: '周一… ☕', night: '晚安 🌙', morning: '早上好 ☀️', hi: '你好！ 👋', coffee: '喝杯咖啡？ ☕', food: '给我留一口 🍕', tired: '休息一下 🥱', test: '祈祷顺利 🤞', ship: '发布吧！ 🚀', tidy: '整理一下 🧹', fast: '加速一下 ⚡', rush: '马上！ ⏱️', help: '我在，一起解决', center: '让 div 居中？ 🫠' },
     leet: '13:37',
     breakLine: span => `连续工作 ${span} · 伸个懒腰？`,
     badgesTitle: '徽章',

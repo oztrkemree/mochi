@@ -895,5 +895,15 @@ test('Mochi reads the draft over the shoulder and reacts before it is sent', () 
   for (const said of ['eline sağlık', 'tşk', 'kralsın', 'helal olsun', 'çok güzel olmuş', 'ty', 'nailed it', 'you\'re the best', 'love it', 'amazing']) expect(typingMood(said)?.mood).toBe('love')
   for (const said of ['typescript ayarla', 'kraliçe', 'bir hata var olabilir', 'legendary']) expect(typingMood(said)?.mood).not.toBe('love')
   expect(typingMood('mochi naber')?.mood).toBe('wave')
+  const said: [string, string][] = [
+    ['.env dosyasındaki şifreyi koy', 'sır tutalım 🔒'], ['merge conflict çıktı', 'conflict mi? ⚔️'], ['bunun için regex yaz', 'regex… başım döndü 🌀'],
+    ['pardon yanlış yazdım', 'olur öyle 😉'], ['hahahaha', 'hehe 😄'], ['vay', 'vay be 😮'], ['bugün doğum günüm', 'iyi ki doğdun! 🎂'],
+    ['hafta sonu geliyor', 'hafta sonu! 🎉'], ['pazartesi sendromu', 'pazartesi… ☕'], ['iyi geceler', 'iyi geceler 🌙'], ['günaydın', 'günaydın ☀️'],
+    ['selam', 'selam! 👋'], ['kahve alıp geliyorum', 'kahve molası? ☕'], ['acıktım', 'bana da ayır 🍕'], ['çok yoruldum', 'biraz dinlen 🥱'],
+    ['testleri çalıştır', 'parmaklar çapraz 🤞'], ['main e merge et', 'yolla gitsin! 🚀'], ['şu dosyayı refactor et', 'toparlayalım 🧹'],
+    ['sayfa çok yavaş', 'hızlandıralım ⚡'], ['acil bakar mısın', 'hemen! ⏱️'], ['takıldım bir yerde', 'buradayım, beraber çözeriz'], ['butonu ortala', 'div ortalamak mı? 🫠'],
+  ]
+  for (const [text, line] of said) expect(typingMood(text)?.line).toBe(line)
+  expect(typingMood('hafta sonu')?.mood).toBe('party')
   expect(typingMood('bu nasıl çalışıyor?')?.mood).toBe('thinking')
 })

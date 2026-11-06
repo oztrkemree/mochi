@@ -313,7 +313,7 @@ export const ja: typeof en = {
     love: '私も大好き',
     hello: 'こんにちは',
     welcome: 'どういたしまして',
-    typing: { careful: '気をつけて…', aww: 'わぁ ♥', uhoh: 'あらら…', question: 'うーん、いい質問', bug: 'バグ？捕まえよう', whoa: 'おっと、落ち着いて！' },
+    typing: { careful: '気をつけて…', aww: 'わぁ ♥', uhoh: 'あらら…', question: 'うーん、いい質問', bug: 'バグ？捕まえよう', whoa: 'おっと、落ち着いて！', secret: '秘密にしよう 🔒', conflict: 'コンフリクト？ ⚔️', regex: '正規表現…くらくら 🌀', sorry: 'よくあるよ 😉', laugh: 'へへ 😄', wow: 'わお 😮', birthday: 'お誕生日おめでとう！ 🎂', weekend: '週末だ！ 🎉', monday: '月曜日… ☕', night: 'おやすみ 🌙', morning: 'おはよう ☀️', hi: 'やあ！ 👋', coffee: 'コーヒー休憩？ ☕', food: 'ひと口残してね 🍕', tired: '少し休んで 🥱', test: 'うまくいきますように 🤞', ship: 'リリースだ！ 🚀', tidy: '片付けよう 🧹', fast: '速くしよう ⚡', rush: 'すぐに！ ⏱️', help: 'ここにいるよ、一緒に解決しよう', center: 'divの中央寄せ？ 🫠' },
     leet: '13:37',
     breakLine: span => `${span}休みなし · ちょっと伸びをする？`,
     badgesTitle: 'バッジ',

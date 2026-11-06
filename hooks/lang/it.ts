@@ -318,7 +318,7 @@ export const it: typeof en = {
     love: 'ti voglio bene anch’io',
     hello: 'ciao',
     welcome: 'prego',
-    typing: { careful: 'attenzione…', aww: 'oh ♥', uhoh: 'oh oh…', question: 'mmm, bella domanda', bug: 'un bug? acchiappiamolo', whoa: 'ehi, calma!' },
+    typing: { careful: 'attenzione…', aww: 'oh ♥', uhoh: 'oh oh…', question: 'mmm, bella domanda', bug: 'un bug? acchiappiamolo', whoa: 'ehi, calma!', secret: 'resta segreto 🔒', conflict: 'un conflitto? ⚔️', regex: 'regex… che giramento 🌀', sorry: 'capita 😉', laugh: 'hehe 😄', wow: 'wow 😮', birthday: 'buon compleanno! 🎂', weekend: 'weekend! 🎉', monday: 'lunedì… ☕', night: 'buonanotte 🌙', morning: 'buongiorno ☀️', hi: 'ciao! 👋', coffee: 'pausa caffè? ☕', food: 'lasciamene un po’ 🍕', tired: 'riposati un po’ 🥱', test: 'dita incrociate 🤞', ship: 'si spedisce! 🚀', tidy: 'mettiamo in ordine 🧹', fast: 'acceleriamo ⚡', rush: 'subito! ⏱️', help: 'ci sono, lo risolviamo', center: 'centrare un div? 🫠' },
     leet: '13:37',
     breakLine: span => `${span} senza pause · ci sgranchiamo un po’?`,
     badgesTitle: 'BADGE',

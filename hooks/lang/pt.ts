@@ -316,7 +316,7 @@ export const pt: typeof en = {
     love: 'também te amo',
     hello: 'oi',
     welcome: 'de nada',
-    typing: { careful: 'cuidado…', aww: 'own ♥', uhoh: 'eita…', question: 'hmm, boa pergunta', bug: 'um bug? vamos pegá-lo', whoa: 'opa, calma!' },
+    typing: { careful: 'cuidado…', aww: 'own ♥', uhoh: 'eita…', question: 'hmm, boa pergunta', bug: 'um bug? vamos pegá-lo', whoa: 'opa, calma!', secret: 'fica em segredo 🔒', conflict: 'um conflito? ⚔️', regex: 'regex… tontura 🌀', sorry: 'acontece 😉', laugh: 'hehe 😄', wow: 'uau 😮', birthday: 'feliz aniversário! 🎂', weekend: 'fim de semana! 🎉', monday: 'segunda… ☕', night: 'boa noite 🌙', morning: 'bom dia ☀️', hi: 'oi! 👋', coffee: 'pausa pro café? ☕', food: 'guarda um pedaço 🍕', tired: 'descansa um pouco 🥱', test: 'dedos cruzados 🤞', ship: 'manda pra produção! 🚀', tidy: 'vamos arrumar 🧹', fast: 'vamos acelerar ⚡', rush: 'já! ⏱️', help: 'tô aqui, a gente resolve', center: 'centralizar uma div? 🫠' },
     leet: '13:37',
     breakLine: span => `${span} sem pausa · que tal se alongar?`,
     badgesTitle: 'CONQUISTAS',

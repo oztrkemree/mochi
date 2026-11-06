@@ -116,9 +116,44 @@ export function promptEgg(text: string): Reaction | null {
   return null
 }
 
+/** A regex for words that start at a word's edge, in Turkish and English; a Turkish ending may follow. */
+const word = (...alts: string[]) => new RegExp(`(?<!\\p{L})(${alts.join('|')})`, 'iu')
+
 /** Words that would be hard to take back: production, a deploy, a forced push, a wipe. */
-const RISKY = /\brm\s+-rf\b|\bprod(uction)?\b|canl[ıi]ya|\bdeploy|force[- ]push|push\s+(-f|--force)\b|drop\s+(table|database)|reset\s+--hard|\bsil\b|delete\s+all/iu
-const BUG = /\bbugs?\b|\bhata|\berror|exception|\bcrash|[cç][oö]k[uü]yor|traceback/iu
+const RISKY = /\brm\s+-rf\b|\bprod(uction)?\b|canl[ıi]ya|\bdeploy|force[- ]push|push\s+(-f|--force)\b|drop\s+(table|database)|reset\s+--hard|(?<!\p{L})sil(?!\p{L})|delete\s+all/iu
+/** An apology, which comes before any frustration in the same breath ("sorry, wrong file"). */
+const SORRY = word('pardon', '[oö]z[uü]r', 'sorry', 'my bad', 'oops', 'hay aksi', 'kusura bakma')
+const BUG = /(?<!\p{L})bugs?(?!\p{L})|\bhata|\berror|exception|\bcrash|[cç][oö]k[uü]yor|traceback/iu
+
+type TypingLine = keyof ReturnType<typeof t>['fun']['typing']
+
+/**
+ * What the draft may be about, in the order Mochi looks, with the face it
+ * makes and what it says: the first that matches wins.
+ */
+const TOPICS: [RegExp, Mood, TypingLine][] = [
+  [word('[sş]ifre', 'password', 'secret', 'token', 'api[ _-]?key', '\\.env(?!\\p{L})', 'credential'), 'scared', 'secret'],
+  [word('conflict', '<<<<<<<', '[cç]ak[ıi][sş]ma'), 'nervous', 'conflict'],
+  [word('regex', 'regexp', 'regular expression', 'd[uü]zenli ifade'), 'dizzy', 'regex'],
+  [/(^|[^\p{L}])(a?(ha){2,}|(he){2,}|j?sj?sj|lol|lmao|rofl|kdkd|asdf)(?!\p{L})|😂|🤣/iu, 'pleased', 'laugh'],
+  [word('vay', 'wow', 'omg', 'inan[ıi]lmaz', 'no way', 'insane'), 'shocked', 'wow'],
+  [word('do[gğ]um g[uü]n', 'birthday', 'iyi ki do[gğ]dun'), 'party', 'birthday'],
+  [word('hafta ?sonu', 'weekend', 'cuma(?!\\p{L})', 'friday', 'tgif'), 'party', 'weekend'],
+  [word('pazartesi', 'monday'), 'tired', 'monday'],
+  [word('iyi geceler', 'good ?night', 'gn(?!\\p{L})', 'nighty'), 'sleepy', 'night'],
+  [word('g[uü]nayd[ıi]n', 'good morning', 'morning(?!\\p{L})'), 'wave', 'morning'],
+  [word('selam', 'merhaba', 'naber', 'hello', 'hey(?!\\p{L})', 'hi(?!\\p{L})', 'sa(?!\\p{L})'), 'wave', 'hi'],
+  [word('kahve', '[cç]ay(?!\\p{L})', 'coffee', 'tea(?!\\p{L})', 'mola', 'break(?!\\p{L})'), 'stretch', 'coffee'],
+  [word('ac[ıi]kt[ıi]m', 'yemek', '[oö][gğ]le', 'pizza', 'd[oö]ner', 'lunch', 'dinner', 'hungry', 'burger', 'snack'), 'wink', 'food'],
+  [word('uykum', 'yorgun', 'yoruldum', 'bitkin', 'tired', 'sleepy', 'exhausted'), 'sleepy', 'tired'],
+  [word('merge', 'release', 'ship(?!\\p{L})', 'yay[ıi]nla', 'launch'), 'proud', 'ship'],
+  [word('test', 'spec(?!\\p{L})', 'coverage'), 'nervous', 'test'],
+  [word('refactor', 'temizle', 'toparla', 'clean ?up', 'tidy'), 'writing', 'tidy'],
+  [word('yava[sş]', 'slow', 'performans', 'performance', 'optimi[sz]e', 'h[ıi]zland[ıi]r'), 'running', 'fast'],
+  [word('acil', 'hemen', 'asap', 'urgent', 'deadline', '[cç]abuk'), 'running', 'rush'],
+  [word('yard[ıi]m', 'help', 'tak[ıi]ld[ıi]m', 'stuck', 'anlamad[ıi]m'), 'wave', 'help'],
+  [word('ortala', 'center', 'centre', 'flexbox', 'align'), 'thinking', 'center'],
+]
 
 /**
  * Mochi reading over the person's shoulder as they type: a face and a few
@@ -129,11 +164,14 @@ export function typingMood(text: string): { mood: Mood; line: string } | null {
   if (said === '') return null
   const w = t().fun.typing
   if (RISKY.test(said)) return { mood: 'scared', line: w.careful }
+  if (SORRY.test(said)) return { mood: 'wink', line: w.sorry }
   const plain = onPrompt(said, false).mood
   if (plain === 'shocked') return { mood: 'shocked', line: w.whoa }
   if (plain === 'nervous') return { mood: 'nervous', line: w.uhoh }
   if (BUG.test(said)) return { mood: 'dizzy', line: w.bug }
   if (plain === 'pleased') return { mood: 'love', line: w.aww }
+  const topic = TOPICS.find(([re]) => re.test(said))
+  if (topic) return { mood: topic[1], line: w[topic[2]] }
   if (NAME.test(said)) return { mood: 'wave', line: t().fun.hello }
   if (said.endsWith('?')) return { mood: 'thinking', line: w.question }
   return null
