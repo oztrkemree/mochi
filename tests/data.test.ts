@@ -243,7 +243,7 @@ test('a history cleared in another chat is neither counted nor written back by t
   on('session.end', () => ({ sessionId: 'chat-1' }) as never)
   await clock.set(NOON)
   await $.session.start(START)
-  expect(await say($, 'mochi', 'level')).toContain('Level 4 ·')
+  expect(await say($, 'mochi', 'level')).toContain('Level 5 ·')
   // Another chat clears the history: every chat's days go, and its level's memory starts over.
   delete files[`${DIR}/days/chat-1.json`]
   delete files[`${DIR}/days/other-chat.json`]

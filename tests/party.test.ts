@@ -96,7 +96,7 @@ test('the floor shows only the places with someone in them, a "+N" past each one
   expect(big.svg).toContain('+4</text>')
   expect(big.svg).toContain('9 idle')
   // Each Mochi wears the person's outfit: what Mochi wears in the band, given by mood.
-  const dressed = floorOf(crowd, NOW, 'w0', () => ({ head: 'beanie', face: 'sunglasses', neck: 'scarf', held: null, ground: 'cactus' }))
+  const dressed = floorOf(crowd, NOW, 'w0', () => ({ head: 'beanie', eyes: 'sunglasses', face: null, lip: null, chin: null, neck: 'scarf', held: null, ground: 'cactus' }))
   expect((dressed.svg.match(/<use href="#art/g) ?? []).length).toBeGreaterThanOrEqual((big.svg.match(/<use href="#art/g) ?? []).length + 17 * 2)
   expect(new Set(dressed.svg.match(/data:[^"]+/g)).size).toBe((dressed.svg.match(/data:[^"]+/g) ?? []).length)
   // The picked one has a ring at its feet.

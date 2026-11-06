@@ -77,15 +77,18 @@ export type Item =
   | 'bowler' | 'flatcap' | 'explorer' | 'baseballcap'
   | 'heartglasses' | 'eyepatch' | 'beard' | 'goggles' | 'starglasses' | 'cinema3d' | 'nerdglasses' | 'visor'
   | 'clownnose' | 'catwhiskers' | 'plaster' | 'freckles' | 'bushybrows' | 'eyelashes' | 'fangs' | 'teardrop'
+  | 'aviators' | 'pixelshades' | 'cateye' | 'masquerade' | 'divemask' | 'vrheadset' | 'facemask' | 'goldstars' | 'lollipop' | 'bubblegum' | 'wheat' | 'rose'
+  | 'pencilstache' | 'chevron' | 'handlebar' | 'walrus' | 'horseshoe' | 'goatee' | 'soulpatch' | 'chinstrap' | 'wizardbeard' | 'braidbeard'
   | 'spikedcollar' | 'pearls'  | 'bellcollar' | 'neckerchief' | 'lei'  | 'goldchain' | 'overalls'
+  | 'sailorcollar' | 'whistle' | 'lanyard' | 'camera' | 'stethoscope' | 'binoculars' | 'headphones' | 'bib' | 'ruff' | 'bolotie' | 'boa' | 'locket'
   | 'flag' | 'whisk' | 'pinwheel' | 'compass'  | 'key' | 'icecream' | 'cupcake' | 'sunflower' | 'clover' | 'toadstool' | 'cactuspot' | 'wand' | 'potion' | 'paddle' | 'joystick' | 'bubblewand' | 'rollingpin' | 'harmonica' | 'tambourine'
   | 'mushroom' | 'frog' | 'robot' | 'ramen' | 'snail' | 'campfire' | 'bonsai' | 'penguin' | 'lavalamp' | 'taco' | 'tent' | 'hedgehog' | 'wateringcan' | 'macaron' | 'arcade' | 'snowman' | 'rocket' | 'watermelon' | 'chest' | 'axolotl' | 'horse' | 'sprout' | 'bunny'
 
 /** Something earned once from real work (see hooks/badges.ts). */
 export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' | 'owl' | 'bird' | 'polyglot' | 'marathon' | 'week' | 'hundred' | 'month' | 'fivehundred' | 'regular' | 'craftsman' | 'bulldozer' | 'vampire'
 
-/** What is on Mochi right now, slot by slot. */
-export type Outfit = { head: Item | null; face: Item | null; neck: Item | null; held: Item | null; ground: Item | null }
+/** What is on Mochi right now, slot by slot. On the face: glasses (`eyes`), the rest (`face`), a mustache (`lip`) and a beard (`chin`), each worn with the others. */
+export type Outfit = { head: Item | null; eyes: Item | null; face: Item | null; lip: Item | null; chin: Item | null; neck: Item | null; held: Item | null; ground: Item | null }
 
 export type Scene = { context: number; agents: number; outfit?: Outfit }
 

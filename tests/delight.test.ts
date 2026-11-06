@@ -73,7 +73,7 @@ const at = (y: number, m: number, d: number, hour: number, minute = 0) => {
   return utc + new Date(utc).getTimezoneOffset() * 60_000
 }
 
-const NONE = { head: null, face: null, neck: null, held: null, ground: null }
+const NONE = { head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null }
 
 test('the calendar knows the fixed days and the person’s own', async () => {
   const on = (day: string, own = { birthday: '', firstDay: '' }) => occasions(day, own).map(o => o.name)

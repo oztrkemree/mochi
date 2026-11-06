@@ -41,7 +41,7 @@ function isSelfContained(svg: string): boolean {
 }
 
 const day = (rec: Partial<DayRec>): Partial<DayRec> => rec
-const NONE = { head: null, face: null, neck: null, held: null, ground: null }
+const NONE = { head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null }
 
 /** Three chats over the end of August and September; two of them in the same folder. */
 const CHATS: ChatDays[] = [
@@ -121,7 +121,7 @@ test('the card goes where it is told, and its markdown line shows it on a profil
   expect(cardPath('docs/me.svg', '/proj/', '/home/me')).toBe('/proj/docs/me.svg')
   expect(cardPath('"/srv/my card.svg"', '/proj', '/home/me')).toBe('/srv/my card.svg')
   expect(cardMarkdown('my card.svg')).toBe('[![Mochi for Claude Code](my%20card.svg)](https://github.com/oztrkemree/mochi)')
-  expect(bestOutfit(['beanie', 'crown', 'glasses', 'monocle', 'bowtie', 'medal', 'mug', 'cat'])).toEqual({ head: 'crown', face: 'monocle', neck: 'medal', held: null, ground: 'cat' })
+  expect(bestOutfit(['beanie', 'crown', 'glasses', 'monocle', 'bowtie', 'medal', 'mug', 'cat'])).toEqual({ ...NONE, head: 'crown', eyes: 'monocle', neck: 'medal', ground: 'cat' })
   expect(bestOutfit([])).toEqual(NONE)
 })
 
