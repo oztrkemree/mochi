@@ -485,8 +485,8 @@ async function standup($: Dollar): Promise<string> {
     }
   }
   const text = standupText(today, v.history?.days ?? {}, commits)
-  const copied = await $.ui.copy({ text }).catch(() => ({ isCopied: false }))
-  return `${text}\n\n${copied.isCopied ? t().standup.copied : t().standup.notCopied}`
+  const copied = await $.ui.copy({ text }).catch(() => undefined)
+  return `${text}\n\n${copied?.isCopied ? t().standup.copied : t().standup.notCopied}`
 }
 
 /** A changed file's diff against the last commit (before the first, what is staged); a new file not yet added, all added. */
@@ -1266,6 +1266,8 @@ const pathIn = (line: string): string => /(?:~[\\/]|[A-Za-z]:[\\/]|\/|https?:\/\
 function copyOf(verb: string, text: string): string {
   const lines = text.split('\n')
   if (verb === 'card') return lines.length > 1 ? (lines.at(-1) ?? '') : ''
+  // The stand-up note without the line saying it was copied, to copy again.
+  if (verb === 'standup') return lines.slice(0, -2).join('\n')
   return verb === 'feedback' ? pathIn(lines.at(-1) ?? '') : ''
 }
 
@@ -1286,12 +1288,14 @@ async function openIt($: Dollar, target: string) {
 /** One of /mochi's actions run from the details pane (`reset:history` and the like); its answer is kept for the pane to show. */
 async function act($: Dollar, what: string) {
   const [verb = '', scope = ''] = what.split(':')
-  const text = verb === 'card' ? await card($, '')
+  const text = verb === 'standup' ? await standup($)
+    : verb === 'card' ? await card($, '')
     : verb === 'wrapped' ? await wrapped($, '')
     : verb === 'year' ? await wrapped($, 'year')
     : verb === 'snap' ? await snap($)
     : verb === 'tour' ? await replayTour()
     : verb === 'news' ? newsLines(chat.coach.version)
+    : verb === 'update' ? await updateNow($)
     : verb === 'feedback' ? await feedback($)
     : verb === 'export' ? await exportAll($)
     : verb === 'reset' ? await reset($, scope)

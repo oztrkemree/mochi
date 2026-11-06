@@ -333,6 +333,14 @@ test('the details pane: tabs, rows that fold, switches for every setting and eve
   expect(await pane.find({ key: 'said:open' })).toBeDefined()
   await pane.press({ key: 'said:copy' })
   expect(copied[0]).toMatch(/^https:\/\/github\.com\//)
+  await pane.press({ key: 'said:close' })
+  // The stand-up note, copied at once and again from its own button.
+  await pane.press({ key: 'do:standup' })
+  expect(await pane.find({ type: 'Text', text: 'Today' })).toBeDefined()
+  await pane.press({ key: 'said:copy' })
+  expect(copied.at(-1)).toMatch(/\nToday\n/)
+  expect(copied.at(-1)).not.toContain('Copied')
+  await pane.press({ key: 'said:close' })
   // A reset still asks first.
   await pane.press({ key: 'do:reset:history' })
   expect(await pane.find({ type: 'Text', text: 'Nothing was cleared.' })).toBeDefined()
