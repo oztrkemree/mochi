@@ -15,6 +15,14 @@ export const de: typeof en = {
   months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 
   news: {
+    '0.8.0': {
+      headline: 'Brille, Schnurrbart und Bart zugleich, 34 neue Teile, schnellere Levels',
+      notes: [
+        'Das Gesicht hat jetzt vier Plätze: Brille, Schnurrbart, Bart und alles andere, alles zusammen tragbar.',
+        'Vierunddreißig neue Teile: 12 für den Hals, 12 fürs Gesicht, 5 Schnurrbärte und 5 Bärte.',
+        'Levels kommen schneller: Jedes braucht 40 % weniger Erfahrung, und dein Level steigt gleich mit dem Update.',
+      ],
+    },
     '0.6.0': {
       headline: 'die Party: jeder Chat als kleiner Mochi auf einem Boden',
       notes: [

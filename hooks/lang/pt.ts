@@ -17,6 +17,14 @@ export const pt: typeof en = {
   months: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
 
   news: {
+    '0.8.0': {
+      headline: 'óculos, bigode e barba juntos, 34 coisas novas, níveis mais rápidos',
+      notes: [
+        'O rosto agora tem quatro espaços: óculos, bigode, barba e o resto, tudo junto.',
+        'Trinta e quatro coisas novas para vestir: 12 para o pescoço, 12 para o rosto, 5 bigodes e 5 barbas.',
+        'Os níveis chegam mais rápido: cada um pede 40% menos experiência, e seu nível sobe assim que você atualiza.',
+      ],
+    },
     '0.6.0': {
       headline: 'a festa: cada chat como um pequeno Mochi no mesmo chão',
       notes: [

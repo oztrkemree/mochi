@@ -15,6 +15,14 @@ export const id: typeof en = {
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
 
   news: {
+    '0.8.0': {
+      headline: 'kacamata, kumis, dan janggut sekaligus, 34 barang baru, level lebih cepat',
+      notes: [
+        'Wajah kini punya empat slot: kacamata, kumis, janggut, dan sisanya, bisa dipakai bersamaan.',
+        'Tiga puluh empat barang baru: 12 untuk leher, 12 untuk wajah, 5 kumis, dan 5 janggut.',
+        'Level datang lebih cepat: tiap level butuh 40% lebih sedikit pengalaman, dan levelmu naik begitu kamu memperbarui.',
+      ],
+    },
     '0.6.0': {
       headline: 'pesta: setiap chat jadi Mochi kecil di satu lantai',
       notes: [
