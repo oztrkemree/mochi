@@ -313,7 +313,7 @@ export const ko: typeof en = {
     love: '저도 사랑해요',
     hello: '안녕하세요',
     welcome: '천만에요',
-    typing: { careful: '조심해…', aww: '아잉 ♥', uhoh: '이런…', question: '음, 좋은 질문', bug: '버그? 잡아보자', whoa: '워워, 진정해!', secret: '비밀로 하자 🔒', conflict: '충돌? ⚔️', regex: '정규식… 어지러워 🌀', sorry: '그럴 수 있지 😉', laugh: '헤헤 😄', wow: '와 😮', birthday: '생일 축하해! 🎂', weekend: '주말이다! 🎉', monday: '월요일… ☕', night: '잘 자 🌙', morning: '좋은 아침 ☀️', hi: '안녕! 👋', coffee: '커피 타임? ☕', food: '나도 좀 남겨줘 🍕', tired: '좀 쉬어 🥱', test: '잘 되길 🤞', ship: '배포 가자! 🚀', tidy: '정리하자 🧹', fast: '빠르게 하자 ⚡', rush: '바로! ⏱️', help: '여기 있어, 같이 해결하자', center: 'div 가운데 정렬? 🫠' },
+    typing: { careful: '조심해…', aww: '아잉 ♥', uhoh: '이런…', question: '음, 좋은 질문', bug: '버그? 잡아보자', whoa: '워워, 진정해!', secret: '비밀로 하자 🔒', conflict: '충돌? ⚔️', regex: '정규식… 어지러워 🌀', sorry: '그럴 수 있지 😉', laugh: '헤헤 😄', wow: '와 😮', birthday: '생일 축하해! 🎂', weekend: '주말이다! 🎉', monday: '월요일… ☕', night: '잘 자 🌙', morning: '좋은 아침 ☀️', hi: '안녕! 👋', coffee: '커피 타임? ☕', food: '나도 좀 남겨줘 🍕', tired: '좀 쉬어 🥱', test: '잘 되길 🤞', ship: '배포 가자! 🚀', tidy: '정리하자 🧹', fast: '빠르게 하자 ⚡', rush: '바로! ⏱️', help: '여기 있어, 같이 해결하자', center: 'div 가운데 정렬? 🫠', disco: '디스코 타임! 🪩' },
     leet: '13:37',
     breakLine: span => `쉬지 않고 ${span} · 기지개 한번?`,
     badgesTitle: '배지',

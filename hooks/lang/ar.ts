@@ -339,7 +339,7 @@ export const ar: typeof en = {
     love: 'وأنا أحبك أيضًا',
     hello: 'مرحبًا',
     welcome: 'عفوًا',
-    typing: { careful: 'انتبه…', aww: 'أوه ♥', uhoh: 'أوه لا…', question: 'همم، سؤال جيد', bug: 'خلل؟ لنمسكه', whoa: 'مهلاً، بهدوء!', secret: 'لنحفظ السر 🔒', conflict: 'تعارض؟ ⚔️', regex: 'regex… دوار 🌀', sorry: 'يحدث 😉', laugh: 'هههه 😄', wow: 'واو 😮', birthday: 'عيد ميلاد سعيد! 🎂', weekend: 'عطلة نهاية الأسبوع! 🎉', monday: 'الاثنين… ☕', night: 'تصبح على خير 🌙', morning: 'صباح الخير ☀️', hi: 'أهلًا! 👋', coffee: 'استراحة قهوة؟ ☕', food: 'احتفظ لي بقطعة 🍕', tired: 'خذ قسطًا من الراحة 🥱', test: 'بالتوفيق 🤞', ship: 'أطلقه! 🚀', tidy: 'لنرتّب 🧹', fast: 'لنسرّعه ⚡', rush: 'فورًا! ⏱️', help: 'أنا هنا، سنجد الحل', center: 'توسيط div؟ 🫠' },
+    typing: { careful: 'انتبه…', aww: 'أوه ♥', uhoh: 'أوه لا…', question: 'همم، سؤال جيد', bug: 'خلل؟ لنمسكه', whoa: 'مهلاً، بهدوء!', secret: 'لنحفظ السر 🔒', conflict: 'تعارض؟ ⚔️', regex: 'regex… دوار 🌀', sorry: 'يحدث 😉', laugh: 'هههه 😄', wow: 'واو 😮', birthday: 'عيد ميلاد سعيد! 🎂', weekend: 'عطلة نهاية الأسبوع! 🎉', monday: 'الاثنين… ☕', night: 'تصبح على خير 🌙', morning: 'صباح الخير ☀️', hi: 'أهلًا! 👋', coffee: 'استراحة قهوة؟ ☕', food: 'احتفظ لي بقطعة 🍕', tired: 'خذ قسطًا من الراحة 🥱', test: 'بالتوفيق 🤞', ship: 'أطلقه! 🚀', tidy: 'لنرتّب 🧹', fast: 'لنسرّعه ⚡', rush: 'فورًا! ⏱️', help: 'أنا هنا، سنجد الحل', center: 'توسيط div؟ 🫠', disco: 'وقت الديسكو! 🪩' },
     leet: '13:37',
     breakLine: span => `${span} بلا استراحة · نتمطّى قليلًا؟`,
     badgesTitle: 'الشارات',

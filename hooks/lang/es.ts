@@ -316,7 +316,7 @@ export const es: typeof en = {
     love: 'yo también te quiero',
     hello: 'hola',
     welcome: 'de nada',
-    typing: { careful: 'cuidado…', aww: 'aww ♥', uhoh: 'uy…', question: 'mmm, buena pregunta', bug: '¿un bug? a cazarlo', whoa: '¡eh, tranqui!', secret: 'que quede en secreto 🔒', conflict: '¿un conflicto? ⚔️', regex: 'regex… me mareo 🌀', sorry: 'pasa 😉', laugh: 'jeje 😄', wow: 'guau 😮', birthday: '¡feliz cumpleaños! 🎂', weekend: '¡finde! 🎉', monday: 'lunes… ☕', night: 'buenas noches 🌙', morning: 'buenos días ☀️', hi: '¡hola! 👋', coffee: '¿pausa para café? ☕', food: 'guárdame un poco 🍕', tired: 'descansa un poco 🥱', test: 'dedos cruzados 🤞', ship: '¡a producción! 🚀', tidy: 'ordenemos 🧹', fast: 'aceleremos ⚡', rush: '¡ya mismo! ⏱️', help: 'aquí estoy, lo resolvemos', center: '¿centrar un div? 🫠' },
+    typing: { careful: 'cuidado…', aww: 'aww ♥', uhoh: 'uy…', question: 'mmm, buena pregunta', bug: '¿un bug? a cazarlo', whoa: '¡eh, tranqui!', secret: 'que quede en secreto 🔒', conflict: '¿un conflicto? ⚔️', regex: 'regex… me mareo 🌀', sorry: 'pasa 😉', laugh: 'jeje 😄', wow: 'guau 😮', birthday: '¡feliz cumpleaños! 🎂', weekend: '¡finde! 🎉', monday: 'lunes… ☕', night: 'buenas noches 🌙', morning: 'buenos días ☀️', hi: '¡hola! 👋', coffee: '¿pausa para café? ☕', food: 'guárdame un poco 🍕', tired: 'descansa un poco 🥱', test: 'dedos cruzados 🤞', ship: '¡a producción! 🚀', tidy: 'ordenemos 🧹', fast: 'aceleremos ⚡', rush: '¡ya mismo! ⏱️', help: 'aquí estoy, lo resolvemos', center: '¿centrar un div? 🫠', disco: '¡hora de disco! 🪩' },
     leet: '13:37',
     breakLine: span => `${span} sin pausa · ¿te estiras un poco?`,
     badgesTitle: 'INSIGNIAS',

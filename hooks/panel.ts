@@ -285,6 +285,46 @@ export function fireworks(seed: number, elapsed: number, x0: number, x1: number,
   return { behind: bursts, front: confetti }
 }
 
+/**
+ * The band as a disco, `w` wide and `h` tall, over the stretch from `x0` to
+ * `x1`: a mirror ball turning on its string, coloured beams sweeping from
+ * it, and spots sliding along the floor; behind the lines, for as long as it stands.
+ */
+export function disco(x0: number, x1: number, w: number, h: number): string {
+  const cx = (x0 + x1) / 2
+  const [by, br] = [13, 9]
+  const INKS = ['#FF5FA2', '#7AA2F7', '#73DACA', '#FFD36B', '#B794F6']
+  // Colour that fades along each beam and out from each spot, with no blur to cut it square.
+  const defs = INKS.map((ink, i) =>
+    `<linearGradient id="beam${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ink}" stop-opacity="0.55"/><stop offset="1" stop-color="${ink}" stop-opacity="0"/></linearGradient>` +
+    `<radialGradient id="spot${i}"><stop offset="0" stop-color="${ink}" stop-opacity="0.55"/><stop offset="1" stop-color="${ink}" stop-opacity="0"/></radialGradient>`).join('')
+  const beams = INKS.map((_, i) => {
+    const swing = 26 + i * 7
+    const start = -64 + i * 32
+    const dur = 2 + i * 0.4
+    return `<path d="M${n(cx - 2)} ${by}L${n(cx - 26)} ${h + 40}L${n(cx + 26)} ${h + 40}L${n(cx + 2)} ${by}Z" fill="url(#beam${i})">` +
+      `<animateTransform attributeName="transform" type="rotate" values="${start - swing} ${n(cx)} ${by};${start + swing} ${n(cx)} ${by};${start - swing} ${n(cx)} ${by}" dur="${n(dur)}s" repeatCount="indefinite"/></path>`
+  }).join('')
+  const spots = INKS.map((_, i) => {
+    const dur = 2.6 + i * 0.5
+    const from = x0 + ((i * 97) % Math.max(1, x1 - x0))
+    return `<ellipse cx="${n(from)}" cy="${h - 12}" rx="26" ry="7" fill="url(#spot${i})">` +
+      `<animate attributeName="cx" values="${n(from)};${n(x1)};${n(x0)};${n(from)}" dur="${n(dur)}s" repeatCount="indefinite"/></ellipse>`
+  }).join('')
+  // The ball: a disc of mirror tiles whose rows slide past as it turns, and glints flashing on it.
+  const tiles = Array.from({ length: 7 }, (_, row) => {
+    const y = by - br + row * 2.7
+    return `<g><animateTransform attributeName="transform" type="translate" values="0 0;2.7 0" dur="0.45s" repeatCount="indefinite"/>` +
+      Array.from({ length: 10 }, (_, k) => `<rect x="${n(cx - br - 2.7 + k * 2.7 + (row % 2) * 1.35)}" y="${n(y)}" width="2.2" height="2.2" rx="0.4" fill="${(k + row) % 4 === 0 ? '#FFFFFF' : (k + row) % 4 === 2 ? '#E3E6EE' : '#A9AEBA'}"/>`).join('') + '</g>'
+  }).join('')
+  const glints = [[-4, -3, 0], [4, 1, 0.45], [-1, 4, 0.9]].map(([dx, dy, b]) =>
+    `<path d="M${n(cx + dx!)} ${n(by + dy! - 3)}V${n(by + dy! + 3)}M${n(cx + dx! - 3)} ${n(by + dy!)}H${n(cx + dx! + 3)}" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0"><animate attributeName="opacity" values="0;1;0" dur="1.2s" begin="${b}s" repeatCount="indefinite"/></path>`).join('')
+  const ball = `<path d="M${n(cx)} 0V${by - br}" stroke="#9A9994" stroke-width="0.9"/>` +
+    `<clipPath id="ballclip"><circle cx="${n(cx)}" cy="${by}" r="${br - 0.4}"/></clipPath><circle cx="${n(cx)}" cy="${by}" r="${br}" fill="#7D828E"/>` +
+    `<g clip-path="url(#ballclip)">${tiles}</g><circle cx="${n(cx)}" cy="${by}" r="${br}" fill="none" stroke="#fff" stroke-opacity="0.4" stroke-width="0.7"/>${glints}`
+  return `<defs>${defs}</defs>${beams}${spots}${ball}`
+}
+
 /** The panel's drawing, and where its gauges sit (in the drawing's pixels) so a click region can lie over them. */
 export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card: { x: number; w: number }; width: number } {
   const { shot, infoFrom } = panel
@@ -323,7 +363,10 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   // ---- three lines of what is happening ----
   const stageEnd = Math.round(MASCOT_X + MASCOT * 0.88 + 6)
   const clock = local(now, info.tz)
-  const show = shot.mood === 'party' ? fireworks(shot.at, (now - shot.at) / 1000, stageEnd + 10, sepX - 10, W, H) : { behind: '', front: '' }
+  // The disco is the line the typing put up for the secret word; any other celebration has fireworks.
+  const isDisco = shot.mood === 'party' && info.detail === t().fun.typing.disco
+  const show = shot.mood === 'party' && !isDisco ? fireworks(shot.at, (now - shot.at) / 1000, stageEnd + 10, sepX - 10, W, H) : { behind: '', front: '' }
+  const floor = isDisco ? disco(stageEnd + 10, sepX - 10, W, H) : ''
   const free = Math.max(0, sepX - stageEnd - 12)
   const room = Math.min(free, LINES_W)
   const x0 = stageEnd + Math.round((free - room) / 2)
@@ -425,7 +468,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
     `<text class="t faint" x="${metaX}" y="73" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + ci.svg
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
-    STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + show.behind + glow + mascot +
+    STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + show.behind + floor + glow + mascot +
     `<g transform="translate(0 ${n((H - ROW_H) / 2)})">` +
     // The bubble's pop and typing run from when the line changed, so a redraw
     // mid-way picks them up where they were; the rest loops on the clock.

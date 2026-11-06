@@ -133,6 +133,8 @@ type TypingLine = keyof ReturnType<typeof t>['fun']['typing']
  */
 const TOPICS: [RegExp, Mood, TypingLine][] = [
   [word('[sş]ifre', 'password', 'secret', 'token', 'api[ _-]?key', '\\.env(?!\\p{L})', 'credential'), 'scared', 'secret'],
+  // The secret word: the band turns into a disco while it stands (see the panel's `disco`).
+  [word('disko', 'disco', 'dans', 'dance'), 'party', 'disco'],
   [word('conflict', '<<<<<<<', '[cç]ak[ıi][sş]ma'), 'nervous', 'conflict'],
   [word('regex', 'regexp', 'regular expression', 'd[uü]zenli ifade'), 'dizzy', 'regex'],
   [/(^|[^\p{L}])(a?(ha){2,}|(he){2,}|j?sj?sj|lol|lmao|rofl|kdkd|asdf)(?!\p{L})|😂|🤣/iu, 'pleased', 'laugh'],

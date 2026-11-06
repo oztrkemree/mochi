@@ -16,7 +16,7 @@ import { typingMood } from '../hooks/fun'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
-import { fireworks, panelSvg, sky } from '../hooks/panel'
+import { disco, fireworks, panelSvg, sky } from '../hooks/panel'
 import { paramsAt, svgFor, target, TRANSITION_MS } from '../hooks/rig'
 import { afterTool, beforeTool, duration, flowEnd, flowLine, isScary, onPrompt, onTurnEnd } from '../hooks/react'
 
@@ -906,4 +906,15 @@ test('Mochi reads the draft over the shoulder and reacts before it is sent', () 
   for (const [text, line] of said) expect(typingMood(text)?.line).toBe(line)
   expect(typingMood('hafta sonu')?.mood).toBe('party')
   expect(typingMood('bu nasıl çalışıyor?')?.mood).toBe('thinking')
+})
+
+test('the secret word turns the band into a disco, and no other celebration does', () => {
+  setLang('tr')
+  expect(typingMood('hadi disko')).toEqual({ mood: 'party', line: 'disko zamanı! 🪩' })
+  expect(typingMood('dans edelim')?.line).toBe('disko zamanı! 🪩')
+  expect(disco(100, 600, 740, 88)).toContain('clip-path="url(#ballclip)"')
+  const shot = { mood: 'party' as const, scene: { context: 10, agents: 0 }, at: 1_760_000_000_000, from: null }
+  const band = (detail: string) => panelSvg({ panel: { shot, info: { ...NO_INFO, label: 'party', detail }, infoFrom: null, infoAt: shot.at }, now: shot.at + 500, width: 740 }).svg
+  expect(band('disko zamanı! 🪩')).toContain('ballclip')
+  expect(band('testler geçti')).not.toContain('ballclip')
 })

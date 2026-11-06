@@ -314,7 +314,7 @@ export const de: typeof en = {
     love: 'ich hab dich auch lieb',
     hello: 'hallo',
     welcome: 'gern geschehen',
-    typing: { careful: 'Vorsicht…', aww: 'ohh ♥', uhoh: 'oh-oh…', question: 'hmm, gute Frage', bug: 'ein Bug? fangen wir ihn', whoa: 'hui, ganz ruhig!', secret: 'bleibt geheim 🔒', conflict: 'ein Konflikt? ⚔️', regex: 'Regex… schwindlig 🌀', sorry: 'passiert 😉', laugh: 'hehe 😄', wow: 'wow 😮', birthday: 'alles Gute! 🎂', weekend: 'Wochenende! 🎉', monday: 'Montag… ☕', night: 'gute Nacht 🌙', morning: 'guten Morgen ☀️', hi: 'hallo! 👋', coffee: 'Kaffeepause? ☕', food: 'lass mir was übrig 🍕', tired: 'ruh dich aus 🥱', test: 'Daumen drücken 🤞', ship: 'raus damit! 🚀', tidy: 'räumen wir auf 🧹', fast: 'machen wir’s schneller ⚡', rush: 'sofort! ⏱️', help: 'ich bin da, wir kriegen das hin', center: 'ein div zentrieren? 🫠' },
+    typing: { careful: 'Vorsicht…', aww: 'ohh ♥', uhoh: 'oh-oh…', question: 'hmm, gute Frage', bug: 'ein Bug? fangen wir ihn', whoa: 'hui, ganz ruhig!', secret: 'bleibt geheim 🔒', conflict: 'ein Konflikt? ⚔️', regex: 'Regex… schwindlig 🌀', sorry: 'passiert 😉', laugh: 'hehe 😄', wow: 'wow 😮', birthday: 'alles Gute! 🎂', weekend: 'Wochenende! 🎉', monday: 'Montag… ☕', night: 'gute Nacht 🌙', morning: 'guten Morgen ☀️', hi: 'hallo! 👋', coffee: 'Kaffeepause? ☕', food: 'lass mir was übrig 🍕', tired: 'ruh dich aus 🥱', test: 'Daumen drücken 🤞', ship: 'raus damit! 🚀', tidy: 'räumen wir auf 🧹', fast: 'machen wir’s schneller ⚡', rush: 'sofort! ⏱️', help: 'ich bin da, wir kriegen das hin', center: 'ein div zentrieren? 🫠', disco: 'Disco-Zeit! 🪩' },
     leet: '13:37',
     breakLine: span => `${span} ohne Pause · kurz strecken?`,
     badgesTitle: 'ABZEICHEN',
