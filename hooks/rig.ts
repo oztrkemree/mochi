@@ -1057,7 +1057,19 @@ export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, numb
   },
 }
 
+/** How far a thing on the ground stands out from Mochi, in the drawing's units, and how much it is grown about its foot. */
+const GROUND_GAP = 3
+const GROUND_S = 1.12
+
+/** One thing worn, in place; a thing on the ground a little apart and a little larger. */
 function wearSvg(item: Item): string {
+  const at = WEAR_AT[item]
+  if (!at.ground) return placed(item)
+  const x = at.x + (at.x < 50 ? -GROUND_GAP : GROUND_GAP)
+  return `<g transform="translate(${n(x)} 88.6) scale(${GROUND_S}) translate(${n(-at.x)} -88.6)">${placed(item)}</g>`
+}
+
+function placed(item: Item): string {
   const vector = VECTOR_WEAR[item]
   const at = WEAR_AT[item]
   // Lines are drawn at a fixed size; `s` grows them around their foot (on the ground) or center.
@@ -1206,7 +1218,6 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     '</defs>',
     helpers(wasScene.agents, scene.agents),
     '<ellipse cx="50" cy="88.5" rx="21" ry="3" fill="#2B1B17" opacity="0.13"/>',
-    wearSlot('ground', outfit, wasOutfit),
     waves,
     `<g transform="translate(${n(to.shift)} ${n(to.lift)})">${tweenT('translate', `${n(from.shift)} ${n(from.lift)}`, `${n(to.shift)} ${n(to.lift)}`)}`,
     `<g>${loops.move}`,
@@ -1253,6 +1264,8 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     '</g></g></g></g>',
     over,
     '</g></g></g></g>',
+    // What stands beside Mochi is drawn in front of it.
+    wearSlot('ground', outfit, wasOutfit),
     '</svg>',
   ].join('')
 }

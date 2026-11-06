@@ -626,7 +626,9 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     const { Box, Svg } = $.ui.resolve(e)
     const pane = await read($, panel)
     const now = await $.clock.now()
-    const width = Math.round(Math.min(1600, Math.max(420, e.props.bodyColumns * 8.1 - 8)))
+    // The five columns the engine keeps at the right for the terminal's `[-]`
+    // stand empty here, so the panel takes them.
+    const width = Math.round(Math.min(1600, Math.max(420, (e.props.bodyColumns + 5) * 8.1 - 8)))
     const alt = `${pane.info.label}: ${pane.info.detail}`
     let drawn: ReturnType<typeof panelSvg>
     try {
@@ -641,13 +643,13 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     }
     // A clear region pulled back over the whole panel: a click anywhere on it
     // opens the detail pane. Columns are the band's own unit, about 8.1 pixels
-    // here; 3.8 rows (lines) is the panel's height, so the band does not grow.
+    // here, and 20 pixels a row, so the region is the panel's height.
     const panelCols = Math.max(8, Math.round(drawn.width / 8.1))
     let hit: JSX.Element | null = null
     if (e.surface === 'desktop') {
       const { Client } = $.ui.resolve(e)
       hit = (
-        <Box marginLeft={-panelCols} width={panelCols} height={3.8} flexShrink={0}>
+        <Box marginLeft={-panelCols} width={panelCols} height={PANEL_H / 20} flexShrink={0}>
           <Client key="hit" module="./hit.tsx" props={{ rows: 6 }} width="100%" height="100%" />
         </Box>
       )

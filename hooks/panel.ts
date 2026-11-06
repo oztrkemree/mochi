@@ -13,7 +13,15 @@ import { mascotInner, shiftTimeline } from './rig'
 // week). One SVG keeps everything aligned whatever the band's own layout
 // does, and an <img> of it keeps the painted parts an interactive frame would strip.
 
-export const PANEL_H = 76
+export const PANEL_H = 88
+/** The height the lines and gauges are laid out in, centred in the band's. */
+const ROW_H = 76
+/** The mascot's box in the band, in pixels: larger than the band, its empty margins outside. */
+const MASCOT = Math.round(PANEL_H * 1.14)
+/** The mascot's box from the band's left edge, room for what stands beside it. */
+const MASCOT_X = 4
+/** The widest the three lines get; past it they sit centred between the mascot and the gauges. */
+const LINES_W = 440
 
 /** Which family a tool belongs to, for the strip's icon and colour. */
 export function toolKind(tool: string): Recent['kind'] {
@@ -203,7 +211,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const since = Math.max(0, now - panel.infoAt) / 1000
 
   // ---- three ring gauges on the right ----
-  const colW = 84
+  const colW = 72
   const list = gauges(info, was, now)
   const gX = W - colW * list.length
   const sepX = gX - 8
@@ -216,14 +224,22 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   }).join('')
 
   // ---- the mascot on its stage ----
+  // The mascot's box is larger than the band: its drawing reaches from about
+  // 9 units down (a hat) to 93 (what stands beside it), so that span fills
+  // the height; across, it reaches 88, where the lines may start.
+  const mY = -MASCOT * 0.07
+  const gx = n(MASCOT_X + MASCOT * 0.5), gy = n(mY + MASCOT * 0.55), gr = n(MASCOT * 0.35)
   const glow = info.isBusy
-    ? `<circle cx="38" cy="42" r="27" fill="${ink}" opacity="0.3" filter="url(#haze)"><animate attributeName="opacity" values="0.18;0.38;0.18" dur="2.4s" repeatCount="indefinite"/></circle>`
-    : `<circle cx="38" cy="42" r="27" fill="${ink}" opacity="0.2" filter="url(#haze)"/>`
-  const mascot = `<svg x="0" y="0" width="${H}" height="${H}" viewBox="0 0 100 100" overflow="visible">${mascotInner(shot, Math.max(0, now - shot.at))}</svg>`
+    ? `<circle cx="${gx}" cy="${gy}" r="${gr}" fill="${ink}" opacity="0.3" filter="url(#haze)"><animate attributeName="opacity" values="0.18;0.38;0.18" dur="2.4s" repeatCount="indefinite"/></circle>`
+    : `<circle cx="${gx}" cy="${gy}" r="${gr}" fill="${ink}" opacity="0.2" filter="url(#haze)"/>`
+  const mascot = `<svg x="${MASCOT_X}" y="${n(mY)}" width="${MASCOT}" height="${MASCOT}" viewBox="0 0 100 100" overflow="visible">${mascotInner(shot, Math.max(0, now - shot.at))}</svg>`
 
   // ---- three lines of what is happening ----
-  const x0 = 86
-  const room = sepX - x0 - 12
+  const stageEnd = Math.round(MASCOT_X + MASCOT * 0.88 + 6)
+  const free = Math.max(0, sepX - stageEnd - 12)
+  const room = Math.min(free, LINES_W)
+  const x0 = stageEnd + Math.round((free - room) / 2)
+  const end = x0 + room
   const [verb = '', ...rest] = info.detail.split(' · ')
   const subject = rest.join(' · ')
   const titleRoom = Math.max(6, Math.floor((room - 14) / 8.1))
@@ -241,7 +257,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
     ? [t().st.tools(info.tools), ...(info.agents > 0 ? [t().st.agents(info.agents)] : [])].join(' · ')
     : info.last !== '' ? t().panel.lastTurn(info.last) : info.label
   const sumX = x0 + line.width + (line.width > 0 ? 6 : 0)
-  const second = line.svg + `<text class="t dim" x="${sumX}" y="47" font-size="11.5">${esc(clip(summary, Math.max(4, Math.floor((sepX - sumX - 12) / 6.6))))}</text>`
+  const second = line.svg + `<text class="t dim" x="${sumX}" y="47" font-size="11.5">${esc(clip(summary, Math.max(4, Math.floor((end - sumX) / 6.6))))}</text>`
 
   const git = info.git
   const metaParts = [
@@ -249,17 +265,18 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
     ...(info.cost > 0 ? [`$${info.cost.toFixed(2)}`] : []),
   ]
   const metaX = git ? x0 + 14 : x0
-  const room3 = sepX - metaX - 12
+  const room3 = end - metaX
   // A push's CI while its runs go, else the branch's pull request, at the right end of the line.
-  const ci = ciMark(info.ci, info.pr, sepX - 12, 67, room3 - 40)
+  const ci = ciMark(info.ci, info.pr, end, 67, room3 - 40)
   const third = (git ? BRANCH(x0, 67) : '') +
     `<text class="t faint" x="${metaX}" y="67" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + ci.svg
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
     STYLE + rtlStyle() + DEFS + glow + mascot +
+    `<g transform="translate(0 ${n((H - ROW_H) / 2)})">` +
     shiftTimeline(dot + title + second + third, (now / 1000) % 600) +
     `<path class="rule" d="M${n(sepX)} 14V62"/>` +
     shiftTimeline(rings, since) +
-    '</svg>'
+    '</g></svg>'
   return { svg, card: { x: sepX, w: W - sepX }, width: W }
 }
