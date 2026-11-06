@@ -163,7 +163,7 @@ async function pressed($: Dollar, element: string, surface?: RenderSurface) {
     const what = element.slice(5)
     const item = itemOf(what)
     if (what === 'auto') await setPrefs($, p => ({ ...p, pick: {} }))
-    else if (what === 'none') await setPrefs($, p => ({ ...p, pick: { head: null, face: null, neck: null, held: null, ground: null } }))
+    else if (what === 'none') await setPrefs($, p => ({ ...p, pick: { head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null } }))
     else if (item !== null) await toggleItem($, item)
     await sync($)
   }
@@ -1150,7 +1150,7 @@ async function wear($: Dollar, arg: string, p: Prefs): Promise<string> {
     return d.wearAuto
   }
   if (names(arg, 'none', 'none', 'off')) {
-    await setPrefs($, x => ({ ...x, pick: { head: null, face: null, neck: null, held: null, ground: null } }))
+    await setPrefs($, x => ({ ...x, pick: { head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null } }))
     await sync($)
     return d.wearNone
   }

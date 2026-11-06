@@ -39,7 +39,7 @@ const NOW = Date.UTC(2026, 9, 10, 15, 0)
 const OUT = new URL('../docs/gif/', import.meta.url)
 mkdirSync(OUT, { recursive: true })
 
-const outfit = wear => ({ head: null, face: null, neck: null, held: null, ground: null, ...wear })
+const outfit = wear => ({ head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null, ...wear })
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 // ---------- the band, moment by moment ----------
@@ -250,12 +250,12 @@ function wardrobeScene() {
   const H = 400
   const looks = [
     { mood: 'wave', wear: { head: 'beanie', held: 'mug' } },
-    { mood: 'proud', wear: { head: 'crown', face: 'monocle', ground: 'cat' } },
+    { mood: 'proud', wear: { head: 'crown', eyes: 'monocle', ground: 'cat' } },
     { mood: 'thinking', wear: { head: 'wizard', neck: 'scarf' } },
     { mood: 'party', wear: { head: 'partyhat', neck: 'medal', held: 'balloon' } },
-    { mood: 'writing', wear: { head: 'cowboy', face: 'mustache' } },
-    { mood: 'reading', wear: { head: 'gradcap', face: 'glasses', held: 'pencil' } },
-    { mood: 'success', wear: { head: 'pirate', face: 'sunglasses', ground: 'duck' } },
+    { mood: 'writing', wear: { head: 'cowboy', lip: 'mustache' } },
+    { mood: 'reading', wear: { head: 'gradcap', eyes: 'glasses', held: 'pencil' } },
+    { mood: 'success', wear: { head: 'pirate', eyes: 'sunglasses', ground: 'duck' } },
     { mood: 'running', wear: { head: 'hardhat', held: 'wrench' } },
     { mood: 'pleased', wear: { head: 'chefhat', neck: 'bowtie', held: 'cake' } },
     { mood: 'sleeping', wear: { head: 'nightcap', ground: 'cactus' } },

@@ -56,7 +56,7 @@ const SCALE = 1.5
 const NOW = Date.UTC(2026, 9, 10, 15, 0)
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 
-const outfit = wear => ({ head: null, face: null, neck: null, held: null, ground: null, ...wear })
+const outfit = wear => ({ head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null, ...wear })
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const canHold = mood => POSES[mood].held === undefined && POSES[mood].armR >= -40 && POSES[mood].armR <= 0
 const ok = kind => ({ kind, state: 'ok' })
@@ -369,6 +369,7 @@ function rng(seed) {
   const pick = list => list[Math.floor(rand() * list.length)]
   const look = (mood, extra = 0.5) => {
     const wear = { head: pick(SLOT_ITEMS.head) }
+    if (rand() < extra) wear.eyes = pick(SLOT_ITEMS.eyes)
     if (rand() < extra) wear.face = pick(SLOT_ITEMS.face)
     if (rand() < extra) wear.neck = pick(SLOT_ITEMS.neck)
     if (canHold(mood) && rand() < 0.75) wear.held = pick(SLOT_ITEMS.held)
@@ -379,18 +380,18 @@ function rng(seed) {
   const SLOT_S = 0.9
   const showLooks = [
     { mood: 'wave', wear: { head: 'beanie', held: 'mug' } },
-    { mood: 'proud', wear: { head: 'crown', face: 'monocle', ground: 'cat' } },
+    { mood: 'proud', wear: { head: 'crown', eyes: 'monocle', ground: 'cat' } },
     { mood: 'thinking', wear: { head: 'wizard', neck: 'scarf', ground: 'robot' } },
     { mood: 'pleased', wear: { head: 'astronaut', ground: 'rocket', held: 'flag' } },
-    { mood: 'love', wear: { head: 'flowercrown', face: 'heartglasses', ground: 'hedgehog' } },
-    { mood: 'wink', wear: { head: 'pirate', face: 'eyepatch', ground: 'chest' } },
+    { mood: 'love', wear: { head: 'flowercrown', eyes: 'heartglasses', ground: 'hedgehog' } },
+    { mood: 'wink', wear: { head: 'pirate', eyes: 'eyepatch', ground: 'chest' } },
     { mood: 'idle', wear: { head: 'dragon', neck: 'goldchain', ground: 'campfire' } },
-    { mood: 'success', wear: { head: 'viking', face: 'beard', ground: 'axolotl' } },
-    { mood: 'wave', wear: { head: 'unicorn', face: 'starglasses', held: 'wand' } },
+    { mood: 'success', wear: { head: 'viking', chin: 'beard', ground: 'axolotl' } },
+    { mood: 'wave', wear: { head: 'unicorn', eyes: 'starglasses', held: 'wand' } },
     { mood: 'pleased', wear: { head: 'chefhat', neck: 'bowtie', held: 'whisk', ground: 'cake' } },
     { mood: 'idle', wear: { head: 'catears', face: 'catwhiskers', neck: 'bellcollar', ground: 'cat' } },
     { mood: 'party', wear: { head: 'partyhat', neck: 'medal', held: 'balloon', ground: 'gift' } },
-    { mood: 'wink', wear: { head: 'tophat', face: 'monocle', neck: 'necktie', ground: 'penguin' } },
+    { mood: 'wink', wear: { head: 'tophat', eyes: 'monocle', neck: 'necktie', ground: 'penguin' } },
     { mood: 'sleeping', wear: { head: 'nightcap', ground: 'lavalamp' } },
   ].map(l => ({ ...l, wear: canHold(l.mood) ? l.wear : { ...l.wear, held: null } }))
   const montage = mascotMoments(showLooks.map((l, i) => ({ at: 0.8 + i * SLOT_S, mood: l.mood, wear: l.wear, label: Object.values(l.wear).filter(Boolean).map(itemName).join(' · ') })))
@@ -433,7 +434,7 @@ const sl = (name, tokens) => ({ name, tokens, color: '' })
 const slicesAt = ctx => [sl('System prompt', 8000), sl('System tools', 14000), sl('MCP tools', 22000), sl('Memory files', 6000), sl('Messages', Math.max(0, ctx * 2000 - 50000))]
 
 {
-  const wear = { head: 'gradcap', face: 'glasses' }
+  const wear = { head: 'gradcap', eyes: 'glasses' }
   const r3 = [ok('read'), ok('search'), ok('edit')]
   const squeeze = contextWarning({ ...NO_ENV, context: 84, tokens: 168_000, window: 200_000, compactAt: 167_000, slices: slicesAt(84) }, 2) || 'context almost full'
   const M = bandMoments([
@@ -525,7 +526,7 @@ const askHtml = (question, mark) => question.split('\n\n').map(p => (p === mark 
     sub: 'Onto <code>main</code>, <code>master</code>, <code>trunk</code> or <code>develop</code> it asks and names the branch. On your own branch, just a nervous look.',
     beats: [[3.4, 'A force push onto <b>main</b>'], [4.0, 'The question names the branch it would rewrite'], [6.6, '<b>Always allow here</b> remembers per repository'], [8.4, 'History stays as it was']],
     prompt: 'push my fix, force it if you have to', call: { tool: 'Bash', command: cmd }, toolName: 'Bash', toolArg: cmd,
-    ask: askHtml(t().shield.question(what, cmd), cmd), what, wear: { head: 'viking', face: 'beard' }, after: 'main was not touched',
+    ask: askHtml(t().shield.question(what, cmd), cmd), what, wear: { head: 'viking', chin: 'beard' }, after: 'main was not touched',
   })
 }
 {
@@ -540,7 +541,7 @@ const askHtml = (question, mark) => question.split('\n\n').map(p => (p === mark 
     sub: 'Live keys and tokens (AWS, GitHub, Anthropic, OpenAI, Slack, Stripe, private keys) and files like <code>.env</code>.',
     beats: [[3.4, 'Claude is about to write a key into a file'], [4.0, 'Mochi asks, and shows it <b>masked</b>'], [6.6, 'Placeholders and test values go through'], [8.4, 'The key never reaches the file, or a commit']],
     prompt: 'wire up the S3 upload with my key', call: { tool: 'Write', file_path: 'src/config.ts' }, toolName: 'Write', toolArg: 'src/config.ts',
-    ask: askHtml(t().shield.editQuestion(what, 'config.ts'), found[0]?.detail ?? ''), what, wear: { head: 'explorer', face: 'sunglasses' }, after: 'the key was not written',
+    ask: askHtml(t().shield.editQuestion(what, 'config.ts'), found[0]?.detail ?? ''), what, wear: { head: 'explorer', eyes: 'sunglasses' }, after: 'the key was not written',
   })
 }
 
@@ -719,7 +720,7 @@ window.scene = s => { play($('band'), M, s); if (s < ${BADGE_AT}) play($('hero')
     ['hanami', 'sakura season', { head: 'sakura' }],
     ['hacktoberfest', 'October', { neck: 'pin', head: 'beanie' }],
     ['anniversary', 'the day you met', { neck: 'rosette', ground: 'cake' }],
-    ['piDay', '03-14', { face: 'nerdglasses', held: 'pencil' }],
+    ['piDay', '03-14', { eyes: 'nerdglasses', held: 'pencil' }],
     ['friday13', 'Friday the 13th', { ground: 'cat' }],
   ]
   const tiles = list.map(([name, when, wear]) => {
@@ -749,7 +750,7 @@ window.scene = s => D.forEach((m, i) => play($('d' + i), m, s))`,
 // ---------- 10. show it off ----------
 
 {
-  const card = cardSvg(history, outfit({ head: 'crown', face: 'monocle', neck: 'medal', ground: 'cat' }))
+  const card = cardSvg(history, outfit({ head: 'crown', eyes: 'monocle', neck: 'medal', ground: 'cat' }))
   const wrapped = wrappedSvg(wrappedOf([{ label: 'shop', days }], 'month', '2026-10-03'), outfit({ head: 'wizard', neck: 'scarf' }))
   const SWAP = 6.2
   const label = (at, out, text) => `<div class="mono" data-in="${at}" ${out ? `data-out="${out}"` : ''} style="position:absolute;left:478px;width:760px;top:96px;text-align:center;font-size:20px;color:#F2B84B">${text}</div>`
@@ -891,7 +892,7 @@ window.scene = s => {
     { at: 0, r: beforeTool({ tool: 'Edit', file_path: 'src/cart.ts' }), ctx: 40, five: 52, busy: true, recent: r, slices: slicesAt(40) },
     { at: 1.3, r: beforeTool({ tool: 'Bash', command: 'npm run build' }), ctx: 58, five: 71, busy: true, recent: r, slices: slicesAt(58), forecast: { five_hour: NOW + 95 * MIN } },
     { at: 2.6, r: beforeTool({ tool: 'Edit', file_path: 'src/pay.ts' }), ctx: 76, five: 89, busy: true, recent: r, slices: slicesAt(76), warn: 1, forecast: { five_hour: NOW + 18 * MIN } },
-  ], { head: 'gradcap', face: 'glasses' })
+  ], { head: 'gradcap', eyes: 'glasses' })
   const Z = 3.6
   scene({
     name: 'short-limits', chapter: '', film: 'short', fade: 0.12, dur: 4.4, bare: true, tag: '', title: '', sub: '',
@@ -943,12 +944,12 @@ window.scene = s => {
 
 {
   const looks = [
-    { mood: 'wave', wear: { head: 'crown', face: 'monocle', ground: 'cat' } },
+    { mood: 'wave', wear: { head: 'crown', eyes: 'monocle', ground: 'cat' } },
     { mood: 'pleased', wear: { head: 'astronaut', ground: 'rocket' } },
-    { mood: 'wink', wear: { head: 'pirate', face: 'eyepatch', ground: 'chest' } },
+    { mood: 'wink', wear: { head: 'pirate', eyes: 'eyepatch', ground: 'chest' } },
     { mood: 'idle', wear: { head: 'dragon', neck: 'goldchain', ground: 'campfire' } },
-    { mood: 'success', wear: { head: 'viking', face: 'beard', ground: 'axolotl' } },
-    { mood: 'wave', wear: { head: 'unicorn', face: 'starglasses' } },
+    { mood: 'success', wear: { head: 'viking', chin: 'beard', ground: 'axolotl' } },
+    { mood: 'wave', wear: { head: 'unicorn', eyes: 'starglasses' } },
     { mood: 'pleased', wear: { head: 'chefhat', neck: 'bowtie', ground: 'cake' } },
     { mood: 'party', wear: { head: 'partyhat', neck: 'medal', ground: 'gift' } },
   ]

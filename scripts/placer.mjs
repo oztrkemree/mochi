@@ -31,7 +31,7 @@ function state() {
   const level = read('level.ts')
   const slotOf = {}
   const block = level.slice(level.indexOf('export const SLOT_ITEMS'), level.indexOf('export const SLOT:'))
-  for (const m of block.matchAll(/(head|face|neck|held|ground): \[([^\]]*)\]/g)) {
+  for (const m of block.matchAll(/(head|eyes|face|lip|chin|neck|held|ground): \[([^\]]*)\]/g)) {
     for (const id of m[2].matchAll(/'(\w+)'/g)) slotOf[id[1]] = m[1]
   }
   const items = []
@@ -381,7 +381,7 @@ fetch('/api').then(r => r.json()).then(s => {
   S = s
   // WEAR_AT's w is the width on the drawing; the picture's own pixel size is wear.ts's
   S.items.forEach(it => { it.w0 = it.pw; it.h = it.ph })
-  const order = ['head', 'face', 'neck', 'held', 'ground']
+  const order = ['head', 'eyes', 'face', 'lip', 'chin', 'neck', 'held', 'ground']
   const list = $('list')
   for (const slot of order) {
     const here = S.items.filter(i => i.slot === slot)

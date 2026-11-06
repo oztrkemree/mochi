@@ -17,7 +17,7 @@ export const itemName = (i: Item): string => t().item.name[i]
 export const itemShort = (i: Item): string => t().item.short[i]
 
 export type Slot = keyof Outfit
-export const SLOTS: Slot[] = ['head', 'face', 'neck', 'held', 'ground']
+export const SLOTS: Slot[] = ['head', 'eyes', 'face', 'lip', 'chin', 'neck', 'held', 'ground']
 export const slotName = (s: Slot): string => t().item.slot[s]
 
 /** Each slot's items, in the order the wardrobe shows them (roughly the order they unlock). */
@@ -25,11 +25,16 @@ export const SLOT_ITEMS: Record<Slot, Item[]> = {
   head: ['beanie', 'hardhat', 'gradcap', 'chefhat', 'cowboy', 'crown', 'pirate', 'viking', 'wizard', 'partyhat', 'propeller', 'fez', 'nightcap', 'witchhat', 'santahat', 'sakura',
     'bandana', 'sailorhat', 'strawhat', 'daisyhat', 'leaf', 'catears', 'bunnyears', 'flowercrown', 'beret', 'tophat', 'jester', 'nursecap', 'sombrero', 'antlers', 'farmer', 'sunflowercrown', 'bee', 'halo', 'unicorn', 'shortcake', 'rainbow', 'dragon', 'astronaut',
     'bowler', 'flatcap', 'explorer', 'baseballcap'],
-  face: ['glasses', 'sunglasses', 'mustache', 'monocle',
-    'heartglasses', 'eyepatch', 'beard', 'goggles', 'starglasses', 'cinema3d', 'nerdglasses', 'visor',
-    'clownnose', 'catwhiskers', 'plaster', 'freckles', 'bushybrows', 'eyelashes', 'fangs', 'teardrop'],
+  eyes: ['glasses', 'sunglasses', 'monocle',
+    'heartglasses', 'eyepatch', 'goggles', 'starglasses', 'cinema3d', 'nerdglasses', 'visor',
+    'aviators', 'cateye', 'pixelshades', 'masquerade', 'divemask', 'vrheadset'],
+  face: ['clownnose', 'catwhiskers', 'plaster', 'freckles', 'bushybrows', 'eyelashes', 'fangs', 'teardrop',
+    'goldstars', 'wheat', 'facemask', 'lollipop', 'bubblegum', 'rose'],
+  lip: ['mustache', 'pencilstache', 'chevron', 'handlebar', 'horseshoe', 'walrus'],
+  chin: ['beard', 'goatee', 'soulpatch', 'chinstrap', 'wizardbeard', 'braidbeard'],
   neck: ['bowtie', 'necktie', 'scarf', 'evileye', 'medal', 'pin', 'rosette',
-    'spikedcollar', 'pearls', 'bellcollar', 'neckerchief', 'lei', 'goldchain', 'overalls'],
+    'spikedcollar', 'pearls', 'bellcollar', 'neckerchief', 'lei', 'goldchain', 'overalls',
+    'sailorcollar', 'whistle', 'lanyard', 'camera', 'stethoscope', 'binoculars', 'headphones', 'bib', 'ruff', 'bolotie', 'boa', 'locket'],
   held: ['mug', 'tea', 'pencil', 'simit', 'wrench', 'balloon', 'candy', 'lantern', 'envelope',
     'flag', 'whisk', 'pinwheel', 'compass', 'key', 'icecream', 'cupcake', 'sunflower', 'clover', 'toadstool', 'cactuspot', 'wand', 'potion', 'paddle', 'joystick', 'bubblewand', 'rollingpin', 'harmonica', 'tambourine'],
   ground: ['sprout', 'bunny', 'horse', 'cactus', 'duck', 'cat', 'gift', 'pumpkin', 'diya', 'songpyeon', 'cake',
@@ -124,7 +129,7 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'neckerchief', level: 37 },
   { item: 'lei', level: 37 },
   { item: 'goldchain', level: 38 }, { item: 'diya', level: 38 },
-  { item: 'overalls', level: 39 },
+  { item: 'overalls', level: 39 }, { item: 'sailorcollar', level: 39 },
   { item: 'icecream', level: 40 }, { item: 'cupcake', level: 40 },
   { item: 'sunflower', level: 41 }, { item: 'clover', level: 41 },
   { item: 'toadstool', level: 42 }, { item: 'cactuspot', level: 42 },
@@ -142,6 +147,12 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'arcade', level: 54 }, { item: 'snowman', level: 54 },
   { item: 'rocket', level: 55 }, { item: 'watermelon', level: 55 },
   { item: 'chest', level: 56 }, { item: 'axolotl', level: 56 },
+  { item: 'ruff', level: 57 }, { item: 'bolotie', level: 57 },
+  { item: 'boa', level: 58 }, { item: 'locket', level: 58 },
+  { item: 'aviators', level: 59 }, { item: 'cateye', level: 59 },
+  { item: 'pixelshades', level: 60 }, { item: 'masquerade', level: 60 },
+  { item: 'divemask', level: 61 }, { item: 'vrheadset', level: 61 },
+  { item: 'walrus', level: 62 }, { item: 'braidbeard', level: 62 },
   { item: 'balloon', turns: 100 },
   { item: 'gift', days: 30 },
   { item: 'fez', streak: 7 },
@@ -153,6 +164,27 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'pinwheel', turns: 500 },
   { item: 'compass', days: 60 },
   { item: 'key', night: 50 },
+  { item: 'whistle', streak: 21 },
+  { item: 'lanyard', days: 90 },
+  { item: 'camera', turns: 1000 },
+  { item: 'stethoscope', edits: 1000 },
+  { item: 'binoculars', commits: 200 },
+  { item: 'headphones', night: 100 },
+  { item: 'bib', turns: 2000 },
+  { item: 'goldstars', days: 120 },
+  { item: 'wheat', commits: 300 },
+  { item: 'facemask', edits: 2000 },
+  { item: 'lollipop', turns: 3000 },
+  { item: 'bubblegum', streak: 30 },
+  { item: 'rose', night: 150 },
+  { item: 'goatee', days: 14 },
+  { item: 'soulpatch', commits: 25 },
+  { item: 'pencilstache', turns: 200 },
+  { item: 'chevron', edits: 250 },
+  { item: 'handlebar', streak: 10 },
+  { item: 'chinstrap', turns: 750 },
+  { item: 'horseshoe', commits: 150 },
+  { item: 'wizardbeard', night: 75 },
   { item: 'pin', badge: 'hundred' },
   { item: 'rosette', badge: 'month' }, { item: 'santahat', badge: 'month' },
   { item: 'cake', badge: 'fivehundred' },
@@ -236,10 +268,17 @@ export function xpOf(h: History | null): number {
   return Math.round(h.total.turns * 10 + h.total.edits * 2 + h.total.commits * 25 + h.activeDays * 30)
 }
 
+/**
+ * Level n starts at STEP × (n − 1)² experience. It is worked out from the
+ * history every time, so a gentler step lifts everyone's level at once, and
+ * what it opens is celebrated on the next look.
+ */
+const STEP = 60
+
 /** The level for an amount of experience, with the experience its level starts at and the next one needs. */
 export function levelOf(xp: number): { level: number; at: number; next: number } {
-  const level = Math.floor(Math.sqrt(Math.max(0, xp) / 100)) + 1
-  return { level, at: (level - 1) ** 2 * 100, next: level ** 2 * 100 }
+  const level = Math.floor(Math.sqrt(Math.max(0, xp) / STEP)) + 1
+  return { level, at: (level - 1) ** 2 * STEP, next: level ** 2 * STEP }
 }
 
 export function unlocked(h: History | null): Item[] {
@@ -291,7 +330,10 @@ export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: nu
   const held = pick.held !== undefined ? pick.held : dressed(s.held) ?? (s.isMorning && MUG_MOODS.has(mood) ? 'mug' : null)
   return {
     head,
+    eyes: pick.eyes ?? null,
     face: pick.face ?? null,
+    lip: pick.lip ?? null,
+    chin: pick.chin ?? null,
     neck,
     held: canHold ? held : null,
     ground: pick.ground !== undefined ? pick.ground : dressed(s.ground) ?? null,

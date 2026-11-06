@@ -45,8 +45,8 @@ const turn = [...read3, ok('edit'), ok('edit'), ok('bash')]
 /** What each moment shows: a reaction from the real code, what Mochi wears, and the band's figures. */
 const frames = [
   { r: { mood: 'wave', line: st.ready }, wear: { head: 'beanie' }, ctx: 12, recent: [] },
-  { r: beforeTool({ tool: 'Read', file_path: 'hooks/rig.ts' }), wear: { head: 'hardhat', face: 'glasses' }, ctx: 18, busy: true, recent: [...read3.slice(0, 2), run('read')] },
-  { r: beforeTool({ tool: 'Edit', file_path: 'hooks/panel.ts' }), wear: { head: 'hardhat', face: 'glasses' }, ctx: 24, busy: true, recent: [...read3, run('edit')] },
+  { r: beforeTool({ tool: 'Read', file_path: 'hooks/rig.ts' }), wear: { head: 'hardhat', eyes: 'glasses' }, ctx: 18, busy: true, recent: [...read3.slice(0, 2), run('read')] },
+  { r: beforeTool({ tool: 'Edit', file_path: 'hooks/panel.ts' }), wear: { head: 'hardhat', eyes: 'glasses' }, ctx: 24, busy: true, recent: [...read3, run('edit')] },
   { r: beforeTool({ tool: 'Bash', command: 'npm run build' }), wear: { head: 'hardhat' }, ctx: 31, busy: true, recent: [...turn.slice(0, 5), run('bash')] },
   { r: onTurnEnd({ reason: 'completed', seconds: 74, tools: 6, edits: 2, errors: 0 }), wear: { head: 'crown', neck: 'bowtie' }, ctx: 34, recent: turn },
   { r: beforeTool({ tool: 'AskUserQuestion' }), wear: { head: 'wizard', neck: 'scarf' }, ctx: 38, busy: true, recent: [...turn, run('ask')] },
@@ -54,7 +54,7 @@ const frames = [
   { r: { mood: 'sleeping', line: restLine('sleeping', 12 * 60_000) }, wear: { head: 'nightcap', ground: 'duck' }, ctx: 41, recent: [...turn, ok('ask')] },
 ]
 
-const outfit = wear => ({ head: null, face: null, neck: null, held: null, ground: null, ...wear })
+const outfit = wear => ({ head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null, ...wear })
 let last = ''
 
 /** One moment as the band draws it, its ids made its own so the moments do not share gradients and masks. */

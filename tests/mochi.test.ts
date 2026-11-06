@@ -473,11 +473,11 @@ test('days add up into a history, a level and things to wear', async () => {
   expect(h.activeDays).toBe(3)
   expect(h.streak).toBe(2)
   expect(xpOf(h)).toBe(47 * 10 + 20 * 2 + 3 * 25 + 3 * 30)
-  expect(levelOf(0)).toEqual({ level: 1, at: 0, next: 100 })
-  expect(levelOf(450)).toEqual({ level: 3, at: 400, next: 900 })
-  expect(unlocked(h)).toEqual(['beanie', 'glasses', 'mug', 'tea', 'sprout', 'bowtie', 'sunglasses', 'bunny', 'pencil', 'horse', 'bandana'])
+  expect(levelOf(0)).toEqual({ level: 1, at: 0, next: 60 })
+  expect(levelOf(450)).toEqual({ level: 3, at: 240, next: 540 })
+  expect(unlocked(h)).toEqual(['beanie', 'glasses', 'mug', 'tea', 'sprout', 'bowtie', 'sunglasses', 'bunny', 'pencil', 'horse', 'bandana', 'necktie', 'simit'])
   const noon = Date.UTC(2026, 6, 1, 9, 0)
-  const none = { head: null, face: null, neck: null, held: null, ground: null }
+  const none = { head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null }
   expect(outfitFor({}, ['bowtie', 'hardhat'], noon, 180, 'idle', true)).toEqual({ ...none, head: 'hardhat', neck: 'bowtie' })
   expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 5, 0), 180, 'idle', true).held).toBe('mug')
   expect(outfitFor({}, [], Date.UTC(2026, 6, 1, 23, 0), 180, 'writing', false).head).toBe('nightcap')
@@ -485,7 +485,9 @@ test('days add up into a history, a level and things to wear', async () => {
   expect(outfitFor({}, ['hardhat'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true)).toEqual({ ...none, head: 'hardhat' })
   expect(outfitFor({ head: 'hardhat' }, ['hardhat'], Date.UTC(2026, 9, 28, 9, 0), 180, 'idle', true).head).toBe('hardhat')
   expect(outfitFor({ head: null, neck: null, ground: null }, ['hardhat', 'bowtie'], noon, 180, 'idle', true)).toEqual(none)
-  expect(outfitFor({ face: 'glasses', held: 'balloon' }, [], noon, 180, 'idle', true)).toEqual({ ...none, face: 'glasses', held: 'balloon' })
+  expect(outfitFor({ eyes: 'glasses', held: 'balloon' }, [], noon, 180, 'idle', true)).toEqual({ ...none, eyes: 'glasses', held: 'balloon' })
+  // The face is four slots: glasses, a mustache, a beard and something else, all at once.
+  expect(outfitFor({ eyes: 'sunglasses', lip: 'mustache', chin: 'beard', face: 'freckles' }, [], noon, 180, 'idle', true)).toEqual({ ...none, eyes: 'sunglasses', lip: 'mustache', chin: 'beard', face: 'freckles' })
   expect(outfitFor({ held: 'balloon' }, [], noon, 180, 'success', false).held).toBe(null)
 })
 
@@ -500,13 +502,13 @@ test('the wardrobe puts on, takes off and goes back to automatic', async ($, on)
   // One slot at a time; what is locked is shown with what unlocks it, and no button.
   expect(await pane.find({ key: 'wear:viking' })).toBeUndefined()
   expect(await pane.find({ type: 'Text', text: 'seviye 12' })).toBeDefined()
-  await pane.press({ key: 'shelf:face' } as never)
+  await pane.press({ key: 'shelf:eyes' } as never)
   expect(await pane.find({ key: 'wear:glasses' })).toBeDefined()
   await pane.press({ key: 'wear:glasses' } as never)
-  expect((await pane.find({ type: 'Text', text: /^Yüz · / }))?.text).toBe('Yüz · gözlük')
+  expect((await pane.find({ type: 'Text', text: /^Gözlük · / }))?.text).toBe('Gözlük · gözlük')
   // On the desktop the whole card is clickable: a clear region over it posts for the button.
   await pane.post({}, { in: 'tap:wear:glasses' })
-  expect((await pane.find({ type: 'Text', text: /^Yüz · / }))?.text).toBe('Yüz · boş')
+  expect((await pane.find({ type: 'Text', text: /^Gözlük · / }))?.text).toBe('Gözlük · boş')
   await pane.post({}, { in: 'tap:shelf:head' })
   const said = await $.command.run({ command: 'mochi', args: 'aksesuar viking' } as never)
   expect(said.text).toBe('viking kaskı kilitli (seviye 12).')
@@ -521,12 +523,14 @@ test('what an older version saved under the Turkish item ids carries over', asyn
   expect(itemOf('gozluk')).toBe('glasses')
   expect(itemOf('glasses')).toBe('glasses')
   expect(itemOf('toString')).toBe(null)
-  expect(restorePrefs({ pick: { head: 'tac', face: 'gozluk', neck: 'baret', held: null } } as never).pick).toEqual({ head: 'crown', face: 'glasses', held: null })
+  // Glasses chosen while the face was one slot move to the glasses' own.
+  expect(restorePrefs({ pick: { head: 'tac', face: 'gozluk', neck: 'baret', held: null } } as never).pick).toEqual({ head: 'crown', eyes: 'glasses', held: null })
+  expect(restorePrefs({ pick: { face: 'beard', chin: null } } as never).pick).toEqual({ chin: null })
   expect(restorePrefs({ wear: 'kedi' } as never).pick).toEqual({ ground: 'cat' })
   const clock = engine(on, { prefs: { lang: 'en', pick: { face: 'gozluk' } } })
   await clock.set(NOON)
   await $.session.start(START)
-  expect((await $.command.run({ command: 'mochi', args: 'wear' } as never)).text).toContain('Face: glasses\n')
+  expect((await $.command.run({ command: 'mochi', args: 'wear' } as never)).text).toContain('Glasses: glasses\n')
   expect((await $.command.run({ command: 'mochi', args: 'wear bere' } as never)).text).toBe('beanie put on.')
   // An exact name wins over a longer one it begins: the tea glass, not the teardrop.
   expect((await $.command.run({ command: 'mochi', args: 'wear tea' } as never)).text).toBe('tea glass put on.')
@@ -568,10 +572,10 @@ test('the detail pane shows the other chats, the calendar and the level', async 
   }
   expect(/<[^a-zA-Z/!?]/.test(svg)).toBe(false)
   const level = levelSvg(env, 5_000_000_000_000, 500)
-  expect(level).toContain('Seviye 3')
-  expect(level).toContain('sıradaki: kravat')
-  expect(levelSummary(env)).toBe('Seviye 3 · %' + levelSummary(env).split('%')[1])
-  expect(levelSummary(env)).toContain('sıradaki: kravat (seviye 4)')
+  expect(level).toContain('Seviye 4')
+  expect(level).toContain('sıradaki: baret')
+  expect(levelSummary(env)).toBe('Seviye 4 · %' + levelSummary(env).split('%')[1])
+  expect(levelSummary(env)).toContain('sıradaki: baret (seviye 5)')
 })
 
 test('an edit is told in lines: what went, what came, one line before', async () => {

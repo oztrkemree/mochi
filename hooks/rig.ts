@@ -527,6 +527,40 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   lei: { x: 49.9, y: 68.8, w: 56.8, stretch: 0.61 },
   goldchain: { x: 50.1, y: 72.9, w: 50.7, stretch: 0.58 },
   overalls: { x: 50, y: 72.9, w: 45.8, stretch: 0.81 },
+  sailorcollar: { x: 50, y: 73, w: 58 },
+  whistle: { x: 54, y: 76.5, w: 11 },
+  lanyard: { x: 50, y: 78, w: 12 },
+  camera: { x: 50, y: 77.5, w: 18 },
+  stethoscope: { x: 50, y: 74, w: 47 },
+  binoculars: { x: 50, y: 76.5, w: 16 },
+  headphones: { x: 50, y: 69, w: 48 },
+  bib: { x: 50, y: 76, w: 28 },
+  ruff: { x: 50, y: 70, w: 58 },
+  bolotie: { x: 50, y: 75, w: 8 },
+  boa: { x: 50, y: 70, w: 64 },
+  locket: { x: 50, y: 76.5, w: 9, s: 1.2 },
+  aviators: { x: 50, y: 52, w: 48 },
+  pixelshades: { x: 50, y: 51, w: 44 },
+  cateye: { x: 50, y: 51.5, w: 48 },
+  masquerade: { x: 50, y: 50, w: 47 },
+  divemask: { x: 50, y: 50, w: 44 },
+  facemask: { x: 50, y: 64, w: 28 },
+  vrheadset: { x: 50, y: 51, w: 50 },
+  lollipop: { x: 60, y: 60, w: 20 },
+  bubblegum: { x: 50, y: 66, w: 12 },
+  wheat: { x: 37, y: 60, w: 18, s: 1.25 },
+  rose: { x: 46, y: 64, w: 28, s: 1.2 },
+  goldstars: { x: 50, y: 58, w: 44 },
+  pencilstache: { x: 50, y: 60.6, w: 26 },
+  chevron: { x: 50, y: 60.4, w: 30 },
+  handlebar: { x: 50, y: 59.2, w: 40 },
+  walrus: { x: 50, y: 61.6, w: 36 },
+  horseshoe: { x: 50, y: 65.4, w: 26 },
+  goatee: { x: 50, y: 71, w: 12 },
+  soulpatch: { x: 50, y: 69, w: 5 },
+  chinstrap: { x: 50, y: 66, w: 54 },
+  wizardbeard: { x: 50, y: 74, w: 48 },
+  braidbeard: { x: 50, y: 74, w: 46 },
   flag: { x: 88.1, y: 54.2, w: 20.6, r: 15 },
   whisk: { x: 83.8, y: 53.1, w: 12, r: 24, stretch: 0.99 },
   pinwheel: { x: 81.3, y: 50.5, w: 21.2 },
@@ -548,7 +582,7 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   tambourine: { x: 85, y: 59.9, w: 23, r: 45, stretch: 0.79 },
 }
 
-const NO_OUTFIT: Outfit = { head: null, face: null, neck: null, held: null, ground: null }
+const NO_OUTFIT: Outfit = { head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null }
 
 /** `count` circles of radius `r` around (x, y), `d` from it: a blossom's petals, a rosette's pleats. */
 const around = (x: number, y: number, d: number, r: number, count: number) =>
@@ -556,6 +590,25 @@ const around = (x: number, y: number, d: number, r: number, count: number) =>
     const a = (i * 2 * Math.PI) / count
     return `<circle cx="${n(x + Math.sin(a) * d)}" cy="${n(y - Math.cos(a) * d)}" r="${n(r)}"/>`
   }).join('')
+
+/** `count` points spread evenly along the curve from (x1, y1) to (x2, y2) bending toward (cx, cy), each with the curve's slope there in degrees: a ruff's pleats, a boa's tufts. */
+const along = (x1: number, y1: number, cx: number, cy: number, x2: number, y2: number, count: number): [number, number, number][] =>
+  Array.from({ length: count }, (_, i) => {
+    const t = i / (count - 1)
+    const at = (a: number, c: number, b: number) => (1 - t) ** 2 * a + 2 * (1 - t) * t * c + t ** 2 * b
+    const slope = Math.atan2((1 - t) * (cy - y1) + t * (y2 - cy), (1 - t) * (cx - x1) + t * (x2 - cx))
+    return [at(x1, cx, x2), at(y1, cy, y2), (slope * 180) / Math.PI]
+  })
+
+/** A five-pointed star at (x, y), `r` to its points, turned `turn` degrees: a sticker's. */
+/** A left half drawn again, mirrored about the middle (x 50). */
+const both = (half: string) => `${half}<g transform="translate(100 0) scale(-1 1)">${half}</g>`
+const starAt = (x: number, y: number, r: number, turn: number) =>
+  `M${Array.from({ length: 10 }, (_, i) => {
+    const a = ((i * 36 + turn) * Math.PI) / 180
+    const d = i % 2 ? r * 0.45 : r
+    return `${n(x + Math.sin(a) * d)} ${n(y - Math.cos(a) * d)}`
+  }).join('L')}Z`
 
 /** A small flame standing at (x, y), `s` times its size, flickering in its glow. */
 const flame = (x: number, y: number, s: number) =>
@@ -679,6 +732,328 @@ export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, numb
       '<path d="M6 82.2Q6 80.6 7.6 80.6H16.4Q18 80.6 18 82.2Q17 83.8 16 82.4Q15 84 14 82.4Q13 84.2 12 82.4Q11 84 10 82.4Q9 84.2 8 82.4Q7 83.8 6 82.2Z" fill="#F5B8C4"/>' +
       '<g stroke-width="0.6" stroke-linecap="round"><path d="M8.4 81.4L9.2 81.1" stroke="#5B8DEF"/><path d="M11 81.2L11.6 81.6" stroke="#FFD23F"/><path d="M14.6 81.4L15.4 81.2" stroke="#2EA043"/><path d="M16 82L16.4 82.6" stroke="#5B8DEF"/></g>' +
       `<rect x="11.3" y="76.2" width="1.4" height="4.6" rx="0.4" fill="#7AA2F7"/><path d="M11.3 77.4L12.7 76.8M11.3 79L12.7 78.4" stroke="#fff" stroke-width="0.4"/>${flame(12, 76, 0.7)}`,
+  },
+  // More for the neck, in the same clay: lit from the top left, a darker edge of their own colour.
+  sailorcollar: {
+    box: [18, 60, 64, 27],
+    svg: '<defs><linearGradient id="sailorcollarS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.22"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#0B1430" stop-opacity="0.35"/></linearGradient></defs>' +
+      '<path d="M42.4 68.6Q50 70.8 57.6 68.6L50 81.6Z" fill="#FBF8F3"/><path d="M44.4 71.6Q50 73.4 55.6 71.6" stroke="#233A6E" stroke-width="1" fill="none"/><path d="M45.8 74.4Q50 75.8 54.2 74.4" stroke="#233A6E" stroke-width="0.8" fill="none"/>' +
+      '<g stroke="#152447" stroke-width="0.45" stroke-linejoin="round"><path d="M21.6 62.8Q32 67.6 42.4 68.6L50 81.6Q36 79.6 21.2 72.4Z" fill="#233A6E"/><path d="M78.4 62.8Q68 67.6 57.6 68.6L50 81.6Q64 79.6 78.8 72.4Z" fill="#233A6E"/></g>' +
+      '<path d="M21.6 62.8Q32 67.6 42.4 68.6L50 81.6Q36 79.6 21.2 72.4ZM78.4 62.8Q68 67.6 57.6 68.6L50 81.6Q64 79.6 78.8 72.4Z" fill="url(#sailorcollarS)"/>' +
+      '<g stroke="#FBF8F3" stroke-width="0.7" fill="none" stroke-linecap="round"><path d="M21.4 70.6Q35.6 77.4 47.4 79.2M21.6 68.8Q35 75.4 46 77.2"/><path d="M78.6 70.6Q64.4 77.4 52.6 79.2M78.4 68.8Q65 75.4 54 77.2"/></g>' +
+      '<g fill="#D8433B" stroke="#8E2A22" stroke-width="0.4" stroke-linejoin="round"><path d="M49.4 80.2L47.4 85.2L48.8 84.6L49.6 85.8L50.6 80.4Z"/><path d="M50.6 80.2L52.6 85.2L51.2 84.6L50.4 85.8L49.4 80.4Z"/>' +
+      '<path d="M50 79.8L46 77.8Q45 79.8 46 81.8Z"/><path d="M50 79.8L54 77.8Q55 79.8 54 81.8Z"/><rect x="48.8" y="78.6" width="2.4" height="2.4" rx="0.8"/></g>' +
+      '<path d="M46.4 78.6Q46 79.4 46.3 80.2" stroke="#fff" stroke-opacity="0.5" stroke-width="0.5" fill="none" stroke-linecap="round"/>',
+  },
+  whistle: {
+    box: [41, 67, 23, 16],
+    onSkin: true,
+    svg: '<defs><linearGradient id="whistleM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F8FA"/><stop offset="1" stop-color="#8E98A3"/></linearGradient></defs>' +
+      '<path d="M28.4 60.4Q50 84 71.6 60.4" stroke="#D8433B" stroke-width="1.3" fill="none" stroke-linecap="round"/>' +
+      '<path d="M28.4 60.4Q50 84 71.6 60.4" stroke="#FFF6EC" stroke-width="0.5" stroke-dasharray="1.4 1.4" fill="none" opacity="0.8"/>' +
+      '<circle cx="50" cy="73" r="1.1" fill="none" stroke="#9AA4AE" stroke-width="0.6"/>' +
+      '<g transform="translate(53 76.8) rotate(-12) scale(1.25)"><circle cx="-2.3" cy="-2.3" r="0.9" fill="none" stroke="#9AA4AE" stroke-width="0.6"/>' +
+      '<path d="M0 -3.2H6.3Q7 -3.2 7 -2.5V-1.5Q7 -0.8 6.3 -0.8H3.1A3.2 3.2 0 1 1 0 -3.2Z" fill="url(#whistleM)" stroke="#5E6670" stroke-width="0.45" stroke-linejoin="round"/>' +
+      '<path d="M0.9 -3.2H2.7V-2.1H0.9Z" fill="#3A3F47"/><ellipse cx="-1.1" cy="-1.3" rx="1.3" ry="0.7" fill="#fff" opacity="0.75" transform="rotate(-30 -1.1 -1.3)"/>' +
+      '<path d="M3.6 -2.6H6.2" stroke="#fff" stroke-opacity="0.7" stroke-width="0.4" stroke-linecap="round"/></g>',
+  },
+  lanyard: {
+    box: [37, 66, 26, 19],
+    svg: '<defs><linearGradient id="lanyardM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F8FA"/><stop offset="1" stop-color="#8E98A3"/></linearGradient></defs>' +
+      '<g fill="none"><path d="M30.4 60.6Q38 69.4 48.8 73.4M69.6 60.6Q62 69.4 51.2 73.4" stroke="#3B6FD8" stroke-width="2.2"/><path d="M30.4 60.6Q38 69.4 48.8 73.4M69.6 60.6Q62 69.4 51.2 73.4" stroke="#9DBBFA" stroke-width="0.5"/></g>' +
+      '<g transform="rotate(5 50 79)"><rect x="44.4" y="74.8" width="11.2" height="8.6" rx="1.3" fill="#FBF8F3" stroke="#B9AA9E" stroke-width="0.45"/>' +
+      '<path d="M44.4 77.2V76.1Q44.4 74.8 45.7 74.8H54.3Q55.6 74.8 55.6 76.1V77.2Z" fill="#3B6FD8"/>' +
+      '<rect x="45.7" y="78.2" width="3.6" height="4" rx="0.6" fill="#F5D6C4"/><circle cx="47.5" cy="79.6" r="0.9" fill="#D97757"/><path d="M46.1 82.2Q47.5 80.6 48.9 82.2Z" fill="#D97757"/>' +
+      '<path d="M50.6 79H54.2M50.6 80.6H53.4M50.6 82.2H54" stroke="#C9BDB2" stroke-width="0.7" stroke-linecap="round"/></g>' +
+      '<rect x="48.6" y="72.4" width="2.8" height="2.8" rx="0.6" fill="url(#lanyardM)" stroke="#5E6670" stroke-width="0.4"/>',
+  },
+  camera: {
+    box: [38, 68, 24, 17],
+    svg: '<defs><linearGradient id="cameraM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F8FA"/><stop offset="1" stop-color="#8E98A3"/></linearGradient>' +
+      '<linearGradient id="cameraS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="1" stop-color="#1A0E0A" stop-opacity="0.3"/></linearGradient>' +
+      '<radialGradient id="cameraL" cx="0.35" cy="0.35" r="0.7"><stop offset="0" stop-color="#5A7FC8"/><stop offset="1" stop-color="#0E1A33"/></radialGradient></defs>' +
+      '<path d="M27.4 61Q32.4 71 41.8 74.6M72.6 61Q67.6 71 58.2 74.6" stroke="#4A3328" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
+      '<path d="M27.4 61Q32.4 71 41.8 74.6M72.6 61Q67.6 71 58.2 74.6" stroke="#A8784F" stroke-width="0.35" stroke-dasharray="0.8 0.8" fill="none"/>' +
+      '<path d="M46.4 73.6L47.4 71.4H52.6L53.6 73.6Z" fill="url(#cameraM)" stroke="#5E6670" stroke-width="0.4" stroke-linejoin="round"/><rect x="54.6" y="72.2" width="2" height="1.4" rx="0.4" fill="#D8433B"/>' +
+      '<rect x="41.4" y="73.4" width="17.2" height="10" rx="2" fill="#5A3D30"/>' +
+      '<path d="M41.4 76.4V75.4Q41.4 73.4 43.4 73.4H56.6Q58.6 73.4 58.6 75.4V76.4Z" fill="url(#cameraM)"/>' +
+      '<rect x="41.4" y="73.4" width="17.2" height="10" rx="2" fill="url(#cameraS)" stroke="#2B1B17" stroke-opacity="0.6" stroke-width="0.5"/>' +
+      '<rect x="43" y="74.2" width="2.6" height="1.4" rx="0.3" fill="#FFF6EC" stroke="#9AA4AE" stroke-width="0.3"/>' +
+      '<circle cx="50" cy="78.8" r="4.2" fill="url(#cameraM)" stroke="#5E6670" stroke-width="0.45"/><circle cx="50" cy="78.8" r="3" fill="#2B2E34"/><circle cx="50" cy="78.8" r="1.9" fill="url(#cameraL)"/>' +
+      '<ellipse cx="49.1" cy="77.9" rx="0.9" ry="0.5" fill="#fff" opacity="0.8" transform="rotate(-30 49.1 77.9)"/><circle cx="51" cy="79.8" r="0.3" fill="#fff" opacity="0.5"/>',
+  },
+  stethoscope: {
+    box: [34, 64, 30, 21],
+    onSkin: true,
+    svg: '<defs><linearGradient id="stethoscopeM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F8FA"/><stop offset="1" stop-color="#8E98A3"/></linearGradient></defs>' +
+      '<g fill="none" stroke-linecap="round"><path d="M26.6 61Q29.6 70.8 38.6 74.2M73.4 61Q71 72.6 60.4 76.6" stroke="#2F343C" stroke-width="1.8"/>' +
+      '<path d="M26.3 60.6Q29.3 70.4 38.3 73.8M73.1 60.6Q70.7 72.2 60.1 76.2" stroke="#fff" stroke-opacity="0.22" stroke-width="0.5"/>' +
+      '<path d="M38.6 74.2Q42.2 75.2 42.6 79.6M38.6 74.2Q37.6 77.8 39.4 80.6M60.4 76.6L59.6 77.8" stroke="#A7B0BA" stroke-width="0.9"/></g>' +
+      '<circle cx="38.6" cy="74.2" r="0.9" fill="#A7B0BA"/><g fill="#2F343C"><circle cx="42.6" cy="80" r="0.95"/><circle cx="39.6" cy="81" r="0.95"/></g>' +
+      '<circle cx="58.6" cy="80" r="3.3" fill="url(#stethoscopeM)" stroke="#5E6670" stroke-width="0.45"/><circle cx="58.6" cy="80" r="2.2" fill="#E9EDF1" stroke="#9AA4AE" stroke-width="0.35"/>' +
+      '<ellipse cx="57.4" cy="78.8" rx="1.1" ry="0.55" fill="#fff" opacity="0.8" transform="rotate(-30 57.4 78.8)"/>',
+  },
+  binoculars: {
+    box: [38, 67, 24, 18],
+    svg: '<defs><linearGradient id="binocularsB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7E9C5C"/><stop offset="1" stop-color="#3E5530"/></linearGradient>' +
+      '<linearGradient id="binocularsL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CC3F5"/><stop offset="1" stop-color="#2D4F86"/></linearGradient></defs>' +
+      '<path d="M28.2 61Q35 69.6 43.6 71.6M71.8 61Q65 69.6 56.4 71.6" stroke="#6B5A3A" stroke-width="1.3" fill="none" stroke-linecap="round"/>' +
+      '<g fill="#2B2E34"><rect x="43" y="70.6" width="4.4" height="2.6" rx="0.8"/><rect x="52.6" y="70.6" width="4.4" height="2.6" rx="0.8"/><rect x="47.6" y="73.6" width="4.8" height="3.2" rx="0.8"/></g>' +
+      '<g fill="url(#binocularsB)" stroke="#2B1B17" stroke-opacity="0.6" stroke-width="0.45"><rect x="42" y="72.6" width="6.4" height="10" rx="2.2"/><rect x="51.6" y="72.6" width="6.4" height="10" rx="2.2"/></g>' +
+      '<g fill="#2B2E34" opacity="0.85"><rect x="42" y="75.6" width="6.4" height="1.6"/><rect x="51.6" y="75.6" width="6.4" height="1.6"/></g>' +
+      '<rect x="48.6" y="72" width="2.8" height="2" rx="0.6" fill="#8E98A3"/><path d="M49.3 72.2V73.8M50 72.2V73.8M50.7 72.2V73.8" stroke="#5E6670" stroke-width="0.3"/>' +
+      '<g fill="url(#binocularsL)" stroke="#2B2E34" stroke-width="0.5"><ellipse cx="45.2" cy="82.2" rx="2.7" ry="1.1"/><ellipse cx="54.8" cy="82.2" rx="2.7" ry="1.1"/></g>' +
+      '<g fill="#fff" opacity="0.3"><rect x="43" y="77.6" width="1" height="3.8" rx="0.5"/><rect x="52.6" y="77.6" width="1" height="3.8" rx="0.5"/></g>',
+  },
+  headphones: {
+    box: [25, 59, 50, 16],
+    svg: '<defs><linearGradient id="headphonesC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FE3D3"/><stop offset="1" stop-color="#2E9C8A"/></linearGradient></defs>' +
+      '<path d="M30.6 64.4Q50 80 69.4 64.4" stroke="#2E3440" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M33 66.6Q50 78.4 67 66.6" stroke="#fff" stroke-opacity="0.2" stroke-width="0.6" fill="none" stroke-linecap="round"/>' +
+      [['30.4', '18', ''], ['69.6', '-18', ' scale(-1 1)']].map(([x, r, flip]) => `<g transform="translate(${x} 66.6) rotate(${r})${flip}">` +
+        '<ellipse rx="3.8" ry="5.4" fill="#2E3440"/><ellipse cx="-0.9" rx="3.3" ry="4.9" fill="url(#headphonesC)" stroke="#1D6E62" stroke-width="0.45"/>' +
+        '<ellipse cx="-0.9" rx="1.9" ry="3" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="0.5"/><circle cx="-0.9" cy="1.6" r="0.45" fill="#FFE7A3"/>' +
+        '<ellipse cx="-2.2" cy="-2.6" rx="1" ry="0.6" fill="#fff" opacity="0.6" transform="rotate(-40 -2.2 -2.6)"/></g>').join(''),
+  },
+  bib: {
+    box: [33, 64, 34, 23],
+    svg: '<defs><linearGradient id="bibS" x1="0" y1="0" x2="0" y2="1"><stop offset="0.4" stop-color="#2B1B17" stop-opacity="0"/><stop offset="1" stop-color="#2B1B17" stop-opacity="0.12"/></linearGradient></defs>' +
+      '<path d="M37 68.8Q30 67.4 22.6 63.4M63 68.8Q70 67.4 77.4 63.4" stroke="#E8685F" stroke-width="1.2" fill="none" stroke-linecap="round"/>' +
+      '<path d="M36.6 68.4Q50 72.6 63.4 68.4Q65.6 77.4 59.4 81.4Q50 85.6 40.6 81.4Q34.4 77.4 36.6 68.4Z" fill="#FBF8F3" stroke="#E8685F" stroke-width="1"/>' +
+      '<path d="M36.6 68.4Q50 72.6 63.4 68.4Q65.6 77.4 59.4 81.4Q50 85.6 40.6 81.4Q34.4 77.4 36.6 68.4Z" fill="url(#bibS)"/>' +
+      '<path d="M36.6 68.4Q50 72.6 63.4 68.4Q65.6 77.4 59.4 81.4Q50 85.6 40.6 81.4Q34.4 77.4 36.6 68.4Z" transform="translate(50 76.6) scale(0.84) translate(-50 -76.6)" fill="none" stroke="#F5B8C4" stroke-width="0.7" stroke-dasharray="0.1 1.4" stroke-linecap="round"/>' +
+      '<path d="M48.4 76.8Q49.4 73.8 51.8 73M51.8 77.2Q51.4 74.8 51.8 73" stroke="#3F8A3A" stroke-width="0.6" fill="none" stroke-linecap="round"/><ellipse cx="53.2" cy="72.9" rx="1.4" ry="0.7" fill="#5FA052" transform="rotate(-20 53.2 72.9)"/>' +
+      '<g fill="#D8433B" stroke="#8E2A22" stroke-width="0.35"><circle cx="48.2" cy="77.8" r="1.7"/><circle cx="51.9" cy="78.2" r="1.7"/></g>' +
+      '<g fill="#fff" opacity="0.7"><circle cx="47.6" cy="77.2" r="0.5"/><circle cx="51.3" cy="77.6" r="0.5"/></g>',
+  },
+  ruff: {
+    box: [18, 60, 64, 20],
+    svg: '<path d="M21.6 63.4Q50 73.6 78.4 63.4L78.8 70.8Q50 82 21.2 70.8Z" fill="#E4DBD0"/>' +
+      // The pleats from both ends inward, so the middle ones lie on top.
+      along(22.4, 66.8, 50, 76.6, 77.6, 66.8, 15).map((p, i) => ({ p, far: Math.abs(i - 7) })).sort((a, b) => b.far - a.far)
+        .map(({ p: [x, y, a] }) => `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(a)})"><ellipse rx="2.5" ry="4.5" fill="#FBF8F3" stroke="#C9BDB2" stroke-width="0.4"/>` +
+          '<path d="M-0.5 -3.2Q0.9 0 -0.5 3.2" stroke="#DCD2C7" stroke-width="0.5" fill="none"/><ellipse cx="-1" cy="-2.4" rx="0.7" ry="1" fill="#fff"/></g>').join(''),
+  },
+  bolotie: {
+    box: [37, 65, 26, 21],
+    onSkin: true,
+    svg: '<defs><linearGradient id="bolotieM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F8FA"/><stop offset="1" stop-color="#8E98A3"/></linearGradient>' +
+      '<radialGradient id="bolotieT" cx="0.35" cy="0.3" r="0.75"><stop offset="0" stop-color="#8CE6DC"/><stop offset="1" stop-color="#1E8C84"/></radialGradient></defs>' +
+      '<g fill="none" stroke-linecap="round"><path d="M29.8 60.4Q39 68.8 48.4 72M70.2 60.4Q61 68.8 51.6 72M48.8 75.4Q48.2 79 47.5 82.2M51.2 75.4Q51.8 79 52.5 82.2" stroke="#5A3A26" stroke-width="1.1"/>' +
+      '<path d="M29.8 60.4Q39 68.8 48.4 72M70.2 60.4Q61 68.8 51.6 72M48.8 75.4Q48.2 79 47.5 82.2M51.2 75.4Q51.8 79 52.5 82.2" stroke="#A8784F" stroke-width="0.5" stroke-dasharray="0.8 0.8"/></g>' +
+      '<g fill="url(#bolotieM)" stroke="#5E6670" stroke-width="0.3"><path d="M46.7 81.8H48.3L47.9 84.6Q47.5 85 47.1 84.6Z"/><path d="M51.7 81.8H53.3L52.9 84.6Q52.5 85 52.1 84.6Z"/></g>' +
+      '<ellipse cx="50" cy="73.6" rx="3.7" ry="4.3" fill="url(#bolotieM)" stroke="#5E6670" stroke-width="0.45"/><ellipse cx="50" cy="73.6" rx="3.15" ry="3.75" fill="none" stroke="#8E98A3" stroke-width="0.35" stroke-dasharray="0.5 0.5"/>' +
+      '<ellipse cx="50" cy="73.6" rx="2.4" ry="3" fill="url(#bolotieT)"/><path d="M48.6 72.4Q49.6 73.4 49 74.6M51 72Q50.6 73.6 51.6 75" stroke="#2B1B17" stroke-opacity="0.3" stroke-width="0.3" fill="none"/>' +
+      '<ellipse cx="49.1" cy="72.2" rx="0.8" ry="0.5" fill="#fff" opacity="0.7" transform="rotate(-35 49.1 72.2)"/>',
+  },
+  boa: {
+    box: [16, 57, 68, 30],
+    // A ring of tufts round the neck, and its end hanging down on the right.
+    svg: [...along(22.4, 63.4, 50, 79.4, 77.6, 63.4, 17), ...along(70.4, 69.6, 73.6, 76, 71.6, 83.4, 5)].map(([x, y], i) => {
+      const r = i >= 17 ? 3.2 - (i - 17) * 0.2 : i % 2 ? 3.4 : 3.9
+      const fill = ['#F58BB7', '#F9A8CB', '#E86FA3'][i % 3]
+      return `<path d="M${n(x + r * 0.5)} ${n(y - r * 0.8)}l0.9 -1M${n(x - r * 0.8)} ${n(y - r * 0.4)}l-1 -0.5" stroke="${fill}" stroke-width="0.5" stroke-linecap="round"/>` +
+        `<circle cx="${n(x)}" cy="${n(y)}" r="${n(r)}" fill="${fill}" stroke="#C24F84" stroke-opacity="0.45" stroke-width="0.3"/>` +
+        `<circle cx="${n(x - r * 0.3)}" cy="${n(y - r * 0.35)}" r="${n(r * 0.35)}" fill="#fff" opacity="0.35"/>`
+    }).join(''),
+  },
+  locket: {
+    box: [41, 67, 18, 15],
+    onSkin: true,
+    svg: '<defs><linearGradient id="locketG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE38E"/><stop offset="1" stop-color="#C08A2A"/></linearGradient></defs>' +
+      '<path d="M29.6 60.2Q50 82.6 70.4 60.2" stroke="#C9A24A" stroke-width="0.75" stroke-dasharray="1 0.55" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="50" cy="72.6" r="0.9" fill="none" stroke="#B8862A" stroke-width="0.6"/>' +
+      '<path d="M50 80.6C46.6 78.2 45.4 76.4 45.6 74.6C45.8 72.8 47.8 72.2 50 73.8C52.2 72.2 54.2 72.8 54.4 74.6C54.6 76.4 53.4 78.2 50 80.6Z" fill="url(#locketG)" stroke="#8A5E14" stroke-width="0.45"/>' +
+      '<path d="M50 80.6C46.6 78.2 45.4 76.4 45.6 74.6C45.8 72.8 47.8 72.2 50 73.8C52.2 72.2 54.2 72.8 54.4 74.6C54.6 76.4 53.4 78.2 50 80.6Z" transform="translate(50 76.4) scale(0.6) translate(-50 -76.4)" fill="none" stroke="#A8761E" stroke-width="0.7"/>' +
+      '<ellipse cx="47.6" cy="74.6" rx="1.2" ry="0.6" fill="#fff" opacity="0.75" transform="rotate(-35 47.6 74.6)"/>',
+  },
+  // More for the face. Eyes sit at (40, 52) and (60, 52), the mouth at (50, 64).
+  aviators: {
+    box: [22, 43, 56, 18],
+    svg: '<defs><linearGradient id="aviatorsL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F3B33"/><stop offset="1" stop-color="#6E5A44"/></linearGradient></defs>' +
+      '<g fill="url(#aviatorsL)" fill-opacity="0.9" stroke="#C9A24A" stroke-width="0.9" stroke-linejoin="round"><path d="M31.4 47.6Q40 46 46.6 47.8Q47.6 52.6 44.6 56.4Q41 59.4 36.4 58.4Q31.4 57 30.8 52Q30.6 49 31.4 47.6Z"/>' +
+      '<path d="M68.6 47.6Q60 46 53.4 47.8Q52.4 52.6 55.4 56.4Q59 59.4 63.6 58.4Q68.6 57 69.2 52Q69.4 49 68.6 47.6Z"/></g>' +
+      '<g fill="none" stroke="#C9A24A" stroke-width="0.8" stroke-linecap="round"><path d="M46.6 48.4Q50 47.2 53.4 48.4M44.6 47.2Q50 45.8 55.4 47.2M31 49L24 47.6M69 49L76 47.6"/></g>' +
+      '<path d="M33.4 49.6L37.8 48.6M56.4 49.6L60.8 48.6" stroke="#fff" stroke-opacity="0.4" stroke-width="1" stroke-linecap="round"/>',
+  },
+  pixelshades: {
+    box: [25, 44, 50, 14],
+    // Blocks on a grid, as pixel art draws them.
+    svg: '<g fill="#141414" shape-rendering="crispEdges"><rect x="27.8" y="47.6" width="44.4" height="1.8"/>' +
+      [[30.8, 49.4, 16.8], [32.6, 51.2, 15], [34.4, 53, 11.4], [36.2, 54.8, 7.8]].map(([x = 0, y = 0, w = 0]) =>
+        `<rect x="${x}" y="${y}" width="${w}" height="1.8"/><rect x="${n(100 - x - w)}" y="${y}" width="${w}" height="1.8"/>`).join('') +
+      '</g><g fill="#fff" shape-rendering="crispEdges"><rect x="34.4" y="49.4" width="1.8" height="1.8"/><rect x="36.2" y="51.2" width="1.8" height="1.8"/>' +
+      '<rect x="56" y="49.4" width="1.8" height="1.8"/><rect x="57.8" y="51.2" width="1.8" height="1.8"/></g>',
+  },
+  cateye: {
+    box: [24, 43, 52, 17],
+    onSkin: true,
+    svg: '<g fill="#FFF6EC" fill-opacity="0.16" stroke="#D6336C" stroke-width="1.6" stroke-linejoin="round"><path d="M32 49.2Q38 46.4 46.2 48Q47.4 53 44 56.2Q39.6 58.6 35.4 56.4Q32.4 54.4 32 49.2Z"/>' +
+      '<path d="M68 49.2Q62 46.4 53.8 48Q52.6 53 56 56.2Q60.4 58.6 64.6 56.4Q67.6 54.4 68 49.2Z"/></g>' +
+      '<g fill="#D6336C"><path d="M32.6 48.4L27.6 45.4Q29.4 49 32 50.6Z"/><path d="M67.4 48.4L72.4 45.4Q70.6 49 68 50.6Z"/></g>' +
+      '<g fill="none" stroke="#D6336C" stroke-width="1.2" stroke-linecap="round"><path d="M46.4 49.6Q50 48.2 53.6 49.6M31.6 50.4L25 49.2M68.4 50.4L75 49.2"/></g>' +
+      '<g fill="#fff"><circle cx="29.6" cy="46.8" r="0.5"/><circle cx="70.4" cy="46.8" r="0.5"/></g>' +
+      '<path d="M35.4 49.8A5.6 5.6 0 0 1 39.6 48M55.4 49.8A5.6 5.6 0 0 1 59.6 48" stroke="#fff" stroke-opacity="0.6" stroke-width="1" fill="none" stroke-linecap="round"/>',
+  },
+  masquerade: {
+    box: [22, 31, 56, 30],
+    svg: '<defs><linearGradient id="masqueradeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E4DB8"/><stop offset="1" stop-color="#4A1F6B"/></linearGradient></defs>' +
+      '<path d="M30.6 46.6Q23.4 40.4 25.2 31.4Q31 37.8 30.6 46.6Z" fill="#4FB3A9" stroke="#2E7C74" stroke-width="0.4"/><path d="M30.6 46.6Q27 39.4 25.2 31.4" stroke="#2E7C74" stroke-width="0.4" fill="none"/>' +
+      '<path d="M32.4 46Q29.6 39.6 32.6 33.4Q35.4 39.6 32.4 46Z" fill="#F58BB7" stroke="#C24F84" stroke-width="0.4"/>' +
+      '<path d="M50 49.6Q44 44.4 34 45.2Q27.4 46 26.6 50.4Q27 56 33.6 58.4Q41 60 46 56.4Q48.4 54.4 50 54.8Q51.6 54.4 54 56.4Q59 60 66.4 58.4Q73 56 73.4 50.4Q72.6 46 66 45.2Q56 44.4 50 49.6Z' +
+      'M34 52Q40 45.4 46 52Q40 58.4 34 52ZM54 52Q60 45.4 66 52Q60 58.4 54 52Z" fill="url(#masqueradeG)" fill-rule="evenodd" stroke="#E9B949" stroke-width="0.7" stroke-linejoin="round"/>' +
+      '<path d="M48 47.8Q50 46.2 52 47.8M29.4 54.4Q31 56.4 33.4 56.6M70.6 54.4Q69 56.4 66.6 56.6" stroke="#E9B949" stroke-width="0.5" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="50" cy="51.8" r="1" fill="#E9B949" stroke="#B8862A" stroke-width="0.3"/><circle cx="31.6" cy="46.8" r="1.1" fill="#E9B949" stroke="#B8862A" stroke-width="0.3"/>' +
+      '<path d="M57 46.2Q62 45.4 66.4 46.6" stroke="#fff" stroke-opacity="0.35" stroke-width="0.8" fill="none" stroke-linecap="round"/>',
+  },
+  divemask: {
+    box: [21, 33, 58, 34],
+    svg: '<path d="M29 50.6H23.4M71 50.6H76.6" stroke="#2B2E34" stroke-width="2"/>' +
+      '<path d="M56 64.6Q66 66 70.4 60.6Q72.6 57.4 73.2 52L74.6 36.6" stroke="#FF8A3D" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+      '<path d="M56 64.6Q66 66 70.4 60.6Q72.6 57.4 73.2 52L74.6 36.6" stroke="#fff" stroke-opacity="0.35" stroke-width="0.5" fill="none" stroke-linecap="round" transform="translate(-0.5 -0.3)"/>' +
+      '<rect x="72.8" y="34" width="3.8" height="3.2" rx="1" fill="#2B2E34"/><rect x="53.4" y="62.8" width="4" height="3.4" rx="1.3" fill="#2B2E34"/>' +
+      '<path d="M36 44H64Q71 44 71 51V53Q71 60 64 60H55Q53 60 52 58.4Q51 56.6 50 56.6Q49 56.6 48 58.4Q47 60 45 60H36Q29 60 29 53V51Q29 44 36 44Z" fill="#F2C230" stroke="#B8860B" stroke-width="0.5"/>' +
+      '<rect x="31.4" y="46" width="37.2" height="9.6" rx="4.4" fill="#9FD8F0" fill-opacity="0.28" stroke="#2B2E34" stroke-width="1.2"/>' +
+      '<path d="M34.6 53.4L39.4 47.4M37.4 53.4L41 48.8" stroke="#fff" stroke-opacity="0.55" stroke-width="0.8" stroke-linecap="round"/>' +
+      '<path d="M33 45.4Q50 44.4 67 45.4" stroke="#fff" stroke-opacity="0.4" stroke-width="0.6" fill="none" stroke-linecap="round"/>',
+  },
+  facemask: {
+    box: [23, 51, 54, 23],
+    svg: '<defs><linearGradient id="facemaskS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.3"/><stop offset="1" stop-color="#1F4E63" stop-opacity="0.18"/></linearGradient></defs>' +
+      '<path d="M36.4 59.6Q29 58 25.4 53.6M36.4 67.4Q29 66.4 25.6 58.4" stroke="#EDF6FA" stroke-width="0.8" fill="none" stroke-linecap="round"/>' +
+      '<path d="M63.6 59.6Q71 58 74.6 53.6M63.6 67.4Q71 66.4 74.4 58.4" stroke="#EDF6FA" stroke-width="0.8" fill="none" stroke-linecap="round"/>' +
+      '<path d="M36.4 58.6Q50 55.6 63.6 58.6Q64.4 64 63.6 68.4Q50 72.4 36.4 68.4Q35.6 64 36.4 58.6Z" fill="#A8D8EA" stroke="#5E9DB8" stroke-width="0.5"/>' +
+      '<path d="M36.4 58.6Q50 55.6 63.6 58.6Q64.4 64 63.6 68.4Q50 72.4 36.4 68.4Q35.6 64 36.4 58.6Z" fill="url(#facemaskS)"/>' +
+      '<path d="M36.6 61.4Q50 58.6 63.4 61.4M36.6 64.2Q50 61.6 63.4 64.2M36.6 67Q50 64.8 63.4 67" stroke="#7FB5CC" stroke-width="0.55" fill="none"/>' +
+      '<path d="M44 58.2Q50 56.8 56 58.2" stroke="#fff" stroke-opacity="0.75" stroke-width="0.7" fill="none" stroke-linecap="round"/>',
+  },
+  vrheadset: {
+    box: [20, 40, 60, 21],
+    svg: '<defs><linearGradient id="vrheadsetG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F4EF"/><stop offset="1" stop-color="#C4BCB2"/></linearGradient></defs>' +
+      '<g fill="#4A4F57"><rect x="21.6" y="48" width="7" height="3.2" rx="1"/><rect x="71.4" y="48" width="7" height="3.2" rx="1"/></g>' +
+      '<path d="M34 43H66Q72 43 72 49V53Q72 59 66 59H56Q53.6 59 52.6 57.2Q51.4 55.4 50 55.4Q48.6 55.4 47.4 57.2Q46.4 59 44 59H34Q28 59 28 53V49Q28 43 34 43Z" fill="url(#vrheadsetG)" stroke="#8A8178" stroke-width="0.5"/>' +
+      '<rect x="30.6" y="45.4" width="38.8" height="8.4" rx="3.6" fill="#22252B"/><path d="M33 47.6Q42 46 50 46.6" stroke="#fff" stroke-opacity="0.3" stroke-width="0.9" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="66.4" cy="47.6" r="0.6" fill="#7AD8FF"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>' +
+      '<path d="M30.2 44.8Q32 43.6 35 43.6" stroke="#fff" stroke-opacity="0.8" stroke-width="0.6" fill="none" stroke-linecap="round"/>',
+  },
+  lollipop: {
+    box: [50, 52, 22, 15],
+    svg: '<path d="M53.6 64.2L62.6 59.8" stroke="#F3ECE4" stroke-width="1.1" stroke-linecap="round"/><path d="M53.6 64.2L62.6 59.8" stroke="#C9B8AE" stroke-width="0.3" stroke-linecap="round" transform="translate(0 0.4)"/>' +
+      '<circle cx="66" cy="58.4" r="4.4" fill="#FF6FA0" stroke="#C2406E" stroke-width="0.4"/>' +
+      '<path d="M66 58.4a0.8 0.8 0 0 1 1.6 0a1.6 1.6 0 0 1 -3.2 0a2.4 2.4 0 0 1 4.8 0a3.2 3.2 0 0 1 -6.4 0" stroke="#FFF6EC" stroke-width="0.9" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="64.4" cy="56.4" rx="1.2" ry="0.6" fill="#fff" opacity="0.6" transform="rotate(-35 64.4 56.4)"/>',
+  },
+  bubblegum: {
+    box: [41, 58, 18, 15],
+    // The bubble grows, holds a moment and goes back.
+    svg: '<circle cx="50" cy="65.6" r="5.6" fill="#FF8FC0" fill-opacity="0.92" stroke="#D9558F" stroke-width="0.4"><animate attributeName="r" values="3.2;5.8;5.8;3.2" keyTimes="0;0.6;0.85;1" dur="4s" repeatCount="indefinite"/></circle>' +
+      '<ellipse cx="48" cy="63.6" rx="1.4" ry="0.8" fill="#fff" opacity="0.7" transform="rotate(-35 48 63.6)"><animate attributeName="opacity" values="0.2;0.7;0.7;0.2" keyTimes="0;0.6;0.85;1" dur="4s" repeatCount="indefinite"/></ellipse>',
+  },
+  wheat: {
+    box: [25, 51, 25, 17],
+    svg: '<g transform="translate(46 64.6) rotate(208.3)"><path d="M0 0H18.2" stroke="#C9973A" stroke-width="0.8" stroke-linecap="round"/>' +
+      '<path d="M12.6 -0.9l1.4 -2M14.4 -0.9l1.4 -2M16.2 -0.9l1.4 -2M18 -0.9l1.4 -2M12.6 0.9l1.4 2M14.4 0.9l1.4 2M16.2 0.9l1.4 2M18 0.9l1.4 2M19.6 0h2" stroke="#D9B460" stroke-width="0.3" stroke-linecap="round"/>' +
+      `<g fill="#E2B04A" stroke="#A8761E" stroke-width="0.25">${[12.6, 14.4, 16.2, 18].map(x => `<ellipse cx="${x}" cy="-0.8" rx="1.1" ry="0.55" transform="rotate(-25 ${x} -0.8)"/><ellipse cx="${x}" cy="0.8" rx="1.1" ry="0.55" transform="rotate(25 ${x} 0.8)"/>`).join('')}` +
+      '<ellipse cx="19.4" cy="0" rx="1.1" ry="0.5"/></g></g>',
+  },
+  rose: {
+    box: [29, 57, 33, 13],
+    svg: '<path d="M58.4 64.6Q50 65.4 41.4 63.8" stroke="#3F8A3A" stroke-width="0.9" fill="none" stroke-linecap="round"/>' +
+      '<path d="M53.2 65L53.8 66.2M47.4 64.8L46.8 66" stroke="#3F8A3A" stroke-width="0.5" stroke-linecap="round"/>' +
+      '<path d="M50.6 65.1Q52.4 67.8 55.6 67.4Q53.8 64.8 50.6 65.1Z" fill="#5FA052" stroke="#3F8A3A" stroke-width="0.3"/>' +
+      '<path d="M41.8 64.4Q40.6 66.8 38 67.2Q39.4 64.8 41.8 64.4Z" fill="#5FA052" stroke="#3F8A3A" stroke-width="0.3"/>' +
+      '<circle cx="37.6" cy="62.6" r="3.4" fill="#D8233B" stroke="#9E1028" stroke-width="0.4"/>' +
+      '<path d="M37.6 62.4a0.7 0.7 0 0 1 1.4 0a1.4 1.4 0 0 1 -2.8 0a2.2 2.2 0 0 1 4.4 0" stroke="#9E1028" stroke-width="0.5" fill="none" stroke-linecap="round"/>' +
+      '<path d="M34.4 63.6Q35 66.4 38 66.2Q40.6 66 41 63.4" stroke="#9E1028" stroke-width="0.4" fill="none"/>' +
+      '<ellipse cx="36.2" cy="60.8" rx="1" ry="0.5" fill="#fff" opacity="0.45" transform="rotate(-30 36.2 60.8)"/>',
+  },
+  goldstars: {
+    box: [24, 50, 52, 15],
+    onSkin: true,
+    svg: '<defs><linearGradient id="goldstarsG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE58A"/><stop offset="1" stop-color="#E0A526"/></linearGradient></defs>' +
+      [[31, 59.4, 3.6, -12], [69, 59.6, 3.6, 10], [73.6, 54.4, 1.9, 20]].map(([x = 0, y = 0, r = 0, turn = 0]) =>
+        `<path d="${starAt(x, y, r, turn)}" fill="#FFF6EC" stroke="#FFF6EC" stroke-width="1.4" stroke-linejoin="round"/><path d="${starAt(x, y, r, turn)}" fill="url(#goldstarsG)" stroke="#B8862A" stroke-width="0.4" stroke-linejoin="round"/>`).join('') +
+      '<g fill="#fff" opacity="0.7"><ellipse cx="30" cy="58" rx="0.9" ry="0.5" transform="rotate(-30 30 58)"/><ellipse cx="68" cy="58.2" rx="0.9" ry="0.5" transform="rotate(-30 68 58.2)"/></g>',
+  },
+  // Mustaches and beards, worn together: the mouth is at (50, 64), the jaw follows the body's round corners (radius 19 about (41, 61.5) and (59, 61.5)).
+  pencilstache: {
+    box: [34, 55, 32, 11],
+    onSkin: true,
+    svg: '<defs><linearGradient id="pencilstacheH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A32"/><stop offset="1" stop-color="#3B2117"/></linearGradient></defs>' +
+      both('<path d="M49.2 60Q43 58.8 36.6 60.6Q36.2 61.3 37 61.3Q43 60.3 49.2 61.1Z" fill="url(#pencilstacheH)" stroke="#2B1B17" stroke-width="0.3"/>'),
+  },
+  chevron: {
+    box: [33, 54, 34, 12],
+    onSkin: true,
+    svg: '<defs><linearGradient id="chevronH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A32"/><stop offset="1" stop-color="#3B2117"/></linearGradient></defs>' +
+      both('<path d="M50 57.6Q42 57.2 37 59.2Q34.8 60.2 35 62.6Q35.2 63.6 36.6 63.1Q43 61.8 50 62.4Z" fill="url(#chevronH)" stroke="#2B1B17" stroke-width="0.4" stroke-linejoin="round"/>' +
+        '<path d="M40 59.6L39.4 61.6M43 59L42.6 61.2M46 58.7L45.8 60.9" stroke="#2B1B17" stroke-opacity="0.35" stroke-width="0.4" stroke-linecap="round"/>') +
+      '<path d="M38.4 59.4Q42 58.4 46 58.4" stroke="#fff" stroke-opacity="0.35" stroke-width="0.7" fill="none" stroke-linecap="round"/>',
+  },
+  handlebar: {
+    box: [28, 51, 44, 14],
+    onSkin: true,
+    // Thick at the middle, thinning out to ends that curl up.
+    svg: '<defs><linearGradient id="handlebarH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A32"/><stop offset="1" stop-color="#3B2117"/></linearGradient></defs>' +
+      both('<path d="M50 58.8Q44 57.6 38.6 59.2Q34.4 60.4 32.6 58.8Q31.2 57.2 32.8 55.6Q30.8 55.6 30.2 57.4Q30 61 34 62Q40 63 45.6 61.4Q48.6 60.8 50 61.4Z" fill="url(#handlebarH)" stroke="#2B1B17" stroke-width="0.4" stroke-linejoin="round"/>') +
+      '<path d="M39.4 59.8Q43 58.6 46.6 58.8" stroke="#fff" stroke-opacity="0.35" stroke-width="0.7" fill="none" stroke-linecap="round"/>',
+  },
+  walrus: {
+    box: [31, 54, 38, 15],
+    onSkin: true,
+    // Bushy and hanging over the mouth, its edge in strands.
+    svg: '<defs><linearGradient id="walrusH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A32"/><stop offset="1" stop-color="#3B2117"/></linearGradient></defs>' +
+      both('<path d="M50 56.6Q42 55.8 36.6 58.4Q32.8 60.6 33 64.8Q33.2 66.4 34.6 65.8L36.2 64.4L37.8 66.4L39.6 64.8L41.4 66.8L43.2 65L45 67L46.8 65.2L48.6 67L50 65.6Z" fill="url(#walrusH)" stroke="#2B1B17" stroke-width="0.4" stroke-linejoin="round"/>' +
+        '<path d="M38 60.4Q37.4 62.4 37.8 64.6M41.6 59.2Q41 61.6 41.4 64.6M45.4 58.4Q45 61.4 45.2 64.8" stroke="#2B1B17" stroke-opacity="0.3" stroke-width="0.45" fill="none" stroke-linecap="round"/>') +
+      '<path d="M37.6 59.2Q42 57.4 47 57.4" stroke="#fff" stroke-opacity="0.35" stroke-width="0.8" fill="none" stroke-linecap="round"/>',
+  },
+  horseshoe: {
+    box: [35, 55, 30, 20],
+    onSkin: true,
+    // Over the lip, and down past both corners of the mouth.
+    svg: '<defs><linearGradient id="horseshoeH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A32"/><stop offset="1" stop-color="#3B2117"/></linearGradient></defs>' +
+      both('<path d="M50 58.6Q43 57.8 39.6 59.6Q37.6 61 37.8 64L38 71.4Q38.2 73 39.4 73Q40.6 73 40.8 71.4L41 64.4Q41.4 62.2 44 61.6Q47.4 61 50 61.4Z" fill="url(#horseshoeH)" stroke="#2B1B17" stroke-width="0.4" stroke-linejoin="round"/>') +
+      '<path d="M38.8 63.4L38.9 70.6M40.6 60Q44 59 47 59" stroke="#fff" stroke-opacity="0.3" stroke-width="0.6" fill="none" stroke-linecap="round"/>',
+  },
+  goatee: {
+    box: [42, 64, 16, 14],
+    onSkin: true,
+    svg: '<defs><linearGradient id="goateeH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A32"/><stop offset="1" stop-color="#3B2117"/></linearGradient></defs>' +
+      '<path d="M44.6 66.8Q50 68.4 55.4 66.8Q56 70.6 53 73Q50.8 74.8 50 76.2Q49.2 74.8 47 73Q44 70.6 44.6 66.8Z" fill="url(#goateeH)" stroke="#2B1B17" stroke-width="0.4" stroke-linejoin="round"/>' +
+      '<path d="M47.4 69.6Q48.4 72 50 74M50 69.4L50 72.6M52.6 69.6Q51.8 72 50.6 73.6" stroke="#2B1B17" stroke-opacity="0.3" stroke-width="0.4" fill="none" stroke-linecap="round"/>' +
+      '<path d="M46 68.2Q47.6 68.8 49.4 68.9" stroke="#fff" stroke-opacity="0.35" stroke-width="0.6" fill="none" stroke-linecap="round"/>',
+  },
+  soulpatch: {
+    box: [45, 65, 10, 8],
+    onSkin: true,
+    svg: '<defs><linearGradient id="soulpatchH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A32"/><stop offset="1" stop-color="#3B2117"/></linearGradient></defs>' +
+      '<path d="M48 67.4Q50 66.8 52 67.4Q51.8 70 50 71.4Q48.2 70 48 67.4Z" fill="url(#soulpatchH)" stroke="#2B1B17" stroke-width="0.35" stroke-linejoin="round"/>',
+  },
+  chinstrap: {
+    box: [21, 46, 58, 34],
+    onSkin: true,
+    // A thin band along the jaw, ear to ear.
+    svg: '<defs><linearGradient id="chinstrapH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A32"/><stop offset="1" stop-color="#3B2117"/></linearGradient></defs>' +
+      '<path d="M24.6 48.6L24.6 61A16.4 16.4 0 0 0 41 77.4L59 77.4A16.4 16.4 0 0 0 75.4 61L75.4 48.6" fill="none" stroke="#2B1B17" stroke-width="3.6" stroke-linecap="round"/>' +
+      '<path d="M24.6 48.6L24.6 61A16.4 16.4 0 0 0 41 77.4L59 77.4A16.4 16.4 0 0 0 75.4 61L75.4 48.6" fill="none" stroke="url(#chinstrapH)" stroke-width="2.8" stroke-linecap="round"/>' +
+      '<path d="M24.2 50L24.2 60" stroke="#fff" stroke-opacity="0.3" stroke-width="0.7" stroke-linecap="round"/>',
+  },
+  wizardbeard: {
+    box: [22, 52, 56, 42],
+    // Long and white, from the cheeks to a point below Mochi; the mouth stays clear.
+    svg: '<defs><linearGradient id="wizardbeardW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFDF8"/><stop offset="1" stop-color="#D6CEC4"/></linearGradient></defs>' +
+      '<path d="M27.4 55.6Q29.6 66 40 67.8Q45 68.8 50 68.6Q55 68.8 60 67.8Q70.4 66 72.6 55.6Q76.4 66 72.4 76.4Q66.4 86.4 50 92.4Q33.6 86.4 27.6 76.4Q23.6 66 27.4 55.6Z" fill="url(#wizardbeardW)" stroke="#A89E93" stroke-width="0.5" stroke-linejoin="round"/>' +
+      '<g fill="none" stroke="#B5AB9F" stroke-width="0.5" stroke-linecap="round"><path d="M33 70Q34 78 41 85M39.6 71.4Q40.4 80 46 88M50 71.6L50 89M60.4 71.4Q59.6 80 54 88M67 70Q66 78 59 85"/></g>' +
+      '<path d="M29.4 62Q30 70 34.4 75.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round"/>',
+  },
+  braidbeard: {
+    box: [25, 54, 50, 38],
+    // A fair beard under the mouth, and two braids with golden beads.
+    svg: '<defs><linearGradient id="braidbeardY" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4D684"/><stop offset="1" stop-color="#C4913A"/></linearGradient></defs>' +
+      '<path d="M28 57.6Q31 67 41 68.4Q50 69.6 59 68.4Q69 67 72 57.6Q74.2 70 66 76Q58 80.6 50 80.6Q42 80.6 34 76Q25.8 70 28 57.6Z" fill="url(#braidbeardY)" stroke="#8F6A22" stroke-width="0.5" stroke-linejoin="round"/>' +
+      [44.6, 55.4].map(x => [79.4, 82.2, 85].map(y => `<ellipse cx="${x}" cy="${y}" rx="2.1" ry="1.7" fill="url(#braidbeardY)" stroke="#8F6A22" stroke-width="0.45"/>`).join('') +
+        `<rect x="${n(x - 1.8)}" y="86.4" width="3.6" height="2" rx="0.8" fill="#E9B949" stroke="#9C6F1E" stroke-width="0.4"/><path d="M${n(x - 1)} 88.6L${n(x - 1.4)} 90.4M${x} 88.6L${x} 90.8M${n(x + 1)} 88.6L${n(x + 1.4)} 90.4" stroke="#C4913A" stroke-width="0.6" stroke-linecap="round"/>`).join('') +
+      '<g fill="none" stroke="#A67B2C" stroke-opacity="0.5" stroke-width="0.45" stroke-linecap="round"><path d="M34 70Q37 74 41 76M66 70Q63 74 59 76M50 71L50 77"/></g>' +
+      '<path d="M30 62Q31 67 34.6 70.6" stroke="#fff" stroke-opacity="0.6" stroke-width="0.9" fill="none" stroke-linecap="round"/>',
   },
 }
 
@@ -861,7 +1236,11 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     `<g transform="translate(${n(to.eyeDx)} ${n(to.eyeDy)})">${tweenT('translate', `${n(from.eyeDx)} ${n(from.eyeDy)}`, `${n(to.eyeDx)} ${n(to.eyeDy)}`)}`,
     `<g>${eyeMove}<g transform="translate(0 52)"><g>${eyeBlink}<g transform="translate(0 -52)">${eyesSvg}</g></g></g></g></g>`,
     `<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17">${tween('d', pathOf(from.mouth, 50, 64), pathOf(to.mouth, 50, 64))}${mouthLoop(pose.mouthLoop, pose.mouth)}</path>`,
+    // The face from the skin out: a beard, a mustache over it, the rest, then glasses on top.
+    wearSlot('chin', outfit, wasOutfit),
+    wearSlot('lip', outfit, wasOutfit),
     wearSlot('face', outfit, wasOutfit),
+    wearSlot('eyes', outfit, wasOutfit),
     wearSlot('neck', outfit, wasOutfit),
     wearSlot('head', outfit, wasOutfit),
     arm('L', from.armL, to.armL, pose.armLoopL),

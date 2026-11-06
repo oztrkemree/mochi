@@ -153,11 +153,11 @@ export function wrappedOf(chats: readonly ChatDays[], kind: 'month' | 'year', to
   return { key, from, to, days, total, activeDays: Object.values(days).filter(r => r.turns > 0).length, longest, busiest, top }
 }
 
-/** The best Mochi has earned, slot by slot: the finest hat, the latest of the rest, hands free to cheer. */
+/** The best Mochi has earned, slot by slot: the finest hat, the latest of the rest, hands free to cheer; on the face glasses alone, so it stays Mochi's. */
 export function bestOutfit(items: readonly Item[]): Outfit {
   const first = (list: readonly Item[]) => list.find(i => items.includes(i)) ?? null
   const latest = (slot: Slot) => first([...SLOT_ITEMS[slot]].reverse())
-  return { head: first(HEAD_RANK) ?? latest('head'), face: latest('face'), neck: latest('neck'), held: null, ground: latest('ground') }
+  return { head: first(HEAD_RANK) ?? latest('head'), eyes: latest('eyes'), face: null, lip: null, chin: null, neck: latest('neck'), held: null, ground: latest('ground') }
 }
 
 /** The month to offer as wrapped: the one just ended, in a new month's first week, when it saw work and was not offered yet. */

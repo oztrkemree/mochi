@@ -1,13 +1,13 @@
 # Adding something for Mochi to wear
 
-Mochi's wardrobe is 133 items in five slots. A new one touches a handful of places, and a test checks that none is missed: an item without a slot, art, a place on the drawing, a way to get it or a name in every language fails `claude plugin test .`.
+Mochi's wardrobe is 170 items in eight slots. A new one touches a handful of places, and a test checks that none is missed: an item without a slot, art, a place on the drawing, a way to get it or a name in every language fails `claude plugin test .`.
 
 Have an idea but no art? Open an **Outfit idea** issue instead; someone may draw it.
 
 ## 1. Pick an id and a slot
 
 - **Id**: one short lowercase English word, letters only (`beret`, `sombrero`, `headset`). It is saved in people's settings, so it never changes once released. It must not be an id in use, nor a key of `OLD_IDS` in `hooks/level.ts` (older versions' Turkish ids).
-- **Slot**: `head`, `face`, `neck`, `held` (in the right hand) or `ground` (standing beside Mochi). One item, one slot.
+- **Slot**: `head`, `eyes` (glasses and what goes over the eyes), `face` (everything else on the face), `lip` (a mustache), `chin` (a beard), `neck`, `held` (in the right hand) or `ground` (standing beside Mochi). One item, one slot; the four on the face are worn together, a beard under a mustache under the rest, glasses on top.
 
 Add the id to the `Item` type in `types/index.d.ts`, on the line of its slot, and to that slot's list in `SLOT_ITEMS` in `hooks/level.ts`. The list's order is the wardrobe's order: roughly the order things unlock.
 
@@ -82,7 +82,7 @@ import { svgFor } from '../hooks/rig'
 declare const console: { log: (text: string) => void }
 
 test('preview', () => {
-  const outfit = { head: 'beret', face: null, neck: null, held: null, ground: null } as const
+  const outfit = { head: 'beret', eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null } as const
   const moods = ['idle', 'wave', 'thinking', 'writing', 'party', 'sleeping'] as const
   const cells = moods.map(mood => `<div style="width:220px;height:220px">${svgFor({ mood, scene: { context: -1, agents: 0, outfit }, from: null }, 2000)}</div>`)
   console.log(`PREVIEW <body style="display:flex;flex-wrap:wrap;background:#f4efe9">${cells.join('')}</body>`)

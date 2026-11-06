@@ -40,6 +40,9 @@ export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | unde
       if (v === null) pick[slot] = null
       else if (item !== null && SLOT[item] === slot) pick[slot] = item
     }
+    // Glasses, a mustache or a beard chosen while the face was one slot move to their own, unless it was chosen there too.
+    const face = itemOf((saved.pick as Record<string, unknown>).face)
+    if (face !== null && SLOT[face] !== 'face' && pick[SLOT[face]] === undefined) pick[SLOT[face]] = face
   } else if (saved?.wear === 'none') {
     for (const slot of SLOTS) pick[slot] = null
   } else if (worn !== null) {
