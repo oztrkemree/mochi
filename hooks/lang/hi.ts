@@ -318,6 +318,7 @@ export const hi: typeof en = {
     love: 'मुझे भी आपसे प्यार है',
     hello: 'नमस्ते',
     welcome: 'कोई बात नहीं',
+    typing: { careful: 'सावधान…', aww: 'अरे ♥', uhoh: 'उफ़…', question: 'हम्म, अच्छा सवाल', bug: 'बग? पकड़ते हैं', whoa: 'अरे, आराम से!' },
     leet: '13:37',
     breakLine: span => `${span} से लगातार काम · थोड़ी अंगड़ाई लें?`,
     badgesTitle: 'बैज',

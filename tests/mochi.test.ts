@@ -12,6 +12,7 @@ import { DICTS, LANGS, pickLang, setLang } from '../hooks/i18n'
 import { NO_DIFF, NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
 import { alertCommands, langCodes, langCommand, openCommand, removeCommand } from '../hooks/system'
 import { clip, cols } from '../hooks/text'
+import { typingMood } from '../hooks/fun'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
@@ -880,4 +881,17 @@ test('a celebration fills the band with fireworks and confetti for a few seconds
   expect(show.front).toContain('<rect')
   expect(fireworks(1_760_000_000_000, 1.5, 100, 600, 740, 88).front).toBe(fireworks(1_760_000_000_000, 1.5, 100, 600, 740, 88).front)
   expect(fireworks(1_760_000_000_000, 6, 100, 600, 740, 88)).toEqual({ behind: '', front: '' })
+})
+
+test('Mochi reads the draft over the shoulder and reacts before it is sent', () => {
+  setLang('tr')
+  expect(typingMood('')).toBeNull()
+  expect(typingMood('şunu bi düzenle')).toBeNull()
+  expect(typingMood('prod a deploy et')?.mood).toBe('scared')
+  expect(typingMood('NEDEN HALA OLMUYOR BU')?.mood).toBe('shocked')
+  expect(typingMood('yine çalışmıyor')?.mood).toBe('nervous')
+  expect(typingMood('login de bir bug var')?.mood).toBe('dizzy')
+  expect(typingMood('teşekkürler')).toEqual({ mood: 'love', line: 'ayy ♥' })
+  expect(typingMood('mochi naber')?.mood).toBe('wave')
+  expect(typingMood('bu nasıl çalışıyor?')?.mood).toBe('thinking')
 })

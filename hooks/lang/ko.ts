@@ -313,6 +313,7 @@ export const ko: typeof en = {
     love: '저도 사랑해요',
     hello: '안녕하세요',
     welcome: '천만에요',
+    typing: { careful: '조심해…', aww: '아잉 ♥', uhoh: '이런…', question: '음, 좋은 질문', bug: '버그? 잡아보자', whoa: '워워, 진정해!' },
     leet: '13:37',
     breakLine: span => `쉬지 않고 ${span} · 기지개 한번?`,
     badgesTitle: '배지',

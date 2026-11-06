@@ -15,7 +15,7 @@ import { MAX_SHOWN, TOUR_MOODS, countRules, freshTips, hasRule, isNewer, newsFor
 import type { TipId } from './coach'
 import { detailHeight, detailSvg, relPath } from './detail'
 import { addSample, keepSamples, age, ago, baseName, clockAt, contextWarning, dayKey, forecastFull, forecasts, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, turnsLeft, warnLevel, withLines } from './facts'
-import { BREAK_AFTER, birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, workFrom } from './fun'
+import { BREAK_AFTER, birthdayName, dueGreeting, firstDayOf, greeting, isBreakDue, isLeet, parseBirthday, promptEgg, typingMood, workFrom } from './fun'
 import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
@@ -346,16 +346,22 @@ async function noteStream($: Dollar, kind: 'thinking' | 'talking') {
     : { mood: 'talking', line: t().st.talking, holdMs: 0 }, now)
 }
 
-async function noteTyping($: Dollar, isEmpty: boolean) {
+/** Mochi listens while the person types, and reacts to what the draft says so far; an emptied prompt lets it rest. */
+async function noteTyping($: Dollar, text: string) {
   const f = await read($, face)
-  if (isEmpty) {
-    if (f.mood === 'listening') await rest($)
+  if (text.trim() === '') {
+    if (f.mood === 'listening' || chat.isTypingFace) await rest($)
+    chat.isTypingFace = false
     return
   }
-  if (f.mood !== 'listening' && f.until === 0) {
-    chat.faceToken += 1
-    await putFace($, { mood: 'listening', line: t().st.listening, until: 0, since: 0 })
-  }
+  const r = typingMood(text)
+  const mood = r?.mood ?? 'listening'
+  const line = r?.line ?? t().st.listening
+  // A reaction still held stays.
+  if (f.until !== 0 || (f.mood === mood && f.line === line)) return
+  chat.faceToken += 1
+  chat.isTypingFace = r !== null
+  await putFace($, { mood, line, until: 0, since: 0 })
 }
 
 async function setEnv($: Dollar, change: (v: Env) => Env) {
@@ -2185,7 +2191,7 @@ export const register: Register = on => {
     if (chat.isBusy) return ran
     chat.lastTypedAt = await $.clock.now()
     chat.lastActivity = chat.lastTypedAt
-    await noteTyping($, ran.text.trim() === '')
+    await noteTyping($, ran.text)
 
     return ran
   }).catch(($, e, next) => next(e))
@@ -2195,6 +2201,7 @@ export const register: Register = on => {
     if (text.startsWith('/')) return next(e)
     if (chat.isLabelFromPrompt && chat.label === '') chat.label = peerLabel('', text)
     chat.lastTurnFailed = false
+    chat.isTypingFace = false
     void notePrompt($, text, ['composer', 'bridge', 'sdk'].includes(e.origin?.kind)).catch(() => undefined)
     const wasAsleep = await wake($)
     const now = await $.clock.now()

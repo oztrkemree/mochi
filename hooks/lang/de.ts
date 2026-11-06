@@ -314,6 +314,7 @@ export const de: typeof en = {
     love: 'ich hab dich auch lieb',
     hello: 'hallo',
     welcome: 'gern geschehen',
+    typing: { careful: 'Vorsicht…', aww: 'ohh ♥', uhoh: 'oh-oh…', question: 'hmm, gute Frage', bug: 'ein Bug? fangen wir ihn', whoa: 'hui, ganz ruhig!' },
     leet: '13:37',
     breakLine: span => `${span} ohne Pause · kurz strecken?`,
     badgesTitle: 'ABZEICHEN',

@@ -335,6 +335,8 @@ export const en = {
     love: 'love you too',
     hello: 'hello',
     welcome: 'you’re welcome',
+    /** What Mochi says over your shoulder while you type: something risky, thanks, trouble, a question, a bug, shouting. */
+    typing: { careful: 'careful…', aww: 'aww ♥', uhoh: 'uh-oh…', question: 'hmm, good question', bug: 'a bug? let’s catch it', whoa: 'whoa, easy!' },
     leet: '13:37',
     breakLine: (span: string) => `${span} without a break · a stretch?`,
     badgesTitle: 'BADGES',

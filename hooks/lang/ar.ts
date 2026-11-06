@@ -339,6 +339,7 @@ export const ar: typeof en = {
     love: 'وأنا أحبك أيضًا',
     hello: 'مرحبًا',
     welcome: 'عفوًا',
+    typing: { careful: 'انتبه…', aww: 'أوه ♥', uhoh: 'أوه لا…', question: 'همم، سؤال جيد', bug: 'خلل؟ لنمسكه', whoa: 'مهلاً، بهدوء!' },
     leet: '13:37',
     breakLine: span => `${span} بلا استراحة · نتمطّى قليلًا؟`,
     badgesTitle: 'الشارات',

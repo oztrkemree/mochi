@@ -333,6 +333,7 @@ export const pl: typeof en = {
     love: 'ja ciebie też',
     hello: 'cześć',
     welcome: 'nie ma za co',
+    typing: { careful: 'ostrożnie…', aww: 'ojej ♥', uhoh: 'oj-oj…', question: 'hmm, dobre pytanie', bug: 'bug? złapmy go', whoa: 'ej, spokojnie!' },
     leet: '13:37',
     breakLine: span => `${span} bez przerwy · rozciągniemy się?`,
     badgesTitle: 'ODZNAKI',

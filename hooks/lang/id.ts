@@ -314,6 +314,7 @@ export const id: typeof en = {
     love: 'aku juga sayang kamu',
     hello: 'halo',
     welcome: 'sama-sama',
+    typing: { careful: 'hati-hati…', aww: 'aww ♥', uhoh: 'waduh…', question: 'hmm, pertanyaan bagus', bug: 'bug? ayo tangkap', whoa: 'wah, santai!' },
     leet: '13:37',
     breakLine: span => `${span} tanpa jeda · regangkan badan dulu?`,
     badgesTitle: 'LENCANA',

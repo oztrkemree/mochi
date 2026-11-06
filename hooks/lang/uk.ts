@@ -335,6 +335,7 @@ export const uk: typeof en = {
     love: 'і я тебе',
     hello: 'привіт',
     welcome: 'нема за що',
+    typing: { careful: 'обережно…', aww: 'ой ♥', uhoh: 'ой-ой…', question: 'хм, гарне питання', bug: 'баг? впіймаємо', whoa: 'ого, спокійно!' },
     leet: '13:37',
     breakLine: span => `${span} без перерви · потягнемося?`,
     badgesTitle: 'ЗНАЧКИ',

@@ -316,6 +316,7 @@ export const pt: typeof en = {
     love: 'também te amo',
     hello: 'oi',
     welcome: 'de nada',
+    typing: { careful: 'cuidado…', aww: 'own ♥', uhoh: 'eita…', question: 'hmm, boa pergunta', bug: 'um bug? vamos pegá-lo', whoa: 'opa, calma!' },
     leet: '13:37',
     breakLine: span => `${span} sem pausa · que tal se alongar?`,
     badgesTitle: 'CONQUISTAS',

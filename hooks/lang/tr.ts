@@ -313,6 +313,7 @@ export const tr: typeof en = {
     love: 'ben de seni',
     hello: 'merhaba',
     welcome: 'rica ederim',
+    typing: { careful: 'dikkat…', aww: 'ayy ♥', uhoh: 'eyvah…', question: 'hmm, güzel soru', bug: 'bug mı? yakalayalım', whoa: 'oha, sakin!' },
     leet: '13:37',
     breakLine: span => `${span} aralıksız · biraz gerinelim mi?`,
     badgesTitle: 'ROZETLER',

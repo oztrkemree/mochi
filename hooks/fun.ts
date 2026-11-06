@@ -116,6 +116,29 @@ export function promptEgg(text: string): Reaction | null {
   return null
 }
 
+/** Words that would be hard to take back: production, a deploy, a forced push, a wipe. */
+const RISKY = /\brm\s+-rf\b|\bprod(uction)?\b|canl[ıi]ya|\bdeploy|force[- ]push|push\s+(-f|--force)\b|drop\s+(table|database)|reset\s+--hard|\bsil\b|delete\s+all/iu
+const BUG = /\bbugs?\b|\bhata|\berror|exception|\bcrash|[cç][oö]k[uü]yor|traceback/iu
+
+/**
+ * Mochi reading over the person's shoulder as they type: a face and a few
+ * words for what the draft says so far, before it is sent; null leaves it listening.
+ */
+export function typingMood(text: string): { mood: Mood; line: string } | null {
+  const said = text.trim()
+  if (said === '') return null
+  const w = t().fun.typing
+  if (RISKY.test(said)) return { mood: 'scared', line: w.careful }
+  const plain = onPrompt(said, false).mood
+  if (plain === 'shocked') return { mood: 'shocked', line: w.whoa }
+  if (plain === 'nervous') return { mood: 'nervous', line: w.uhoh }
+  if (BUG.test(said)) return { mood: 'dizzy', line: w.bug }
+  if (plain === 'pleased') return { mood: 'love', line: w.aww }
+  if (NAME.test(said)) return { mood: 'wave', line: t().fun.hello }
+  if (said.endsWith('?')) return { mood: 'thinking', line: w.question }
+  return null
+}
+
 /** Whether the local clock says 13:37. */
 export function isLeet(now: number, tz: number): boolean {
   const l = local(now, tz)

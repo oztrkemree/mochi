@@ -313,6 +313,7 @@ export const zh: typeof en = {
     love: '我也爱你',
     hello: '你好',
     welcome: '不客气',
+    typing: { careful: '小心…', aww: '哇 ♥', uhoh: '糟糕…', question: '嗯，好问题', bug: '有 bug？抓住它', whoa: '哇，冷静！' },
     leet: '13:37',
     breakLine: span => `连续工作 ${span} · 伸个懒腰？`,
     badgesTitle: '徽章',

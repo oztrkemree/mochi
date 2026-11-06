@@ -335,6 +335,7 @@ export const ru: typeof en = {
     love: 'и я тебя',
     hello: 'привет',
     welcome: 'пожалуйста',
+    typing: { careful: 'осторожно…', aww: 'ой ♥', uhoh: 'ой-ой…', question: 'хм, хороший вопрос', bug: 'баг? поймаем', whoa: 'ого, спокойно!' },
     leet: '13:37',
     breakLine: span => `${span} без перерыва · потянемся?`,
     badgesTitle: 'ЗНАЧКИ',

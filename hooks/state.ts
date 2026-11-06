@@ -119,6 +119,8 @@ export const chat = {
   isBusy: false,
   lastActivity: 0,
   lastTypedAt: 0,
+  /** Whether the face up now is one typing put up (not listening), so the next keystroke may change it. */
+  isTypingFace: false,
   faceToken: 0,
   errorRun: 0,
   callId: 0,

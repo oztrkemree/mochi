@@ -316,6 +316,7 @@ export const es: typeof en = {
     love: 'yo también te quiero',
     hello: 'hola',
     welcome: 'de nada',
+    typing: { careful: 'cuidado…', aww: 'aww ♥', uhoh: 'uy…', question: 'mmm, buena pregunta', bug: '¿un bug? a cazarlo', whoa: '¡eh, tranqui!' },
     leet: '13:37',
     breakLine: span => `${span} sin pausa · ¿te estiras un poco?`,
     badgesTitle: 'INSIGNIAS',

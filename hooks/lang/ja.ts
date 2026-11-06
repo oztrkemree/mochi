@@ -313,6 +313,7 @@ export const ja: typeof en = {
     love: '私も大好き',
     hello: 'こんにちは',
     welcome: 'どういたしまして',
+    typing: { careful: '気をつけて…', aww: 'わぁ ♥', uhoh: 'あらら…', question: 'うーん、いい質問', bug: 'バグ？捕まえよう', whoa: 'おっと、落ち着いて！' },
     leet: '13:37',
     breakLine: span => `${span}休みなし · ちょっと伸びをする？`,
     badgesTitle: 'バッジ',

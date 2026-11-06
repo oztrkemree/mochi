@@ -317,6 +317,7 @@ export const fr: typeof en = {
     love: 'moi aussi',
     hello: 'bonjour',
     welcome: 'avec plaisir',
+    typing: { careful: 'attention…', aww: 'oh ♥', uhoh: 'oh oh…', question: 'hmm, bonne question', bug: 'un bug ? on l’attrape', whoa: 'ouh là, du calme !' },
     leet: '13:37',
     breakLine: span => `${span} sans pause · on s’étire ?`,
     badgesTitle: 'BADGES',

@@ -318,6 +318,7 @@ export const it: typeof en = {
     love: 'ti voglio bene anch’io',
     hello: 'ciao',
     welcome: 'prego',
+    typing: { careful: 'attenzione…', aww: 'oh ♥', uhoh: 'oh oh…', question: 'mmm, bella domanda', bug: 'un bug? acchiappiamolo', whoa: 'ehi, calma!' },
     leet: '13:37',
     breakLine: span => `${span} senza pause · ci sgranchiamo un po’?`,
     badgesTitle: 'BADGE',
