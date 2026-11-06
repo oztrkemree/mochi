@@ -15,7 +15,7 @@ import { clip, cols } from '../hooks/text'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
-import { panelSvg } from '../hooks/panel'
+import { panelSvg, sky } from '../hooks/panel'
 import { paramsAt, svgFor, target, TRANSITION_MS } from '../hooks/rig'
 import { afterTool, beforeTool, duration, flowEnd, flowLine, isScary, onPrompt, onTurnEnd } from '../hooks/react'
 
@@ -862,4 +862,14 @@ test('wide characters clip by the room they take, and marks on a letter take non
   expect(cols('नमस्ते')).toBe(4)
   expect(cols('مَرْحَبًا')).toBe(5)
   expect(clip('नमस्ते दुनिया', 5)).toBe('नमस्ते…')
+})
+
+test('the sky behind Mochi follows the local hour', () => {
+  const night = sky(23, 110, 88)
+  expect(night).toContain('mask="url(#moonbite)"')
+  expect(night).toContain('<animateMotion')
+  expect(sky(13, 110, 88)).toContain('#FFD36B')
+  expect(sky(6, 110, 88)).toContain('#FFC98A')
+  expect(sky(6, 110, 88)).not.toContain('#FFF6D8')
+  expect(sky(19, 110, 88)).toContain('#FF9E63')
 })

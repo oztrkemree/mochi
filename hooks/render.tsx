@@ -626,9 +626,7 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     const { Box, Svg } = $.ui.resolve(e)
     const pane = await read($, panel)
     const now = await $.clock.now()
-    // The five columns the engine keeps at the right for the terminal's `[-]`
-    // stand empty here, so the panel takes them.
-    const width = Math.round(Math.min(1600, Math.max(420, (e.props.bodyColumns + 5) * 8.1 - 8)))
+    const width = Math.round(Math.min(1600, Math.max(420, e.props.bodyColumns * 8.1 - 8)))
     const alt = `${pane.info.label}: ${pane.info.detail}`
     let drawn: ReturnType<typeof panelSvg>
     try {
