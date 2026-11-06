@@ -150,6 +150,22 @@ export function afterTool(e: Args, out: Outcome, errorRun: number, seconds: numb
 // ---------- reading prompts ----------
 
 /** A brief reaction to what the person sent, before the model's own work takes over. */
+/**
+ * More thanks and praise in Turkish and English, as whole words: the
+ * short forms people type, a job well done, a love for the result.
+ */
+const MORE_THANKS = new RegExp('(?<!\\p{L})(' + [
+  // Turkish
+  't[sş]k', 't[sş]kler', 'te[sş]ekkürler', 'sa[gğ] ?ol(un)?', '[cç]ok sa[gğ] ?ol', 'var ?ol', 'eyv(allah)?', 'mersi',
+  'eline sa[gğ]l[ıi]k', 'ellerine sa[gğ]l[ıi]k', 'eme[gğ]ine sa[gğ]l[ıi]k', 'minnettar[ıi]m',
+  '[cç]ok iyi', '[cç]ok g[uü]zel', 'g[uü]zel olmu[sş]', '[sş]ahane', 'muhte[sş]em', 'harikas[ıi]n', 's[uü]persin', 'm[uü]kemmelsin',
+  'helal olsun', 'kral(s[ıi]n)?', 'adams[ıi]n', 'hayats[ıi]n', 'dehas[ıi]n', 'bay[ıi]ld[ıi]m', '[cç]ok be[gğ]endim', 'tam istedi[gğ]im', 'bir tanesin',
+  // English
+  'ty', 'tysm', 'tyvm', 'thank u', 'thanks a lot', 'many thanks', 'cheers', 'appreciate it', 'appreciated', 'much appreciated',
+  'good job', 'nice job', 'well done', 'nice work', 'great work', 'good work', 'nailed it', 'you rock', 'you(\'| a)re the best', 'legend',
+  'amazing', 'excellent', 'fantastic', 'brilliant', 'wonderful', 'superb', 'outstanding', 'impressive', 'love (it|this|that)', 'kudos', 'genius', 'beautiful',
+].join('|') + ')(?!\\p{L})', 'u')
+
 export function onPrompt(text: string, wasAsleep: boolean): Reaction {
   const said = text.trim()
   const low = said.toLocaleLowerCase()
@@ -158,7 +174,7 @@ export function onPrompt(text: string, wasAsleep: boolean): Reaction {
   // The keyword that sends the work to a workflow's agents: Mochi is ready before the first one starts.
   if (/\bultra[ -]?code\b/.test(low)) return { mood: 'agent', line: ULTRA, holdMs: 0 }
   // Thanks and praise, in the languages Mochi speaks.
-  if (/te[sş]ekk[uü]r|sa[gğ]ol|eyvallah|\beyv\b|thanks|thank you|\bthx\b|\btsk\b|harika|s[uü]per|m[uü]kemmel|aferin|bravo|helal|efsane|perfect|awesome|great job|gracias|danke|merci|obrigad|grazie|dzi[eę]kuj[eę]|dzi[eę]ki|terima kasih|makasih|спасибо|дякую|谢谢|ありがとう|감사|고마워|धन्यवाद|शुक्रिया|شكر/.test(low)) {
+  if (/te[sş]ekk[uü]r|sa[gğ]ol|eyvallah|\beyv\b|thanks|thank you|\bthx\b|\btsk\b|harika|s[uü]per|m[uü]kemmel|aferin|bravo|helal|efsane|perfect|awesome|great job|gracias|danke|merci|obrigad|grazie|dzi[eę]kuj[eę]|dzi[eę]ki|terima kasih|makasih|спасибо|дякую|谢谢|ありがとう|감사|고마워|धन्यवाद|शुक्रिया|شكر/.test(low) || MORE_THANKS.test(low)) {
     return { mood: 'pleased', line: thinking, holdMs: 2500 }
   }
   const letters = said.replace(/[^\p{L}]/gu, '')
