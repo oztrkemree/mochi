@@ -16,7 +16,8 @@ import { nameOf } from './live'
 import { PANEL_H, limitName, panelSvg } from './panel'
 import { SHOWN, floorOf, memberLines, membersOf, partyOf, statusLine } from './party'
 import { duration } from './react'
-import { VECTOR_WEAR, svgFor } from './rig'
+import { VECTOR_WEAR, mascotInner, shiftTimeline, svgFor } from './rig'
+import { prsBoard } from './prs'
 import { ALL_ITEMS, DEFAULT_PREFS, NO_DIFF, NO_ENV, NO_FACE, NO_PANEL, NO_SAID, TABS, TAB_OF, chat, inTab } from './state'
 import { WEAR } from './wear'
 
@@ -55,6 +56,12 @@ function tapRegion($: EngineInterface, desk: DeskPane, key: string, rows: number
 }
 
 /** Over the floor of chats: a click picks whoever stands there (floor.tsx). */
+/** The pull requests' board, which opens the one pressed (board.tsx). */
+function boardRegion($: EngineInterface, desk: DeskPane, rows: number) {
+  const { Box, Client } = $.ui.resolve(desk)
+  return <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key="prboard" module="./board.tsx" props={{ rows }} width="100%" height="100%" /></Box>
+}
+
 function floorRegion($: EngineInterface, desk: DeskPane, rows: number) {
   const { Box, Client } = $.ui.resolve(desk)
   return <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key="party" module="./floor.tsx" props={{ rows }} width="100%" height="100%" /></Box>
@@ -99,7 +106,7 @@ const TOGGLES = [['shield', 'hasShield'], ['alerts', 'hasAlert'], ['sound', 'has
 function actionGroups(): [string, string, [string, string][]][] {
   const d = t().pane
   return [
-    ['work', d.work, [['standup', d.standup], ['week', d.week], ['desk', d.desk]]],
+    ['work', d.work, [['standup', d.standup], ['week', d.week], ['desk', d.desk], ['prs', d.prs]]],
     ['share', d.share, [['card', d.card], ['wrapped', d.wrappedMonth], ['year', d.wrappedYear], ['snap', d.snap]]],
     ['help', d.help, [['tour', d.tour], ['news', d.news], ['update', d.update], ['feedback', d.feedback]]],
     ['data', d.data, [['export', d.export], ['reset:level', d.resetLevel], ['reset:history', d.resetHistory], ['reset:all', d.resetAll]]],
@@ -314,9 +321,24 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       </Box>
     )
     // Everything else /mochi does, a group to a line; what an action answered stays above them until dismissed.
+    // The pull requests as a board, pressed to open one, with the answer's buttons under it. Each redraw
+    // rebuilds the picture, so it is moved on by the time since it was read: the cards slide in once.
+    const board = answer.board ? prsBoard(answer.board, answer.at ?? 0, secW, mood => mascotInner({ mood, scene: { context: 0, agents: 0 }, from: null })) : null
+    const boardSvg = board ? shiftTimeline(board.svg, Math.max(0, now - (answer.at ?? 0)) / 1000) : ''
     const more = () => (
       <Box flexDirection="column" gap={1}>
-        {answer.text !== '' ? (
+        {board ? (
+          <Box key="said" flexDirection="column" gap={0.5}>
+            <Box key="said:board">
+              <Svg source={boardSvg} alt={answer.text} width={secW} height={board.height} />
+              {desk ? boardRegion($, desk, Math.ceil(board.height / 14) + 1) : null}
+            </Box>
+            <Box flexDirection="row" gap={1}>
+              {answer.copy !== '' ? <Button key="said:copy" variant="primary" onPress={pressed}>{d.copy}</Button> : null}
+              <Button key="said:close" variant="secondary" onPress={pressed}>{d.dismiss}</Button>
+            </Box>
+          </Box>
+        ) : answer.text !== '' ? (
           <Box key="said" flexDirection="column" borderStyle="round" borderColor="claude" paddingX={1} gap={0.5}>
             {answer.text.split('\n').map((line, i) => /^https:\/\/\S+$/.test(line)
               ? <Link key={`said:${i}`} href={line} label={cut(line.replace(/^https:\/\//, ''), 60)} />
@@ -345,6 +367,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       if (crew === null || !crew.isShown) return drawn('chats')
       // Every Mochi in the party wears what the person dressed Mochi in, as the band's does in that mood.
       const floor = floorOf(crew, now, crewPick, mood => outfitNow(p, v, mood, now))
+      // Each redraw rebuilds the picture: its loops run on the clock, so a redraw picks them up where they were.
       // As wide as it needs, never wider than the pane: a crowded floor shrinks to fit.
       const floorW = Math.min(secW, floor.width)
       const floorH = Math.round((floor.height * floorW) / floor.width)
@@ -357,7 +380,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         <Box flexDirection="column" gap={1}>
           <Box key="party" flexDirection="row">
             <Box>
-              <Svg source={floor.svg} alt={all.map(m => `${nameOf(m.peer)}: ${statusLine(m)}`).join(', ')} width={floorW} height={floorH} />
+              <Svg source={shiftTimeline(floor.svg, (now / 1000) % 600)} alt={all.map(m => `${nameOf(m.peer)}: ${statusLine(m)}`).join(', ')} width={floorW} height={floorH} />
               {desk ? floorRegion($, desk, Math.ceil(floorH / 14) + 1) : null}
             </Box>
           </Box>

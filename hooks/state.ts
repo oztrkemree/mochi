@@ -1,3 +1,4 @@
+import type { Inbox } from '../types'
 import type { Block, Crew, DayRec, Env, Face, FileDiff, Info, Outfit, Panel, Peer, Prefs, Section, Shot, Tab } from '../types'
 import type { GhTrouble } from './ci'
 import type { Pending, TipId } from './coach'
@@ -103,7 +104,8 @@ export const NO_INFO: Info = {
 }
 export const NO_PANEL: Panel = { shot: FIRST_SHOT, info: NO_INFO, infoFrom: null, infoAt: 0 }
 /** What the last of the details pane's actions answered, and the part of it worth copying; '' when there is none to show. */
-export const NO_SAID = { text: '', copy: '', open: '' }
+/** What an action from the pane answered: its text, what to copy and open, and for the pull requests their board and when it was read. */
+export const NO_SAID = { text: '', copy: '', open: '', board: null as Inbox | null, at: 0 }
 /** The changed file picked in the details pane's Changes, this chat's own; `path` '' when none is. */
 export const NO_DIFF: FileDiff = { path: '', lines: [], more: 0 }
 
@@ -133,6 +135,8 @@ export const chat = {
   pendingWarn: 0,
   costAtStart: 0,
   detailAt: 0,
+  /** When the pane's figures were last written. */
+  detailSetAt: 0,
   stream: null as 'thinking' | 'talking' | null,
   turn: { startedAt: 0, tools: 0, edits: 0, errors: 0 },
   watch: NEW_WATCH as Watch,

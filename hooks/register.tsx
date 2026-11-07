@@ -31,6 +31,8 @@ import { SNAP_W, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffe
 import type { ChatDays } from './share'
 import { LOOK_BACK_DAYS, deskText, standupText, weekText } from './standup'
 import type { Commit, Desk } from './standup'
+import { PRS_QUERY, PRS_SEARCH, inboxOf, prsBoard, prsText } from './prs'
+import type { Inbox } from '../types'
 import { clip } from './sound'
 import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_DIFF, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
 import { alertCommands, langCodes, langCommand, openCommand, pngCommands, removeCommand } from './system'
@@ -59,6 +61,8 @@ const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' 
 const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
 
 const TICK_MS = 450
+/** The pane's figures wait this long for a change that is only the other chats' heartbeats; a chat counts as there for ALIVE_MS (45s) after its last. */
+const DETAIL_BEAT_MS = 20_000
 /** While Mochi dozes or is hidden, the timer does its rounds on one beat in this many, about every 2 seconds. */
 const DOZE_EVERY = 5
 const SLEEPY_AFTER = 3 * 60_000
@@ -237,7 +241,7 @@ async function infoNow($: Dollar): Promise<Info> {
     forecast: forecasts(v, await $.clock.now()),
     ...(left !== null ? { turnsLeft: left } : {}),
     tz: v.tz,
-    peers: v.peers,
+    // The band draws no other chats: their heartbeats would redraw it for nothing.
     ci: v.ci ?? null,
     pr: v.pr ?? null,
   }
@@ -538,6 +542,24 @@ async function desk($: Dollar): Promise<string> {
     desks.push({ repo: baseName(root), branch: git?.branch ?? '', dirty: git?.files.length ?? 0, branches })
   }
   return deskText(desks)
+}
+
+/**
+ * /mochi prs: the pull requests waiting on the person on GitHub, from one
+ * call of their own gh; with the links too, for copying.
+ */
+async function prs($: Dollar): Promise<{ text: string; copy: string; inbox: Inbox | null }> {
+  const s = t().prs
+  const out = await gh($, ['api', 'graphql', '-f', `query=${PRS_QUERY}`, ...Object.entries(PRS_SEARCH).flatMap(([key, q]) => ['-f', `${key}=${q}`])])
+  if (out === null) return { text: s.noAnswer, copy: '', inbox: null }
+  if (out.exitCode !== 0) {
+    const why = ghTrouble(out.exitCode, out.stderr)
+    return { text: why === null ? s.noAnswer : s.trouble(t().ci[why]), copy: '', inbox: null }
+  }
+  const inbox = inboxOf(out.stdout)
+  if (inbox === null) return { text: s.noAnswer, copy: '', inbox: null }
+  const now = await $.clock.now()
+  return { text: prsText(inbox, now), copy: prsText(inbox, now, true), inbox }
 }
 
 /** A changed file's diff against the last commit (before the first, what is staged); a new file not yet added, all added. */
@@ -925,6 +947,9 @@ async function removeLive($: Dollar, names: string[]) {
   if (argv !== null) await $.process.run(argv, { cwd: `${chat.dataDir}/live`, timeoutMs: 5000 }).catch(() => undefined)
 }
 
+/** The pane's figures less the other chats' heartbeats: what changes when the pane would show something new. */
+const unbeat = (v: Env): Env => ({ ...v, peers: (v.peers ?? []).map(p => ({ ...p, at: 0 })) })
+
 async function openDetail($: Dollar) {
   await update($, detail, () => ({ ...NO_ENV, ...(chat.lastEnv ?? NO_ENV) }))
   chat.detailAt = await $.clock.now()
@@ -981,7 +1006,15 @@ async function tick($: Dollar) {
   if (now - chat.detailAt > 3000) {
     chat.detailAt = now
     const d = await read($, detail)
-    if (JSON.stringify(d) !== JSON.stringify(v)) await update($, detail, () => v)
+    // Every pane redraw rebuilds its pictures, so a change only in the other
+    // chats' heartbeats (each rewrites its file every few seconds) waits up to
+    // DETAIL_BEAT_MS, well inside the time a chat may stay silent and still count as there.
+    const isChanged = JSON.stringify(d) !== JSON.stringify(v)
+    const isBeat = isChanged && JSON.stringify(unbeat(d)) === JSON.stringify(unbeat(v))
+    if (isChanged && (!isBeat || now - chat.detailSetAt >= DETAIL_BEAT_MS)) {
+      chat.detailSetAt = now
+      await update($, detail, () => v)
+    }
   }
   const git = v.git
   if (!chat.isBusy && git && git.changed > 0 && f.until === 0 && (f.mood === 'idle' || f.mood === 'sleepy') && now - chat.lastNudge > NUDGE_EVERY_MS
@@ -1134,10 +1167,10 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
 
 type Word = keyof Dict['cmd']['words'] | keyof Dict['data']['words'] | 'chats'
 /** A subcommand's name: the key of its words in each language, or a name the same in every language. */
-type Name = Word | 'ci' | 'update' | 'standup' | 'week' | 'desk'
+type Name = Word | 'ci' | 'update' | 'standup' | 'week' | 'desk' | 'prs'
 
 /** A command's words in the language in use: in `cmd.words`, or, for a newer command, in its own section; none for a name the same in every language. */
-const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' || key === 'standup' || key === 'week' || key === 'desk' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
+const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' || key === 'standup' || key === 'week' || key === 'desk' || key === 'prs' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
 
 /** Whether `value` names the command: its English words, or the words of the language in use. */
 const names = (value: string, key: Name, ...english: string[]) => english.includes(value) || wordsFor(key).some(w => plain(w) === value)
@@ -1167,6 +1200,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'standup', english: ['standup', 'daily', 'stand-up'], run: () => standup($) },
     { name: 'week', english: ['week', 'weekly', 'hafta', 'haftalik'], run: () => week($) },
     { name: 'desk', english: ['desk', 'leftovers', 'unpushed', 'masa', 'kalanlar'], run: () => desk($) },
+    { name: 'prs', english: ['prs', 'pr', 'pulls', 'reviews', 'inceleme'], run: async () => (await prs($)).text },
     { name: 'card', english: ['card'], run: (_, raw) => card($, raw) },
     { name: 'wrapped', english: ['wrapped', 'wrap'], run: arg => wrapped($, arg) },
     { name: 'snap', english: ['snap', 'snapshot'], run: () => snap($) },
@@ -1341,6 +1375,12 @@ async function openIt($: Dollar, target: string) {
 /** One of /mochi's actions run from the details pane (`reset:history` and the like); its answer is kept for the pane to show. */
 async function act($: Dollar, what: string) {
   const [verb = '', scope = ''] = what.split(':')
+  // The pull requests copy with their links, which the pane leaves out.
+  if (verb === 'prs') {
+    const list = await prs($)
+    const at = await $.clock.now()
+    return void (await update($, said, () => ({ text: list.text, copy: list.copy, open: '', board: list.inbox, at })))
+  }
   const text = verb === 'standup' ? await standup($)
     : verb === 'week' ? await week($)
     : verb === 'desk' ? await desk($)
@@ -1358,7 +1398,7 @@ async function act($: Dollar, what: string) {
   if (text === '') return
   // What was made is shown at once, not only named.
   const open = openOf(verb, text)
-  await update($, said, () => ({ text, copy: copyOf(verb, text), open }))
+  await update($, said, () => ({ ...NO_SAID, text, copy: copyOf(verb, text), open }))
   if (open !== '') await openIt($, open)
 }
 
@@ -2676,6 +2716,16 @@ export const register: Register = on => {
     // A wardrobe card or tab is clickable all over: a clear region on it, keyed `tap:` and the button's own key.
     if (e.element.startsWith('tap:')) await pressed($, e.element.slice(4))
     if (e.element === 'arrange') await arranged($, data)
+    // A press on the pull requests' board: how far down it landed, turned into the card there, whose pull request opens.
+    if (e.element === 'prboard' && typeof data === 'object' && data !== null && typeof (data as { fy?: unknown }).fy === 'number') {
+      const answer = await read($, said)
+      if (answer.board) {
+        const drawn = prsBoard(answer.board, answer.at ?? 0, 600, () => '')
+        const y = (data as { fy: number }).fy * drawn.height
+        const url = drawn.spots.find(x => y >= x.y0 && y <= x.y1)?.url ?? ''
+        if (/^https:\/\/github\.com\//.test(url)) await openIt($, url)
+      }
+    }
     // A press on the party's floor: how far across it landed, turned into the chat standing there, as the pane drew it.
     if (e.element === 'party' && typeof data === 'object' && data !== null && typeof (data as { fx?: unknown }).fx === 'number') {
       const v = await read($, detail)

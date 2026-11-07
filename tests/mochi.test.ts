@@ -14,6 +14,7 @@ import { alertCommands, langCodes, langCommand, openCommand, removeCommand } fro
 import { clip, cols } from '../hooks/text'
 import { typingMood } from '../hooks/fun'
 import { deskText, standupText, weekText } from '../hooks/standup'
+import { inboxOf, prsBoard, prsText } from '../hooks/prs'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
@@ -952,4 +953,61 @@ test('the week sums seven days, and the desk lists work not yet safe on a remote
     { repo: 'wiki', branch: 'main', dirty: 0, branches: [{ name: 'main', ahead: 0, hasUpstream: true }] },
   ])).toBe('spark\n  • 3 dosya commit edilmedi (feat/x)\n  • try: hiç push edilmedi (4 commit)\n  • feat/x: 2 commit push edilmedi\n\nHepsi güvende: wiki')
   expect(deskText([{ repo: 'wiki', branch: 'main', dirty: 0, branches: [] }])).toContain('Masada bir şey kalmadı')
+})
+
+test('the pull requests waiting on the person: asked for review, new commits after their review, their own by what blocks them', () => {
+  setLang('tr')
+  const now = Date.parse('2026-11-07T12:00:00Z')
+  const pr = (number: number, title: string, more: Record<string, unknown> = {}) => ({
+    number, title, url: `https://github.com/o/spark-be/pull/${number}`, isDraft: false, updatedAt: '2026-11-06T10:00:00Z',
+    repository: { name: 'spark-be' }, author: { login: 'ahmet' }, reviewDecision: null, mergeable: 'MERGEABLE',
+    commits: { nodes: [{ commit: { committedDate: '2026-11-06T10:00:00Z', statusCheckRollup: { state: 'SUCCESS' } } }] },
+    latestReviews: { nodes: [] }, ...more,
+  })
+  const answer = JSON.stringify({ data: {
+    viewer: { login: 'emre' },
+    review: { nodes: [pr(10, 'Add the cache')] },
+    seen: { nodes: [
+      pr(11, 'Fix the badge', { latestReviews: { nodes: [{ author: { login: 'emre' }, submittedAt: '2026-11-06T09:00:00Z' }] } }),
+      pr(12, 'Already seen', { latestReviews: { nodes: [{ author: { login: 'emre' }, submittedAt: '2026-11-06T11:00:00Z' }] } }),
+      pr(10, 'Add the cache'),
+    ] },
+    mine: { nodes: [
+      pr(20, 'Waiting', { author: { login: 'emre' }, reviewDecision: 'REVIEW_REQUIRED' }),
+      pr(21, 'Broken', { author: { login: 'emre' }, mergeable: 'CONFLICTING', commits: { nodes: [{ commit: { committedDate: '2026-11-06T10:00:00Z', statusCheckRollup: { state: 'FAILURE' } } }] } }),
+      pr(22, 'Approved', { author: { login: 'emre' }, reviewDecision: 'APPROVED' }),
+      pr(23, 'Ancient', { author: { login: 'emre' }, updatedAt: '2026-08-01T10:00:00Z' }),
+    ] },
+  } })
+  const inbox = inboxOf(answer)
+  expect(inbox).not.toBe(null)
+  expect(prsText(inbox!, now)).toBe([
+    'Senden inceleme bekleyen (1)',
+    '  • spark-be #10 Add the cache · ahmet · 1g önce',
+    '',
+    'İncelediğin, sonra yeni commit gelen (1)',
+    '  • spark-be #11 Fix the badge · ahmet · 1g önce',
+    '',
+    "Senin PR'ların (3)",
+    '  • spark-be #21 Broken · çakışma var, CI kırık',
+    '  • spark-be #22 Approved · onaylandı, birleştirilebilir',
+    '  • spark-be #20 Waiting · inceleme bekliyor',
+    '',
+    '30 günden uzun süredir dokunulmamış 1 PR listeye alınmadı.',
+  ].join('\n'))
+  expect(prsText(inbox!, now, true)).toContain('    https://github.com/o/spark-be/pull/10')
+  expect(prsText({ review: [], seen: [], mine: [] }, now)).toBe('Seni bekleyen PR yok.')
+  expect(inboxOf('not json')).toBe(null)
+  expect(inboxOf('{"errors":[{"message":"x"}]}')).toBe(null)
+  // The board: a card a pull request, each a place to press that opens it, the old one left out.
+  const board = prsBoard(inbox!, now, 560, mood => `<g data-mood="${mood}"/>`)
+  expect(board.svg).toStartWith('<svg')
+  expect(board.svg).toContain(`viewBox="0 0 560 ${board.height}"`)
+  expect(board.svg).toContain('data-mood="nervous"')
+  expect(board.spots.map(x => x.url.split('/').at(-1))).toEqual(['10', '11', '21', '22', '20'])
+  expect(board.spots.every((x, i, all) => x.y1 > x.y0 && (i === 0 || x.y0 > all[i - 1]!.y1))).toBe(true)
+  const empty = prsBoard({ review: [], seen: [], mine: [] }, now, 300, mood => `<g data-mood="${mood}"/>`)
+  expect(empty.spots).toEqual([])
+  expect(empty.svg).toContain('Seni bekleyen PR yok.')
+  expect(empty.svg).toContain('data-mood="party"')
 })

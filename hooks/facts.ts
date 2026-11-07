@@ -270,12 +270,14 @@ export function forecastFull(samples: readonly Sample[], limit: Limit, now: numb
   return fullAt
 }
 
-/** When each usage window runs out at this pace, rounded to the minute so the panel does not redraw for nothing. */
+const FORECAST_STEP_MS = 5 * 60_000
+
+/** When each usage window runs out at this pace, rounded to five minutes: the estimate moves several minutes a minute, and each step redraws the band. */
 export function forecasts(v: Env, now: number): Record<string, number> {
   const out: Record<string, number> = {}
   for (const l of v.limits) {
     const at = forecastFull(v.samples, l, now, v.tz)
-    if (at !== null) out[l.kind] = Math.round(at / 60_000) * 60_000
+    if (at !== null) out[l.kind] = Math.round(at / FORECAST_STEP_MS) * FORECAST_STEP_MS
   }
   return out
 }
