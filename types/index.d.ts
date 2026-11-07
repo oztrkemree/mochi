@@ -423,8 +423,8 @@ declare module 'claude-code' {
       sec: number
       env: Env
       prefs: Prefs
-      /** What the last of the details pane's actions answered, the part of it worth copying, the file, folder or link it opens, and for the pull requests their board and when it was read (each absent from an older version). */
-      said: { text: string; copy: string; open?: string; board?: Inbox | null; at?: number }
+      /** What the last of the details pane's actions answered, the part of it worth copying, the file, folder or link it opens, for the pull requests their board, whether it is the code city, and when it was made (each absent from an older version). */
+      said: { text: string; copy: string; open?: string; board?: Inbox | null; at?: number; city?: boolean }
       /** The changed file picked in the details pane's Changes, with its diff; `path` '' when none is. */
       diff: FileDiff
       /** The chat picked on the details pane's party, by session id; '' when none is. */

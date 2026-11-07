@@ -594,6 +594,7 @@ export const en = {
     week: 'This week',
     desk: 'Left on the desk',
     prs: 'Pull requests',
+    city: 'Code city',
     update: 'Check for updates',
     data: 'Your data',
     card: 'Profile card',
@@ -720,6 +721,13 @@ export const en = {
     clean: (list: string): string => `All safe: ${list}`,
   },
   /** /mochi prs: the pull requests waiting on the person on GitHub. */
+  /** The code city: the last four weeks as a building a day. */
+  city: {
+    title: 'Your code city',
+    sub: (turns: string, commits: string, add: string): string => `${turns} turns · ${commits} commits · +${add} lines in four weeks`,
+    legend: 'height: turns · lit windows: commits · moon: late night · park: a day off',
+    record: (n: number): string => `record · ${n} turns`,
+  },
   prs: {
     countReview: 'to review',
     countSeen: 'new commits',
@@ -743,8 +751,8 @@ export const en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, update, status',
-    hint: '[standup | week | desk | prs | details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, update, status',
+    hint: '[standup | week | desk | prs | city | details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi on one line.',
     big: 'Mochi full size.',
     detailOpened: 'Details pane opened.',
@@ -778,7 +786,7 @@ export const en = {
     moreLine: (tips: boolean, breaks: boolean, plugins: boolean) =>
       `Tips: ${tips ? 'on' : 'off'} · Breaks: ${breaks ? 'on' : 'off'} · Plugin reactions: ${plugins ? 'on' : 'off'}`,
     peersLine: (level: number, peers: string) => `Level ${level} · other chats: ${peers}`,
-    commands: 'Commands: /mochi (show/hide) | standup | week | desk | prs | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'Commands: /mochi (show/hide) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name: string, list: string) => `Language: ${name}. Available: ${list} · /mochi lang <code> or auto`,
     langSet: (name: string) => `Language: ${name}.`,
     langAuto: (name: string) => `Language follows Claude Code and the system: ${name}.`,

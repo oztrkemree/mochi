@@ -566,6 +566,7 @@ export const it: typeof en = {
     week: 'Questa settimana',
     desk: 'Rimasto sul tavolo',
     prs: 'Pull request',
+    city: 'Città del codice',
     update: 'Cerca aggiornamenti',
     data: 'I tuoi dati',
     card: 'Scheda profilo',
@@ -681,6 +682,12 @@ export const it: typeof en = {
     allClean: 'Niente in sospeso: tutto committato e pushato. 🎉',
     clean: list => `Tutto al sicuro: ${list}`,
   },
+  city: {
+    title: 'La tua città del codice',
+    sub: (turns, commits, add) => `${turns} turni · ${commits} commit · +${add} righe in quattro settimane`,
+    legend: 'altezza: turni · finestre accese: commit · luna: notte fonda · parco: giorno libero',
+    record: n => `record · ${n} turni`,
+  },
   prs: {
     countReview: 'da rivedere',
     countSeen: 'nuovi commit',
@@ -704,8 +711,8 @@ export const it: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, mostra/nascondi, dettagli, livello, indossa, badge, chat, scudo, avvisi, CI, consigli, pause, suono, plugin, scheda, riepilogo, istantanea, tour, novità, compleanno, lingua, piccolo/grande, esporta, azzera, feedback, aggiorna, stato',
-    hint: '[standup | week | desk | prs | dettagli | livello | indossa [oggetto] | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua [codice] | piccolo | grande | nascondi | mostra | esporta | azzera | feedback | aggiorna | stato]',
+    description: 'Mochi: standup, week, desk, prs, city, mostra/nascondi, dettagli, livello, indossa, badge, chat, scudo, avvisi, CI, consigli, pause, suono, plugin, scheda, riepilogo, istantanea, tour, novità, compleanno, lingua, piccolo/grande, esporta, azzera, feedback, aggiorna, stato',
+    hint: '[standup | week | desk | prs | city | dettagli | livello | indossa [oggetto] | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua [codice] | piccolo | grande | nascondi | mostra | esporta | azzera | feedback | aggiorna | stato]',
     small: 'Mochi su una riga.',
     big: 'Mochi a grandezza naturale.',
     detailOpened: 'Pannello dei dettagli aperto.',
@@ -740,7 +747,7 @@ export const it: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Consigli: ${tips ? 'sì' : 'no'} · Pause: ${breaks ? 'sì' : 'no'} · Reazioni dei plugin: ${plugins ? 'sì' : 'no'}`,
     peersLine: (level, peers) => `Livello ${level} · altre chat: ${peers}`,
-    commands: 'Comandi: /mochi (mostra/nascondi) | standup | week | desk | prs | dettagli | livello | indossa | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua | piccolo | grande | esporta | azzera | feedback | aggiorna | stato',
+    commands: 'Comandi: /mochi (mostra/nascondi) | standup | week | desk | prs | city | dettagli | livello | indossa | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua | piccolo | grande | esporta | azzera | feedback | aggiorna | stato',
     langNow: (name, list) => `Lingua: ${name}. Disponibili: ${list} · /mochi lingua <codice> o automatico`,
     langSet: name => `Lingua: ${name}.`,
     langAuto: name => `La lingua segue Claude Code e il sistema: ${name}.`,

@@ -562,6 +562,21 @@ async function prs($: Dollar): Promise<{ text: string; copy: string; inbox: Inbo
   return { text: prsText(inbox, now), copy: prsText(inbox, now, true), inbox }
 }
 
+/** The code city in the details pane, its buildings rising from now. */
+async function showCity($: Dollar) {
+  const at = await $.clock.now()
+  await update($, said, () => ({ ...NO_SAID, text: t().city.title, city: true, at }))
+}
+
+/** /mochi city: the code city, shown in the details pane. */
+async function cityNow($: Dollar): Promise<string> {
+  await showCity($)
+  // It shows where the pane's actions answer: that section opens, and is shown if it was hidden.
+  await setPrefs($, p => ({ ...p, open: { ...p.open, more: true }, hidden: p.hidden.filter(b => b !== 'more') }))
+  await openDetail($)
+  return t().city.title
+}
+
 /** A changed file's diff against the last commit (before the first, what is staged); a new file not yet added, all added. */
 async function loadDiff($: Dollar, git: Git, path: string): Promise<FileDiff> {
   const f = git.files.find(x => x.path === path)
@@ -1167,10 +1182,10 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
 
 type Word = keyof Dict['cmd']['words'] | keyof Dict['data']['words'] | 'chats'
 /** A subcommand's name: the key of its words in each language, or a name the same in every language. */
-type Name = Word | 'ci' | 'update' | 'standup' | 'week' | 'desk' | 'prs'
+type Name = Word | 'ci' | 'update' | 'standup' | 'week' | 'desk' | 'prs' | 'city'
 
 /** A command's words in the language in use: in `cmd.words`, or, for a newer command, in its own section; none for a name the same in every language. */
-const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' || key === 'standup' || key === 'week' || key === 'desk' || key === 'prs' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
+const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' || key === 'standup' || key === 'week' || key === 'desk' || key === 'prs' || key === 'city' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
 
 /** Whether `value` names the command: its English words, or the words of the language in use. */
 const names = (value: string, key: Name, ...english: string[]) => english.includes(value) || wordsFor(key).some(w => plain(w) === value)
@@ -1201,6 +1216,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'week', english: ['week', 'weekly', 'hafta', 'haftalik'], run: () => week($) },
     { name: 'desk', english: ['desk', 'leftovers', 'unpushed', 'masa', 'kalanlar'], run: () => desk($) },
     { name: 'prs', english: ['prs', 'pr', 'pulls', 'reviews', 'inceleme'], run: async () => (await prs($)).text },
+    { name: 'city', english: ['city', 'town', 'sehir', 'kent'], run: () => cityNow($) },
     { name: 'card', english: ['card'], run: (_, raw) => card($, raw) },
     { name: 'wrapped', english: ['wrapped', 'wrap'], run: arg => wrapped($, arg) },
     { name: 'snap', english: ['snap', 'snapshot'], run: () => snap($) },
@@ -1375,6 +1391,7 @@ async function openIt($: Dollar, target: string) {
 /** One of /mochi's actions run from the details pane (`reset:history` and the like); its answer is kept for the pane to show. */
 async function act($: Dollar, what: string) {
   const [verb = '', scope = ''] = what.split(':')
+  if (verb === 'city') return void (await showCity($))
   // The pull requests copy with their links, which the pane leaves out.
   if (verb === 'prs') {
     const list = await prs($)

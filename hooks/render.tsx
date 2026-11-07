@@ -6,7 +6,8 @@ import { BADGES, badgeHint, badgeName, badgeSvg } from './badges'
 import { ciLine, prLine } from './ci'
 import { changesPieces, detailHeight, detailParts, diffable, levelSummary, levelSvg, metersSvg, partLines, partSvg, pieceSvg, ruleSvg, switchSvg } from './detail'
 import type { Part, Parts } from './detail'
-import { baseName, clockAt, forecasts } from './facts'
+import { baseName, clockAt, dayKey, forecasts, local } from './facts'
+import { citySvg } from './city'
 import { birthdayName } from './fun'
 import { DICTS, LANGS, t } from './i18n'
 import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, outfitNow, slotName, unlocked } from './level'
@@ -107,7 +108,7 @@ function actionGroups(): [string, string, [string, string][]][] {
   const d = t().pane
   return [
     ['work', d.work, [['standup', d.standup], ['week', d.week], ['desk', d.desk], ['prs', d.prs]]],
-    ['share', d.share, [['card', d.card], ['wrapped', d.wrappedMonth], ['year', d.wrappedYear], ['snap', d.snap]]],
+    ['share', d.share, [['city', d.city], ['card', d.card], ['wrapped', d.wrappedMonth], ['year', d.wrappedYear], ['snap', d.snap]]],
     ['help', d.help, [['tour', d.tour], ['news', d.news], ['update', d.update], ['feedback', d.feedback]]],
     ['data', d.data, [['export', d.export], ['reset:level', d.resetLevel], ['reset:history', d.resetHistory], ['reset:all', d.resetAll]]],
   ]
@@ -325,9 +326,17 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     // rebuilds the picture, so it is moved on by the time since it was read: the cards slide in once.
     const board = answer.board ? prsBoard(answer.board, answer.at ?? 0, secW, mood => mascotInner({ mood, scene: { context: 0, agents: 0 }, from: null })) : null
     const boardSvg = board ? shiftTimeline(board.svg, Math.max(0, now - (answer.at ?? 0)) / 1000) : ''
+    // The code city, drawn from the days as they are now, its buildings risen once since it was asked for.
+    const city = answer.city ? citySvg(v.history?.days ?? {}, dayKey(now, v.tz ?? 0), local(now, v.tz ?? 0).hour, secW) : null
+    const citySource = city ? shiftTimeline(city.svg, Math.max(0, now - (answer.at ?? 0)) / 1000) : ''
     const more = () => (
       <Box flexDirection="column" gap={1}>
-        {board ? (
+        {city ? (
+          <Box key="said" flexDirection="column" gap={0.5}>
+            <Svg source={citySource} alt={answer.text} width={secW} height={city.height} />
+            <Box flexDirection="row" gap={1}><Button key="said:close" variant="secondary" onPress={pressed}>{d.dismiss}</Button></Box>
+          </Box>
+        ) : board ? (
           <Box key="said" flexDirection="column" gap={0.5}>
             <Box key="said:board">
               <Svg source={boardSvg} alt={answer.text} width={secW} height={board.height} />

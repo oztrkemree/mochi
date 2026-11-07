@@ -562,6 +562,7 @@ export const id: typeof en = {
     week: 'Minggu ini',
     desk: 'Masih di meja',
     prs: 'Pull request',
+    city: 'Kota kode',
     update: 'Cek pembaruan',
     data: 'Datamu',
     card: 'Kartu profil',
@@ -677,6 +678,12 @@ export const id: typeof en = {
     allClean: 'Tidak ada yang tertinggal: semua sudah di-commit dan di-push. 🎉',
     clean: list => `Semua aman: ${list}`,
   },
+  city: {
+    title: 'Kota kodemu',
+    sub: (turns, commits, add) => `${turns} giliran · ${commits} commit · +${add} baris dalam empat minggu`,
+    legend: 'tinggi: giliran · jendela menyala: commit · bulan: larut malam · taman: hari libur',
+    record: n => `rekor · ${n} giliran`,
+  },
   prs: {
     countReview: 'perlu review',
     countSeen: 'commit baru',
@@ -700,8 +707,8 @@ export const id: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, tampilkan/sembunyikan, detail, level, pakai, lencana, chat, perisai, notifikasi, CI, tips, istirahat, suara, plugin, kartu, rekap, jepret, tur, baru, ultah, bahasa, kecil/besar, ekspor, reset, masukan, perbarui, status',
-    hint: '[standup | week | desk | prs | detail | level | pakai [barang] | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa [kode] | kecil | besar | sembunyikan | tampilkan | ekspor | reset | masukan | perbarui | status]',
+    description: 'Mochi: standup, week, desk, prs, city, tampilkan/sembunyikan, detail, level, pakai, lencana, chat, perisai, notifikasi, CI, tips, istirahat, suara, plugin, kartu, rekap, jepret, tur, baru, ultah, bahasa, kecil/besar, ekspor, reset, masukan, perbarui, status',
+    hint: '[standup | week | desk | prs | city | detail | level | pakai [barang] | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa [kode] | kecil | besar | sembunyikan | tampilkan | ekspor | reset | masukan | perbarui | status]',
     small: 'Mochi dalam satu baris.',
     big: 'Mochi ukuran penuh.',
     detailOpened: 'Panel detail dibuka.',
@@ -734,7 +741,7 @@ export const id: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tips: ${tips ? 'aktif' : 'nonaktif'} · Istirahat: ${breaks ? 'aktif' : 'nonaktif'} · Reaksi plugin: ${plugins ? 'aktif' : 'nonaktif'}`,
     peersLine: (level, peers) => `Level ${level} · chat lain: ${peers}`,
-    commands: 'Perintah: /mochi (tampilkan/sembunyikan) | standup | week | desk | prs | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | ekspor | reset | masukan | perbarui | status',
+    commands: 'Perintah: /mochi (tampilkan/sembunyikan) | standup | week | desk | prs | city | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | ekspor | reset | masukan | perbarui | status',
     langNow: (name, list) => `Bahasa: ${name}. Tersedia: ${list} · /mochi bahasa <kode> atau otomatis`,
     langSet: name => `Bahasa: ${name}.`,
     langAuto: name => `Bahasa mengikuti Claude Code dan sistem: ${name}.`,

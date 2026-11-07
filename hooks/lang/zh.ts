@@ -561,6 +561,7 @@ export const zh: typeof en = {
     week: '本周',
     desk: '桌上的遗留',
     prs: '拉取请求',
+    city: '代码城市',
     update: '检查更新',
     data: '你的数据',
     card: '个人卡片',
@@ -676,6 +677,12 @@ export const zh: typeof en = {
     allClean: '桌上没有遗留：全部已提交并推送。 🎉',
     clean: list => `全部安全：${list}`,
   },
+  city: {
+    title: '你的代码城市',
+    sub: (turns, commits, add) => `四周内 ${turns} 轮 · ${commits} 次提交 · +${add} 行`,
+    legend: '高度：轮数 · 亮窗：提交 · 月亮：深夜 · 公园：休息日',
+    record: n => `纪录 · ${n} 轮`,
+  },
   prs: {
     countReview: '待评审',
     countSeen: '新提交',
@@ -699,8 +706,8 @@ export const zh: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi：standup, week, desk, prs, 显示/隐藏、详情、等级、穿戴、徽章、对话、护盾、提醒、CI、提示、休息、声音、插件、卡片、回顾、快照、导览、新功能、生日、语言、大小、导出、重置、反馈、更新、状态',
-    hint: '[standup | week | desk | prs | details | level | wear [物品] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [代码] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi：standup, week, desk, prs, city, 显示/隐藏、详情、等级、穿戴、徽章、对话、护盾、提醒、CI、提示、休息、声音、插件、卡片、回顾、快照、导览、新功能、生日、语言、大小、导出、重置、反馈、更新、状态',
+    hint: '[standup | week | desk | prs | city | details | level | wear [物品] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [代码] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi 单行显示。',
     big: 'Mochi 全尺寸显示。',
     detailOpened: '详情面板已打开。',
@@ -733,7 +740,7 @@ export const zh: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `提示：${tips ? '开' : '关'} · 休息提醒：${breaks ? '开' : '关'} · 插件反应：${plugins ? '开' : '关'}`,
     peersLine: (level, peers) => `等级 ${level} · 其他对话：${peers}`,
-    commands: '命令：/mochi（显示/隐藏）| standup | week | desk | prs | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: '命令：/mochi（显示/隐藏）| standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name, list) => `语言：${name}。可选：${list} · /mochi lang <代码> 或 auto`,
     langSet: name => `语言：${name}。`,
     langAuto: name => `语言跟随 Claude Code 和系统：${name}。`,

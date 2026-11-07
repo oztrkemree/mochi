@@ -581,6 +581,7 @@ export const pl: typeof en = {
     week: 'Ten tydzień',
     desk: 'Zostało na biurku',
     prs: 'Pull requesty',
+    city: 'Miasto kodu',
     update: 'Sprawdź aktualizacje',
     data: 'Twoje dane',
     card: 'Karta profilu',
@@ -696,6 +697,12 @@ export const pl: typeof en = {
     allClean: 'Nic nie zostało: wszystko zacommitowane i wypchnięte. 🎉',
     clean: list => `Wszystko bezpieczne: ${list}`,
   },
+  city: {
+    title: 'Twoje miasto kodu',
+    sub: (turns, commits, add) => `${turns} tur · ${commits} commitów · +${add} linii w cztery tygodnie`,
+    legend: 'wysokość: tury · jasne okna: commity · księżyc: późna noc · park: wolne',
+    record: n => `rekord · ${n} tur`,
+  },
   prs: {
     countReview: 'do recenzji',
     countSeen: 'nowe commity',
@@ -719,8 +726,8 @@ export const pl: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, pokaż/ukryj, szczegóły, poziom, ubierz, odznaki, czaty, tarcza, powiadomienia, CI, porady, przerwy, dźwięk, wtyczki, karta, podsumowanie, zrzut, wprowadzenie, nowości, urodziny, język, mały/duży, eksport, resetuj, opinia, aktualizuj, stan',
-    hint: '[standup | week | desk | prs | szczegóły | poziom | ubierz [rzecz] | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język [kod] | mały | duży | ukryj | pokaż | eksport | resetuj | opinia | aktualizuj | stan]',
+    description: 'Mochi: standup, week, desk, prs, city, pokaż/ukryj, szczegóły, poziom, ubierz, odznaki, czaty, tarcza, powiadomienia, CI, porady, przerwy, dźwięk, wtyczki, karta, podsumowanie, zrzut, wprowadzenie, nowości, urodziny, język, mały/duży, eksport, resetuj, opinia, aktualizuj, stan',
+    hint: '[standup | week | desk | prs | city | szczegóły | poziom | ubierz [rzecz] | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język [kod] | mały | duży | ukryj | pokaż | eksport | resetuj | opinia | aktualizuj | stan]',
     small: 'Mochi w jednej linii.',
     big: 'Mochi w pełnym rozmiarze.',
     detailOpened: 'Panel szczegółów otwarty.',
@@ -755,7 +762,7 @@ export const pl: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Porady: ${tips ? 'wł.' : 'wył.'} · Przerwy: ${breaks ? 'wł.' : 'wył.'} · Reakcje wtyczek: ${plugins ? 'wł.' : 'wył.'}`,
     peersLine: (level, peers) => `Poziom ${level} · inne czaty: ${peers}`,
-    commands: 'Polecenia: /mochi (pokaż/ukryj) | standup | week | desk | prs | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | eksport | resetuj | opinia | aktualizuj | stan',
+    commands: 'Polecenia: /mochi (pokaż/ukryj) | standup | week | desk | prs | city | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | eksport | resetuj | opinia | aktualizuj | stan',
     langNow: (name, list) => `Język: ${name}. Dostępne: ${list} · /mochi język <kod> lub auto`,
     langSet: name => `Język: ${name}.`,
     langAuto: name => `Język zgodny z Claude Code i systemem: ${name}.`,

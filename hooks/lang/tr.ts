@@ -561,6 +561,7 @@ export const tr: typeof en = {
     week: 'Bu hafta',
     desk: 'Masada kalanlar',
     prs: 'Bekleyen PR\'lar',
+    city: 'Kod şehrim',
     update: 'Güncelleme var mı?',
     data: 'Verilerin',
     card: 'Profil kartı',
@@ -676,6 +677,12 @@ export const tr: typeof en = {
     allClean: 'Masada bir şey kalmadı: her şey commit ve push edilmiş. 🎉',
     clean: list => `Hepsi güvende: ${list}`,
   },
+  city: {
+    title: 'Kod şehrin',
+    sub: (turns, commits, add) => `Dört haftada ${turns} tur · ${commits} commit · +${add} satır`,
+    legend: 'yükseklik: tur · ışıklı pencere: commit · ay: gece mesaisi · park: boş gün',
+    record: n => `rekor · ${n} tur`,
+  },
   prs: {
     countReview: 'incelemen bekleniyor',
     countSeen: 'yeni commit',
@@ -699,8 +706,8 @@ export const tr: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, aktar, sıfırla, geribildirim, güncelle, durum',
-    hint: '[standup | week | desk | prs | detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | aktar | sıfırla | geribildirim | güncelle | durum]',
+    description: 'Mochi: standup, week, desk, prs, city, göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, aktar, sıfırla, geribildirim, güncelle, durum',
+    hint: '[standup | week | desk | prs | city | detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | aktar | sıfırla | geribildirim | güncelle | durum]',
     small: 'Mochi tek satır.',
     big: 'Mochi tam boy.',
     detailOpened: 'Detay paneli açıldı.',
@@ -733,7 +740,7 @@ export const tr: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `İpuçları: ${tips ? 'açık' : 'kapalı'} · Mola: ${breaks ? 'açık' : 'kapalı'} · Eklenti tepkileri: ${plugins ? 'açık' : 'kapalı'}`,
     peersLine: (level, peers) => `Seviye ${level} · diğer sohbetler: ${peers}`,
-    commands: 'Komutlar: /mochi (göster/gizle) | standup | week | desk | prs | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | güncelle | durum',
+    commands: 'Komutlar: /mochi (göster/gizle) | standup | week | desk | prs | city | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | güncelle | durum',
     langNow: (name, list) => `Dil: ${name}. Seçenekler: ${list} · /mochi dil <kod> ya da otomatik`,
     langSet: name => `Dil: ${name}.`,
     langAuto: name => `Dil Claude Code’a ve sisteme göre seçiliyor: ${name}.`,

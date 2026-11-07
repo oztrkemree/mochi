@@ -15,6 +15,7 @@ import { clip, cols } from '../hooks/text'
 import { typingMood } from '../hooks/fun'
 import { deskText, standupText, weekText } from '../hooks/standup'
 import { inboxOf, prsBoard, prsText } from '../hooks/prs'
+import { citySvg } from '../hooks/city'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
@@ -1010,4 +1011,24 @@ test('the pull requests waiting on the person: asked for review, new commits aft
   expect(empty.spots).toEqual([])
   expect(empty.svg).toContain('Seni bekleyen PR yok.')
   expect(empty.svg).toContain('data-mood="party"')
+})
+
+test('the code city: a building a day worked, a park a day off, a lot ahead, the busiest flies its flag, the sky is the hour\'s', () => {
+  setLang('tr')
+  const rec = (turns: number, commits: number, night = 0) => ({ turns, tools: 0, edits: 0, errors: 0, commits, cost: 0, secs: 0, night, add: 100, del: 0, early: 0, langs: 0 })
+  const days = { '2026-10-30': rec(947, 305, 3), '2026-11-06': rec(170, 33), '2026-11-07': rec(18, 2) }
+  const night = citySvg(days, '2026-11-07', 23, 600)
+  expect(night.svg).toStartWith('<svg')
+  expect(night.svg).toContain(`viewBox="0 0 600 ${night.height}"`)
+  expect(night.svg).toContain('rekor · 947 tur')
+  expect(night.svg).toContain('1.135 tur · 340 commit')
+  expect(night.svg).toContain('#0E1428')
+  // Sunday, still ahead, is an empty lot drawn in dashes; today has its crane.
+  expect(night.svg).toContain('stroke-dasharray="3 3"')
+  expect(night.svg).toContain('#F2B84B')
+  expect(citySvg(days, '2026-11-07', 13, 600).svg).toContain('#A9D4F2')
+  expect(citySvg({}, '2026-11-07', 13, 320).svg).not.toContain('rekor')
+  // Four weeks of the busiest days still fit what the desktop takes of one drawing.
+  const busy = Object.fromEntries(Array.from({ length: 28 }, (_, i) => [shiftDay('2026-11-07', -i), rec(900 + i, 300, 5)]))
+  for (const w of [320, 600, 1400]) expect(citySvg(busy, '2026-11-08', 3, w).svg.length).toBeLessThan(131072)
 })

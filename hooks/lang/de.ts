@@ -563,6 +563,7 @@ export const de: typeof en = {
     week: 'Diese Woche',
     desk: 'Noch auf dem Tisch',
     prs: 'Pull Requests',
+    city: 'Code-Stadt',
     update: 'Nach Updates suchen',
     data: 'Deine Daten',
     card: 'Profilkarte',
@@ -678,6 +679,12 @@ export const de: typeof en = {
     allClean: 'Nichts mehr auf dem Tisch: alles committet und gepusht. 🎉',
     clean: list => `Alles sicher: ${list}`,
   },
+  city: {
+    title: 'Deine Code-Stadt',
+    sub: (turns, commits, add) => `${turns} Runden · ${commits} Commits · +${add} Zeilen in vier Wochen`,
+    legend: 'Höhe: Runden · helle Fenster: Commits · Mond: spät nachts · Park: freier Tag',
+    record: n => `Rekord · ${n} Runden`,
+  },
   prs: {
     countReview: 'zu prüfen',
     countSeen: 'neue Commits',
@@ -701,8 +708,8 @@ export const de: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
-    hint: '[standup | week | desk | prs | details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
+    description: 'Mochi: standup, week, desk, prs, city, zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
+    hint: '[standup | week | desk | prs | city | details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
     small: 'Mochi in einer Zeile.',
     big: 'Mochi in voller Größe.',
     detailOpened: 'Detailansicht geöffnet.',
@@ -737,7 +744,7 @@ export const de: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tipps: ${tips ? 'an' : 'aus'} · Pausen: ${breaks ? 'an' : 'aus'} · Plugin-Reaktionen: ${plugins ? 'an' : 'aus'}`,
     peersLine: (level, peers) => `Level ${level} · andere Chats: ${peers}`,
-    commands: 'Befehle: /mochi (zeigen/verstecken) | standup | week | desk | prs | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
+    commands: 'Befehle: /mochi (zeigen/verstecken) | standup | week | desk | prs | city | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
     langNow: (name, list) => `Sprache: ${name}. Verfügbar: ${list} · /mochi sprache <Code> oder automatisch`,
     langSet: name => `Sprache: ${name}.`,
     langAuto: name => `Sprache folgt Claude Code und dem System: ${name}.`,

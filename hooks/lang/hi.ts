@@ -566,6 +566,7 @@ export const hi: typeof en = {
     week: 'इस हफ़्ते',
     desk: 'मेज़ पर बाकी',
     prs: 'पुल रिक्वेस्ट',
+    city: 'कोड शहर',
     update: 'अपडेट जाँचें',
     data: 'आपका डेटा',
     card: 'प्रोफ़ाइल कार्ड',
@@ -681,6 +682,12 @@ export const hi: typeof en = {
     allClean: 'कुछ बाकी नहीं: सब कमिट और पुश हो चुका है। 🎉',
     clean: list => `सब सुरक्षित: ${list}`,
   },
+  city: {
+    title: 'आपका कोड शहर',
+    sub: (turns, commits, add) => `चार हफ़्तों में ${turns} टर्न · ${commits} कमिट · +${add} लाइनें`,
+    legend: 'ऊँचाई: टर्न · जलती खिड़कियाँ: कमिट · चाँद: देर रात · पार्क: छुट्टी',
+    record: n => `रिकॉर्ड · ${n} टर्न`,
+  },
   prs: {
     countReview: 'रिव्यू के लिए',
     countSeen: 'नए कमिट',
@@ -704,8 +711,8 @@ export const hi: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, दिखाना/छिपाना, विवरण, लेवल, पहनावा, बैज, चैट, कवच, अलर्ट, CI, सुझाव, ब्रेक, आवाज़, प्लगइन, कार्ड, लेखा-जोखा, तस्वीर, परिचय, नया क्या है, जन्मदिन, भाषा, छोटा/बड़ा, एक्सपोर्ट, रीसेट, फ़ीडबैक, अपडेट, स्थिति',
-    hint: '[standup | week | desk | prs | details | level | wear [चीज़] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [कोड] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, दिखाना/छिपाना, विवरण, लेवल, पहनावा, बैज, चैट, कवच, अलर्ट, CI, सुझाव, ब्रेक, आवाज़, प्लगइन, कार्ड, लेखा-जोखा, तस्वीर, परिचय, नया क्या है, जन्मदिन, भाषा, छोटा/बड़ा, एक्सपोर्ट, रीसेट, फ़ीडबैक, अपडेट, स्थिति',
+    hint: '[standup | week | desk | prs | city | details | level | wear [चीज़] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [कोड] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi एक लाइन में।',
     big: 'Mochi पूरे आकार में।',
     detailOpened: 'विवरण पैनल खुल गया।',
@@ -738,7 +745,7 @@ export const hi: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `सुझाव: ${tips ? 'चालू' : 'बंद'} · ब्रेक: ${breaks ? 'चालू' : 'बंद'} · प्लगइन प्रतिक्रियाएँ: ${plugins ? 'चालू' : 'बंद'}`,
     peersLine: (level, peers) => `लेवल ${level} · दूसरी चैट: ${peers}`,
-    commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | standup | week | desk | prs | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name, list) => `भाषा: ${name}। उपलब्ध: ${list} · /mochi lang <कोड> या auto`,
     langSet: name => `भाषा: ${name}।`,
     langAuto: name => `भाषा Claude Code और सिस्टम के हिसाब से: ${name}।`,
