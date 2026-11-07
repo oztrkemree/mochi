@@ -80,7 +80,7 @@ Claude 的一举一动它都有反应，会拦下那些你事后会后悔的命�
   <img src="docs/demo.svg" width="744" alt="Mochi 的状态栏轮流切换心情和装扮：挥手、阅读、编辑、运行命令、得意、等你回复、庆祝，最后睡着">
 </p>
 
-表情旁边：用大白话说明正在发生什么（`编辑中 checkout.tsx`、`测试通过 · 4s`）、一排小方块表示最近的工具调用（正在运行的会轻轻呼吸，失败的会变红）、你的分支，以及改动了多少个文件。
+表情旁边：用大白话说明正在发生什么，在对话气泡里逐字打出（`编辑中 checkout.tsx`、`测试通过 · 4s`）、一排带有工具图标的小方块表示最近的工具调用（正在运行的会轻轻呼吸，失败的会变红）、你的分支，以及改动了多少个文件。Mochi 身后的天空跟着你的时间变化，夜里有月亮和萤火虫。庆祝时整条状态栏都会放烟花。
 
 ## 📊 你的限额，一目了然，还附带预测
 
@@ -222,6 +222,16 @@ Mochi 空闲时，偶尔会针对刚发生的事给一条简短的 Claude Code �
 
 在详情面板的**衣橱**区域挑选要穿戴的配饰，或者直接用 `/mochi 穿戴 眼镜`。用 `/mochi 生日 04-23` 告诉 Mochi 你的生日，它只保存在你的电脑上。有新装扮的点子？[docs/OUTFITS.md](docs/OUTFITS.md) 写了怎么加进来。
 
+## 🗂️ 你的工作，复制即用
+
+详情面板里的 **工作** 分组，每一项也都是一条命令。提交只算你自己的，不限分支，来自最近两周任何对话打开过的每个仓库。
+
+- **`/mochi standup`** 帮你写站会笔记：上一个工作日（周一就是上周五）和今天，按仓库列出你的提交，以及当天的轮数、时长和行数，并复制到剪贴板。
+- **`/mochi week`** 对最近七天做同样的事。
+- **`/mochi desk`** 列出还没安全放到远程的工作：未提交的改动、未推送的提交和从未推送的分支。
+- **`/mochi prs`** 通过你自己的 `gh` 把等你处理的拉取请求做成看板：请你审查的、你审查后又有新提交的，以及你自己的和卡住每一个的原因。点卡片即可打开。
+- **`/mochi city`** 把你最近四周画成一座城市：每天一栋楼，高度对应当天的轮数，亮着的窗户是你的提交，熬夜的日子头顶有月亮，休息日是公园，最忙的一天插着旗。
+
 ## 📸 晒出来
 
 - **`/mochi 卡片`** 生成一张卡片：穿着今日装扮的 Mochi，加上你的等级、经验值和连续天数。
@@ -284,6 +294,11 @@ Mochi 空闲时，偶尔会针对刚发生的事给一条简短的 Claude Code �
 | `/mochi card [path]` | 为你的 GitHub 个人主页保存一张卡片 |
 | `/mochi wrapped [year]` | 把你的这个月（或这一年）浓缩成一张图保存下来 |
 | `/mochi snap` | 把状态栏和详情面板保存为图片 |
+| `/mochi standup` | 上一个工作日和今天的站会笔记，已复制 |
+| `/mochi week` | 最近七天：按仓库的提交、轮数、时长和行数 |
+| `/mochi desk` | 还没安全放到远程的工作（Mochi 见过的所有仓库） |
+| `/mochi prs` | 等你处理的拉取请求，看板形式 |
+| `/mochi city` | 把最近四周画成一座城市 |
 | `/mochi tour` | 重看首次运行时的导览 |
 | `/mochi news` | 这个版本带来了什么 |
 | `/mochi birthday [MM-DD \| none]` | 告诉 Mochi 你的生日、查看它，或者删掉它 |
@@ -306,18 +321,18 @@ English · Türkçe · Español · Deutsch · Français · Português · Рус�
 
 ## 🔒 它会访问什么
 
-**一切都留在你的电脑上。** Mochi 不会把任何关于你或你工作的内容发到任何地方。它自己唯一的请求，是最多每 12 小时从 GitHub 读一次版本号，好在有更新时告诉你；设置了 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` 时连这个也不做。除此之外唯一会联网的是你自己的 `gh`，用于跟踪 CI，`/mochi ci` 就能把它关掉。
+**一切都留在你的电脑上。** Mochi 不会把任何关于你或你工作的内容发到任何地方。它自己唯一的请求，是最多每 12 小时从 GitHub 读一次版本号，好在有更新时告诉你；设置了 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` 时连这个也不做。除此之外唯一会联网的是你自己的 `gh`，用于跟踪 CI，`/mochi ci` 就能把它关掉。`/mochi prs` 也会用你的 `gh`，但只在你运行它时。
 
 <details>
 <summary><b>完整清单</b></summary>
 
 <br>
 
-- **git**：只在对话所在的文件夹里读取，为状态栏和详情面板运行 `git status`、`git log`、`git diff --numstat` 和 `git rev-parse`。护盾需要细看时，会查询当前分支和默认分支、`git add` 会添加哪些文件（`git ls-files`），以及 `git commit` 会提交什么（`git diff`）。
-- **gh**：只在 CI 跟踪开启时运行，用的是你自己的登录（Mochi 从不经手你的令牌）。`gh pr view` 在对话开始时、你打开详情面板时以及 push 前后运行；`gh run list` 只在本对话 push 之后运行，每 30 秒一次，直到运行结束，最多半小时。`/mochi ci` 会把两者都关掉。
+- **git**：只在对话所在的文件夹里读取，为状态栏和详情面板运行 `git status`、`git log`、`git diff --numstat` 和 `git rev-parse`。护盾需要细看时，会查询当前分支和默认分支、`git add` 会添加哪些文件（`git ls-files`），以及 `git commit` 会提交什么（`git diff`）。为了 `/mochi standup`、`week` 和 `desk`，在最近两周任何对话打开过的每个仓库里运行：你自己提交的 `git log`、`git status`、`git remote`、`git for-each-ref` 和 `git rev-list`。
+- **gh**：只在 CI 跟踪开启时运行，用的是你自己的登录（Mochi 从不经手你的令牌）。`gh pr view` 在对话开始时、你打开详情面板时以及 push 前后运行；`gh run list` 只在本对话 push 之后运行，每 30 秒一次，直到运行结束，最多半小时。`/mochi ci` 会把两者都关掉。`/mochi prs` 只在你运行它或点它的按钮时调用一次 `gh api graphql`。
 - **GitHub，用于检查更新**：最多每 12 小时一次，以及你运行 `/mochi update` 时，从 `raw.githubusercontent.com/oztrkemree/mochi` 直接下载 `.claude-plugin/plugin.json`，用来比较版本号。它不带任何关于你或你工作的内容；设置了 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` 时不会发生。
 - **系统自带的工具**：通知在 macOS 上用 `osascript`，Windows 上用 PowerShell，Linux 上用 `notify-send`。获取语言时，macOS 上运行 `defaults read -g AppleLanguages`，Windows 上运行 `reg query`；用 `uname` 区分 macOS 和 Linux。`/mochi 快照` 的 PNG 由 `rsvg-convert` 或 ImageMagick 的 `magick` 生成（如果装了的话）。已关闭对话的文件，以及 `/mochi 重置` 清除的内容，都按文件名用 `rm`（Windows 上用 `cmd` 的 `del`）删除，且只限于 `~/.claude/mochi/` 之内。
-- **`~/.claude/mochi/` 下的文件**：每个打开的对话进行到哪一步、每日计数、你的等级和徽章、用于预测的用量读数、每条提示显示过几次、你反复给出的简短指示（绝不保存完整的 prompt）、决定由哪个对话来播报限额重置的标记、你写的 `shield.json`（如果有的话），以及 `/mochi 卡片`、`回顾`、`快照` 和 `导出` 保存的文件。设置、始终允许的项和你的生日，存放在 Claude Code 为插件提供的存储里。
+- **`~/.claude/mochi/` 下的文件**：每个打开的对话进行到哪一步、每日计数、你的等级和徽章、用于预测的用量读数、每条提示显示过几次、你反复给出的简短指示（绝不保存完整的 prompt）、决定由哪个对话来播报限额重置的标记、你写的 `shield.json`（如果有的话），以及 `/mochi 卡片`、`回顾`、`快照` 和 `导出` 保存的文件。设置、始终允许的项和你的生日，存放在 Claude Code 为插件提供的存储里。为了“工作”分组，`repos.json` 记录你的对话打开过哪些仓库以及时间。
 - **你的项目**：Mochi 在建议一条指示之前会读取 `CLAUDE.md`，只有你选了**加入**之后，才会在末尾追加一行。只有你给 `/mochi 卡片` 指定了项目里的路径，它才会把卡片写到那里。为了统计行数和发现密钥，它会读取 Claude 即将覆盖的文件；遇到一次完成添加和提交的命令，还会读取它将要添加的新文件（最多 20 个，每个不超过 1 MB）。读到的内容一概不保留。
 - **其他插件**可以借 Mochi 显示一种心情和一句短话，并署上自己的名字，每个插件最多每 10 秒一次；`/mochi 插件` 可以关掉。`/mochi 反馈` 只会显示一个链接：什么都不会发送。
 - **Claude Code 自己的钩子**：Mochi 观察工具调用、提示、子代理和每一轮，用来选择表情、记录当天的数字，并把每一个原样传下去；它读取聊天的消息只是为了找到聊天的标题。遇到权限请求时，它只显示 Claude 正在等你，从不替你回答。唯一会动手的钩子是护盾：在它认为无法撤销的命令或编辑之前，它会先问你，只有你选择**停止**，或问题无法完整显示时，才拒绝那次调用。它从不替你允许任何事。Mochi 添加 `/mochi` 命令，并为依赖它的插件添加 `$.mochi`。它不向自己的插件文件夹写入任何内容，也不加载自己文件以外的代码。首次启动时，它会从 Claude Code 的存储 `~/.claude/plugins/store/` 读取一次旧 `mochi` 插件的设置，把它们搬过来。

@@ -6,7 +6,8 @@ import { BADGES, badgeHint, badgeName, badgeSvg } from './badges'
 import { ciLine, prLine } from './ci'
 import { changesPieces, detailHeight, detailParts, diffable, levelSummary, levelSvg, metersSvg, partLines, partSvg, pieceSvg, ruleSvg, switchSvg } from './detail'
 import type { Part, Parts } from './detail'
-import { baseName, clockAt, forecasts } from './facts'
+import { baseName, clockAt, dayKey, forecasts, local } from './facts'
+import { citySvg } from './city'
 import { birthdayName } from './fun'
 import { DICTS, LANGS, t } from './i18n'
 import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, outfitNow, slotName, unlocked } from './level'
@@ -16,7 +17,8 @@ import { nameOf } from './live'
 import { PANEL_H, limitName, panelSvg } from './panel'
 import { SHOWN, floorOf, memberLines, membersOf, partyOf, statusLine } from './party'
 import { duration } from './react'
-import { VECTOR_WEAR, svgFor } from './rig'
+import { VECTOR_WEAR, mascotInner, shiftTimeline, svgFor } from './rig'
+import { prsBoard } from './prs'
 import { ALL_ITEMS, DEFAULT_PREFS, NO_DIFF, NO_ENV, NO_FACE, NO_PANEL, NO_SAID, TABS, TAB_OF, chat, inTab } from './state'
 import { WEAR } from './wear'
 
@@ -55,6 +57,12 @@ function tapRegion($: EngineInterface, desk: DeskPane, key: string, rows: number
 }
 
 /** Over the floor of chats: a click picks whoever stands there (floor.tsx). */
+/** The pull requests' board, which opens the one pressed (board.tsx). */
+function boardRegion($: EngineInterface, desk: DeskPane, rows: number) {
+  const { Box, Client } = $.ui.resolve(desk)
+  return <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key="prboard" module="./board.tsx" props={{ rows }} width="100%" height="100%" /></Box>
+}
+
 function floorRegion($: EngineInterface, desk: DeskPane, rows: number) {
   const { Box, Client } = $.ui.resolve(desk)
   return <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key="party" module="./floor.tsx" props={{ rows }} width="100%" height="100%" /></Box>
@@ -99,8 +107,9 @@ const TOGGLES = [['shield', 'hasShield'], ['alerts', 'hasAlert'], ['sound', 'has
 function actionGroups(): [string, string, [string, string][]][] {
   const d = t().pane
   return [
-    ['share', d.share, [['card', d.card], ['wrapped', d.wrappedMonth], ['year', d.wrappedYear], ['snap', d.snap]]],
-    ['help', d.help, [['tour', d.tour], ['news', d.news], ['feedback', d.feedback]]],
+    ['work', d.work, [['standup', d.standup], ['week', d.week], ['desk', d.desk], ['prs', d.prs]]],
+    ['share', d.share, [['city', d.city], ['card', d.card], ['wrapped', d.wrappedMonth], ['year', d.wrappedYear], ['snap', d.snap]]],
+    ['help', d.help, [['tour', d.tour], ['news', d.news], ['update', d.update], ['feedback', d.feedback]]],
     ['data', d.data, [['export', d.export], ['reset:level', d.resetLevel], ['reset:history', d.resetHistory], ['reset:all', d.resetAll]]],
   ]
 }
@@ -313,9 +322,32 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       </Box>
     )
     // Everything else /mochi does, a group to a line; what an action answered stays above them until dismissed.
+    // The pull requests as a board, pressed to open one, with the answer's buttons under it. Each redraw
+    // rebuilds the picture, so it is moved on by the time since it was read: the cards slide in once.
+    const board = answer.board ? prsBoard(answer.board, answer.at ?? 0, secW, mood => mascotInner({ mood, scene: { context: 0, agents: 0 }, from: null })) : null
+    const boardSvg = board ? shiftTimeline(board.svg, Math.max(0, now - (answer.at ?? 0)) / 1000) : ''
+    // The code city, drawn from the days as they are now, its buildings risen once since it was asked for.
+    const city = answer.city ? citySvg(v.history?.days ?? {}, dayKey(now, v.tz ?? 0), local(now, v.tz ?? 0).hour, secW) : null
+    const citySource = city ? shiftTimeline(city.svg, Math.max(0, now - (answer.at ?? 0)) / 1000) : ''
     const more = () => (
       <Box flexDirection="column" gap={1}>
-        {answer.text !== '' ? (
+        {city ? (
+          <Box key="said" flexDirection="column" gap={0.5}>
+            <Svg source={citySource} alt={answer.text} width={secW} height={city.height} />
+            <Box flexDirection="row" gap={1}><Button key="said:close" variant="secondary" onPress={pressed}>{d.dismiss}</Button></Box>
+          </Box>
+        ) : board ? (
+          <Box key="said" flexDirection="column" gap={0.5}>
+            <Box key="said:board">
+              <Svg source={boardSvg} alt={answer.text} width={secW} height={board.height} />
+              {desk ? boardRegion($, desk, Math.ceil(board.height / 14) + 1) : null}
+            </Box>
+            <Box flexDirection="row" gap={1}>
+              {answer.copy !== '' ? <Button key="said:copy" variant="primary" onPress={pressed}>{d.copy}</Button> : null}
+              <Button key="said:close" variant="secondary" onPress={pressed}>{d.dismiss}</Button>
+            </Box>
+          </Box>
+        ) : answer.text !== '' ? (
           <Box key="said" flexDirection="column" borderStyle="round" borderColor="claude" paddingX={1} gap={0.5}>
             {answer.text.split('\n').map((line, i) => /^https:\/\/\S+$/.test(line)
               ? <Link key={`said:${i}`} href={line} label={cut(line.replace(/^https:\/\//, ''), 60)} />
@@ -344,6 +376,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       if (crew === null || !crew.isShown) return drawn('chats')
       // Every Mochi in the party wears what the person dressed Mochi in, as the band's does in that mood.
       const floor = floorOf(crew, now, crewPick, mood => outfitNow(p, v, mood, now))
+      // Each redraw rebuilds the picture: its loops run on the clock, so a redraw picks them up where they were.
       // As wide as it needs, never wider than the pane: a crowded floor shrinks to fit.
       const floorW = Math.min(secW, floor.width)
       const floorH = Math.round((floor.height * floorW) / floor.width)
@@ -356,7 +389,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         <Box flexDirection="column" gap={1}>
           <Box key="party" flexDirection="row">
             <Box>
-              <Svg source={floor.svg} alt={all.map(m => `${nameOf(m.peer)}: ${statusLine(m)}`).join(', ')} width={floorW} height={floorH} />
+              <Svg source={shiftTimeline(floor.svg, (now / 1000) % 600)} alt={all.map(m => `${nameOf(m.peer)}: ${statusLine(m)}`).join(', ')} width={floorW} height={floorH} />
               {desk ? floorRegion($, desk, Math.ceil(floorH / 14) + 1) : null}
             </Box>
           </Box>
@@ -641,13 +674,13 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     }
     // A clear region pulled back over the whole panel: a click anywhere on it
     // opens the detail pane. Columns are the band's own unit, about 8.1 pixels
-    // here; 3.8 rows (lines) is the panel's height, so the band does not grow.
+    // here, and 20 pixels a row, so the region is the panel's height.
     const panelCols = Math.max(8, Math.round(drawn.width / 8.1))
     let hit: JSX.Element | null = null
     if (e.surface === 'desktop') {
       const { Client } = $.ui.resolve(e)
       hit = (
-        <Box marginLeft={-panelCols} width={panelCols} height={3.8} flexShrink={0}>
+        <Box marginLeft={-panelCols} width={panelCols} height={PANEL_H / 20} flexShrink={0}>
           <Client key="hit" module="./hit.tsx" props={{ rows: 6 }} width="100%" height="100%" />
         </Box>
       )

@@ -12,10 +12,14 @@ import { DICTS, LANGS, pickLang, setLang } from '../hooks/i18n'
 import { NO_DIFF, NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
 import { alertCommands, langCodes, langCommand, openCommand, removeCommand } from '../hooks/system'
 import { clip, cols } from '../hooks/text'
+import { typingMood } from '../hooks/fun'
+import { deskText, standupText, weekText } from '../hooks/standup'
+import { inboxOf, prsBoard, prsText } from '../hooks/prs'
+import { citySvg } from '../hooks/city'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
-import { panelSvg } from '../hooks/panel'
+import { disco, fireworks, panelSvg, sky } from '../hooks/panel'
 import { paramsAt, svgFor, target, TRANSITION_MS } from '../hooks/rig'
 import { afterTool, beforeTool, duration, flowEnd, flowLine, isScary, onPrompt, onTurnEnd } from '../hooks/react'
 
@@ -862,4 +866,169 @@ test('wide characters clip by the room they take, and marks on a letter take non
   expect(cols('नमस्ते')).toBe(4)
   expect(cols('مَرْحَبًا')).toBe(5)
   expect(clip('नमस्ते दुनिया', 5)).toBe('नमस्ते…')
+})
+
+test('the sky behind Mochi follows the local hour', () => {
+  const night = sky(23, 110, 88)
+  expect(night).toContain('mask="url(#moonbite)"')
+  expect(night).toContain('<animateMotion')
+  expect(sky(13, 110, 88)).toContain('fill="#FFFFFF"')
+  expect(sky(6, 110, 88)).not.toContain('#FFF6D8')
+  expect(sky(6, 110, 88)).not.toContain('fill="#FFFFFF"')
+  expect(sky(19, 110, 88)).toContain('#FFF6D8')
+})
+
+test('a celebration fills the band with fireworks and confetti for a few seconds, the same show on every redraw', () => {
+  const show = fireworks(1_760_000_000_000, 1, 100, 600, 740, 88)
+  expect(show.behind).toContain('<animateTransform')
+  expect(show.front).toContain('<rect')
+  expect(fireworks(1_760_000_000_000, 1.5, 100, 600, 740, 88).front).toBe(fireworks(1_760_000_000_000, 1.5, 100, 600, 740, 88).front)
+  expect(fireworks(1_760_000_000_000, 6, 100, 600, 740, 88)).toEqual({ behind: '', front: '' })
+})
+
+test('Mochi reads the draft over the shoulder and reacts before it is sent', () => {
+  setLang('tr')
+  expect(typingMood('')).toBeNull()
+  expect(typingMood('şunu bi düzenle')).toBeNull()
+  expect(typingMood('prod a deploy et')?.mood).toBe('scared')
+  expect(typingMood('NEDEN HALA OLMUYOR BU')?.mood).toBe('shocked')
+  expect(typingMood('yine çalışmıyor')?.mood).toBe('nervous')
+  expect(typingMood('login de bir bug var')?.mood).toBe('dizzy')
+  expect(typingMood('teşekkürler')).toEqual({ mood: 'love', line: 'ayy ♥' })
+  for (const said of ['eline sağlık', 'tşk', 'kralsın', 'helal olsun', 'çok güzel olmuş', 'ty', 'nailed it', 'you\'re the best', 'love it', 'amazing']) expect(typingMood(said)?.mood).toBe('love')
+  for (const said of ['typescript ayarla', 'kraliçe', 'bir hata var olabilir', 'legendary']) expect(typingMood(said)?.mood).not.toBe('love')
+  expect(typingMood('mochi naber')?.mood).toBe('wave')
+  const said: [string, string][] = [
+    ['.env dosyasındaki şifreyi koy', 'sır tutalım 🔒'], ['merge conflict çıktı', 'conflict mi? ⚔️'], ['bunun için regex yaz', 'regex… başım döndü 🌀'],
+    ['pardon yanlış yazdım', 'olur öyle 😉'], ['hahahaha', 'hehe 😄'], ['vay', 'vay be 😮'], ['bugün doğum günüm', 'iyi ki doğdun! 🎂'],
+    ['hafta sonu geliyor', 'hafta sonu! 🎉'], ['pazartesi sendromu', 'pazartesi… ☕'], ['iyi geceler', 'iyi geceler 🌙'], ['günaydın', 'günaydın ☀️'],
+    ['selam', 'selam! 👋'], ['kahve alıp geliyorum', 'kahve molası? ☕'], ['acıktım', 'bana da ayır 🍕'], ['çok yoruldum', 'biraz dinlen 🥱'],
+    ['testleri çalıştır', 'parmaklar çapraz 🤞'], ['main e merge et', 'yolla gitsin! 🚀'], ['şu dosyayı refactor et', 'toparlayalım 🧹'],
+    ['sayfa çok yavaş', 'hızlandıralım ⚡'], ['acil bakar mısın', 'hemen! ⏱️'], ['takıldım bir yerde', 'buradayım, beraber çözeriz'], ['butonu ortala', 'div ortalamak mı? 🫠'],
+  ]
+  for (const [text, line] of said) expect(typingMood(text)?.line).toBe(line)
+  expect(typingMood('hafta sonu')?.mood).toBe('party')
+  expect(typingMood('bu nasıl çalışıyor?')?.mood).toBe('thinking')
+})
+
+test('the secret word turns the band into a disco, and no other celebration does', () => {
+  setLang('tr')
+  expect(typingMood('hadi disko')).toEqual({ mood: 'party', line: 'disko zamanı! 🪩' })
+  expect(typingMood('dans edelim')?.line).toBe('disko zamanı! 🪩')
+  expect(disco(100, 600, 740, 88)).toContain('clip-path="url(#ballclip)"')
+  const shot = { mood: 'party' as const, scene: { context: 10, agents: 0 }, at: 1_760_000_000_000, from: null }
+  const band = (detail: string) => panelSvg({ panel: { shot, info: { ...NO_INFO, label: 'party', detail }, infoFrom: null, infoAt: shot.at }, now: shot.at + 500, width: 740 }).svg
+  expect(band('disko zamanı! 🪩')).toContain('ballclip')
+  expect(band('testler geçti')).not.toContain('ballclip')
+})
+
+test('the stand-up note has the last day worked and today, commits by repository and the day’s numbers', () => {
+  setLang('tr')
+  const rec = (turns: number, secs: number, add: number, del: number) => ({ turns, tools: 0, edits: 0, errors: 0, commits: 0, cost: 0, secs, night: 0, add, del, early: 0, langs: 0 })
+  // A Monday: the last day worked is Friday, past the quiet weekend.
+  const text = standupText('2026-11-09', { '2026-11-06': rec(12, 7200, 540, 120), '2026-11-09': rec(3, 1500, 40, 2) }, [
+    { repo: 'mochi', at: 2, subject: 'Turn the band into a disco', day: '2026-11-06' },
+    { repo: 'mochi', at: 1, subject: 'Type the line out', day: '2026-11-06' },
+    { repo: 'spark', at: 3, subject: 'Fix the board', day: '2026-11-06' },
+    { repo: 'mochi', at: 4, subject: 'Add /mochi standup', day: '2026-11-09' },
+  ])
+  expect(text.split('\n')[0]).toBe('Cuma')
+  expect(text).toContain('• mochi: 2 commit\n  – Turn the band into a disco\n  – Type the line out\n• spark: 1 commit')
+  expect(text).toContain('12 tur · 2sa · +540 −120 satır')
+  expect(text).toContain('Bugün\n• mochi: 1 commit\n  – Add /mochi standup')
+  expect(standupText('2026-11-09', {}, [])).toBe('Dün\n• commit yok\n\nBugün\n• commit yok')
+})
+
+test('the week sums seven days, and the desk lists work not yet safe on a remote', () => {
+  setLang('tr')
+  const rec = (turns: number, secs: number) => ({ turns, tools: 0, edits: 0, errors: 0, commits: 0, cost: 0, secs, night: 0, add: 10, del: 1, early: 0, langs: 0 })
+  const text = weekText('2026-11-09', { '2026-11-03': rec(5, 3600), '2026-11-06': rec(10, 3600), '2026-11-01': rec(9, 9) }, [
+    { repo: 'mochi', at: 2, subject: 'Disco', day: '2026-11-06' },
+    { repo: 'mochi', at: 1, subject: 'Old', day: '2026-11-02' },
+  ])
+  expect(text.split('\n')[0]).toMatch(/^Bu hafta · 3 Kas.* – 9 Kas/)
+  expect(text).toContain('• mochi: 1 commit\n  – Disco')
+  expect(text).toContain('1 commit · 2 gün çalışıldı · 15 tur · 2sa · +20 −2 satır')
+  expect(deskText([
+    { repo: 'spark', branch: 'feat/x', dirty: 3, branches: [{ name: 'feat/x', ahead: 2, hasUpstream: true }, { name: 'try', ahead: 4, hasUpstream: false }, { name: 'main', ahead: 0, hasUpstream: true }] },
+    { repo: 'wiki', branch: 'main', dirty: 0, branches: [{ name: 'main', ahead: 0, hasUpstream: true }] },
+  ])).toBe('spark\n  • 3 dosya commit edilmedi (feat/x)\n  • try: hiç push edilmedi (4 commit)\n  • feat/x: 2 commit push edilmedi\n\nHepsi güvende: wiki')
+  expect(deskText([{ repo: 'wiki', branch: 'main', dirty: 0, branches: [] }])).toContain('Masada bir şey kalmadı')
+})
+
+test('the pull requests waiting on the person: asked for review, new commits after their review, their own by what blocks them', () => {
+  setLang('tr')
+  const now = Date.parse('2026-11-07T12:00:00Z')
+  const pr = (number: number, title: string, more: Record<string, unknown> = {}) => ({
+    number, title, url: `https://github.com/o/spark-be/pull/${number}`, isDraft: false, updatedAt: '2026-11-06T10:00:00Z',
+    repository: { name: 'spark-be' }, author: { login: 'ahmet' }, reviewDecision: null, mergeable: 'MERGEABLE',
+    commits: { nodes: [{ commit: { committedDate: '2026-11-06T10:00:00Z', statusCheckRollup: { state: 'SUCCESS' } } }] },
+    latestReviews: { nodes: [] }, ...more,
+  })
+  const answer = JSON.stringify({ data: {
+    viewer: { login: 'emre' },
+    review: { nodes: [pr(10, 'Add the cache')] },
+    seen: { nodes: [
+      pr(11, 'Fix the badge', { latestReviews: { nodes: [{ author: { login: 'emre' }, submittedAt: '2026-11-06T09:00:00Z' }] } }),
+      pr(12, 'Already seen', { latestReviews: { nodes: [{ author: { login: 'emre' }, submittedAt: '2026-11-06T11:00:00Z' }] } }),
+      pr(10, 'Add the cache'),
+    ] },
+    mine: { nodes: [
+      pr(20, 'Waiting', { author: { login: 'emre' }, reviewDecision: 'REVIEW_REQUIRED' }),
+      pr(21, 'Broken', { author: { login: 'emre' }, mergeable: 'CONFLICTING', commits: { nodes: [{ commit: { committedDate: '2026-11-06T10:00:00Z', statusCheckRollup: { state: 'FAILURE' } } }] } }),
+      pr(22, 'Approved', { author: { login: 'emre' }, reviewDecision: 'APPROVED' }),
+      pr(23, 'Ancient', { author: { login: 'emre' }, updatedAt: '2026-08-01T10:00:00Z' }),
+    ] },
+  } })
+  const inbox = inboxOf(answer)
+  expect(inbox).not.toBe(null)
+  expect(prsText(inbox!, now)).toBe([
+    'Senden inceleme bekleyen (1)',
+    '  • spark-be #10 Add the cache · ahmet · 1g önce',
+    '',
+    'İncelediğin, sonra yeni commit gelen (1)',
+    '  • spark-be #11 Fix the badge · ahmet · 1g önce',
+    '',
+    "Senin PR'ların (3)",
+    '  • spark-be #21 Broken · çakışma var, CI kırık',
+    '  • spark-be #22 Approved · onaylandı, birleştirilebilir',
+    '  • spark-be #20 Waiting · inceleme bekliyor',
+    '',
+    '30 günden uzun süredir dokunulmamış 1 PR listeye alınmadı.',
+  ].join('\n'))
+  expect(prsText(inbox!, now, true)).toContain('    https://github.com/o/spark-be/pull/10')
+  expect(prsText({ review: [], seen: [], mine: [] }, now)).toBe('Seni bekleyen PR yok.')
+  expect(inboxOf('not json')).toBe(null)
+  expect(inboxOf('{"errors":[{"message":"x"}]}')).toBe(null)
+  // The board: a card a pull request, each a place to press that opens it, the old one left out.
+  const board = prsBoard(inbox!, now, 560, mood => `<g data-mood="${mood}"/>`)
+  expect(board.svg).toStartWith('<svg')
+  expect(board.svg).toContain(`viewBox="0 0 560 ${board.height}"`)
+  expect(board.svg).toContain('data-mood="nervous"')
+  expect(board.spots.map(x => x.url.split('/').at(-1))).toEqual(['10', '11', '21', '22', '20'])
+  expect(board.spots.every((x, i, all) => x.y1 > x.y0 && (i === 0 || x.y0 > all[i - 1]!.y1))).toBe(true)
+  const empty = prsBoard({ review: [], seen: [], mine: [] }, now, 300, mood => `<g data-mood="${mood}"/>`)
+  expect(empty.spots).toEqual([])
+  expect(empty.svg).toContain('Seni bekleyen PR yok.')
+  expect(empty.svg).toContain('data-mood="party"')
+})
+
+test('the code city: a building a day worked, a park a day off, a lot ahead, the busiest flies its flag, the sky is the hour\'s', () => {
+  setLang('tr')
+  const rec = (turns: number, commits: number, night = 0) => ({ turns, tools: 0, edits: 0, errors: 0, commits, cost: 0, secs: 0, night, add: 100, del: 0, early: 0, langs: 0 })
+  const days = { '2026-10-30': rec(947, 305, 3), '2026-11-06': rec(170, 33), '2026-11-07': rec(18, 2) }
+  const night = citySvg(days, '2026-11-07', 23, 600)
+  expect(night.svg).toStartWith('<svg')
+  expect(night.svg).toContain(`viewBox="0 0 600 ${night.height}"`)
+  expect(night.svg).toContain('rekor · 947 tur')
+  expect(night.svg).toContain('1.135 tur · 340 commit')
+  expect(night.svg).toContain('#0E1428')
+  // Sunday, still ahead, is an empty lot drawn in dashes; today has its crane.
+  expect(night.svg).toContain('stroke-dasharray="3 3"')
+  expect(night.svg).toContain('#F2B84B')
+  expect(citySvg(days, '2026-11-07', 13, 600).svg).toContain('#A9D4F2')
+  expect(citySvg({}, '2026-11-07', 13, 320).svg).not.toContain('rekor')
+  // Four weeks of the busiest days still fit what the desktop takes of one drawing.
+  const busy = Object.fromEntries(Array.from({ length: 28 }, (_, i) => [shiftDay('2026-11-07', -i), rec(900 + i, 300, 5)]))
+  for (const w of [320, 600, 1400]) expect(citySvg(busy, '2026-11-08', 3, w).svg.length).toBeLessThan(131072)
 })

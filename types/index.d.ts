@@ -92,6 +92,30 @@ export type Outfit = { head: Item | null; eyes: Item | null; face: Item | null; 
 
 export type Scene = { context: number; agents: number; outfit?: Outfit }
 
+/** A pull request as the list shows it. */
+export type Pull = {
+  repo: string
+  number: number
+  title: string
+  url: string
+  author: string
+  isDraft: boolean
+  /** Epoch ms of the last change, and of the last commit. */
+  updatedAt: number
+  committedAt: number
+  /** APPROVED, CHANGES_REQUESTED, REVIEW_REQUIRED, or '' when none is needed. */
+  decision: string
+  /** MERGEABLE, CONFLICTING or UNKNOWN. */
+  mergeable: string
+  /** The last commit's checks: SUCCESS, FAILURE, ERROR, PENDING, EXPECTED, or '' with none. */
+  checks: string
+  /** Epoch ms of the person's own last review, 0 when none. */
+  reviewedAt: number
+}
+
+/** The pull requests waiting on the person, by list (hooks/prs.ts). */
+export type Inbox = { review: Pull[]; mine: Pull[]; seen: Pull[] }
+
 /** What the desktop drawing shows: a mood and scene, eased into from what was on screen. */
 export type Shot = {
   mood: Mood
@@ -399,8 +423,8 @@ declare module 'claude-code' {
       sec: number
       env: Env
       prefs: Prefs
-      /** What the last of the details pane's actions answered, the part of it worth copying, and the file, folder or link it opens (absent from an older version). */
-      said: { text: string; copy: string; open?: string }
+      /** What the last of the details pane's actions answered, the part of it worth copying, the file, folder or link it opens, for the pull requests their board, whether it is the code city, and when it was made (each absent from an older version). */
+      said: { text: string; copy: string; open?: string; board?: Inbox | null; at?: number; city?: boolean }
       /** The changed file picked in the details pane's Changes, with its diff; `path` '' when none is. */
       diff: FileDiff
       /** The chat picked on the details pane's party, by session id; '' when none is. */

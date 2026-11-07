@@ -19,6 +19,15 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.9.0': {
+      headline: 'your stand-up, your pull requests and a city of your last four weeks',
+      notes: [
+        'A Work group in the details pane: /mochi standup, week, desk and prs write your stand-up, sum up the week, list work not yet pushed and show the pull requests waiting on you.',
+        '/mochi city draws your last four weeks as a city: a building a day, as tall as its turns, its lit windows your commits.',
+        'Mochi speaks in a speech bubble under a sky that follows the hour, celebrates with fireworks, and reacts to your prompt as you type.',
+        'The details pane redraws far less often, so it stays still while you read.',
+      ],
+    },
     '0.8.0': {
       headline: 'glasses, a mustache and a beard at once, 34 new things to wear, faster levels',
       notes: [
@@ -335,6 +344,8 @@ export const en = {
     love: 'love you too',
     hello: 'hello',
     welcome: 'you’re welcome',
+    /** What Mochi says over your shoulder while you type: something risky, thanks, trouble, a question, a bug, shouting, and the everyday topics after them (secrets, coffee, the weekend, a release, a test…). */
+    typing: { careful: 'careful…', aww: 'aww ♥', uhoh: 'uh-oh…', question: 'hmm, good question', bug: 'a bug? let’s catch it', whoa: 'whoa, easy!', secret: 'keep it secret 🔒', conflict: 'a conflict? ⚔️', regex: 'regex… dizzy 🌀', sorry: 'happens 😉', laugh: 'hehe 😄', wow: 'whoa 😮', birthday: 'happy birthday! 🎂', weekend: 'weekend! 🎉', monday: 'Monday… ☕', night: 'good night 🌙', morning: 'good morning ☀️', hi: 'hi there! 👋', coffee: 'coffee break? ☕', food: 'save me a bite 🍕', tired: 'get some rest 🥱', test: 'fingers crossed 🤞', ship: 'ship it! 🚀', tidy: 'let’s tidy up 🧹', fast: 'let’s speed it up ⚡', rush: 'on it! ⏱️', help: 'I’m here, we’ll figure it out', center: 'centring a div? 🫠', disco: 'disco time! 🪩' },
     leet: '13:37',
     breakLine: (span: string) => `${span} without a break · a stretch?`,
     badgesTitle: 'BADGES',
@@ -587,6 +598,13 @@ export const en = {
     show: 'Show',
     share: 'Share',
     help: 'Help',
+    work: 'Work',
+    standup: 'Stand-up note',
+    week: 'This week',
+    desk: 'Left on the desk',
+    prs: 'Pull requests',
+    city: 'Code city',
+    update: 'Check for updates',
     data: 'Your data',
     card: 'Profile card',
     wrappedMonth: 'Month wrapped',
@@ -693,9 +711,57 @@ export const en = {
     current: (v: string) => `Mochi ${v} is the latest.`,
     unknown: (v: string) => `Mochi ${v}. The latest version could not be read just now.`,
   },
+  /** /mochi standup: the last day worked and today, to paste into a stand-up. */
+  standup: {
+    yesterday: 'Yesterday',
+    today: 'Today',
+    noCommits: 'no commits',
+    commits: (n: number): string => n === 1 ? '1 commit' : `${n} commits`,
+    more: (n: number): string => `${n} more`,
+    stats: (turns: number, time: string, add: number, del: number): string => `${turns} turns · ${time} · +${add} −${del} lines`,
+    copied: 'Copied — paste it into your stand-up.',
+    notCopied: 'Could not copy it; select the text above.',
+    week: (from: string, to: string): string => `This week · ${from} – ${to}`,
+    weekTotals: (commits: number, days: number, turns: number, time: string, add: number, del: number): string => `${commits} commits · ${days} days worked · ${turns} turns · ${time} · +${add} −${del} lines`,
+    uncommitted: (n: number, branch: string): string => `${n} files not committed (${branch})`,
+    unpushed: (branch: string, n: number): string => `${branch}: ${n} commits not pushed`,
+    neverPushed: (branch: string, n: number): string => `${branch}: never pushed (${n} commits)`,
+    allClean: 'Nothing left on the desk: everything is committed and pushed. 🎉',
+    clean: (list: string): string => `All safe: ${list}`,
+  },
+  /** /mochi prs: the pull requests waiting on the person on GitHub. */
+  /** The code city: the last four weeks as a building a day. */
+  city: {
+    title: 'Your code city',
+    sub: (turns: string, commits: string, add: string): string => `${turns} turns · ${commits} commits · +${add} lines in four weeks`,
+    legend: 'height: turns · lit windows: commits · moon: late night · park: a day off',
+    record: (n: number): string => `record · ${n} turns`,
+  },
+  prs: {
+    countReview: 'to review',
+    countSeen: 'new commits',
+    countMine: 'yours',
+    newCommits: 'new commits',
+    review: (n: number): string => `Waiting for your review (${n})`,
+    seen: (n: number): string => `Reviewed by you, new commits since (${n})`,
+    mine: (n: number): string => `Your pull requests (${n})`,
+    draft: 'draft',
+    conflict: 'conflicts',
+    ciFailed: 'CI failing',
+    changes: 'changes requested',
+    ciRunning: 'CI running',
+    waitingReview: 'waiting for review',
+    approved: 'approved, ready to merge',
+    ready: 'ready to merge',
+    none: 'No pull request is waiting on you.',
+    old: (n: number, days: number): string => `${n} untouched for over ${days} days left out.`,
+    noAnswer: 'gh did not answer, so the pull requests could not be read.',
+    trouble: (why: string): string => `Could not read the pull requests: ${why}`,
+  },
+
   cmd: {
-    description: 'Mochi: show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, update, status',
-    hint: '[details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, update, status',
+    hint: '[standup | week | desk | prs | city | details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | update | status]',
     small: 'Mochi on one line.',
     big: 'Mochi full size.',
     detailOpened: 'Details pane opened.',
@@ -729,7 +795,7 @@ export const en = {
     moreLine: (tips: boolean, breaks: boolean, plugins: boolean) =>
       `Tips: ${tips ? 'on' : 'off'} · Breaks: ${breaks ? 'on' : 'off'} · Plugin reactions: ${plugins ? 'on' : 'off'}`,
     peersLine: (level: number, peers: string) => `Level ${level} · other chats: ${peers}`,
-    commands: 'Commands: /mochi (show/hide) | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'Commands: /mochi (show/hide) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
     langNow: (name: string, list: string) => `Language: ${name}. Available: ${list} · /mochi lang <code> or auto`,
     langSet: (name: string) => `Language: ${name}.`,
     langAuto: (name: string) => `Language follows Claude Code and the system: ${name}.`,

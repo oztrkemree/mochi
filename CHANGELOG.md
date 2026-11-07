@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.9.0
+
+### Work
+
+A Work group opens the More section of the details pane. Each of its buttons is also a command, in all sixteen languages. The commits are your own, on any branch, from every repository a chat opened in the last two weeks: each chat notes its repository in `~/.claude/mochi/repos.json` at most once an hour.
+
+- `/mochi standup` writes your stand-up: the last day you worked (Friday on a Monday) and today, your commits by repository and that day's turns, time and lines. It is copied to the clipboard, and the pane's Copy button copies it again.
+- `/mochi week` sums up the last seven days the same way.
+- `/mochi desk` lists work not yet safe on a remote: uncommitted changes, unpushed commits and branches never pushed. Branches whose upstream is gone are skipped, since those were merged and deleted.
+- `/mochi prs` reads, in one call of your own `gh`, the pull requests asking for your review, those you reviewed that got commits since, and your own with what blocks each (changes asked, failing checks, a conflict). The pane shows them as a board: three counts, then a card for each with its state and how long it has waited. Press a card to open it on GitHub.
+- Help in the pane has a check for updates, until now only `/mochi update`.
+
+### The code city
+
+- `/mochi city`, and a button at the top of the Share group, draw your last four weeks as an isometric city: each day a building as tall as its turns, its lit windows your commits, a moon over a late night, a park for a day off, a crane over today and a flag on your busiest day. The sky follows your hour and cars run along the road in front. Even four weeks of your busiest days stay within what the desktop draws.
+
+### The band
+
+- What Mochi says sits in a speech bubble whose tail points back at it. A new line is typed out a letter at a time behind a caret in Mochi's colour, and a long one goes on two rows.
+- Behind Mochi the sky follows your local hour: the moon, stars and fireflies at night, the first stars at dusk, drifting clouds by day.
+- The trail of tool calls shows each tool family's icon on a tile of its colour.
+- When Mochi celebrates (tests passed, a push, CI green, a new level), fireworks burst behind the lines and confetti falls over the whole band for about four seconds.
+- Type "disco" or "dance" and the band turns into a disco for as long as the word stands, with a mirror ball, sweeping beams and Mochi dancing.
+- The desktop band is 88 pixels tall instead of 76 and Mochi is bigger. What stands beside it stands a little apart, and in front of it.
+
+### Mochi reads along
+
+- Mochi reacts to your prompt as you type, before it is sent: careful at production, a deploy, a forced push or a wipe; startled at shouting; nervous at "still not working"; dizzy at a bug; in love at thanks; waving at its name; thinking at a question.
+- It knows twenty-two everyday topics more, each with its own face and words in all sixteen languages: a secret or a token, a merge conflict, a regex, an apology, a laugh, surprise, a birthday, the weekend, Monday, good night and good morning, a greeting, coffee, food, tiredness, a release, a test, a refactor, slowness, a rush, a call for help and centring a div.
+- It hears thanks and praise in their short forms (`ty`, `tysm`, `tşk`) and as people say them (`nailed it`, `eline sağlık`, `helal olsun`), as whole words only, so "typescript" does not count.
+
+### Lighter
+
+- The desktop rebuilds every picture on each redraw, so Mochi now redraws less. The details pane waits up to 20 seconds when only other chats' heartbeats changed, instead of redrawing every few seconds. The band no longer carries the other chats, the limit forecast moves in five-minute steps, and the party floor, the board and the city pick up their animations where they were.
+
 ## 0.8.0
 
 - The face is four slots: glasses, a mustache, a beard and everything else, worn together. They are drawn beard, mustache, the rest, then glasses on top. Glasses, a mustache or a beard you chose while the face was one slot move to their own slot. The wardrobe has eight tabs now, and the card you share keeps only glasses on the face.

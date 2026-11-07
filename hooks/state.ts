@@ -1,3 +1,4 @@
+import type { Inbox } from '../types'
 import type { Block, Crew, DayRec, Env, Face, FileDiff, Info, Outfit, Panel, Peer, Prefs, Section, Shot, Tab } from '../types'
 import type { GhTrouble } from './ci'
 import type { Pending, TipId } from './coach'
@@ -103,7 +104,8 @@ export const NO_INFO: Info = {
 }
 export const NO_PANEL: Panel = { shot: FIRST_SHOT, info: NO_INFO, infoFrom: null, infoAt: 0 }
 /** What the last of the details pane's actions answered, and the part of it worth copying; '' when there is none to show. */
-export const NO_SAID = { text: '', copy: '', open: '' }
+/** What an action from the pane answered: its text, what to copy and open, for the pull requests their board, whether it is the code city, and when it was made. */
+export const NO_SAID = { text: '', copy: '', open: '', board: null as Inbox | null, at: 0, city: false }
 /** The changed file picked in the details pane's Changes, this chat's own; `path` '' when none is. */
 export const NO_DIFF: FileDiff = { path: '', lines: [], more: 0 }
 
@@ -119,16 +121,22 @@ export const chat = {
   isBusy: false,
   lastActivity: 0,
   lastTypedAt: 0,
+  /** Whether the face up now is one typing put up (not listening), so the next keystroke may change it. */
+  isTypingFace: false,
   faceToken: 0,
   errorRun: 0,
   callId: 0,
   gitAt: 0,
+  /** When this chat last wrote each repository into repos.json, so it writes at most once an hour. */
+  repoSeen: {} as Record<string, number>,
   isGitWanted: true,
   lastNudge: 0,
   warned: 0,
   pendingWarn: 0,
   costAtStart: 0,
   detailAt: 0,
+  /** When the pane's figures were last written. */
+  detailSetAt: 0,
   stream: null as 'thinking' | 'talking' | null,
   turn: { startedAt: 0, tools: 0, edits: 0, errors: 0 },
   watch: NEW_WATCH as Watch,

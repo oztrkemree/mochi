@@ -80,7 +80,7 @@ Nachdenken, lesen, suchen, tippen, einen Befehl ausführen, auf dich warten, ein
   <img src="docs/demo.svg" width="744" alt="Mochis Leiste geht ihre Stimmungen und Outfits durch: winkt, liest, bearbeitet, führt einen Befehl aus, ist stolz, wartet auf dich, feiert und schläft">
 </p>
 
-Neben dem Gesicht: was gerade passiert, in klaren Worten (`bearbeitet checkout.tsx`, `Tests bestanden · 4s`), die letzten Tool-Aufrufe als Reihe kleiner Kästchen (ein laufender atmet, ein fehlgeschlagener wird rot), dein Branch und wie viele Dateien sich geändert haben.
+Neben dem Gesicht: was gerade passiert, in klaren Worten, Buchstabe für Buchstabe in einer Sprechblase (`bearbeitet checkout.tsx`, `Tests bestanden · 4s`), die letzten Tool-Aufrufe als Reihe von Kacheln mit dem Symbol ihres Tools (ein laufender atmet, ein fehlgeschlagener wird rot), dein Branch und wie viele Dateien sich geändert haben. Hinter Mochi folgt der Himmel deiner Uhrzeit, nachts mit Mond und Glühwürmchen, und beim Feiern steigt Feuerwerk über der ganzen Leiste auf.
 
 ## 📊 Deine Limits auf einen Blick, mit Prognose
 
@@ -222,6 +222,16 @@ Jede Runde, jede Bearbeitung, jeder Commit und jeder Arbeitstag bringt Erfahrung
 
 Was Mochi trägt, suchst du im Bereich **Kleiderschrank** der Detailansicht aus, oder mit `/mochi tragen brille`. Deinen Geburtstag verrätst du Mochi mit `/mochi geburtstag 04-23`; er bleibt auf deinem Rechner. Du hast eine Idee für ein neues Teil? [docs/OUTFITS.md](docs/OUTFITS.md) zeigt, wie du es hinzufügst.
 
+## 🗂️ Deine Arbeit, fertig zum Einfügen
+
+Die Gruppe **Arbeit** in der Detailansicht, jeder Eintrag auch als Befehl. Die Commits sind deine eigenen, auf jedem Branch, aus jedem Repository, das ein Chat in den letzten zwei Wochen geöffnet hat.
+
+- **`/mochi standup`** schreibt dein Stand-up: der letzte Arbeitstag (montags der Freitag) und heute, deine Commits nach Repository und die Turns, die Zeit und die Zeilen des Tages. Es landet in der Zwischenablage.
+- **`/mochi week`** macht dasselbe für die letzten sieben Tage.
+- **`/mochi desk`** listet, was noch auf keinem Remote sicher ist: nicht committete Änderungen, nicht gepushte Commits und nie gepushte Branches.
+- **`/mochi prs`** zeigt die Pull Requests, die auf dich warten, als Board, über dein eigenes `gh`: die, die dein Review wollen, die du reviewt hast und die seitdem neue Commits haben, und deine eigenen mit dem, was sie aufhält. Ein Klick auf eine Karte öffnet sie.
+- **`/mochi city`** zeichnet deine letzten vier Wochen als Stadt: ein Haus pro Tag, so hoch wie seine Turns, die hellen Fenster deine Commits, ein Mond über einer langen Nacht, ein Park an einem freien Tag und eine Flagge auf deinem vollsten Tag.
+
 ## 📸 Zum Herzeigen
 
 - **`/mochi karte`** zeichnet eine Karte: Mochi im heutigen Outfit, dein Level, deine Erfahrung und deine Serien.
@@ -284,6 +294,11 @@ Du brauchst keinen einzigen: Mochi legt los, sobald er installiert ist. Wenn du 
 | `/mochi card [path]` | Eine Karte für dein GitHub-Profil speichern |
 | `/mochi wrapped [year]` | Deinen Monat oder dein Jahr in einem Bild speichern |
 | `/mochi snap` | Leiste und Detailansicht als Bilder speichern |
+| `/mochi standup` | Dein Stand-up für den letzten Arbeitstag und heute, kopiert |
+| `/mochi week` | Die letzten sieben Tage: Commits nach Repository, Turns, Zeit und Zeilen |
+| `/mochi desk` | Arbeit, die noch auf keinem Remote sicher ist, in jedem Repository, das Mochi kennt |
+| `/mochi prs` | Die Pull Requests, die auf dich warten, als Board |
+| `/mochi city` | Deine letzten vier Wochen als Stadt |
 | `/mochi tour` | Den Rundgang vom ersten Start noch einmal ansehen |
 | `/mochi news` | Was diese Version Neues bringt |
 | `/mochi birthday [MM-DD \| none]` | Mochi deinen Geburtstag verraten, ihn anzeigen oder vergessen lassen |
@@ -306,18 +321,18 @@ Mochi spricht die Sprache aus der `language`-Einstellung von Claude Code, wenn s
 
 ## 🔒 Worauf Mochi zugreift
 
-**Alles bleibt auf deinem Rechner.** Mochi schickt nichts über dich oder deine Arbeit irgendwohin. Seine einzige eigene Anfrage liest höchstens alle 12 Stunden seine Versionsnummer von GitHub, damit er dir sagen kann, wenn ein Update da ist; solange `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` gesetzt ist, lässt er auch das. Das Einzige, was sonst mit dem Internet spricht, ist dein eigenes `gh`, für die CI-Beobachtung, und `/mochi ci` schaltet die aus.
+**Alles bleibt auf deinem Rechner.** Mochi schickt nichts über dich oder deine Arbeit irgendwohin. Seine einzige eigene Anfrage liest höchstens alle 12 Stunden seine Versionsnummer von GitHub, damit er dir sagen kann, wenn ein Update da ist; solange `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` gesetzt ist, lässt er auch das. Das Einzige, was sonst mit dem Internet spricht, ist dein eigenes `gh`, für die CI-Beobachtung, und `/mochi ci` schaltet die aus. Auch `/mochi prs` fragt dein `gh`, aber nur, wenn du es aufrufst.
 
 <details>
 <summary><b>Die vollständige Liste</b></summary>
 
 <br>
 
-- **git**, im Ordner des Chats und nur lesend: `git status`, `git log`, `git diff --numstat` und `git rev-parse` für die Leiste und die Detailansicht. Wenn der Schild genauer hinsehen muss, fragt er den Branch und den Standard-Branch ab, die Dateien, die ein `git add` hinzufügen würde (`git ls-files`), und was ein `git commit` committen würde (`git diff`).
-- **gh**, nur solange die CI-Beobachtung an ist, mit deinem eigenen Login (Mochi sieht dein Token nie): `gh pr view`, wenn ein Chat startet, wenn du die Detailansicht öffnest und rund um einen Push; `gh run list` nur nach einem Push in diesem Chat, alle 30 Sekunden, bis die Läufe fertig sind, höchstens eine halbe Stunde lang. `/mochi ci` schaltet beides aus.
+- **git**, im Ordner des Chats und nur lesend: `git status`, `git log`, `git diff --numstat` und `git rev-parse` für die Leiste und die Detailansicht. Wenn der Schild genauer hinsehen muss, fragt er den Branch und den Standard-Branch ab, die Dateien, die ein `git add` hinzufügen würde (`git ls-files`), und was ein `git commit` committen würde (`git diff`). Für `/mochi standup`, `week` und `desk`, in jedem Repository, das ein Chat in den letzten zwei Wochen geöffnet hat: `git log` deiner eigenen Commits, `git status`, `git remote`, `git for-each-ref` und `git rev-list`.
+- **gh**, nur solange die CI-Beobachtung an ist, mit deinem eigenen Login (Mochi sieht dein Token nie): `gh pr view`, wenn ein Chat startet, wenn du die Detailansicht öffnest und rund um einen Push; `gh run list` nur nach einem Push in diesem Chat, alle 30 Sekunden, bis die Läufe fertig sind, höchstens eine halbe Stunde lang. `/mochi ci` schaltet beides aus. `/mochi prs` macht einen einzigen `gh api graphql`-Aufruf, nur wenn du es aufrufst oder seinen Knopf drückst.
 - **GitHub, für Updates**: höchstens alle 12 Stunden und wenn du `/mochi update` aufrufst, ein einfacher Download von `.claude-plugin/plugin.json` von `raw.githubusercontent.com/oztrkemree/mochi`, um Versionsnummern zu vergleichen. Er trägt nichts über dich oder deine Arbeit und entfällt, solange `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` gesetzt ist.
 - **Die Werkzeuge des Systems**: Benachrichtigungen über `osascript` unter macOS, PowerShell unter Windows und `notify-send` unter Linux. Für die Sprache `defaults read -g AppleLanguages` unter macOS und `reg query` unter Windows; `uname` unterscheidet macOS von Linux. Für die PNGs von `/mochi foto` `rsvg-convert` oder `magick` von ImageMagick, falls installiert. Dateien geschlossener Chats und das, was `/mochi zurücksetzen` löscht, werden einzeln beim Namen mit `rm` gelöscht, unter Windows mit `del` aus `cmd`, und nur innerhalb von `~/.claude/mochi/`.
-- **Dateien unter `~/.claude/mochi/`**: der Stand jedes offenen Chats, Tageszählungen, dein Level und deine Abzeichen, Verbrauchswerte für die Prognose, wie oft jeder Tipp gezeigt wurde und die kurzen Anweisungen, die du wiederholst (nie ganze Prompts), die Markierungen, mit denen nur ein Chat ein zurückgesetztes Limit meldet, deine `shield.json`, falls du eine schreibst, und was `/mochi karte`, `rückblick`, `foto` und `exportieren` speichern. Einstellungen, was immer erlaubt ist, und dein Geburtstag liegen im Plugin-Speicher von Claude Code.
+- **Dateien unter `~/.claude/mochi/`**: der Stand jedes offenen Chats, Tageszählungen, dein Level und deine Abzeichen, Verbrauchswerte für die Prognose, wie oft jeder Tipp gezeigt wurde und die kurzen Anweisungen, die du wiederholst (nie ganze Prompts), die Markierungen, mit denen nur ein Chat ein zurückgesetztes Limit meldet, deine `shield.json`, falls du eine schreibst, und was `/mochi karte`, `rückblick`, `foto` und `exportieren` speichern. Einstellungen, was immer erlaubt ist, und dein Geburtstag liegen im Plugin-Speicher von Claude Code. Für die Gruppe Arbeit hält `repos.json` fest, welche Repositories deine Chats geöffnet haben und wann.
 - **Dein Projekt**: Mochi liest die `CLAUDE.md`, bevor er eine Anweisung vorschlägt, und hängt erst dann eine Zeile an, wenn du **Aufnehmen** wählst. Die Karte schreibt er nur dorthin, wenn du `/mochi karte` einen Pfad dorthin gibst. Um Zeilen zu zählen und Geheimnisse zu erkennen, liest er eine Datei, die Claude gleich überschreiben will, und bei einem Befehl, der in einem Rutsch hinzufügt und committet, die neuen Dateien, die dabei hinzukämen (bis zu 20, jeweils unter 1 MB). Nichts davon wird gespeichert.
 - **Andere Plugins** können über Mochi eine Stimmung und eine kurze Zeile zeigen, mit ihrem Namen unterschrieben, jedes höchstens einmal alle 10 Sekunden; `/mochi erweiterungen` schaltet das aus. `/mochi rückmeldung` gibt nur einen Link aus: Gesendet wird nichts.
 - **Die Hooks von Claude Code**: Mochi beobachtet Tool-Aufrufe, Prompts, Subagenten und Turns, um sein Gesicht zu wählen und die Zahlen des Tages zu führen, und gibt jedes Ereignis unverändert weiter; die Nachrichten des Chats liest es nur, um seinen Titel zu finden. Bei einer Berechtigungsanfrage zeigt es nur, dass Claude auf dich wartet, und beantwortet sie nie. Der Schutzschild ist der einzige Hook, der handelt: Vor einem Befehl oder einer Änderung, die er für unumkehrbar hält, fragt er dich, und nur wenn du **Abbrechen** wählst oder die Frage nicht zu Ende gestellt werden kann, lehnt er diesen Aufruf ab. Er erlaubt nie etwas für dich. Mochi fügt den Befehl `/mochi` hinzu und, für Plugins, die von ihm abhängen, `$.mochi`. Es schreibt nichts in seinen eigenen Plugin-Ordner und lädt keinen Code außer seinen eigenen Dateien. Beim ersten Start liest es einmal die Einstellungen des alten Plugins `mochi` aus dem Speicher von Claude Code in `~/.claude/plugins/store/`, um sie zu übernehmen.

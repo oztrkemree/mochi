@@ -1,6 +1,6 @@
 import type { Info, Limit, Mood, Panel, Recent } from '../types'
 import { ciMark } from './ci'
-import { clockAt, timeGone } from './facts'
+import { clockAt, local, timeGone } from './facts'
 import { DEFS, STYLE, ring, usageInk } from './gauge'
 import { isShell } from './guard'
 import { t } from './i18n'
@@ -13,7 +13,15 @@ import { mascotInner, shiftTimeline } from './rig'
 // week). One SVG keeps everything aligned whatever the band's own layout
 // does, and an <img> of it keeps the painted parts an interactive frame would strip.
 
-export const PANEL_H = 76
+export const PANEL_H = 88
+/** The height the lines and gauges are laid out in, centred in the band's. */
+const ROW_H = 76
+/** The mascot's box in the band, in pixels: larger than the band, its empty margins outside. */
+const MASCOT = Math.round(PANEL_H * 1.14)
+/** The mascot's box from the band's left edge, room for what stands beside it. */
+const MASCOT_X = 4
+/** The widest the three lines get; past it they sit centred between the mascot and the gauges. */
+const LINES_W = 440
 
 /** Which family a tool belongs to, for the strip's icon and colour. */
 export function toolKind(tool: string): Recent['kind'] {
@@ -175,22 +183,147 @@ function gauges(info: Info, was: Info, now: number): Gauge[] {
 
 /** The last tool calls as a row of small squares: new ones arrive, a running one breathes, a failed one is red. */
 function timeline(recent: Recent[], seen: Set<number>, x: number, cy: number, room: number): { svg: string; width: number } {
-  const step = 12
+  // Each call a tile of its family's colour with the family's icon on it,
+  // so the trail reads as what was done; the running one breathes.
+  const step = 16
   const fits = Math.floor(room / step)
   const list = fits > 0 ? recent.slice(-fits) : []
   const svg = list.map((r, i) => {
     const px = x + i * step
     const fill = r.state === 'fail' ? '#F0645A' : KIND_INK[r.kind]
     const breathe = r.state === 'run' ? '<animate attributeName="opacity" values="1;0.35;1" dur="1s" repeatCount="indefinite"/>' : ''
-    const sq = `<rect x="${px}" y="${cy - 4.5}" width="9" height="9" rx="2.6" fill="${fill}" fill-opacity="${r.state === 'run' ? 1 : 0.8}">${breathe}</rect>`
+    const sq = `<g>${breathe}<rect x="${px}" y="${cy - 6.5}" width="13" height="13" rx="3.6" fill="${fill}" fill-opacity="${r.state === 'run' ? 0.32 : 0.18}"/>` +
+      `<g transform="translate(${n(px + 6.5)} ${n(cy)}) scale(0.95)">${glyph(r.kind, fill)}</g></g>`
     if (seen.has(r.id)) return sq
     return `<g><animate attributeName="opacity" values="0;1" dur="0.35s" fill="freeze"/><animateTransform attributeName="transform" type="translate" values="6 0;0 0" dur="0.35s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.35 0 0.15 1"/>${sq}</g>`
   }).join('')
-  return { svg, width: list.length * step }
+  return { svg, width: list.length * step - 3 }
 }
+
+/** The speech bubble's fill and edge, in either theme. */
+const BUBBLE = '<style>.bub{fill:#fff;fill-opacity:.06;stroke:#fff;stroke-opacity:.1;stroke-width:1}' +
+  '@media (prefers-color-scheme:light){.bub{fill:#000;fill-opacity:.035;stroke:#000;stroke-opacity:.09}}</style>'
 
 const BRANCH = (x: number, y: number) =>
   `<g transform="translate(${n(x)} ${n(y)})" stroke="#A1A09B" stroke-width="1.3" fill="none" stroke-linecap="round"><circle cx="2" cy="-7" r="1.6"/><circle cx="2" cy="1" r="1.6"/><circle cx="8" cy="-5" r="1.6"/><path d="M2 -5.4V-0.6M8 -3.4C8 -1 2 -2 2 -0.6"/></g>`
+
+/**
+ * The sky behind the mascot at the machine's local hour, `w` wide and `h`
+ * tall: a moon, stars and two fireflies at night, the first stars at dusk,
+ * drifting clouds by day. Within the stage: a cloud fades in and
+ * out at its edges, so nothing drifts under the lines.
+ */
+export function sky(hour: number, w: number, h: number): string {
+  const isNight = hour >= 21 || hour < 5
+  const isLow = (hour >= 5 && hour < 8) || (hour >= 17 && hour < 21)
+  const star = (x: number, y: number, r: number, dur: number, begin: number) =>
+    `<circle cx="${n(x)}" cy="${n(y)}" r="${r}" fill="#FFF6D8"><animate attributeName="opacity" values="0.15;0.9;0.15" dur="${dur}s" begin="${begin}s" repeatCount="indefinite"/></circle>`
+  const stars = (count: number) => [[8, 12, 0.9, 2.6, 0], [20, 6, 0.7, 3.4, 1.1], [w - 30, 8, 0.8, 2.9, 0.6], [6, 34, 0.7, 3.8, 1.9], [w - 8, 36, 0.9, 3.1, 0.3], [26, 22, 0.6, 4.2, 2.4]]
+    .slice(0, count).map(([x, y, r, d, b]) => star(x!, y!, r!, d!, b!)).join('')
+  const firefly = (path: string, dur: number, begin: number) =>
+    `<g><animateMotion path="${path}" dur="${dur}s" begin="${begin}s" repeatCount="indefinite" rotate="0"/>` +
+    `<circle r="4" fill="#E9F57A" opacity="0.25" filter="url(#haze)"/><circle r="1.3" fill="#F2FA9C"><animate attributeName="opacity" values="1;0.2;1" dur="1.7s" begin="${begin}s" repeatCount="indefinite"/></circle></g>`
+  const cloud = (y: number, s: number, dur: number, begin: number) =>
+    `<g opacity="0" fill="#FFFFFF"><animateTransform attributeName="transform" type="translate" values="-6 ${y};${w - 24} ${y}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+    `<animate attributeName="opacity" values="0;0.16;0.16;0" keyTimes="0;0.15;0.85;1" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+    `<g transform="scale(${s})"><circle cx="0" cy="0" r="5"/><circle cx="6" cy="-2.5" r="6.5"/><circle cx="13" cy="0" r="5"/><rect x="0" y="0" width="13" height="5" rx="2.5"/></g></g>`
+  let scene: string
+  if (isNight) {
+    scene = stars(6) +
+      `<g transform="translate(${n(w - 16)} 15)"><circle r="11" fill="#FFF3C4" opacity="0.12" filter="url(#haze)"/><circle r="6.5" fill="#F6EBC8" mask="url(#moonbite)"/></g>` +
+      firefly(`M8 ${h - 22} q10 -12 20 -2 t16 6 t-14 10 t-22 -14`, 9, 0) +
+      firefly(`M${w - 10} ${h - 30} q-10 8 -18 -4 t-6 -14 t14 4 t10 14`, 11, 3)
+  } else if (isLow) {
+    scene = hour >= 17 ? stars(2) : ''
+  } else {
+    scene = cloud(10, 0.8, 38, 6) + cloud(26, 0.6, 52, 30)
+  }
+  return '<defs><mask id="moonbite" maskUnits="userSpaceOnUse" x="-10" y="-10" width="20" height="20"><rect x="-10" y="-10" width="20" height="20" fill="#fff"/><circle cx="3.2" cy="-2.4" r="5.6" fill="#000"/></mask></defs>' +
+    scene
+}
+
+/**
+ * A celebration across the whole band, `elapsed` seconds after it began:
+ * fireworks bursting behind the lines between `x0` and `x1`, and confetti
+ * falling over everything, all gone after about four seconds. `seed` (the
+ * moment it began) picks the same show on every redraw.
+ */
+export function fireworks(seed: number, elapsed: number, x0: number, x1: number, w: number, h: number): { behind: string; front: string } {
+  if (elapsed < 0 || elapsed > 4.5) return { behind: '', front: '' }
+  let r = Math.floor(seed) % 2147483647 || 1
+  const rand = () => (r = (r * 48271) % 2147483647) / 2147483647
+  const INKS = ['#FF6B6B', '#FFD36B', '#7AA2F7', '#73DACA', '#B794F6', '#F07CB8', '#FF9E63']
+  const at = (t: number) => n(t - elapsed)
+  const bursts = Array.from({ length: 5 }, (_, i) => {
+    const cx = x0 + (x1 - x0) * ((i + 0.2 + rand() * 0.6) / 5)
+    const cy = 12 + rand() * 26
+    const ink = INKS[Math.floor(rand() * INKS.length)]!
+    const t0 = i * 0.38 + rand() * 0.2
+    const rise = `<circle cx="${n(cx)}" cy="${n(h + 4)}" r="1.4" fill="${ink}" opacity="0"><animate attributeName="cy" values="${n(h + 4)};${n(cy)}" begin="${at(t0)}s" dur="0.45s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.6 0.4 1"/>` +
+      `<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" begin="${at(t0)}s" dur="0.45s" fill="freeze"/></circle>`
+    const sparks = Array.from({ length: 18 }, (_, k) => {
+      const a = (k / 18) * Math.PI * 2 + rand() * 0.2
+      const d = 19 + rand() * 10
+      const dx = Math.cos(a) * d, dy = Math.sin(a) * d
+      return `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(1.1 + rand() * 0.7)}" fill="${k % 3 === 0 ? '#FFFFFF' : ink}" opacity="0">` +
+        `<animateTransform attributeName="transform" type="translate" values="0 0;${n(dx)} ${n(dy)};${n(dx * 1.1)} ${n(dy * 1.1 + 6)}" keyTimes="0;0.45;1" begin="${at(t0 + 0.45)}s" dur="1.3s" fill="freeze" calcMode="spline" keySplines="0.1 0.8 0.3 1;0.4 0 0.8 0.6"/>` +
+        `<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.55;1" begin="${at(t0 + 0.45)}s" dur="1.3s" fill="freeze"/></circle>`
+    }).join('')
+    const flash = `<circle cx="${n(cx)}" cy="${n(cy)}" r="14" fill="${ink}" opacity="0" filter="url(#haze)"><animate attributeName="opacity" values="0;0.45;0" begin="${at(t0 + 0.45)}s" dur="0.6s" fill="freeze"/></circle>`
+    return rise + flash + sparks
+  }).join('')
+  const confetti = Array.from({ length: 30 }, () => {
+    const x = rand() * w
+    const t0 = rand() * 1.4
+    const dur = 1.8 + rand() * 1.4
+    const ink = INKS[Math.floor(rand() * INKS.length)]!
+    const spin = rand() < 0.5 ? 360 : -360
+    return `<g opacity="0"><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.8;1" begin="${at(t0)}s" dur="${n(dur)}s" fill="freeze"/>` +
+      `<animateTransform attributeName="transform" type="translate" values="${n(x)} -6;${n(x + (rand() - 0.5) * 30)} ${n(h + 6)}" begin="${at(t0)}s" dur="${n(dur)}s" fill="freeze"/>` +
+      `<rect x="-2" y="-1" width="4" height="2.2" rx="0.6" fill="${ink}"><animateTransform attributeName="transform" type="rotate" values="0;${spin}" dur="0.9s" repeatCount="indefinite"/></rect></g>`
+  }).join('')
+  return { behind: bursts, front: confetti }
+}
+
+/**
+ * The band as a disco, `w` wide and `h` tall, over the stretch from `x0` to
+ * `x1`: a mirror ball turning on its string, coloured beams sweeping from
+ * it, and spots sliding along the floor; behind the lines, for as long as it stands.
+ */
+export function disco(x0: number, x1: number, w: number, h: number): string {
+  const cx = (x0 + x1) / 2
+  const [by, br] = [13, 9]
+  const INKS = ['#FF5FA2', '#7AA2F7', '#73DACA', '#FFD36B', '#B794F6']
+  // Colour that fades along each beam and out from each spot, with no blur to cut it square.
+  const defs = INKS.map((ink, i) =>
+    `<linearGradient id="beam${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ink}" stop-opacity="0.55"/><stop offset="1" stop-color="${ink}" stop-opacity="0"/></linearGradient>` +
+    `<radialGradient id="spot${i}"><stop offset="0" stop-color="${ink}" stop-opacity="0.55"/><stop offset="1" stop-color="${ink}" stop-opacity="0"/></radialGradient>`).join('')
+  const beams = INKS.map((_, i) => {
+    const swing = 26 + i * 7
+    const start = -64 + i * 32
+    const dur = 2 + i * 0.4
+    return `<path d="M${n(cx - 2)} ${by}L${n(cx - 26)} ${h + 40}L${n(cx + 26)} ${h + 40}L${n(cx + 2)} ${by}Z" fill="url(#beam${i})">` +
+      `<animateTransform attributeName="transform" type="rotate" values="${start - swing} ${n(cx)} ${by};${start + swing} ${n(cx)} ${by};${start - swing} ${n(cx)} ${by}" dur="${n(dur)}s" repeatCount="indefinite"/></path>`
+  }).join('')
+  const spots = INKS.map((_, i) => {
+    const dur = 2.6 + i * 0.5
+    const from = x0 + ((i * 97) % Math.max(1, x1 - x0))
+    return `<ellipse cx="${n(from)}" cy="${h - 12}" rx="26" ry="7" fill="url(#spot${i})">` +
+      `<animate attributeName="cx" values="${n(from)};${n(x1)};${n(x0)};${n(from)}" dur="${n(dur)}s" repeatCount="indefinite"/></ellipse>`
+  }).join('')
+  // The ball: a disc of mirror tiles whose rows slide past as it turns, and glints flashing on it.
+  const tiles = Array.from({ length: 7 }, (_, row) => {
+    const y = by - br + row * 2.7
+    return `<g><animateTransform attributeName="transform" type="translate" values="0 0;2.7 0" dur="0.45s" repeatCount="indefinite"/>` +
+      Array.from({ length: 10 }, (_, k) => `<rect x="${n(cx - br - 2.7 + k * 2.7 + (row % 2) * 1.35)}" y="${n(y)}" width="2.2" height="2.2" rx="0.4" fill="${(k + row) % 4 === 0 ? '#FFFFFF' : (k + row) % 4 === 2 ? '#E3E6EE' : '#A9AEBA'}"/>`).join('') + '</g>'
+  }).join('')
+  const glints = [[-4, -3, 0], [4, 1, 0.45], [-1, 4, 0.9]].map(([dx, dy, b]) =>
+    `<path d="M${n(cx + dx!)} ${n(by + dy! - 3)}V${n(by + dy! + 3)}M${n(cx + dx! - 3)} ${n(by + dy!)}H${n(cx + dx! + 3)}" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0"><animate attributeName="opacity" values="0;1;0" dur="1.2s" begin="${b}s" repeatCount="indefinite"/></path>`).join('')
+  const ball = `<path d="M${n(cx)} 0V${by - br}" stroke="#9A9994" stroke-width="0.9"/>` +
+    `<clipPath id="ballclip"><circle cx="${n(cx)}" cy="${by}" r="${br - 0.4}"/></clipPath><circle cx="${n(cx)}" cy="${by}" r="${br}" fill="#7D828E"/>` +
+    `<g clip-path="url(#ballclip)">${tiles}</g><circle cx="${n(cx)}" cy="${by}" r="${br}" fill="none" stroke="#fff" stroke-opacity="0.4" stroke-width="0.7"/>${glints}`
+  return `<defs>${defs}</defs>${beams}${spots}${ball}`
+}
 
 /** The panel's drawing, and where its gauges sit (in the drawing's pixels) so a click region can lie over them. */
 export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card: { x: number; w: number }; width: number } {
@@ -203,63 +336,146 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
   const since = Math.max(0, now - panel.infoAt) / 1000
 
   // ---- three ring gauges on the right ----
-  const colW = 84
+  // Narrow columns against the right edge, so the lines in the middle keep the room.
+  const colW = 56
   const list = gauges(info, was, now)
   const gX = W - colW * list.length
-  const sepX = gX - 8
+  const sepX = gX - 10
   const rings = list.map((g, i) => {
     const cx = gX + colW * i + colW / 2
-    return ring({ id: g.key, cx, cy: 28.5, r: 16.5, width: 4.6, arcs: g.arcs, was: g.was, center: esc(g.center), centerSize: 11.5,
+    return ring({ id: g.key, cx, cy: 29, r: 14.5, width: 4.2, arcs: g.arcs, was: g.was, center: esc(g.center), centerSize: 10.5,
       ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.pace !== undefined ? { pace: g.pace } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) }) +
-      `<text class="t ${g.halo ? '' : 'dim'}" x="${n(cx)}" y="61" font-size="10.5" font-weight="${g.halo ? 650 : 500}" text-anchor="middle"${g.halo ? ` fill="${g.halo}"` : ''}>${esc(g.label)}</text>` +
-      `<text class="t${g.subInk ? '' : ' faint'}" x="${n(cx)}" y="72.5" font-size="10" text-anchor="middle" font-variant-numeric="tabular-nums"${g.subInk ? ` fill="${g.subInk}" font-weight="600"` : ''}>${esc(g.sub)}</text>`
+      `<text class="t ${g.halo ? '' : 'dim'}" x="${n(cx)}" y="58.5" font-size="10" font-weight="${g.halo ? 650 : 500}" text-anchor="middle"${g.halo ? ` fill="${g.halo}"` : ''}>${esc(g.label)}</text>` +
+      `<text class="t${g.subInk ? '' : ' faint'}" x="${n(cx)}" y="69.5" font-size="9.5" text-anchor="middle" font-variant-numeric="tabular-nums"${g.subInk ? ` fill="${g.subInk}" font-weight="600"` : ''}>${esc(g.sub)}</text>`
   }).join('')
 
   // ---- the mascot on its stage ----
+  // The mascot's box is larger than the band: its drawing reaches from about
+  // 9 units down (a hat) to 93 (what stands beside it), so that span fills
+  // the height; across, it reaches 88, where the lines may start.
+  const mY = -MASCOT * 0.07
+  const gx = n(MASCOT_X + MASCOT * 0.5), gy = n(mY + MASCOT * 0.55), gr = n(MASCOT * 0.35)
   const glow = info.isBusy
-    ? `<circle cx="38" cy="42" r="27" fill="${ink}" opacity="0.3" filter="url(#haze)"><animate attributeName="opacity" values="0.18;0.38;0.18" dur="2.4s" repeatCount="indefinite"/></circle>`
-    : `<circle cx="38" cy="42" r="27" fill="${ink}" opacity="0.2" filter="url(#haze)"/>`
-  const mascot = `<svg x="0" y="0" width="${H}" height="${H}" viewBox="0 0 100 100" overflow="visible">${mascotInner(shot, Math.max(0, now - shot.at))}</svg>`
+    ? `<circle cx="${gx}" cy="${gy}" r="${gr}" fill="${ink}" opacity="0.3" filter="url(#haze)"><animate attributeName="opacity" values="0.18;0.38;0.18" dur="2.4s" repeatCount="indefinite"/></circle>`
+    : `<circle cx="${gx}" cy="${gy}" r="${gr}" fill="${ink}" opacity="0.2" filter="url(#haze)"/>`
+  const mascot = `<svg x="${MASCOT_X}" y="${n(mY)}" width="${MASCOT}" height="${MASCOT}" viewBox="0 0 100 100" overflow="visible">${mascotInner(shot, Math.max(0, now - shot.at))}</svg>`
 
   // ---- three lines of what is happening ----
-  const x0 = 86
-  const room = sepX - x0 - 12
+  const stageEnd = Math.round(MASCOT_X + MASCOT * 0.88 + 6)
+  const clock = local(now, info.tz ?? 0)
+  // The disco is the line the typing put up for the secret word; any other celebration has fireworks.
+  const isDisco = shot.mood === 'party' && info.detail === t().fun.typing.disco
+  const show = shot.mood === 'party' && !isDisco ? fireworks(shot.at, (now - shot.at) / 1000, stageEnd + 10, sepX - 10, W, H) : { behind: '', front: '' }
+  const floor = isDisco ? disco(stageEnd + 10, sepX - 10, W, H) : ''
+  const free = Math.max(0, sepX - stageEnd - 12)
+  const room = Math.min(free, LINES_W)
+  const x0 = stageEnd + Math.round((free - room) / 2)
+  const end = x0 + room
   const [verb = '', ...rest] = info.detail.split(' · ')
   const subject = rest.join(' · ')
-  const titleRoom = Math.max(6, Math.floor((room - 14) / 8.1))
-  const verbShown = clip(verb, titleRoom)
-  const subjectShown = subject ? clip(subject, Math.max(4, titleRoom - cols(verbShown) - 3)) : ''
+  // What Mochi says, in a speech bubble whose tail points back at it; the
+  // bubble pops when the line changes. A line too long for one row goes on
+  // two, smaller: what Mochi does over what it does it to. The two lines
+  // under the bubble start at its edge.
+  const bx = x0 + 7
+  const tx = bx + 22
+  const inner = room - 7 - 30
+  const [ONE, TWO] = [13.5, 12]
+  /** About how wide a letter is at this size, bold. */
+  const cw = (size: number) => size * 0.56
+  const isTwo = (cols(verb) + (subject ? cols(subject) + 3 : 0)) * cw(ONE) > inner && (subject !== '' || verb.includes(' '))
+  type Run = { text: string; ink: string; weight: number }
+  let rows: Run[][]
+  if (!isTwo) {
+    const fit = Math.max(6, Math.floor(inner / cw(ONE)))
+    const v = clip(verb, fit)
+    const said = subject ? clip(subject, Math.max(4, fit - cols(v) - 3)) : ''
+    rows = [[{ text: v, ink: 'ink', weight: 650 }, ...(said ? [{ text: ' · ', ink: 'faint', weight: 400 }, { text: said, ink: 'fg', weight: 650 }] : [])]]
+  } else {
+    const fit = Math.max(6, Math.floor(inner / cw(TWO)))
+    const cut = verb.lastIndexOf(' ', fit)
+    const first = subject ? verb : verb.slice(0, cut > 0 ? cut : fit)
+    const second = subject || verb.slice(first.length).trim()
+    rows = [[{ text: clip(first, fit), ink: 'ink', weight: 650 }], [{ text: clip(second, fit), ink: subject ? 'fg' : 'ink', weight: subject ? 550 : 650 }]]
+  }
+  const size = isTwo ? TWO : ONE
+  const rowCols = rows.map(row => row.reduce((sum, x) => sum + cols(x.text), 0))
+  const bw = Math.min(room - 7, 30 + Math.max(...rowCols) * cw(size))
+  const [y0, y1, r] = isTwo ? [2, 37, 13] : [5, 33, 12]
+  const bases = isTwo ? [16.5, 31] : [23.5]
+  const bubblePath = `M${n(bx + r)} ${y0}H${n(bx + bw - r)}Q${n(bx + bw)} ${y0} ${n(bx + bw)} ${y0 + r}V${y1 - r}Q${n(bx + bw)} ${y1} ${n(bx + bw - r)} ${y1}` +
+    `H${n(bx + r)}Q${bx} ${y1} ${bx} ${y1 - r}V${y1 - r + 1}L${n(bx - 7)} ${y1 - 3}L${bx} ${y0 + r + 1}V${y0 + r}Q${bx} ${y0} ${n(bx + r)} ${y0}Z`
+  const pops = was.detail !== info.detail
+    ? `<animateTransform attributeName="transform" type="translate" values="-3 1;0 0" dur="0.3s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.3 0 0.2 1.4"/><animate attributeName="opacity" values="0;1" dur="0.25s" fill="freeze"/>`
+    : ''
+  const dotY = n(bases[0]! - size * 0.33)
   const dot = info.isBusy
-    ? `<circle cx="${x0 + 3.5}" cy="21.5" r="3.5" fill="${ink}"><animate attributeName="opacity" values="1;0.25;1" dur="1.1s" repeatCount="indefinite"/></circle>`
-    : `<circle cx="${x0 + 3.5}" cy="21.5" r="3.5" fill="${ink}" opacity="0.6"/>`
-  const title = `<text class="t" x="${x0 + 13}" y="26.5" font-size="15" font-weight="650"><tspan fill="${ink}">${esc(verbShown)}</tspan>` +
-    (subjectShown ? `<tspan class="faint" font-weight="400"> · </tspan><tspan class="fg">${esc(subjectShown)}</tspan>` : '') + '</text>'
+    ? `<circle cx="${bx + 13}" cy="${dotY}" r="3.5" fill="${ink}"><animate attributeName="opacity" values="1;0.25;1" dur="1.1s" repeatCount="indefinite"/></circle>`
+    : `<circle cx="${bx + 13}" cy="${dotY}" r="3.5" fill="${ink}" opacity="0.6"/>`
+  // A new line is typed out a letter at a time, row after row, behind a
+  // caret, which blinks twice when it is done and goes; never longer than 1.2s.
+  const letters = rowCols.reduce((sum, k) => sum + k, 0)
+  const perLetter = Math.min(0.03, 1.2 / Math.max(1, letters))
+  const typing = pops !== '' && letters > 0
+  // Each row's reveal runs on one timeline from the line's start: hidden
+  // until its turn, then a letter at a time. Drawn after it has ended, a
+  // browser shows a rect as written, not as the animation left it, so each
+  // is written at its full width.
+  const durs = rowCols.map(k => Math.max(0.12, k * perLetter))
+  const total = durs.reduce((sum, d) => sum + d, 0)
+  let clips = ''
+  let carets = ''
+  let at = 0
+  rows.forEach((_, i) => {
+    const k = rowCols[i]!
+    const d = durs[i]!
+    const base = bases[i]!
+    const steps = Array.from({ length: k + 1 }, (_, j) => j)
+    const times = [...(at > 0 ? [0] : []), ...steps.map(j => (at + (j * d) / (k + 1)) / total)].map(n).join(';')
+    const reveal = (from: number, each: (j: number) => number) => [...(at > 0 ? [from] : []), ...steps.map(each)].map(n).join(';')
+    const step = (key: string, values: string) => `<animate attributeName="${key}" values="${values}" keyTimes="${times}" calcMode="discrete" dur="${n(total)}s" fill="freeze"/>`
+    clips += `<rect x="${tx - 1}" y="${n(base - size)}" height="${n(size + 5)}" width="${n(k * cw(size) + 4)}">${step('width', reveal(0, j => j * cw(size) + 1))}</rect>`
+    carets += `<rect x="${tx}" y="${n(base - size * 0.82)}" width="1.5" height="${n(size)}" rx="0.75" fill="${ink}" opacity="0">${step('x', reveal(tx, j => tx + j * cw(size)))}` +
+      // Shown only while its row types, and the last one's blinks after: each
+      // with an end, so drawn later it is gone however the browser keeps time.
+      `<set attributeName="opacity" to="1" begin="${n(at)}s" dur="${n(d)}s"/>` +
+      (i === rows.length - 1 ? `<animate attributeName="opacity" values="1;0;1;0" keyTimes="0;0.25;0.5;0.75" calcMode="discrete" begin="${n(at + d)}s" dur="1s"/>` : '') + '</rect>'
+    at += d
+  })
+  const runs = (row: Run[]) => row.map(x => `<tspan font-weight="${x.weight}"${x.ink === 'ink' ? ` fill="${ink}"` : ` class="${x.ink}"`}>${esc(x.text)}</tspan>`).join('')
+  const title = `<g>${pops}<path class="bub" d="${bubblePath}"/>${dot}${typing ? `<clipPath id="typed">${clips}</clipPath>` : ''}` +
+    rows.map((row, i) => `<text class="t" x="${tx}" y="${bases[i]}" font-size="${size}"${typing ? ' clip-path="url(#typed)"' : ''}>${runs(row)}</text>`).join('') +
+    (typing ? carets : '') + '</g>'
 
   const seen = new Set(was.recent.map(r => r.id))
-  const line = timeline(info.recent, seen, x0, 43, Math.min(14 * 12, Math.max(0, room - 150)))
+  const line = timeline(info.recent, seen, bx, 49, Math.min(12 * 16, Math.max(0, room - 160)))
   const summary = info.isBusy
     ? [t().st.tools(info.tools), ...(info.agents > 0 ? [t().st.agents(info.agents)] : [])].join(' · ')
     : info.last !== '' ? t().panel.lastTurn(info.last) : info.label
-  const sumX = x0 + line.width + (line.width > 0 ? 6 : 0)
-  const second = line.svg + `<text class="t dim" x="${sumX}" y="47" font-size="11.5">${esc(clip(summary, Math.max(4, Math.floor((sepX - sumX - 12) / 6.6))))}</text>`
+  const sumX = bx + line.width + (line.width > 0 ? 8 : 0)
+  const second = line.svg + `<text class="t dim" x="${sumX}" y="53.2" font-size="12">${esc(clip(summary, Math.max(4, Math.floor((end - sumX) / 6.6))))}</text>`
 
   const git = info.git
   const metaParts = [
     ...(git ? [git.branch, git.changed > 0 ? t().panel.changes(git.changed) : t().panel.clean, ...(git.ahead > 0 ? [`↑${git.ahead}`] : []), ...(git.behind > 0 ? [`↓${git.behind}`] : [])] : []),
     ...(info.cost > 0 ? [`$${info.cost.toFixed(2)}`] : []),
   ]
-  const metaX = git ? x0 + 14 : x0
-  const room3 = sepX - metaX - 12
+  const metaX = git ? bx + 14 : bx
+  const room3 = end - metaX
   // A push's CI while its runs go, else the branch's pull request, at the right end of the line.
-  const ci = ciMark(info.ci, info.pr, sepX - 12, 67, room3 - 40)
-  const third = (git ? BRANCH(x0, 67) : '') +
-    `<text class="t faint" x="${metaX}" y="67" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + ci.svg
+  const ci = ciMark(info.ci, info.pr, end, 73, room3 - 40)
+  const third = (git ? BRANCH(bx, 73) : '') +
+    `<text class="t faint" x="${metaX}" y="73" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + ci.svg
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
-    STYLE + rtlStyle() + DEFS + glow + mascot +
-    shiftTimeline(dot + title + second + third, (now / 1000) % 600) +
+    STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + show.behind + floor + glow + mascot +
+    `<g transform="translate(0 ${n((H - ROW_H) / 2)})">` +
+    // The bubble's pop and typing run from when the line changed, so a redraw
+    // mid-way picks them up where they were; the rest loops on the clock.
+    shiftTimeline(title, since) +
+    shiftTimeline(second + third, (now / 1000) % 600) +
     `<path class="rule" d="M${n(sepX)} 14V62"/>` +
     shiftTimeline(rings, since) +
-    '</svg>'
+    '</g>' + show.front + '</svg>'
   return { svg, card: { x: sepX, w: W - sepX }, width: W }
 }
