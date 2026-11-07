@@ -80,7 +80,7 @@ Pensando, lendo, buscando, digitando, rodando um comando, esperando você, comem
   <img src="docs/demo.svg" width="744" alt="A faixa do Mochi passando pelos seus humores e roupas: acenando, lendo, editando, rodando um comando, orgulhoso, esperando você, comemorando e dormindo">
 </p>
 
-Ao lado da carinha: o que está acontecendo, com todas as letras (`editando checkout.tsx`, `testes passaram · 4s`), as últimas chamadas de ferramentas como uma fileira de quadradinhos (a que está rodando respira, a que falhou fica vermelha), seu branch e quantos arquivos mudaram.
+Ao lado da carinha: o que está acontecendo, com todas as letras, digitado letra a letra num balão (`editando checkout.tsx`, `testes passaram · 4s`), as últimas chamadas de ferramentas como uma fileira de peças com o ícone de cada ferramenta (a que está rodando respira, a que falhou fica vermelha), seu branch e quantos arquivos mudaram. Atrás do Mochi o céu acompanha a sua hora, com lua e vaga-lumes à noite, e uma comemoração solta fogos de artifício pela faixa toda.
 
 ## 📊 Seus limites num relance, com previsão
 
@@ -222,6 +222,16 @@ Cada turno, edição, commit e dia de trabalho rende experiência. Os níveis li
 
 Escolha o que vestir na seção **Guarda-roupa** do painel de detalhes, ou com `/mochi vestir óculos`. Conte ao Mochi quando é seu aniversário com `/mochi aniversário 04-23`; a data fica só na sua máquina. Tem uma ideia de algo novo para vestir? O [docs/OUTFITS.md](docs/OUTFITS.md) mostra como adicionar.
 
+## 🗂️ Seu trabalho, pronto para colar
+
+O grupo **Trabalho** no painel de detalhes, cada um também como comando. Os commits são os seus, em qualquer branch, de cada repositório que um chat abriu nas últimas duas semanas.
+
+- **`/mochi standup`** escreve seu stand-up: o último dia trabalhado (a sexta, se for segunda) e hoje, seus commits por repositório e os turnos, o tempo e as linhas do dia. Ele vai para a área de transferência.
+- **`/mochi week`** faz o mesmo com os últimos sete dias.
+- **`/mochi desk`** lista o que ainda não está seguro num remoto: mudanças sem commit, commits sem push e branches nunca enviados.
+- **`/mochi prs`** mostra os pull requests esperando por você como um quadro, pelo seu próprio `gh`: os que pedem sua revisão, os que você revisou e receberam commits novos, e os seus com o que bloqueia cada um. Toque num cartão para abri-lo.
+- **`/mochi city`** desenha suas últimas quatro semanas como uma cidade: um prédio por dia da altura dos seus turnos, seus commits como janelas acesas, uma lua sobre uma noite longa, um parque num dia de folga e uma bandeira no seu dia mais cheio.
+
 ## 📸 Mostre por aí
 
 - **`/mochi cartão`** desenha um cartão: o Mochi com a roupa de hoje, seu nível, sua experiência e seus dias seguidos.
@@ -284,6 +294,11 @@ Você nunca precisa de nenhum: o Mochi funciona assim que é instalado. Quando q
 | `/mochi card [path]` | Salva um cartão para o seu perfil do GitHub |
 | `/mochi wrapped [year]` | Salva o seu mês, ou o seu ano, numa só imagem |
 | `/mochi snap` | Salva a faixa e o painel de detalhes como imagens |
+| `/mochi standup` | Seu stand-up do último dia trabalhado e de hoje, copiado |
+| `/mochi week` | Os últimos sete dias: commits por repositório, turnos, tempo e linhas |
+| `/mochi desk` | O trabalho ainda não seguro num remoto, em cada repositório que o Mochi viu |
+| `/mochi prs` | Os pull requests esperando por você, como quadro |
+| `/mochi city` | Suas últimas quatro semanas como uma cidade |
 | `/mochi tour` | Mostra de novo o tour da primeira vez |
 | `/mochi news` | O que esta versão trouxe |
 | `/mochi birthday [MM-DD \| none]` | Conta ao Mochi quando é seu aniversário, mostra a data salva ou a esquece |
@@ -306,18 +321,18 @@ O Mochi fala o idioma da configuração `language` do Claude Code quando ela é 
 
 ## 🔒 O que ele acessa
 
-**Tudo fica na sua máquina.** O Mochi não envia nada sobre você ou o seu trabalho para lugar nenhum. A única requisição dele mesmo lê o número da versão no GitHub, no máximo a cada 12 horas, para avisar quando sai uma atualização; enquanto `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` estiver definida, nem isso. A única outra coisa que fala com a internet é o seu próprio `gh`, para o acompanhamento de CI, e `/mochi ci` desliga isso.
+**Tudo fica na sua máquina.** O Mochi não envia nada sobre você ou o seu trabalho para lugar nenhum. A única requisição dele mesmo lê o número da versão no GitHub, no máximo a cada 12 horas, para avisar quando sai uma atualização; enquanto `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` estiver definida, nem isso. A única outra coisa que fala com a internet é o seu próprio `gh`, para o acompanhamento de CI, e `/mochi ci` desliga isso. `/mochi prs` também usa o seu `gh`, só quando você o executa.
 
 <details>
 <summary><b>A lista completa</b></summary>
 
 <br>
 
-- **git**, na pasta do chat, só para ler: `git status`, `git log`, `git diff --numstat` e `git rev-parse` para a faixa e o painel de detalhes. Quando o escudo precisa olhar mais de perto, ele pergunta qual é o branch atual e o branch padrão, quais arquivos um `git add` adicionaria (`git ls-files`) e o que um `git commit` levaria (`git diff`).
-- **gh**, só enquanto o acompanhamento de CI estiver ligado, com o seu próprio login (o Mochi nunca vê seu token): `gh pr view` quando um chat começa, quando você abre o painel de detalhes e em torno de um push; `gh run list` só depois de um push neste chat, a cada 30 segundos até as execuções terminarem, por meia hora no máximo. `/mochi ci` desliga os dois.
+- **git**, na pasta do chat, só para ler: `git status`, `git log`, `git diff --numstat` e `git rev-parse` para a faixa e o painel de detalhes. Quando o escudo precisa olhar mais de perto, ele pergunta qual é o branch atual e o branch padrão, quais arquivos um `git add` adicionaria (`git ls-files`) e o que um `git commit` levaria (`git diff`). Para `/mochi standup`, `week` e `desk`, em cada repositório que um chat abriu nas últimas duas semanas: `git log` dos seus próprios commits, `git status`, `git remote`, `git for-each-ref` e `git rev-list`.
+- **gh**, só enquanto o acompanhamento de CI estiver ligado, com o seu próprio login (o Mochi nunca vê seu token): `gh pr view` quando um chat começa, quando você abre o painel de detalhes e em torno de um push; `gh run list` só depois de um push neste chat, a cada 30 segundos até as execuções terminarem, por meia hora no máximo. `/mochi ci` desliga os dois. `/mochi prs` faz uma única chamada `gh api graphql`, só quando você o executa ou toca no botão dele.
 - **GitHub, para atualizações**: no máximo a cada 12 horas, e quando você roda `/mochi update`, um download simples de `.claude-plugin/plugin.json` a partir de `raw.githubusercontent.com/oztrkemree/mochi` para comparar números de versão. Não leva nada sobre você ou o seu trabalho e não acontece enquanto `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` estiver definida.
 - **As ferramentas do próprio sistema**: notificações via `osascript` no macOS, PowerShell no Windows e `notify-send` no Linux. Para o idioma, `defaults read -g AppleLanguages` no macOS e `reg query` no Windows; `uname` distingue o macOS do Linux. Para os PNGs do `/mochi captura`, o `rsvg-convert` ou o `magick` do ImageMagick, se você tiver. Os arquivos de chats fechados, e o que o `/mochi redefinir` apaga, são removidos pelo nome com `rm`, ou com o `del` do `cmd` no Windows, e só dentro de `~/.claude/mochi/`.
-- **Arquivos em `~/.claude/mochi/`**: em que pé está cada chat aberto, contagens diárias, seu nível e suas conquistas, leituras de uso para a previsão, quantas vezes cada dica apareceu e as instruções curtas que você repete (nunca prompts inteiros), os marcadores que dizem a um chat para avisar que um limite reiniciou, seu `shield.json` se você escrever um, e o que `/mochi cartão`, `retrospectiva`, `captura` e `exportar` salvam. As configurações, o que está sempre permitido e seu aniversário ficam no armazenamento do Claude Code para plugins.
+- **Arquivos em `~/.claude/mochi/`**: em que pé está cada chat aberto, contagens diárias, seu nível e suas conquistas, leituras de uso para a previsão, quantas vezes cada dica apareceu e as instruções curtas que você repete (nunca prompts inteiros), os marcadores que dizem a um chat para avisar que um limite reiniciou, seu `shield.json` se você escrever um, e o que `/mochi cartão`, `retrospectiva`, `captura` e `exportar` salvam. As configurações, o que está sempre permitido e seu aniversário ficam no armazenamento do Claude Code para plugins. Para o grupo Trabalho, `repos.json` guarda quais repositórios seus chats abriram, e quando.
 - **Seu projeto**: o Mochi lê o `CLAUDE.md` antes de sugerir uma instrução e só acrescenta uma linha depois que você escolhe **Adicionar**. Ele só grava o cartão no projeto se você passar para o `/mochi cartão` um caminho lá dentro. Para contar linhas e detectar segredos, ele lê um arquivo que o Claude está prestes a sobrescrever e, num comando que adiciona e faz commit de uma vez, os arquivos novos que seriam adicionados (até 20, com menos de 1 MB cada). Nada do que ele lê é guardado.
 - **Outros plugins** podem mostrar um humor e uma frase curta pelo Mochi, assinados com o nome deles, cada um no máximo uma vez a cada 10 segundos; `/mochi extensões` desliga isso. O `/mochi relatar` só mostra um link: nada é enviado.
 - **Os hooks do próprio Claude Code**: o Mochi observa chamadas de ferramentas, prompts, subagentes e turnos para escolher sua expressão e manter as contagens do dia, e repassa cada um sem mudanças; lê as mensagens do chat só para achar o título dele. Num pedido de permissão, só mostra que o Claude está esperando por você, e nunca o responde. O escudo é o único hook que age: antes de um comando ou edição que considera irreversível, ele pergunta a você, e só se você escolher **Parar**, ou se a pergunta não puder ser concluída, ele recusa essa chamada. Ele nunca permite nada por você. O Mochi adiciona o comando `/mochi` e, para plugins que dependem dele, `$.mochi`. Não grava nada na própria pasta do plugin e não carrega código além dos próprios arquivos. Na primeira vez que inicia, lê uma vez as configurações do antigo plugin `mochi`, no armazenamento do Claude Code em `~/.claude/plugins/store/`, para trazê-las.

@@ -14,6 +14,15 @@ export const tr: typeof en = {
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
   news: {
+    '0.9.0': {
+      headline: 'stand-up notun, seni bekleyen PR\'lar ve son dört haftanın şehri',
+      notes: [
+        'Detay panelinde yeni bir İş grubu var: /mochi standup, week, desk ve prs stand-up notunu yazıyor, haftayı özetliyor, henüz push edilmemiş işleri listeliyor ve seni bekleyen PR\'ları gösteriyor.',
+        '/mochi city son dört haftanı bir şehir olarak çiziyor: her gün bir bina, boyu o günün turları kadar, yanan pencereleri commit\'lerin.',
+        'Mochi artık bir konuşma balonunda konuşuyor. Arkasındaki gökyüzü saate göre değişiyor, kutlamada havai fişek patlıyor ve sen yazarken prompt\'a tepki veriyor.',
+        'Detay paneli çok daha seyrek yeniden çiziliyor, bu yüzden okurken yerinde duruyor.',
+      ],
+    },
     '0.8.0': {
       headline: 'gözlük, bıyık ve sakal bir arada, 34 yeni parça, daha hızlı seviye',
       notes: [

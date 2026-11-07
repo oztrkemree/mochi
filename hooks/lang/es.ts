@@ -17,6 +17,15 @@ export const es: typeof en = {
   months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
 
   news: {
+    '0.9.0': {
+      headline: 'tu stand-up, tus pull requests y una ciudad de tus últimas cuatro semanas',
+      notes: [
+        'Un grupo Trabajo en el panel de detalles: /mochi standup, week, desk y prs escriben tu stand-up, resumen la semana, listan el trabajo sin subir y muestran los pull requests que te esperan.',
+        '/mochi city dibuja tus últimas cuatro semanas como una ciudad: un edificio por día, tan alto como sus turnos, con tus commits como ventanas encendidas.',
+        'Mochi habla en un bocadillo bajo un cielo que sigue la hora, celebra con fuegos artificiales y reacciona a tu prompt mientras escribes.',
+        'El panel de detalles se redibuja mucho menos, así que se queda quieto mientras lees.',
+      ],
+    },
     '0.8.0': {
       headline: 'gafas, bigote y barba a la vez, 34 cosas nuevas y niveles más rápidos',
       notes: [

@@ -80,7 +80,7 @@ Düşünür, okur, arar, yazar, komut çalıştırır, seni bekler, testler yeş
   <img src="docs/demo.svg" width="744" alt="Mochi'nin bandı ruh hallerinden ve kıyafetlerinden geçiyor: el sallıyor, okuyor, düzenliyor, komut çalıştırıyor, gururlu, seni bekliyor, kutluyor ve uyuyor">
 </p>
 
-Yüzün yanında: olan biten sade sözcüklerle (`checkout.tsx düzenleniyor`, `testler geçti · 4sn`), son araç çağrıları küçük kareler halinde (çalışan nefes alır, başarısız olan kırmızıya döner), dalın ve kaç dosyanın değiştiği.
+Yüzün yanında: olan biten sade sözcüklerle, bir konuşma balonunda harf harf yazılarak (`checkout.tsx düzenleniyor`, `testler geçti · 4sn`), son araç çağrıları her biri kendi aracının simgesini taşıyan karolar halinde (çalışan nefes alır, başarısız olan kırmızıya döner), dalın ve kaç dosyanın değiştiği. Mochi'nin arkasındaki gökyüzü saatini izler, gece ay ve ateşböcekleri çıkar. Bir kutlama bandın üstünde havai fişek patlatır.
 
 ## 📊 Limitlerin tek bakışta, tahminiyle birlikte
 
@@ -222,6 +222,16 @@ Her tur, her düzenleme, her commit ve çalıştığın her gün deneyim kazand�
 
 Ne giyeceğini detay ekranındaki **Gardırop** bölümünden ya da `/mochi aksesuar gözlük` ile seç. Doğum gününü `/mochi doğumgünü 04-23` ile Mochi'ye söyle; yalnızca bu bilgisayarda kalır. Giyilecek yeni bir şey için aklında bir fikir mi var? Nasıl ekleneceği [docs/OUTFITS.md](docs/OUTFITS.md)'de.
 
+## 🗂️ İşin, yapıştırmaya hazır
+
+Detay ekranındaki **İş** grubu. Her biri bir komut olarak da çalışır. Commit'ler senin commit'lerin: her dalda, son iki haftada bir sohbetin açtığı her depodan.
+
+- **`/mochi standup`** stand-up notunu yazar: son çalıştığın gün (pazartesiyse cuma) ve bugün, depo depo commit'lerin, o günün turları, süresi ve satırları. Not panoya kopyalanır.
+- **`/mochi week`** aynısını son yedi gün için yapar.
+- **`/mochi desk`** henüz bir remote'ta güvende olmayan işleri listeler: commit edilmemiş değişiklikler, push edilmemiş commit'ler ve hiç push edilmemiş dallar.
+- **`/mochi prs`** seni bekleyen PR'ları kendi `gh`'in üzerinden bir pano olarak gösterir: incelemeni isteyenler, incelediğin ve sonrasında yeni commit gelenler, ve kendi PR'ların, her birini neyin beklettiğiyle. Bir karta basınca PR açılır.
+- **`/mochi city`** son dört haftanı bir şehir olarak çizer: her gün bir bina, boyu o günün turları kadar, yanan pencereleri commit'lerin. Geç saate kalan günün üstünde ay, boş günde park, en yoğun günde bayrak durur.
+
 ## 📸 Hava at
 
 - **`/mochi kart`** bir kart çizer: bugünkü kıyafetiyle Mochi, seviyen, deneyimin ve serilerin.
@@ -284,6 +294,11 @@ Hiçbirine ihtiyacın yok: Mochi kurulduğu an çalışır. Yön vermek istediğ
 | `/mochi card [path]` | GitHub profilin için bir kart kaydeder |
 | `/mochi wrapped [year]` | Ayını ya da yılını tek bir resimde kaydeder |
 | `/mochi snap` | Bandı ve detay ekranını resim olarak kaydeder |
+| `/mochi standup` | Son çalışılan gün ve bugün için stand-up notu, kopyalanmış |
+| `/mochi week` | Son yedi gün: depo depo commit, tur, süre ve satır |
+| `/mochi desk` | Henüz bir remote'ta güvende olmayan işler, Mochi'nin gördüğü her depoda |
+| `/mochi prs` | Seni bekleyen PR'lar, pano halinde |
+| `/mochi city` | Son dört haftan bir şehir olarak |
 | `/mochi tour` | İlk açılıştaki tanıtımı yeniden gösterir |
 | `/mochi news` | Bu sürümün getirdikleri |
 | `/mochi birthday [MM-DD \| none]` | Doğum gününü kaydeder, gösterir ya da siler |
@@ -306,18 +321,18 @@ Claude Code'un `language` ayarı bunlardan biriyse Mochi o dili konuşur; değil
 
 ## 🔒 Neye dokunur
 
-**Her şey bilgisayarında kalır.** Mochi senin ya da işin hakkında hiçbir yere hiçbir şey göndermez. Kendi yaptığı tek istek, yeni bir sürüm çıktığında haber verebilmek için en fazla 12 saatte bir GitHub'dan sürüm numarasını okumaktır; `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` ayarlıyken bunu da yapmaz. İnternetle konuşan diğer tek şey, CI takibi için senin kendi `gh`'ın, onu da `/mochi ci` kapatır.
+**Her şey bilgisayarında kalır.** Mochi senin ya da işin hakkında hiçbir yere hiçbir şey göndermez. Kendi yaptığı tek istek, yeni bir sürüm çıktığında haber verebilmek için en fazla 12 saatte bir GitHub'dan sürüm numarasını okumaktır; `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` ayarlıyken bunu da yapmaz. İnternetle konuşan diğer tek şey, CI takibi için senin kendi `gh`'ın, onu da `/mochi ci` kapatır. `/mochi prs` de `gh`'ini kullanır, yalnızca sen çalıştırdığında.
 
 <details>
 <summary><b>Tam liste</b></summary>
 
 <br>
 
-- **git**, sohbetin klasöründe ve yalnızca okumak için: bant ve detay ekranı için `git status`, `git log`, `git diff --numstat` ve `git rev-parse`. Kalkanın daha yakından bakması gerektiğinde dalı ve varsayılan dalı, bir `git add`'in ekleyeceği dosyaları (`git ls-files`) ve bir `git commit`'in commit edeceklerini (`git diff`) sorar.
-- **gh**, yalnızca CI takibi açıkken ve senin kendi oturumunla (Mochi token'ını hiç görmez): bir sohbet başladığında, detay ekranını açtığında ve bir push'un çevresinde `gh pr view`; `gh run list` ise yalnızca bu sohbette bir push'tan sonra, çalıştırmalar bitene kadar 30 saniyede bir, en fazla yarım saat. `/mochi ci` ikisini de kapatır.
+- **git**, sohbetin klasöründe ve yalnızca okumak için: bant ve detay ekranı için `git status`, `git log`, `git diff --numstat` ve `git rev-parse`. Kalkanın daha yakından bakması gerektiğinde dalı ve varsayılan dalı, bir `git add`'in ekleyeceği dosyaları (`git ls-files`) ve bir `git commit`'in commit edeceklerini (`git diff`) sorar. `/mochi standup`, `week` ve `desk` için, son iki haftada bir sohbetin açtığı her depoda: kendi commit'lerin için `git log`, `git status`, `git remote`, `git for-each-ref` ve `git rev-list`.
+- **gh**, yalnızca CI takibi açıkken ve senin kendi oturumunla (Mochi token'ını hiç görmez): bir sohbet başladığında, detay ekranını açtığında ve bir push'un çevresinde `gh pr view`; `gh run list` ise yalnızca bu sohbette bir push'tan sonra, çalıştırmalar bitene kadar 30 saniyede bir, en fazla yarım saat. `/mochi ci` ikisini de kapatır. `/mochi prs` tek bir `gh api graphql` çağrısı yapar, yalnızca sen çalıştırdığında ya da düğmesine bastığında.
 - **Güncellemeler için GitHub**: en fazla 12 saatte bir ve `/mochi update` yazdığında, sürüm numaralarını karşılaştırmak için `raw.githubusercontent.com/oztrkemree/mochi` adresinden `.claude-plugin/plugin.json` dosyasının düz bir indirmesi. Senin ya da işin hakkında hiçbir şey taşımaz; `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` ayarlıyken yapılmaz.
 - **Sistemin kendi araçları**: bildirimler için macOS'te `osascript`, Windows'ta PowerShell, Linux'ta `notify-send`. Dil için macOS'te `defaults read -g AppleLanguages`, Windows'ta `reg query`; macOS ile Linux'u `uname` ayırır. `/mochi fotoğraf`'ın PNG'leri için, kuruluysa `rsvg-convert` ya da ImageMagick'in `magick`'i. Kapanmış sohbetlerin dosyaları ve `/mochi sıfırla`'nın temizledikleri, yalnızca `~/.claude/mochi/` içinde ve adıyla, `rm` ile (Windows'ta `cmd`'nin `del`'i ile) silinir.
-- **`~/.claude/mochi/` altındaki dosyalar**: her açık sohbetin durumu, günlük sayılar, seviyen ve rozetlerin, tahmin için kullanım ölçümleri, her ipucunun kaç kez gösterildiği ve tekrarladığın kısa talimatlar (asla prompt'un tamamı değil), bir limit sıfırlanmasını tek bir sohbetin duyurmasını sağlayan işaretler, yazdıysan `shield.json`'ın ve `/mochi kart`, `özet`, `fotoğraf` ve `aktar`'ın kaydettikleri. Ayarlar, hep izin verilenler ve doğum günün Claude Code'un eklentiler için tuttuğu depoda durur.
+- **`~/.claude/mochi/` altındaki dosyalar**: her açık sohbetin durumu, günlük sayılar, seviyen ve rozetlerin, tahmin için kullanım ölçümleri, her ipucunun kaç kez gösterildiği ve tekrarladığın kısa talimatlar (asla prompt'un tamamı değil), bir limit sıfırlanmasını tek bir sohbetin duyurmasını sağlayan işaretler, yazdıysan `shield.json`'ın ve `/mochi kart`, `özet`, `fotoğraf` ve `aktar`'ın kaydettikleri. Ayarlar, hep izin verilenler ve doğum günün Claude Code'un eklentiler için tuttuğu depoda durur. İş grubu için `repos.json`, sohbetlerinin hangi depoları ne zaman açtığını tutar.
 - **Projen**: Mochi bir talimat önermeden önce `CLAUDE.md`'yi okur ve yalnızca sen **Ekle**'yi seçince sonuna tek bir satır ekler. Kartı projene yalnızca `/mochi kart`'a oradaki bir yolu verirsen yazar. Satırları saymak ve gizli bilgileri yakalamak için Claude'un üzerine yazmak üzere olduğu dosyayı, aynı anda ekleyip commit eden bir komut için de ekleyeceği yeni dosyaları (en fazla 20 tane, her biri 1 MB'tan küçük) okur. Okuduğu hiçbir şeyi saklamaz.
 - **Diğer eklentiler** Mochi aracılığıyla bir ruh hali ve kısa bir satır gösterebilir; satır eklentinin adıyla imzalanır, her eklenti için en fazla 10 saniyede bir. `/mochi eklentiler` bunu kapatır. `/mochi geribildirim` yalnızca bir bağlantı yazdırır: hiçbir şey gönderilmez.
 - **Claude Code'un kendi kancaları**: Mochi yüzünü seçmek ve günün sayılarını tutmak için araç çağrılarını, istemleri, alt ajanları ve turları izler, her birini olduğu gibi geçirir; sohbetin mesajlarını yalnızca başlığını bulmak için okur. Bir izin isteğinde yalnızca Claude'un seni beklediğini gösterir, isteği hiç yanıtlamaz. Bir şey yapan tek kanca kalkandır: geri alınamaz saydığı bir komut ya da düzenlemeden önce sana sorar ve o çağrıyı yalnızca **Durdur**'u seçersen ya da soru sonuna kadar gösterilemezse reddeder. Senin yerine hiçbir şeye izin vermez. Mochi `/mochi` komutunu ve ona bağlı eklentiler için `$.mochi`'yi ekler. Kendi eklenti klasörüne hiçbir şey yazmaz, kendi dosyaları dışında kod yüklemez. İlk açılışta, ayarlarını taşımak için eski `mochi` eklentisinin ayarlarını Claude Code'un `~/.claude/plugins/store/` deposundan bir kez okur.

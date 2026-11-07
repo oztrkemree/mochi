@@ -19,6 +19,15 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.9.0': {
+      headline: 'your stand-up, your pull requests and a city of your last four weeks',
+      notes: [
+        'A Work group in the details pane: /mochi standup, week, desk and prs write your stand-up, sum up the week, list work not yet pushed and show the pull requests waiting on you.',
+        '/mochi city draws your last four weeks as a city: a building a day, as tall as its turns, its lit windows your commits.',
+        'Mochi speaks in a speech bubble under a sky that follows the hour, celebrates with fireworks, and reacts to your prompt as you type.',
+        'The details pane redraws far less often, so it stays still while you read.',
+      ],
+    },
     '0.8.0': {
       headline: 'glasses, a mustache and a beard at once, 34 new things to wear, faster levels',
       notes: [

@@ -18,6 +18,15 @@ export const fr: typeof en = {
   months: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'],
 
   news: {
+    '0.9.0': {
+      headline: 'ton stand-up, tes pull requests et une ville de tes quatre dernières semaines',
+      notes: [
+        'Un groupe Travail dans le panneau de détails : /mochi standup, week, desk et prs écrivent ton stand-up, résument la semaine, listent le travail pas encore poussé et montrent les pull requests qui t’attendent.',
+        '/mochi city dessine tes quatre dernières semaines en ville : un immeuble par jour, aussi haut que ses tours, tes commits en fenêtres allumées.',
+        'Mochi parle dans une bulle sous un ciel qui suit l’heure, fête avec des feux d’artifice et réagit à ton prompt pendant que tu tapes.',
+        'Le panneau de détails se redessine bien moins souvent et reste immobile pendant que tu lis.',
+      ],
+    },
     '0.8.0': {
       headline: 'lunettes, moustache et barbe à la fois, 34 nouveaux accessoires, des niveaux plus rapides',
       notes: [

@@ -15,6 +15,15 @@ export const id: typeof en = {
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
 
   news: {
+    '0.9.0': {
+      headline: 'stand-up kamu, pull request kamu, dan kota dari empat minggu terakhirmu',
+      notes: [
+        'Grup Kerja di panel detail: /mochi standup, week, desk dan prs menulis stand-up kamu, merangkum minggu ini, mendaftar pekerjaan yang belum di-push, dan menampilkan pull request yang menunggumu.',
+        '/mochi city menggambar empat minggu terakhirmu sebagai kota: satu gedung per hari, setinggi jumlah giliran, dengan commit kamu sebagai jendela yang menyala.',
+        'Mochi berbicara dalam balon kata di bawah langit yang mengikuti jam, merayakan dengan kembang api, dan bereaksi pada prompt saat kamu mengetik.',
+        'Panel detail jauh lebih jarang digambar ulang, jadi tetap diam saat kamu membaca.',
+      ],
+    },
     '0.8.0': {
       headline: 'kacamata, kumis, dan janggut sekaligus, 34 barang baru, level lebih cepat',
       notes: [

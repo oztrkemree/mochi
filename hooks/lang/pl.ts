@@ -34,6 +34,15 @@ export const pl: typeof en = {
   months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
 
   news: {
+    '0.9.0': {
+      headline: 'twój stand-up, twoje pull requesty i miasto z ostatnich czterech tygodni',
+      notes: [
+        'Grupa Praca w panelu szczegółów: /mochi standup, week, desk i prs piszą twój stand-up, podsumowują tydzień, wypisują niewypchniętą pracę i pokazują pull requesty, które na ciebie czekają.',
+        '/mochi city rysuje twoje ostatnie cztery tygodnie jako miasto: jeden budynek na dzień, wysoki jak liczba tur, a zapalone okna to twoje commity.',
+        'Mochi mówi w dymku pod niebem, które podąża za godziną, świętuje fajerwerkami i reaguje na prompt, gdy piszesz.',
+        'Panel szczegółów odświeża się znacznie rzadziej, więc stoi w miejscu, gdy czytasz.',
+      ],
+    },
     '0.8.0': {
       headline: 'okulary, wąsy i broda naraz, 34 nowe rzeczy, szybsze poziomy',
       notes: [
