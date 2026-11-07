@@ -99,7 +99,7 @@ const TOGGLES = [['shield', 'hasShield'], ['alerts', 'hasAlert'], ['sound', 'has
 function actionGroups(): [string, string, [string, string][]][] {
   const d = t().pane
   return [
-    ['work', d.work, [['standup', d.standup]]],
+    ['work', d.work, [['standup', d.standup], ['week', d.week], ['desk', d.desk]]],
     ['share', d.share, [['card', d.card], ['wrapped', d.wrappedMonth], ['year', d.wrappedYear], ['snap', d.snap]]],
     ['help', d.help, [['tour', d.tour], ['news', d.news], ['update', d.update], ['feedback', d.feedback]]],
     ['data', d.data, [['export', d.export], ['reset:level', d.resetLevel], ['reset:history', d.resetHistory], ['reset:all', d.resetAll]]],

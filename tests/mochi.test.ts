@@ -13,7 +13,7 @@ import { NO_DIFF, NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
 import { alertCommands, langCodes, langCommand, openCommand, removeCommand } from '../hooks/system'
 import { clip, cols } from '../hooks/text'
 import { typingMood } from '../hooks/fun'
-import { standupText } from '../hooks/standup'
+import { deskText, standupText, weekText } from '../hooks/standup'
 
 // Most of these read the Turkish lines; one test below speaks English.
 setLang('tr')
@@ -935,4 +935,21 @@ test('the stand-up note has the last day worked and today, commits by repository
   expect(text).toContain('12 tur · 2sa · +540 −120 satır')
   expect(text).toContain('Bugün\n• mochi: 1 commit\n  – Add /mochi standup')
   expect(standupText('2026-11-09', {}, [])).toBe('Dün\n• commit yok\n\nBugün\n• commit yok')
+})
+
+test('the week sums seven days, and the desk lists work not yet safe on a remote', () => {
+  setLang('tr')
+  const rec = (turns: number, secs: number) => ({ turns, tools: 0, edits: 0, errors: 0, commits: 0, cost: 0, secs, night: 0, add: 10, del: 1, early: 0, langs: 0 })
+  const text = weekText('2026-11-09', { '2026-11-03': rec(5, 3600), '2026-11-06': rec(10, 3600), '2026-11-01': rec(9, 9) }, [
+    { repo: 'mochi', at: 2, subject: 'Disco', day: '2026-11-06' },
+    { repo: 'mochi', at: 1, subject: 'Old', day: '2026-11-02' },
+  ])
+  expect(text.split('\n')[0]).toMatch(/^Bu hafta · 3 Kas.* – 9 Kas/)
+  expect(text).toContain('• mochi: 1 commit\n  – Disco')
+  expect(text).toContain('1 commit · 2 gün çalışıldı · 15 tur · 2sa · +20 −2 satır')
+  expect(deskText([
+    { repo: 'spark', branch: 'feat/x', dirty: 3, branches: [{ name: 'feat/x', ahead: 2, hasUpstream: true }, { name: 'try', ahead: 4, hasUpstream: false }, { name: 'main', ahead: 0, hasUpstream: true }] },
+    { repo: 'wiki', branch: 'main', dirty: 0, branches: [{ name: 'main', ahead: 0, hasUpstream: true }] },
+  ])).toBe('spark\n  • 3 dosya commit edilmedi (feat/x)\n  • try: hiç push edilmedi (4 commit)\n  • feat/x: 2 commit push edilmedi\n\nHepsi güvende: wiki')
+  expect(deskText([{ repo: 'wiki', branch: 'main', dirty: 0, branches: [] }])).toContain('Masada bir şey kalmadı')
 })

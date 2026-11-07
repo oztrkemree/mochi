@@ -29,8 +29,8 @@ import { addedFiles, allow, allowedOf, commitScan, diffAdds, editSecrets, gitAdd
 import { paramsAt } from './rig'
 import { SNAP_W, cardMarkdown, cardPath, cardSvg, framed, monthName, monthToOffer, periodTitle, wrappedOf, wrappedSvg } from './share'
 import type { ChatDays } from './share'
-import { LOOK_BACK_DAYS, standupText } from './standup'
-import type { Commit } from './standup'
+import { LOOK_BACK_DAYS, deskText, standupText, weekText } from './standup'
+import type { Commit, Desk } from './standup'
 import { clip } from './sound'
 import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_DIFF, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
 import { alertCommands, langCodes, langCommand, openCommand, pngCommands, removeCommand } from './system'
@@ -449,28 +449,25 @@ async function noteRepo($: Dollar, root: string) {
   await $.fs.write(path, `${JSON.stringify(kept)}\n`)
 }
 
-/**
- * /mochi standup: the last day worked and today, from the commits of every
- * repository seen lately (the person's own, on any branch) and Mochi's
- * history of turns, time and lines; copied to the clipboard as well.
- */
-async function standup($: Dollar): Promise<string> {
+/** The repositories any chat saw in the last two weeks, from repos.json, and this chat's own. */
+async function recentRoots($: Dollar): Promise<string[]> {
   const now = await $.clock.now()
-  const v = await read($, env)
-  const tz = v.tz
-  const today = dayKey(now, tz)
-  const from = shiftDay(today, -LOOK_BACK_DAYS)
-  const [y = 1970, m = 1, d = 1] = from.split('-').map(Number)
-  const since = Math.floor((Date.UTC(y, m - 1, d) - tz * 60_000) / 1000)
   let seen: Record<string, number> = {}
   try {
     seen = JSON.parse(await $.fs.read(`${chat.dataDir}/repos.json`)) as Record<string, number>
   } catch {
     seen = {}
   }
-  const roots = new Set([...Object.entries(seen).filter(([, at]) => now - at < 14 * 86_400_000).map(([root]) => root), ...(v.git?.root ? [v.git.root] : [])])
+  const own = (await read($, env)).git?.root
+  return [...new Set([...Object.entries(seen).filter(([, at]) => now - at < 14 * 86_400_000).map(([root]) => root), ...(own ? [own] : [])])]
+}
+
+/** The person's own commits since the start of `from` (a local day), on any branch and without merges, in every recent repository. */
+async function commitsFrom($: Dollar, from: string, tz: number): Promise<(Commit & { day: string })[]> {
+  const [y = 1970, m = 1, d = 1] = from.split('-').map(Number)
+  const since = Math.floor((Date.UTC(y, m - 1, d) - tz * 60_000) / 1000)
   const commits: (Commit & { day: string })[] = []
-  for (const root of roots) {
+  for (const root of await recentRoots($)) {
     const run = (args: string[]) => $.process.run(['git', '-C', root, ...args], { timeoutMs: 5000 }).catch(() => undefined)
     const email = (await run(['config', 'user.email']))?.stdout.trim() ?? ''
     const log = await run(['log', '--all', '--no-merges', `--since=@${since}`, ...(email ? [`--author=${email}`] : []), '--format=%H%x09%ct%x09%s'])
@@ -484,9 +481,63 @@ async function standup($: Dollar): Promise<string> {
       commits.push({ repo: baseName(root), at: ms, subject: rest.join('\t'), day: dayKey(ms, tz) })
     }
   }
-  const text = standupText(today, v.history?.days ?? {}, commits)
+  return commits
+}
+
+/** A note copied to the clipboard as well, and said so under it. */
+async function copiedNote($: Dollar, text: string): Promise<string> {
   const copied = await $.ui.copy({ text }).catch(() => undefined)
   return `${text}\n\n${copied?.isCopied ? t().standup.copied : t().standup.notCopied}`
+}
+
+/**
+ * /mochi standup: the last day worked and today, from the commits of every
+ * repository seen lately and Mochi's history of turns, time and lines.
+ */
+async function standup($: Dollar): Promise<string> {
+  const v = await read($, env)
+  const today = dayKey(await $.clock.now(), v.tz)
+  return copiedNote($, standupText(today, v.history?.days ?? {}, await commitsFrom($, shiftDay(today, -LOOK_BACK_DAYS), v.tz)))
+}
+
+/** /mochi week: the last seven days, for a sprint review or a one-to-one. */
+async function week($: Dollar): Promise<string> {
+  const v = await read($, env)
+  const today = dayKey(await $.clock.now(), v.tz)
+  return copiedNote($, weekText(today, v.history?.days ?? {}, await commitsFrom($, shiftDay(today, -6), v.tz)))
+}
+
+/**
+ * /mochi desk: work not yet safe on a remote in every recent repository:
+ * changes not committed, commits not pushed, branches never pushed (their
+ * commits no remote has). A branch whose upstream is gone was merged and
+ * deleted there (a squash merge leaves its commits on no remote), so it is
+ * left out; a repository with no remote at all counts only its changes.
+ */
+async function desk($: Dollar): Promise<string> {
+  const desks: Desk[] = []
+  for (const root of await recentRoots($)) {
+    const run = (args: string[]) => $.process.run(['git', '-C', root, ...args], { timeoutMs: 5000 }).catch(() => undefined)
+    // Untracked folders as one entry each, as git status shows them.
+    const status = await run(['--no-optional-locks', 'status', '--porcelain=v1', '-b'])
+    if (status?.exitCode !== 0) continue
+    const git = parseGit(status.stdout, '')
+    const hasRemote = ((await run(['remote']))?.stdout.trim() ?? '') !== ''
+    const branches: Desk['branches'] = []
+    const refs = hasRemote ? await run(['for-each-ref', '--format=%(refname:short)%09%(upstream:short)%09%(upstream:track)', 'refs/heads']) : undefined
+    for (const line of (refs?.stdout ?? '').split('\n').filter(Boolean).slice(0, 30)) {
+      const [name = '', upstream = '', track = ''] = line.split('\t')
+      if (track.includes('gone')) continue
+      if (upstream !== '') {
+        branches.push({ name, ahead: Number(/ahead (\d+)/.exec(track)?.[1] ?? 0), hasUpstream: true })
+        continue
+      }
+      const count = await run(['rev-list', '--count', name, '--not', '--remotes'])
+      branches.push({ name, ahead: count?.exitCode === 0 ? Number(count.stdout.trim()) || 0 : 0, hasUpstream: false })
+    }
+    desks.push({ repo: baseName(root), branch: git?.branch ?? '', dirty: git?.files.length ?? 0, branches })
+  }
+  return deskText(desks)
 }
 
 /** A changed file's diff against the last commit (before the first, what is staged); a new file not yet added, all added. */
@@ -1083,10 +1134,10 @@ async function shield($: Dollar, args: Record<string, unknown> & { tool: string 
 
 type Word = keyof Dict['cmd']['words'] | keyof Dict['data']['words'] | 'chats'
 /** A subcommand's name: the key of its words in each language, or a name the same in every language. */
-type Name = Word | 'ci' | 'update' | 'standup'
+type Name = Word | 'ci' | 'update' | 'standup' | 'week' | 'desk'
 
 /** A command's words in the language in use: in `cmd.words`, or, for a newer command, in its own section; none for a name the same in every language. */
-const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' || key === 'standup' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
+const wordsFor = (key: Name): string[] => (key === 'chats' ? t().chats.words.split(' ').filter(Boolean) : key === 'ci' || key === 'standup' || key === 'week' || key === 'desk' ? [] : key === 'update' ? t().update.words.split(' ').filter(Boolean) : { ...t().cmd.words, ...t().data.words }[key])
 
 /** Whether `value` names the command: its English words, or the words of the language in use. */
 const names = (value: string, key: Name, ...english: string[]) => english.includes(value) || wordsFor(key).some(w => plain(w) === value)
@@ -1114,6 +1165,8 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
     { name: 'chats', english: ['chats', 'board'], run: () => chatsNow($) },
     { name: 'standup', english: ['standup', 'daily', 'stand-up'], run: () => standup($) },
+    { name: 'week', english: ['week', 'weekly', 'hafta', 'haftalik'], run: () => week($) },
+    { name: 'desk', english: ['desk', 'leftovers', 'unpushed', 'masa', 'kalanlar'], run: () => desk($) },
     { name: 'card', english: ['card'], run: (_, raw) => card($, raw) },
     { name: 'wrapped', english: ['wrapped', 'wrap'], run: arg => wrapped($, arg) },
     { name: 'snap', english: ['snap', 'snapshot'], run: () => snap($) },
@@ -1267,7 +1320,7 @@ function copyOf(verb: string, text: string): string {
   const lines = text.split('\n')
   if (verb === 'card') return lines.length > 1 ? (lines.at(-1) ?? '') : ''
   // The stand-up note without the line saying it was copied, to copy again.
-  if (verb === 'standup') return lines.slice(0, -2).join('\n')
+  if (verb === 'standup' || verb === 'week') return lines.slice(0, -2).join('\n')
   return verb === 'feedback' ? pathIn(lines.at(-1) ?? '') : ''
 }
 
@@ -1289,6 +1342,8 @@ async function openIt($: Dollar, target: string) {
 async function act($: Dollar, what: string) {
   const [verb = '', scope = ''] = what.split(':')
   const text = verb === 'standup' ? await standup($)
+    : verb === 'week' ? await week($)
+    : verb === 'desk' ? await desk($)
     : verb === 'card' ? await card($, '')
     : verb === 'wrapped' ? await wrapped($, '')
     : verb === 'year' ? await wrapped($, 'year')
