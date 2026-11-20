@@ -231,6 +231,49 @@ fn codex_label(path: Option<&Path>) -> &'static str {
     }
 }
 
+// ---------- updates ----------
+
+/// The first look for a new version, a while after start so it never slows the start; then this often.
+const FIRST_LOOK: Duration = Duration::from_secs(60);
+const LOOK_EVERY: Duration = Duration::from_secs(6 * 60 * 60);
+
+/// Whether this build can update itself: a release build with the key its updates are signed with.
+fn can_update(app: &AppHandle) -> bool {
+    !cfg!(debug_assertions) && is_signed(app.config().plugins.0.get("updater"))
+}
+
+/// Whether the updater's settings carry the key updates are checked against; without one nothing is fetched.
+fn is_signed(updater: Option<&Value>) -> bool {
+    updater.and_then(|u| u.get("pubkey")).and_then(Value::as_str).is_some_and(|key| !key.trim().is_empty())
+}
+
+/// Looks for a new version and, when there is one, puts it in and starts again on it.
+/// The updater checks the new version's signature before it puts anything in.
+async fn update_once(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
+    use tauri_plugin_updater::UpdaterExt;
+    let Some(update) = app.updater()?.check().await? else { return Ok(()) };
+    eprintln!("mochi: updating {} -> {}", update.current_version, update.version);
+    // On Windows the installer closes the app itself and opens the new one.
+    update.download_and_install(|_, _| {}, || {}).await?;
+    app.restart();
+}
+
+fn keep_updated(app: AppHandle) {
+    if !can_update(&app) {
+        return;
+    }
+    thread::spawn(move || {
+        thread::sleep(FIRST_LOOK);
+        loop {
+            // A failed look (offline, GitHub down) is tried again at the next one.
+            if let Err(e) = tauri::async_runtime::block_on(update_once(&app)) {
+                eprintln!("mochi: no update this time: {e}");
+            }
+            thread::sleep(LOOK_EVERY);
+        }
+    });
+}
+
 // ---------- the window ----------
 
 /// macOS keeps a window off the screen an app fills unless the window says it belongs there too.
@@ -272,6 +315,7 @@ fn note(text: String) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![read_live, take_inbox, note, shown])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
@@ -305,6 +349,8 @@ pub fn run() {
                 tray = tray.icon(icon.clone());
             }
             tray.build(app)?;
+
+            keep_updated(app.handle().clone());
 
             let handle = app.handle().clone();
             thread::spawn(move || loop {
@@ -392,6 +438,14 @@ mod tests {
         assert!(k["tool_input"].get("content").is_none());
         assert!(k.get("transcript_path").is_none());
         assert_eq!(k["tool_name"], "Write");
+    }
+
+    #[test]
+    fn updates_are_looked_for_only_with_the_key_they_are_signed_with() {
+        assert!(!is_signed(None));
+        assert!(!is_signed(Some(&json!({}))));
+        assert!(!is_signed(Some(&json!({ "pubkey": "  " }))));
+        assert!(is_signed(Some(&json!({ "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6" }))));
     }
 
     #[test]

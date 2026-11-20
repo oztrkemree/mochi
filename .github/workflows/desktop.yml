@@ -1,0 +1,79 @@
+# The desktop app: built for macOS (Apple silicon and Intel) and Windows, put
+# on a release named for its version, and its update file copied to the
+# release the installed apps look at (desktop-latest).
+#
+# To release: set the version in app/src-tauri/tauri.conf.json and
+# app/package.json, merge, then push a tag desktop-vX.Y.Z on that commit.
+name: desktop
+
+on:
+  push:
+    tags: ['desktop-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: app/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+      - run: pnpm install --frozen-lockfile
+        working-directory: app
+      - run: pnpm test
+        working-directory: app
+      - run: cargo test --target ${{ matrix.target }}
+        if: matrix.target != 'x86_64-apple-darwin'
+        working-directory: app/src-tauri
+      - uses: tauri-apps/tauri-action@action-v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: app
+          tagName: desktop-v__VERSION__
+          releaseName: 'Mochi Buddy desktop __VERSION__'
+          releaseBody: 'Mochi on the desktop. See app/README.md for what it does and how to install it.'
+          releaseDraft: false
+          prerelease: false
+          args: --target ${{ matrix.target }}
+
+  # The installed apps look for desktop-latest/latest.json; the mod's own releases stay the repository's "latest".
+  point:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(jq -r .version app/src-tauri/tauri.conf.json)
+          gh release download "desktop-v$version" --pattern latest.json --dir out
+          gh release view desktop-latest >/dev/null 2>&1 || gh release create desktop-latest --title 'Mochi Buddy desktop: update file' --notes 'Where installed apps look for a new version. Not an install: see the desktop-v releases.' --latest=false
+          gh release upload desktop-latest out/latest.json --clobber
