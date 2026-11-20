@@ -343,6 +343,47 @@ export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: nu
 /** Whether the pose leaves the right hand down and empty, to hold a cup or a balloon. */
 const canHold = (mood: Mood) => POSES[mood].held === undefined && POSES[mood].armR >= -40 && POSES[mood].armR <= 0
 
+/** The person's look as another program reads it (look.json): their own picks, what is open to them, and what the seasons go by. */
+export type Look = { pick: Partial<Outfit>; items: Item[]; tz: number; birthday: string; firstDay: string }
+
+/** The look this chat's Mochi wears by, for the desktop app; null until the history is read. */
+export function lookOf(p: Prefs, v: Env): Look | null {
+  if (v.history === null) return null
+  const items = unlocked(v.history)
+  const pick: Partial<Outfit> = {}
+  for (const slot of SLOTS) {
+    const chosen = p.pick[slot]
+    if (chosen === null || (chosen !== undefined && items.includes(chosen))) pick[slot] = chosen
+  }
+  return { pick, items, tz: v.tz, birthday: p.birthday, firstDay: p.firstDay }
+}
+
+/** A look file's content, checked field by field: a version this does not know, or no picks or items, is no look. */
+export function lookFrom(value: unknown): Look | null {
+  if (typeof value !== 'object' || value === null) return null
+  const v = value as { v?: unknown; pick?: unknown; items?: unknown; tz?: unknown; birthday?: unknown; firstDay?: unknown }
+  if (v.v !== 1 || typeof v.pick !== 'object' || v.pick === null || Array.isArray(v.pick) || !Array.isArray(v.items)) return null
+  const picked = v.pick as Record<string, unknown>
+  const pick: Partial<Outfit> = {}
+  for (const slot of SLOTS) {
+    if (picked[slot] === null) pick[slot] = null
+    else {
+      const item = itemOf(picked[slot])
+      if (item !== null) pick[slot] = item
+    }
+  }
+  return {
+    pick,
+    items: v.items.map(itemOf).filter((i): i is Item => i !== null),
+    tz: typeof v.tz === 'number' && Math.abs(v.tz) <= 14 * 60 ? v.tz : 0,
+    birthday: typeof v.birthday === 'string' && /^\d\d-\d\d$/.test(v.birthday) ? v.birthday : '',
+    firstDay: typeof v.firstDay === 'string' && /^\d{4}-\d\d-\d\d$/.test(v.firstDay) ? v.firstDay : '',
+  }
+}
+
+/** What a Mochi wears in a mood by a look, as the band's Mochi would. */
+export const dressAs = (look: Look, mood: Mood, now: number): Outfit => outfitFor(look.pick, look.items, now, look.tz, mood, canHold(mood), look)
+
 /** What Mochi has on now: the person's choice (while it can still be worn), what it earned, the season and the hour. */
 export function outfitNow(p: Prefs, v: Env, mood: Mood, now: number): Outfit {
   const ok = unlocked(v.history)

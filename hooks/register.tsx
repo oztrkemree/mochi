@@ -20,7 +20,7 @@ import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
-import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
+import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
 import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
 import { floorOf, partyOf, spotAt } from './party'
 import { PANEL_H, panelSvg, toolKind } from './panel'
@@ -714,6 +714,13 @@ async function writeLive($: Dollar, isForced = false) {
   chat.liveKey = key
   chat.liveAt = now
   await $.fs.write(`${chat.dataDir}/live/${chat.sessionId}.json`, JSON.stringify({ ...live, at: now })).catch(() => undefined)
+  // The person's look, for the desktop app's Mochi to wear the same; written when it changes.
+  const look = lookOf(await read($, prefs), await read($, env))
+  const text = look === null ? '' : JSON.stringify({ v: 1, ...look })
+  if (text !== '' && text !== chat.lookKey) {
+    chat.lookKey = text
+    await $.fs.write(`${chat.dataDir}/look.json`, text).catch(() => undefined)
+  }
 }
 
 /** Reads the other chats' files that changed, and says what is worth saying about them. */

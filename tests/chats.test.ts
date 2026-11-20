@@ -456,6 +456,21 @@ test('this chat’s file lists its usage windows in whole percents, and is writt
   expect(liveFile(files).windows[0]).toEqual({ kind: 'five_hour', p: 35, resetsAt })
 })
 
+test('the person’s look is written for the desktop app (look.json), and again when a pick changes it', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const look = () => JSON.parse(files.get('/h/.claude/mochi/look.json') ?? 'null')
+  expect(look()).toMatchObject({ v: 1, pick: {}, birthday: '' })
+  expect(Array.isArray(look().items)).toBe(true)
+  expect(typeof look().tz).toBe('number')
+  // Taking the hat off is a pick too: the app's Mochi goes bareheaded as well.
+  expect((await $.command.run({ command: 'mochi', args: 'wear none' } as never)).text).toBeTruthy()
+  await clock.advance(20_000)
+  expect(look().pick.head).toBeNull()
+})
+
 test('a peer file’s usage windows are read one by one: junk is dropped, percents are whole, four at most; a file without them has none', async () => {
   const at = NOW + 60 * MIN
   const base = { id: 'y', label: 'new', state: 'idle', line: '', since: 0, at: NOW, v: 2 }

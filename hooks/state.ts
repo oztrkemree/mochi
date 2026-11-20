@@ -161,6 +161,8 @@ export const chat = {
   latestAt: 0,
   liveAt: 0,
   liveKey: '',
+  /** The look last written to look.json by this chat. */
+  lookKey: '',
   peersAt: 0,
   peerMtimes: {} as Record<string, number>,
   peerCache: {} as Record<string, Peer>,

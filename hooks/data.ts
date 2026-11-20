@@ -8,9 +8,11 @@ import type { Platform } from './system'
 export type Scope = 'level' | 'history' | 'all'
 
 const isExport = (dir: string, name: string) => dir === '' && name.startsWith('export-')
+/** The desktop app's own file, and the look written for it from the rest: neither is the person's to take out. */
+const isForApp = (dir: string, name: string) => dir === '' && (name === 'app.json' || name === 'look.json')
 
-/** Whether an export takes this file: every JSON file Mochi keeps but the other chats' presence and earlier exports. */
-export const isExported = (dir: string, name: string): boolean => name.endsWith('.json') && dir !== 'live' && !isExport(dir, name)
+/** Whether an export takes this file: every JSON file Mochi keeps but the other chats' presence, what is kept for the desktop app, and earlier exports. */
+export const isExported = (dir: string, name: string): boolean => name.endsWith('.json') && dir !== 'live' && !isExport(dir, name) && !isForApp(dir, name)
 
 /**
  * Whether a reset of `scope` removes this file. The level's memory goes with
@@ -19,7 +21,7 @@ export const isExported = (dir: string, name: string): boolean => name.endsWith(
  * the rules they wrote, which Mochi could not write again.
  */
 export function isCleared(scope: Scope, dir: string, name: string): boolean {
-  if (!name.endsWith('.json') || isExport(dir, name) || (dir === '' && name === 'shield.json')) return false
+  if (!name.endsWith('.json') || isExport(dir, name) || (dir === '' && (name === 'shield.json' || name === 'app.json'))) return false
   if (dir === '' && name === 'level.json') return true
   if (scope === 'history') return dir === 'days'
   return scope === 'all'

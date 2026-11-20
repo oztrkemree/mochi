@@ -6,7 +6,7 @@ import { asciiRows, kaomoji, LOOKS } from '../hooks/looks'
 import { changesPieces, detailSvg, levelSummary, levelSvg, pieceSvg } from '../hooks/detail'
 import { addSample, clockAt, contextWarning, dayKey, dirOf, forecastFull, freshDiff, lineCount, lineDelta, parseDiff, parseGit, parseNumstat, shiftDay, timeGone, turnsLeft, warnLevel, weekHabit, withLines } from '../hooks/facts'
 import { NEW_WATCH, danger, watchCall } from '../hooks/guard'
-import { itemOf, levelOf, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
+import { dressAs, itemOf, levelOf, lookFrom, outfitFor, summarize, unlocked, xpOf } from '../hooks/level'
 import { peerLabel, peerNews, peersLine } from '../hooks/live'
 import { DICTS, LANGS, pickLang, setLang } from '../hooks/i18n'
 import { NO_DIFF, NO_ENV, NO_INFO, restorePrefs } from '../hooks/state'
@@ -493,6 +493,22 @@ test('days add up into a history, a level and things to wear', async () => {
   // The face is four slots: glasses, a mustache, a beard and something else, all at once.
   expect(outfitFor({ eyes: 'sunglasses', lip: 'mustache', chin: 'beard', face: 'freckles' }, [], noon, 180, 'idle', true)).toEqual({ ...none, eyes: 'sunglasses', lip: 'mustache', chin: 'beard', face: 'freckles' })
   expect(outfitFor({ held: 'balloon' }, [], noon, 180, 'success', false).held).toBe(null)
+})
+
+test('the look another program reads (look.json) dresses its Mochi as the band dresses this one, and what is not a look reads as none', async () => {
+  const look = lookFrom({ v: 1, pick: { head: 'tophat', eyes: 'monocle', lip: null, neck: 'not-an-item' }, items: ['tophat', 'monocle', 42, 'bowtie'], tz: 180, birthday: '03-14', firstDay: '' })
+  expect(look).toEqual({ pick: { head: 'tophat', eyes: 'monocle', lip: null }, items: ['tophat', 'monocle', 'bowtie'], tz: 180, birthday: '03-14', firstDay: '' })
+  const noon = Date.UTC(2026, 6, 1, 9, 0)
+  const none = { head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null }
+  // What was picked is worn; an empty slot takes what is open, as in the band.
+  expect(dressAs(look!, 'idle', noon)).toEqual({ ...none, head: 'tophat', eyes: 'monocle', neck: 'bowtie' })
+  // Asleep it is still the person's own hat, never one the program made up.
+  expect(dressAs(look!, 'sleeping', noon).head).toBe('tophat')
+  expect(lookFrom(null)).toBeNull()
+  expect(lookFrom({ v: 2, pick: {}, items: [] })).toBeNull()
+  expect(lookFrom({ v: 1, pick: 'x', items: [] })).toBeNull()
+  // A missing or odd zone and dates read as none, not as a reason to drop the look.
+  expect(lookFrom({ v: 1, pick: {}, items: [], tz: 'x', birthday: 'soon' })).toEqual({ pick: {}, items: [], tz: 0, birthday: '', firstDay: '' })
 })
 
 test('the wardrobe puts on, takes off and goes back to automatic', async ($, on) => {
