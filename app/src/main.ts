@@ -3,6 +3,8 @@ import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Moni
 import { openUrl } from '@tauri-apps/plugin-opener'
 
 import { pickLang, setLang } from '../../hooks/i18n'
+import { type Look, lookFrom } from '../../hooks/level'
+import { PEER_INK } from '../../hooks/live'
 import { type Sessions, agentPeers, hookedOf, noted } from './agents'
 import { type Area, areaOf, fit } from './place'
 import { type View, newsOf, peersOf, viewOf } from './world'
@@ -29,6 +31,20 @@ addEventListener('error', e => note(e.error ?? e.message))
 addEventListener('unhandledrejection', e => note(e.reason))
 
 let view: View | null = null
+/** The look the mod last wrote, kept by its text so it is read again only when it changes. */
+let look: { text: string | null; value: Look | null } = { text: null, value: null }
+function lookOf(text: string | null): Look | null {
+  if (text !== look.text) {
+    let value: unknown = null
+    try {
+      value = text === null ? null : JSON.parse(text)
+    } catch {
+      value = null
+    }
+    look = { text, value: lookFrom(value) }
+  }
+  return look.value
+}
 /** Codex and the like, known from their hook calls. */
 const agents: Sessions = new Map()
 /** When what Mochi says now comes down; 0 with nothing said. */
@@ -77,8 +93,8 @@ async function place() {
   }
   const isSaying = say.classList.contains('on')
   // The window's size in points; in pixels on Windows, at the scale of the screen it goes to.
-  const w = isSaying ? Math.max(SIZE, say.offsetWidth + 10) : SIZE
-  const h = isSaying ? SIZE - 4 + say.offsetHeight : SIZE
+  const w = isSaying ? Math.max(SIZE, say.offsetWidth + 18) : SIZE
+  const h = isSaying ? SIZE + 2 + say.offsetHeight : SIZE
   const k = isMac ? 1 : monitor.scaleFactor
   const size = { w: Math.round(w * k), h: Math.round(h * k) }
   put = { ...fit(corner!, size.w, size.h, area), ...size }
@@ -91,7 +107,12 @@ async function place() {
   }
 }
 
-async function speak(text: string, ms: number) {
+/** The dot before what Mochi says, in the ink the band gives that news: waiting, done, failed; grey for an answer to a press. */
+const NEWS_INK: Record<'asking' | 'done' | 'failed', string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error }
+const QUIET_INK = PEER_INK.idle
+
+async function speak(text: string, ms: number, ink = QUIET_INK) {
+  say.style.setProperty('--ink', ink)
   say.textContent = text
   say.classList.add('on')
   saidUntil = Date.now() + ms
@@ -111,7 +132,8 @@ async function read() {
     const hooked = hookedOf(call)
     if (hooked) noted(agents, hooked)
   }
-  const next = viewOf([...peersOf(texts, now), ...agentPeers(agents, now)], now)
+  const lookText = await invoke<string | null>('read_look').catch(() => null)
+  const next = viewOf([...peersOf(texts, now), ...agentPeers(agents, now)], now, lookOf(lookText))
   const before = view
   view = next
   // The drawing loops by itself: it is put on screen again only when it differs, so its motion never starts over for nothing.
@@ -133,7 +155,7 @@ async function read() {
     return
   }
   const news = newsOf(before.peers, next.peers, now)
-  if (news.length > 0) await speak(news.slice(0, 3).join('\n'), NEWS_MS)
+  if (news.length > 0) await speak(news.slice(0, 3).map(n => n.line).join('\n'), NEWS_MS, NEWS_INK[news[0].kind])
   else if (saidUntil > 0 && now >= saidUntil) await hush()
 }
 

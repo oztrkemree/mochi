@@ -1,5 +1,6 @@
-import type { Mood, Peer } from '../../types'
-import { appLink, peerNews, peerOf, peersLine } from '../../hooks/live'
+import type { Mood, Outfit, Peer } from '../../types'
+import { type Look, dressAs } from '../../hooks/level'
+import { type PeerNews, appLink, peerNews, peerOf, peersLine } from '../../hooks/live'
 import { crowdOf, membersOf, moodOf } from '../../hooks/party'
 import { svgFor } from '../../hooks/rig'
 import { t } from '../../hooks/i18n'
@@ -12,6 +13,8 @@ import { t } from '../../hooks/i18n'
 export type View = {
   svg: string
   mood: Mood
+  /** What Mochi wears, by the look the mod writes; undefined before there is one. */
+  outfit: Outfit | undefined
   /** Opens the chat Mochi stands for, in the Claude app; '' when no chat is open or it runs where a link cannot reach. */
   link: string
   /** How things stand in one line, for a press: who needs a look, or else what Mochi is doing. */
@@ -36,12 +39,14 @@ export function peersOf(texts: readonly string[], now: number): Peer[] {
 }
 
 /** Mochi as it stands now: asleep with no chat open, else as the most pressing one (waiting, failed, working, done, at rest). */
-export function viewOf(peers: readonly Peer[], now: number): View {
+export function viewOf(peers: readonly Peer[], now: number, look: Look | null = null): View {
   const lead = membersOf(crowdOf(peers, now))[0]
   const mood = lead ? moodOf(lead, now) : 'sleeping'
+  const outfit = look ? dressAs(look, mood, now) : undefined
   return {
-    svg: svgFor({ mood, scene: { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0) }, from: null }),
+    svg: svgFor({ mood, scene: { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0), outfit }, from: null }),
     mood,
+    outfit,
     link: appLink(lead?.peer.app),
     line: peersLine(peers) ?? t().mood[mood],
     peers,
@@ -49,4 +54,4 @@ export function viewOf(peers: readonly Peer[], now: number): View {
 }
 
 /** What Mochi has to say about the change from one read to the next: a chat waits, ended a long turn, or failed. */
-export const newsOf = (before: readonly Peer[], after: readonly Peer[], now: number): string[] => peerNews(before, after, now).map(n => n.line)
+export const newsOf = (before: readonly Peer[], after: readonly Peer[], now: number): PeerNews[] => peerNews(before, after, now)

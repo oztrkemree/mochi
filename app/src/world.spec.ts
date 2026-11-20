@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 
 import { setLang } from '../../hooks/i18n'
 import { ALIVE_MS } from '../../hooks/live'
+import { lookFrom } from '../../hooks/level'
 import { newsOf, peersOf, viewOf } from './world'
 
 setLang('en')
@@ -47,8 +48,18 @@ test('Mochi speaks up when a chat starts to wait, ends a long turn or fails, and
   const before = peersOf([file('fix-login', { state: 'busy', since: NOW - 5 * MIN }), file('api', { state: 'busy', since: NOW - 5 * MIN }), file('docs', { state: 'busy', since: NOW - 1000 })], NOW)
   const after = peersOf([file('fix-login', { state: 'asking' }), file('api', { state: 'idle' }), file('docs', { state: 'idle' })], NOW)
   // A turn of a second is not news; one of five minutes is.
-  expect(newsOf(before, after, NOW)).toEqual(['‘fix-login’ is waiting for you', '‘api’ finished · 5m'])
+  expect(newsOf(before, after, NOW)).toEqual([{ kind: 'asking', line: '‘fix-login’ is waiting for you' }, { kind: 'done', line: '‘api’ finished · 5m' }])
   expect(newsOf(after, after, NOW)).toEqual([])
   // A chat seen for the first time has no before: nothing is said of it.
   expect(newsOf([], after, NOW)).toEqual([])
+})
+
+test('Mochi wears what the band’s Mochi wears, by the look the mod writes; with no look yet it wears what the season gives', () => {
+  const look = lookFrom({ v: 1, pick: { head: 'tophat', eyes: 'monocle' }, items: ['tophat', 'monocle'], tz: 180, birthday: '', firstDay: '' })!
+  const dressed = viewOf(peersOf([file('docs', { state: 'busy', activity: 'writing' })], NOW), NOW, look)
+  expect(dressed.outfit).toMatchObject({ head: 'tophat', eyes: 'monocle' })
+  expect(dressed.svg).not.toBe(viewOf(peersOf([file('docs', { state: 'busy', activity: 'writing' })], NOW), NOW).svg)
+  // Asleep with no chat open, still in the person's own hat.
+  expect(viewOf([], NOW, look).outfit?.head).toBe('tophat')
+  expect(viewOf([], NOW).outfit).toBeUndefined()
 })

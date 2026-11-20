@@ -63,6 +63,12 @@ fn read_live() -> Vec<String> {
     data_dir().map(|d| fresh_files(&d.join("live"))).unwrap_or_default()
 }
 
+/// The person's look as the mod last wrote it, for this Mochi to wear the same; None before there is one.
+#[tauri::command]
+fn read_look() -> Option<String> {
+    fs::read_to_string(data_dir()?.join("look.json")).ok().filter(|t| t.len() < 64_000)
+}
+
 // ---------- the app's own beat ----------
 
 /// What the app says of itself in app.json: when, and whether its Mochi is on screen.
@@ -323,7 +329,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![read_live, take_inbox, note, shown])
+        .invoke_handler(tauri::generate_handler![read_live, read_look, take_inbox, note, shown])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
