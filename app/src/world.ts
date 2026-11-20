@@ -1,13 +1,22 @@
-import type { Peer } from '../../types'
-import { appLink, peerOf } from '../../hooks/live'
-import { type Spot, crowdOf, floorOf, spotAt } from '../../hooks/party'
+import type { Mood, Peer } from '../../types'
+import { appLink, peerNews, peerOf, peersLine } from '../../hooks/live'
+import { crowdOf, membersOf, moodOf } from '../../hooks/party'
 import { svgFor } from '../../hooks/rig'
 
-/** What the window shows: one drawing, its size in its own units, and where each chat's Mochi stands in it. */
-export type View = { svg: string; width: number; height: number; spots: Spot[]; peers: readonly Peer[] }
-
-/** The side of the square a Mochi alone sleeps in. */
-export const LONE = 96
+/**
+ * What the window shows: one Mochi that stands for every chat. It wears the
+ * face of the chat that most needs the person; what else there is to know it
+ * says, when it happens, and is not on screen the rest of the time.
+ */
+export type View = {
+  svg: string
+  mood: Mood
+  /** Opens the chat Mochi stands for, in the Claude app; '' when no chat is open or it runs where a link cannot reach. */
+  link: string
+  /** How things stand in one line, for a press; '' when nothing needs a look. */
+  line: string
+  peers: readonly Peer[]
+}
 
 /** The chats alive now, from the text of their files as the mod wrote them; the first file of a chat wins. */
 export function peersOf(texts: readonly string[], now: number): Peer[] {
@@ -25,14 +34,18 @@ export function peersOf(texts: readonly string[], now: number): Peer[] {
   return [...peers.values()]
 }
 
-/** The floor with every chat on it, or one Mochi asleep when no chat is open. */
+/** Mochi as it stands now: asleep with no chat open, else as the most pressing one (waiting, failed, working, done, at rest). */
 export function viewOf(peers: readonly Peer[], now: number): View {
-  if (peers.length === 0) return { svg: svgFor({ mood: 'sleeping', scene: { context: -1, agents: 0 }, from: null }), width: LONE, height: LONE, spots: [], peers }
-  return { ...floorOf(crowdOf(peers, now), now), peers }
+  const lead = membersOf(crowdOf(peers, now))[0]
+  const mood = lead ? moodOf(lead, now) : 'sleeping'
+  return {
+    svg: svgFor({ mood, scene: { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0) }, from: null }),
+    mood,
+    link: appLink(lead?.peer.app),
+    line: peersLine(peers) ?? '',
+    peers,
+  }
 }
 
-/** The link that opens the chat whose Mochi stands at `fx` (0 to 1 across the drawing); '' where none does or it cannot be opened. */
-export function linkAt(view: View, fx: number): string {
-  const id = spotAt(view, fx)
-  return appLink(view.peers.find(p => p.id === id)?.app)
-}
+/** What Mochi has to say about the change from one read to the next: a chat waits, ended a long turn, or failed. */
+export const newsOf = (before: readonly Peer[], after: readonly Peer[], now: number): string[] => peerNews(before, after, now).map(n => n.line)

@@ -323,7 +323,7 @@ const MUG_MOODS: ReadonlySet<Mood> = new Set(['idle', 'listening', 'pleased', 's
  */
 export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood, canHold: boolean, own: Own = NO_OWN): Outfit {
   const s = season(now, tz, own)
-  const dressed = (i: Item | undefined) => (i !== undefined && items.includes(i) ? i : undefined)
+  const dressed = (i: Item | null | undefined) => (i != null && items.includes(i) ? i : undefined)
   const isAsleep = mood === 'sleeping' || mood === 'sleepy'
   const head = pick.head !== undefined ? pick.head : dressed(s.head) ?? (isAsleep || s.isNight ? 'nightcap' : HEAD_RANK.find(i => items.includes(i)) ?? null)
   const neck = pick.neck !== undefined ? pick.neck : dressed(s.neck) ?? NECK_RANK.find(i => items.includes(i)) ?? null
