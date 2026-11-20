@@ -25,10 +25,10 @@ test('the chats are what their files say: junk, a file gone silent and a second 
 })
 
 test('one Mochi stands for every chat: asleep with none open, and otherwise as the chat that most needs the person', () => {
-  expect(viewOf([], NOW)).toMatchObject({ mood: 'sleeping', link: '', line: '' })
+  expect(viewOf([], NOW)).toMatchObject({ mood: 'sleeping', link: '', line: 'asleep' })
   expect(viewOf([], NOW).svg.startsWith('<svg')).toBe(true)
 
-  expect(viewOf(peersOf([file('docs')], NOW), NOW).mood).toBe('idle')
+  expect(viewOf(peersOf([file('docs')], NOW), NOW)).toMatchObject({ mood: 'idle', line: 'idle' })
   expect(viewOf(peersOf([file('docs'), file('api', { state: 'busy', activity: 'writing' })], NOW), NOW)).toMatchObject({ mood: 'writing', line: 'api is working' })
   // A chat that waits for the person comes before any that works.
   const waiting = viewOf(peersOf([file('api', { state: 'busy', activity: 'writing' }), file('fix-login', { state: 'asking' })], NOW), NOW)

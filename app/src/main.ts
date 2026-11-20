@@ -1,9 +1,10 @@
 import { invoke } from '@tauri-apps/api/core'
-import { LogicalPosition, LogicalSize, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
+import { LogicalPosition, LogicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
 import { pickLang, setLang } from '../../hooks/i18n'
 import { type Sessions, agentPeers, hookedOf, noted } from './agents'
+import { type Area, areaOf, fit } from './place'
 import { type View, newsOf, peersOf, viewOf } from './world'
 
 const stage = document.getElementById('stage')!
@@ -47,17 +48,24 @@ function remembered(): { x: number; y: number } | null {
   }
 }
 
-/** Sizes the window to Mochi and what it says, and keeps its bottom right corner where the person left it. */
+/** A screen's work area in points. */
+const areaIn = (m: Monitor): Area => ({ x: m.workArea.position.x / m.scaleFactor, y: m.workArea.position.y / m.scaleFactor, w: m.workArea.size.width / m.scaleFactor, h: m.workArea.size.height / m.scaleFactor })
+
+/** Sizes the window to Mochi and what it says, and keeps its bottom right corner where the person left it, whole on that screen. */
 async function place() {
-  const monitor = await currentMonitor()
-  if (!monitor) return
-  const k = monitor.scaleFactor
-  const area = { x: monitor.workArea.position.x / k, y: monitor.workArea.position.y / k, w: monitor.workArea.size.width / k, h: monitor.workArea.size.height / k }
+  const areas = (await availableMonitors()).map(areaIn)
+  let area = corner ? areaOf(corner, areas) : null
+  if (!area) {
+    // The first start, or the screen it was left on is gone: the bottom right of the screen the window is on.
+    const monitor = await currentMonitor()
+    if (!monitor) return
+    area = areaIn(monitor)
+    corner = { x: area.x + area.w - EDGE, y: area.y + area.h - EDGE }
+  }
   const isSaying = say.classList.contains('on')
   const w = isSaying ? Math.max(SIZE, say.offsetWidth + 10) : SIZE
   const h = isSaying ? SIZE - 4 + say.offsetHeight : SIZE
-  corner ??= { x: area.x + area.w - EDGE, y: area.y + area.h - EDGE }
-  put = { x: Math.max(area.x, corner.x - w), y: Math.max(area.y, corner.y - h), w, h }
+  put = { ...fit(corner!, w, h, area), w, h }
   await win.setSize(new LogicalSize(w, h))
   await win.setPosition(new LogicalPosition(put.x, put.y))
 }
@@ -92,8 +100,9 @@ async function read() {
     await win.show()
     await invoke('shown')
     // From here on a move is the person's: where they leave the window is where its corner stays. Before it, the system's own first placing is not.
-    const k = await win.scaleFactor()
-    void win.onMoved(({ payload }) => {
+    void win.onMoved(async ({ payload }) => {
+      // The scale of the screen the window is on now: a pull to another screen may change it.
+      const k = await win.scaleFactor()
       const x = payload.x / k
       const y = payload.y / k
       if (Math.abs(x - put.x) <= 1 && Math.abs(y - put.y) <= 1) return
@@ -121,7 +130,7 @@ addEventListener('pointerup', () => {
   if (!pressed || !view) return
   pressed = null
   if (view.link) void openUrl(view.link)
-  else if (view.line) void speak(view.line, ANSWER_MS)
+  else void speak(view.line, ANSWER_MS)
 })
 
 // One read at a time: a slow one is not overtaken by the next.

@@ -15,6 +15,8 @@ It works for macOS and Windows.
 - **Claude Code with the Mochi Buddy mod:** every chat's Mochi already writes a small file under `~/.claude/mochi/live/`. The app reads those once a second. Nothing to set up.
 - **Codex:** in the tray menu, **Connect Codex**. It adds Mochi's entries to `~/.codex/hooks.json` (or `$CODEX_HOME/hooks.json`), after any you have, and keeps the file as it was once, beside it, as `hooks.json.mochi-backup`. Codex asks you to approve new hooks: run `/hooks` once in Codex. **Disconnect Codex** takes Mochi's entries out again and leaves yours.
 
+On Windows the Codex connection is not tried yet: if Codex runs hooks through PowerShell, the quoted path may need `&` before it.
+
 Each Codex hook runs `mochi-desktop hook codex`, which takes the call and is gone: it prints nothing, never stops Codex, and writes nothing while the app is not running. While the app runs, it leaves each call in `~/.claude/mochi/inbox/` for the app to take, keeping only what the app reads: which event, the session and folder, the tool's name, the first 300 characters of a command and the first 200 of a prompt.
 
 ## The mod and the app together

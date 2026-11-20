@@ -18,10 +18,16 @@ const MOST: usize = 64;
 /// The hook calls one read takes from the inbox; the rest wait a second.
 const MOST_CALLS: usize = 500;
 
+/// The person's home folder, as the mod and Codex take it: on Windows the user profile, which a Unix shell's HOME may not be.
+fn home_dir() -> Option<PathBuf> {
+    let var = |name: &str| std::env::var_os(name).filter(|v| !v.is_empty());
+    let home = if cfg!(windows) { var("USERPROFILE").or_else(|| var("HOME")) } else { var("HOME").or_else(|| var("USERPROFILE")) };
+    home.map(PathBuf::from)
+}
+
 /// Where Mochi keeps its files, the same folder the mod writes: ~/.claude/mochi.
 fn data_dir() -> Option<PathBuf> {
-    let home = std::env::var_os("HOME").filter(|h| !h.is_empty()).or_else(|| std::env::var_os("USERPROFILE"))?;
-    Some(PathBuf::from(home).join(".claude").join("mochi"))
+    Some(home_dir()?.join(".claude").join("mochi"))
 }
 
 fn now_ms() -> u128 {
@@ -101,11 +107,15 @@ fn drop_in(dir: &Path, source: &str, input: &str, at: u128, pid: u32) -> Option<
     write_whole(&path, &json!({ "source": source, "at": at as u64, "event": kept(&event) }).to_string()).then_some(path)
 }
 
+/// Whether the app is running, by its beat: with it gone nobody empties the inbox, so the hook puts nothing in.
+fn is_running(dir: &Path) -> bool {
+    is_fresh(&dir.join("app.json"))
+}
+
 /// The `hook` command. It prints nothing and never fails: an agent's hook must not stand in the agent's way.
 pub fn hook(source: &str) {
     let Some(dir) = data_dir() else { return };
-    // With the app not running nobody empties the inbox, so nothing goes in.
-    if !is_fresh(&dir.join("app.json")) {
+    if !is_running(&dir) {
         return;
     }
     let mut input = String::new();
@@ -196,10 +206,7 @@ fn connected(config: Value, command: &str) -> Option<Value> {
 }
 
 fn codex_hooks_path() -> Option<PathBuf> {
-    let home = std::env::var_os("CODEX_HOME").filter(|h| !h.is_empty()).map(PathBuf::from).or_else(|| {
-        let home = std::env::var_os("HOME").filter(|h| !h.is_empty()).or_else(|| std::env::var_os("USERPROFILE"))?;
-        Some(PathBuf::from(home).join(".codex"))
-    })?;
+    let home = std::env::var_os("CODEX_HOME").filter(|h| !h.is_empty()).map(PathBuf::from).or_else(|| Some(home_dir()?.join(".codex")))?;
     Some(home.join("hooks.json"))
 }
 
@@ -412,6 +419,17 @@ mod tests {
     }
 
     #[test]
+    fn the_hook_counts_the_app_as_running_only_while_its_beat_is_on_disk() {
+        let dir = scratch("running");
+        assert!(!is_running(&dir));
+        write_whole(&dir.join("app.json"), &beat_text(now_ms(), true));
+        assert!(is_running(&dir));
+        fs::remove_file(dir.join("app.json")).unwrap();
+        assert!(!is_running(&dir));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
     fn hook_calls_wait_in_the_inbox_in_the_order_they_came_and_are_taken_once() {
         let dir = scratch("inbox");
         drop_in(&dir, "codex", r#"{"hook_event_name":"Stop","session_id":"s1"}"#, 2000, 7).unwrap();
@@ -461,7 +479,7 @@ mod tests {
         assert_eq!(once["hooks"]["Stop"][0]["hooks"][0]["command"], "say done");
         assert_eq!(once["hooks"]["PreToolUse"][0]["matcher"], "*");
         assert!(once["hooks"]["Stop"][1].get("matcher").is_none());
-        assert_eq!(once["hooks"].as_object().unwrap().len(), CODEX_EVENTS.len());
+        assert_eq!(once["hooks"].as_object().unwrap().len(), 10);
         // Taking Mochi out again leaves exactly what was there.
         assert_eq!(disconnected(once).unwrap(), theirs);
         // A config that is not what Codex writes is not touched.

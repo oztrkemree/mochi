@@ -2,6 +2,7 @@ import type { Mood, Peer } from '../../types'
 import { appLink, peerNews, peerOf, peersLine } from '../../hooks/live'
 import { crowdOf, membersOf, moodOf } from '../../hooks/party'
 import { svgFor } from '../../hooks/rig'
+import { t } from '../../hooks/i18n'
 
 /**
  * What the window shows: one Mochi that stands for every chat. It wears the
@@ -13,7 +14,7 @@ export type View = {
   mood: Mood
   /** Opens the chat Mochi stands for, in the Claude app; '' when no chat is open or it runs where a link cannot reach. */
   link: string
-  /** How things stand in one line, for a press; '' when nothing needs a look. */
+  /** How things stand in one line, for a press: who needs a look, or else what Mochi is doing. */
   line: string
   peers: readonly Peer[]
 }
@@ -42,7 +43,7 @@ export function viewOf(peers: readonly Peer[], now: number): View {
     svg: svgFor({ mood, scene: { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0) }, from: null }),
     mood,
     link: appLink(lead?.peer.app),
-    line: peersLine(peers) ?? '',
+    line: peersLine(peers) ?? t().mood[mood],
     peers,
   }
 }
