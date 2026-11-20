@@ -25,7 +25,7 @@ While the app's Mochi is on screen it writes `~/.claude/mochi/app.json` every 15
 
 ## Updates
 
-A release build looks for a new version a minute after it starts and every 6 hours, on this repository's `desktop-latest` release. It checks the new version's signature before it puts anything in, then starts again on it. Nothing is sent but that request.
+Updates start with the first release signed with the project's key; until then the app looks for none. From that release on, the app looks for a new version a minute after it starts and every 6 hours, on this repository's `desktop-latest` release. It checks the new version's signature before it puts anything in, then starts again on it. Nothing is sent but that request.
 
 ## Install
 
@@ -50,4 +50,4 @@ cd src-tauri && cargo test   # files, the inbox, Codex's hooks file
 
 The drawing and the rules are the mod's own files in `../hooks`; the app imports them as they are.
 
-To release: set the version in `src-tauri/tauri.conf.json` and `package.json`, merge, and push a tag `desktop-vX.Y.Z` on that commit. `.github/workflows/desktop.yml` builds the three installers, signs the update files with the `TAURI_SIGNING_PRIVATE_KEY` secret and points `desktop-latest` at them.
+To release: set the version in `src-tauri/tauri.conf.json` and `package.json`, merge, and push a tag `desktop-vX.Y.Z` on that commit. `.github/workflows/desktop.yml` builds the three installers. With the `TAURI_SIGNING_PRIVATE_KEY` secret set (and the key's public half as `plugins.updater.pubkey` in `tauri.conf.json`), it also signs the update files and points `desktop-latest` at them; without it, it builds installers that do not update themselves.

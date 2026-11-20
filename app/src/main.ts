@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import { LogicalPosition, LogicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
+import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
 import { pickLang, setLang } from '../../hooks/i18n'
@@ -33,7 +33,7 @@ let view: View | null = null
 const agents: Sessions = new Map()
 /** When what Mochi says now comes down; 0 with nothing said. */
 let saidUntil = 0
-/** Where the window's bottom right corner sits, in screen points: the window grows up and to the left of it. */
+/** Where the window's bottom right corner sits (in the unit of `isMac` below): the window grows up and to the left of it. */
 let corner: { x: number; y: number } | null = remembered()
 /** Where this last put the window, and how large: a move to anywhere else is the person's own. */
 let put = { x: 0, y: 0, w: 0, h: 0 }
@@ -48,26 +48,47 @@ function remembered(): { x: number; y: number } | null {
   }
 }
 
-/** A screen's work area in points. */
-const areaIn = (m: Monitor): Area => ({ x: m.workArea.position.x / m.scaleFactor, y: m.workArea.position.y / m.scaleFactor, w: m.workArea.size.width / m.scaleFactor, h: m.workArea.size.height / m.scaleFactor })
+/**
+ * Places are kept in the unit the system lays its screens out in: points on
+ * macOS, where every screen shares them, and pixels on Windows, where a 2x
+ * screen's points would overlap a 1x screen's.
+ */
+const isMac = /Mac/i.test(navigator.userAgent)
+
+/** A screen's work area in that unit. */
+function areaIn(m: Monitor): Area {
+  const k = isMac ? m.scaleFactor : 1
+  return { x: m.workArea.position.x / k, y: m.workArea.position.y / k, w: m.workArea.size.width / k, h: m.workArea.size.height / k }
+}
 
 /** Sizes the window to Mochi and what it says, and keeps its bottom right corner where the person left it, whole on that screen. */
 async function place() {
-  const areas = (await availableMonitors()).map(areaIn)
+  const monitors = await availableMonitors()
+  const areas = monitors.map(areaIn)
   let area = corner ? areaOf(corner, areas) : null
-  if (!area) {
+  let monitor = area ? monitors[areas.indexOf(area)] : null
+  if (!area || !monitor) {
     // The first start, or the screen it was left on is gone: the bottom right of the screen the window is on.
-    const monitor = await currentMonitor()
+    monitor = await currentMonitor()
     if (!monitor) return
     area = areaIn(monitor)
-    corner = { x: area.x + area.w - EDGE, y: area.y + area.h - EDGE }
+    const edge = isMac ? EDGE : EDGE * monitor.scaleFactor
+    corner = { x: area.x + area.w - edge, y: area.y + area.h - edge }
   }
   const isSaying = say.classList.contains('on')
+  // The window's size in points; in pixels on Windows, at the scale of the screen it goes to.
   const w = isSaying ? Math.max(SIZE, say.offsetWidth + 10) : SIZE
   const h = isSaying ? SIZE - 4 + say.offsetHeight : SIZE
-  put = { ...fit(corner!, w, h, area), w, h }
-  await win.setSize(new LogicalSize(w, h))
-  await win.setPosition(new LogicalPosition(put.x, put.y))
+  const k = isMac ? 1 : monitor.scaleFactor
+  const size = { w: Math.round(w * k), h: Math.round(h * k) }
+  put = { ...fit(corner!, size.w, size.h, area), ...size }
+  if (isMac) {
+    await win.setSize(new LogicalSize(w, h))
+    await win.setPosition(new LogicalPosition(put.x, put.y))
+  } else {
+    await win.setSize(new PhysicalSize(size.w, size.h))
+    await win.setPosition(new PhysicalPosition(Math.round(put.x), Math.round(put.y)))
+  }
 }
 
 async function speak(text: string, ms: number) {
@@ -101,8 +122,8 @@ async function read() {
     await invoke('shown')
     // From here on a move is the person's: where they leave the window is where its corner stays. Before it, the system's own first placing is not.
     void win.onMoved(async ({ payload }) => {
-      // The scale of the screen the window is on now: a pull to another screen may change it.
-      const k = await win.scaleFactor()
+      // On macOS, in points at the scale of the screen the window is on now: a pull to another screen may change it.
+      const k = isMac ? await win.scaleFactor() : 1
       const x = payload.x / k
       const y = payload.y / k
       if (Math.abs(x - put.x) <= 1 && Math.abs(y - put.y) <= 1) return

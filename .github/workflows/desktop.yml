@@ -16,8 +16,10 @@ permissions:
 
 jobs:
   build:
+    # One at a time: each job adds its computer to the one latest.json on the release.
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - os: macos-latest
@@ -27,6 +29,9 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
+    env:
+      # Without the signing key the installers are built all the same; they just do not update themselves.
+      HAS_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -50,6 +55,10 @@ jobs:
       - run: cargo test --target ${{ matrix.target }}
         if: matrix.target != 'x86_64-apple-darwin'
         working-directory: app/src-tauri
+      - name: Sign the update files, with the key there
+        if: env.HAS_KEY == 'true'
+        working-directory: app/src-tauri
+        run: node -e "const f='tauri.conf.json',c=JSON.parse(require('fs').readFileSync(f));c.bundle.createUpdaterArtifacts=true;require('fs').writeFileSync(f,JSON.stringify(c,null,2))"
       - uses: tauri-apps/tauri-action@action-v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,7 +73,7 @@ jobs:
           prerelease: false
           args: --target ${{ matrix.target }}
 
-  # The installed apps look for desktop-latest/latest.json; the mod's own releases stay the repository's "latest".
+  # The mod's own releases stay the repository's latest; the installed apps look for desktop-latest/latest.json.
   point:
     needs: build
     runs-on: ubuntu-latest
@@ -74,6 +83,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(jq -r .version app/src-tauri/tauri.conf.json)
-          gh release download "desktop-v$version" --pattern latest.json --dir out
+          gh release edit "desktop-v$version" --latest=false
+          mod=$(gh release list --exclude-drafts --exclude-pre-releases --limit 100 --json tagName,createdAt --jq '[.[] | select(.tagName | test("^v[0-9]"))] | sort_by(.createdAt) | last | .tagName // empty')
+          if [ -n "$mod" ]; then gh release edit "$mod" --latest; fi
+          if ! gh release download "desktop-v$version" --pattern latest.json --dir out; then
+            echo "No latest.json: built without the signing key, so installed apps are not pointed at this release."
+            exit 0
+          fi
           gh release view desktop-latest >/dev/null 2>&1 || gh release create desktop-latest --title 'Mochi Buddy desktop: update file' --notes 'Where installed apps look for a new version. Not an install: see the desktop-v releases.' --latest=false
           gh release upload desktop-latest out/latest.json --clobber
