@@ -95,11 +95,8 @@ export function rowsOf(peers: readonly Peer[], now: number, hideIdleAfterMs = 0)
   }))
 }
 
-/** The most dots at Mochi's feet; past it, one fewer and a "+N". */
-export const DOTS_MAX = 5
-
-/** The dots at Mochi's feet: one per chat in the list, in its ink, the waiting ones marked to glow. */
-export function dotsOf(rows: readonly Row[]): { dots: { ink: string; isAsking: boolean }[]; more: number } {
-  const shown = rows.length > DOTS_MAX ? rows.slice(0, DOTS_MAX - 1) : rows
-  return { dots: shown.map(r => ({ ink: r.ink, isAsking: r.status === 'asking' })), more: rows.length - shown.length }
+/** The count at Mochi's feet: how many chats are in the list, in the ink of the most pressing; null with none. */
+export function badgeOf(rows: readonly Row[]): { count: number; ink: string; isAsking: boolean } | null {
+  const lead = rows[0]
+  return lead ? { count: rows.length, ink: lead.ink, isAsking: lead.status === 'asking' } : null
 }

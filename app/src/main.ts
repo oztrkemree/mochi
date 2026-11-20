@@ -10,7 +10,7 @@ import { type Sessions, agentPeers, hookedOf, noted } from './agents'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { words } from './words'
-import { type View, dotsOf, newsOf, peersOf, rowsOf, viewOf } from './world'
+import { type View, badgeOf, newsOf, peersOf, rowsOf, viewOf } from './world'
 
 const root = document.getElementById('root')!
 const stage = document.getElementById('stage')!
@@ -139,20 +139,13 @@ async function hush() {
 function drawAgents() {
   const rows = view ? rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000) : []
   const w = words()
-  const { dots, more } = dotsOf(rows)
-  const marks = dots.map(d => {
-    const dot = document.createElement('span')
-    dot.className = d.isAsking ? 'dot asking' : 'dot'
-    dot.style.setProperty('--ink', d.ink)
-    return dot
-  })
-  if (more > 0) {
-    const plus = document.createElement('span')
-    plus.className = 'more'
-    plus.textContent = `+${more}`
-    marks.push(plus)
-  }
-  agentsButton.replaceChildren(...marks)
+  const badge = badgeOf(rows)
+  const dot = document.createElement('span')
+  dot.className = badge?.isAsking ? 'dot asking' : 'dot'
+  dot.style.setProperty('--ink', badge?.ink ?? QUIET_INK)
+  const number = document.createElement('span')
+  number.textContent = String(badge?.count ?? 0)
+  agentsButton.replaceChildren(dot, number)
   agentsButton.classList.toggle('empty', rows.length === 0)
   agentsButton.title = `${w.agents} · ${rows.length}`
   agentsButton.setAttribute('aria-label', `${w.agents} · ${rows.length}`)
@@ -276,7 +269,7 @@ async function read() {
   else if (saidUntil > 0 && now >= saidUntil) await hush()
 }
 
-// A press opens the chat Mochi stands for, or has it say how things stand; a pull moves the window; a right press opens the settings.
+// A pull moves the window; a right press opens the settings.
 let pressed: { x: number; y: number } | null = null
 stage.addEventListener('pointerdown', e => {
   if (e.button === 0) pressed = { x: e.screenX, y: e.screenY }
@@ -286,10 +279,11 @@ addEventListener('pointermove', e => {
   pressed = null
   void win.startDragging()
 })
+// A press on Mochi opens the list of chats; with none open, Mochi says how it is.
 stage.addEventListener('pointerup', () => {
   if (!pressed || !view) return
   pressed = null
-  if (view.link) void openUrl(view.link)
+  if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0) void toggleAgents()
   else void speak(view.line, ANSWER_MS)
 })
 addEventListener('contextmenu', e => {

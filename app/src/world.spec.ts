@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { setLang } from '../../hooks/i18n'
 import { ALIVE_MS } from '../../hooks/live'
 import { lookFrom } from '../../hooks/level'
-import { DOTS_MAX, dotsOf, newsOf, peersOf, rowsOf, viewOf } from './world'
+import { badgeOf, newsOf, peersOf, rowsOf, viewOf } from './world'
 
 setLang('en')
 
@@ -107,12 +107,9 @@ test('Mochi is drawn with room around it, so what it holds or has beside it is n
   expect(svg.indexOf('class="shadow"')).toBeLessThan(svg.indexOf('overflow="visible"'))
 })
 
-test('each chat is a dot at Mochi’s feet in its own ink, the most pressing first; past the room a "+N", and none with no chat', () => {
+test('the count at Mochi’s feet: how many chats, in the ink of the most pressing, glowing while one waits, and nothing with no chat', () => {
   const rows = rowsOf(peersOf([file('rest'), file('work', { state: 'busy' }), file('wait', { state: 'asking' })], NOW), NOW)
-  expect(dotsOf(rows)).toEqual({ dots: [{ ink: '#F2C14E', isAsking: true }, { ink: '#7AA2F7', isAsking: false }, { ink: '#6E6D69', isAsking: false }], more: 0 })
-  expect(DOTS_MAX).toBe(5)
-  const many = rowsOf(peersOf(['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(id => file(id, { state: 'busy' })), NOW), NOW)
-  expect(dotsOf(many).dots).toHaveLength(4)
-  expect(dotsOf(many).more).toBe(3)
-  expect(dotsOf([])).toEqual({ dots: [], more: 0 })
+  expect(badgeOf(rows)).toEqual({ count: 3, ink: '#F2C14E', isAsking: true })
+  expect(badgeOf(rowsOf(peersOf([file('work', { state: 'busy' })], NOW), NOW))).toEqual({ count: 1, ink: '#7AA2F7', isAsking: false })
+  expect(badgeOf([])).toBeNull()
 })

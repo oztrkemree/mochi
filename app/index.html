@@ -24,15 +24,14 @@
       #say::after { content: ""; position: absolute; right: 22px; bottom: -6px; width: 12px; height: 12px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
       #say.on { display: block; }
 
-      /* Each chat a dot on the ground by Mochi's feet, just right of its shadow (the ground things stand on its left): the shadow lies at 90.5 of Mochi's square and ends at 75, see SHADOW and ROOM in world.ts. No card: they are part of the scene. */
-      #agents { position: absolute; left: calc(var(--size) * 1.03); bottom: calc(var(--size) * 0.155 - 3.5px); display: flex; align-items: center; gap: 4px; padding: 6px; margin: -6px; border: 0; border-radius: 10px; background: none; font: inherit; cursor: pointer; z-index: 1; }
-      #agents:hover { background: rgba(127, 127, 127, 0.16); }
-      #agents:focus-visible { outline: 2px solid #E08A6A; outline-offset: 0; }
-      #agents .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
-      /* A chat that waits for the person glows softly, the only thing that moves here. */
+      /* How many chats, on the ground just right of Mochi's shadow (the ground things stand on its left): the shadow lies at 90.5 of Mochi's square and ends at 75, see SHADOW and ROOM in world.ts. */
+      #agents { position: absolute; left: calc(var(--size) * 1.02); bottom: calc(var(--size) * 0.155 - 11px); display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px 0 7px; border: 0; border-radius: 11px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; z-index: 1; }
+      #agents:hover { filter: brightness(1.12); }
+      #agents:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
+      #agents .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+      /* While a chat waits for the person its dot glows softly, the only thing that moves here. */
       #agents .dot.asking { animation: glow 1.6s ease-in-out infinite; }
-      @keyframes glow { 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 35%, transparent), 0 1px 2px rgba(0, 0, 0, 0.35); } }
-      #agents .more { font-size: 10.5px; font-weight: 650; color: #F0EFEC; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
+      @keyframes glow { 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 35%, transparent); } }
       #agents.empty, #agents[hidden] { display: none; }
       @media (prefers-reduced-motion: reduce) { #agents .dot.asking { animation: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 40%, transparent); } }
 
@@ -56,7 +55,7 @@
       <div id="list" class="card" role="dialog"></div>
       <div id="say" class="card" role="status"></div>
       <div id="row">
-        <button id="agents" type="button"></button>
+        <button id="agents" class="card" type="button"></button>
         <div id="stage" role="img"></div>
       </div>
     </div>
