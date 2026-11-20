@@ -3,7 +3,7 @@ import { expect, test } from 'claude-code/testing'
 import type { Peer } from '../types'
 import { setLang } from '../hooks/i18n'
 import { ALIVE_MS } from '../hooks/live'
-import { DONE_FOR_MS, MOVING_MAX, floorOf, memberLines, membersOf, moodOf, nameLines, partyOf, shareArt, spotAt, statusOf, stillOf } from '../hooks/party'
+import { DONE_FOR_MS, MOVING_MAX, crowdOf, floorOf, memberLines, membersOf, moodOf, nameLines, partyOf, shareArt, spotAt, statusOf, stillOf } from '../hooks/party'
 
 setLang('en')
 
@@ -33,6 +33,25 @@ test('one chat alone draws no party, unless it has subagents', async () => {
   expect(partyOf(peer('me', 'busy'), [], NOW).isShown).toBe(false)
   const withAgents = peer('me', 'busy', { agents: [{ id: 'a', type: 'Explore', task: 'look', activity: 'reading', since: NOW }] })
   expect(partyOf(withAgents, [], NOW).isShown).toBe(true)
+})
+
+test('seen from outside any chat, every chat is another’s: none is marked as one’s own, and a silent one goes quiet', async () => {
+  const crowd = crowdOf([
+    peer('napper', 'idle'),
+    peer('asker', 'asking', { stateAt: NOW - MIN }),
+    peer('worker', 'busy'),
+    peer('gone', 'busy', { at: NOW - ALIVE_MS - 1 }),
+  ], NOW)
+  expect(crowd.isShown).toBe(true)
+  expect(crowd.door.map(m => m.peer.id)).toEqual(['asker'])
+  expect(crowd.shop.map(m => m.peer.id)).toEqual(['worker'])
+  expect(crowd.nap.map(m => m.peer.id)).toEqual(['napper', 'gone'])
+  expect(crowd.nap[1].status).toBe('quiet')
+  expect(crowd.waiting).toBe(1)
+  expect(membersOf(crowd).some(m => m.isSelf)).toBe(false)
+  // No chat at all is no party; one chat is one, since nothing else stands for it there.
+  expect(crowdOf([], NOW).isShown).toBe(false)
+  expect(crowdOf([peer('only', 'idle')], NOW).isShown).toBe(true)
 })
 
 test('those that need the person stand by the door, the longest wait first; work at the bench; the rest in the nap corner', async () => {

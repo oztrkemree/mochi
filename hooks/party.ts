@@ -55,8 +55,16 @@ export type Party = { isShown: boolean; door: Member[]; shop: Member[]; nap: Mem
 export function partyOf(self: Peer, peers: readonly Peer[], now: number): Party {
   const all = [{ peer: self, isSelf: true }, ...peers.filter(p => p.id !== self.id).map(peer => ({ peer, isSelf: false }))]
     .map(({ peer, isSelf }) => ({ peer, isSelf, status: isSelf ? statusOf({ ...peer, at: now }, now) : statusOf(peer, now), isMoving: false }))
-    .sort(before)
-  const isShown = all.length > 1 || (self.agents?.length ?? 0) > 0
+  return placed(all, all.length > 1 || (self.agents?.length ?? 0) > 0)
+}
+
+/** The party seen from outside any chat, as the desktop app sees it: every chat as read, none its own, shown from the first one. */
+export function crowdOf(peers: readonly Peer[], now: number): Party {
+  return placed(peers.map(peer => ({ peer, isSelf: false, status: statusOf(peer, now), isMoving: false })), peers.length > 0)
+}
+
+function placed(all: Member[], isShown: boolean): Party {
+  all.sort(before)
   // The moving ones go by the same order: the waiting first, so they always move. Those at rest stand still.
   let moving = 0
   for (const m of all) {
