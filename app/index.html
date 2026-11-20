@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mochi</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
+      #stage { position: absolute; inset: 0; }
+      #stage > svg { display: block; width: 100%; height: 100%; }
+      /* The floor is drawn for Claude's own pane; outside it, it stands on a card of that pane's colour. One Mochi alone stands on nothing. */
+      #stage.floor { background: rgba(38, 38, 36, 0.96); border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+      @media (prefers-color-scheme: light) {
+        #stage.floor { background: rgba(250, 249, 245, 0.97); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage" role="img"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

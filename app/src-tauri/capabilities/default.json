@@ -1,0 +1,14 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "What the window may do: size, move and show itself, and open a chat's link in the Claude app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-size",
+    "core:window:allow-set-position",
+    "core:window:allow-show",
+    "core:window:allow-start-dragging",
+    { "identifier": "opener:allow-open-url", "allow": [{ "url": "claude://code/continue?session=*" }] }
+  ]
+}
