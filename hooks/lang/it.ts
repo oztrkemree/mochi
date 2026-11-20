@@ -720,8 +720,8 @@ export const it: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, mostra/nascondi, dettagli, livello, indossa, badge, chat, scudo, avvisi, CI, consigli, pause, suono, plugin, scheda, riepilogo, istantanea, tour, novità, compleanno, lingua, piccolo/grande, esporta, azzera, feedback, aggiorna, stato',
-    hint: '[standup | week | desk | prs | city | dettagli | livello | indossa [oggetto] | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua [codice] | piccolo | grande | nascondi | mostra | esporta | azzera | feedback | aggiorna | stato]',
+    description: 'Mochi: standup, week, desk, prs, city, mostra/nascondi, dettagli, livello, indossa, badge, chat, scudo, avvisi, CI, consigli, pause, suono, plugin, scheda, riepilogo, istantanea, tour, novità, compleanno, lingua, piccolo/grande, scrivania, esporta, azzera, feedback, aggiorna, stato',
+    hint: '[standup | week | desk | prs | city | dettagli | livello | indossa [oggetto] | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua [codice] | piccolo | grande | nascondi | mostra | scrivania | esporta | azzera | feedback | aggiorna | stato]',
     small: 'Mochi su una riga.',
     big: 'Mochi a grandezza naturale.',
     detailOpened: 'Pannello dei dettagli aperto.',
@@ -749,6 +749,8 @@ export const it: typeof en = {
     soundOff: 'Suono disattivato.',
     hidden: 'Mochi nascosto. Per farlo tornare: /mochi',
     shown: 'Mochi è di nuovo qui.',
+    desktopOn: 'Scrivania attiva: mentre Mochi è sulla scrivania, la barra appare senza di lui.',
+    desktopOff: 'Scrivania disattivata: Mochi resta nella barra.',
     statusLine: (label, line) => `Stato: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Contesto: ${ctx} · agenti in esecuzione: ${agents} · strumenti in questo turno: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -756,14 +758,14 @@ export const it: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Consigli: ${tips ? 'sì' : 'no'} · Pause: ${breaks ? 'sì' : 'no'} · Reazioni dei plugin: ${plugins ? 'sì' : 'no'}`,
     peersLine: (level, peers) => `Livello ${level} · altre chat: ${peers}`,
-    commands: 'Comandi: /mochi (mostra/nascondi) | standup | week | desk | prs | city | dettagli | livello | indossa | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua | piccolo | grande | esporta | azzera | feedback | aggiorna | stato',
+    commands: 'Comandi: /mochi (mostra/nascondi) | standup | week | desk | prs | city | dettagli | livello | indossa | badge | chat | scudo | avvisi | ci | consigli | pause | suono | plugin | scheda | riepilogo | istantanea | tour | novità | compleanno | lingua | piccolo | grande | scrivania | esporta | azzera | feedback | aggiorna | stato',
     langNow: (name, list) => `Lingua: ${name}. Disponibili: ${list} · /mochi lingua <codice> o automatico`,
     langSet: name => `Lingua: ${name}.`,
     langAuto: name => `La lingua segue Claude Code e il sistema: ${name}.`,
     langUnknown: (code, list) => `Lingua sconosciuta: ${code}. Disponibili: ${list}`,
     words: {
       on: ['attiva', 'accendi'], off: ['disattiva', 'spegni'],
-      hide: ['nascondi'], show: ['mostra'], small: ['piccolo'], big: ['grande'], sound: ['suono', 'audio'],
+      hide: ['nascondi'], show: ['mostra'], small: ['piccolo'], big: ['grande'], sound: ['suono', 'audio'], desktop: ['scrivania'],
       status: ['stato'], details: ['dettagli', 'dettaglio'], level: ['livello'], wear: ['indossa', 'accessori'], shield: ['scudo'],
       alerts: ['avvisi', 'notifiche'], lang: ['lingua'], auto: ['automatico'], none: ['niente', 'nessuno'],
       card: ['scheda'], wrapped: ['riepilogo'], snap: ['istantanea', 'foto'], year: ['anno'],

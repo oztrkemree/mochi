@@ -24,7 +24,7 @@ export const TAB_OF: Record<Block, Tab> = {
 }
 /** A tab's blocks in the person's order. */
 export const inTab = (order: readonly Block[], tab: Tab): Block[] => order.filter(b => TAB_OF[b] === tab)
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: OPEN, order: [...BLOCKS], hidden: [], isArranging: false, tab: 'now', shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, birthday: '', firstDay: '' }
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: OPEN, order: [...BLOCKS], hidden: [], isArranging: false, tab: 'now', shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, goesOut: true, birthday: '', firstDay: '' }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**

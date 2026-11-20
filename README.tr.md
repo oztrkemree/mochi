@@ -269,6 +269,7 @@ Hiçbirine ihtiyacın yok: Mochi kurulduğu an çalışır. Yön vermek istediğ
 | `/mochi shield [on \| off]` | Kalkanın açık olup olmadığını ve neyin nerede hep izinli olduğunu gösterir |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Paylaşmak için bir resim kaydeder |
 | `/mochi small` · `/mochi big` | Tek satır ya da tam boy |
+| `/mochi desktop` | Masaüstü uygulamasına yer açmayı açar ya da kapatır: onun Mochi’si ortadayken bant Mochi’siz çizilir |
 
 <details>
 <summary><b>Bütün komutlar</b></summary>
@@ -304,6 +305,7 @@ Hiçbirine ihtiyacın yok: Mochi kurulduğu an çalışır. Yön vermek istediğ
 | `/mochi birthday [MM-DD \| none]` | Doğum gününü kaydeder, gösterir ya da siler |
 | `/mochi lang [code \| auto]` | Dili gösterir ya da değiştirir |
 | `/mochi small` · `/mochi big` | Tek satır ya da tam boy |
+| `/mochi desktop` | Masaüstü uygulamasına yer açmayı açar ya da kapatır: onun Mochi’si ortadayken bant Mochi’siz çizilir |
 | `/mochi export` | Mochi'nin tuttuğu her şeyi tek bir JSON dosyasına kaydeder |
 | `/mochi reset [level \| history \| all]` | Seviye hafızasını, geçmişi ya da ayarlar dahil her şeyi siler; önce sorar, dışa aktarılan dosyalar ve `shield.json`'ın kalır |
 | `/mochi feedback` | Sürümlerin, sisteminin, arayüzün ve dilin önceden doldurulduğu bir hata bildirimi bağlantısı |

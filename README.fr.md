@@ -269,6 +269,7 @@ Vous n’en avez jamais besoin : Mochi fonctionne dès qu’il est installé. Qu
 | `/mochi shield [on \| off]` | Dit si le bouclier est actif et ce qui est toujours autorisé et où |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Enregistre une image à partager |
 | `/mochi small` · `/mochi big` | Sur une seule ligne ou en grand |
+| `/mochi desktop` | Active ou désactive le retrait devant l’app de bureau : tant que son Mochi est sorti, le bandeau s’affiche sans lui |
 
 <details>
 <summary><b>Toutes les commandes</b></summary>
@@ -304,6 +305,7 @@ Vous n’en avez jamais besoin : Mochi fonctionne dès qu’il est installé. Qu
 | `/mochi birthday [MM-DD \| none]` | Donne votre anniversaire à Mochi, l’affiche ou le fait oublier |
 | `/mochi lang [code \| auto]` | Affiche ou change la langue |
 | `/mochi small` · `/mochi big` | Sur une seule ligne ou en grand |
+| `/mochi desktop` | Active ou désactive le retrait devant l’app de bureau : tant que son Mochi est sorti, le bandeau s’affiche sans lui |
 | `/mochi export` | Enregistre tout ce que Mochi conserve dans un seul fichier JSON |
 | `/mochi reset [level \| history \| all]` | Efface la mémoire du niveau, l’historique, ou tout, réglages compris ; il demande d’abord, et les exports et votre `shield.json` restent |
 | `/mochi feedback` | Un lien vers un rapport de bug, prérempli avec les versions, votre système, l’interface et la langue |

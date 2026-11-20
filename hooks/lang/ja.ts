@@ -715,8 +715,8 @@ export const ja: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, 表示/非表示、詳細、レベル、着せ替え、バッジ、チャット、シールド、通知、CI、ヒント、休憩、サウンド、プラグイン、カード、まとめ、スナップ、ツアー、新機能、誕生日、言語、サイズ、エクスポート、リセット、フィードバック、更新、状態',
-    hint: '[standup | week | desk | prs | city | details | level | wear [アイテム] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [コード] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, 表示/非表示、詳細、レベル、着せ替え、バッジ、チャット、シールド、通知、CI、ヒント、休憩、サウンド、プラグイン、カード、まとめ、スナップ、ツアー、新機能、誕生日、言語、サイズ、デスクトップ、エクスポート、リセット、フィードバック、更新、状態',
+    hint: '[standup | week | desk | prs | city | details | level | wear [アイテム] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [コード] | small | big | hide | show | desktop | export | reset | feedback | update | status]',
     small: 'Mochiを1行表示に。',
     big: 'Mochiをフルサイズに。',
     detailOpened: '詳細パネルを開いた。',
@@ -742,6 +742,8 @@ export const ja: typeof en = {
     soundOff: 'サウンドOFF。',
     hidden: 'Mochiを非表示にした。戻すには: /mochi',
     shown: 'Mochiを表示中。',
+    desktopOn: 'デスクトップON: Mochiがデスクトップに出ている間、バーはMochiなしで表示。',
+    desktopOff: 'デスクトップOFF: Mochiはバーに残る。',
     statusLine: (label, line) => `状態: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `コンテキスト: ${ctx} · 実行中のエージェント: ${agents} · このターンのツール: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -749,14 +751,14 @@ export const ja: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `ヒント: ${tips ? 'ON' : 'OFF'} · 休憩: ${breaks ? 'ON' : 'OFF'} · プラグインのリアクション: ${plugins ? 'ON' : 'OFF'}`,
     peersLine: (level, peers) => `レベル ${level} · 他のチャット: ${peers}`,
-    commands: 'コマンド: /mochi (表示/非表示) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'コマンド: /mochi (表示/非表示) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | desktop | export | reset | feedback | update | status',
     langNow: (name, list) => `言語: ${name}。選択肢: ${list} · /mochi lang <コード> または auto`,
     langSet: name => `言語: ${name}。`,
     langAuto: name => `言語はClaude Codeとシステムに合わせる: ${name}。`,
     langUnknown: (code, list) => `不明な言語: ${code}。選択肢: ${list}`,
     words: {
       on: ['オン'], off: ['オフ'],
-      hide: ['非表示', '隠す'], show: ['表示'], small: ['小さく', '小'], big: ['大きく', '大'], sound: ['サウンド', '音'],
+      hide: ['非表示', '隠す'], show: ['表示'], small: ['小さく', '小'], big: ['大きく', '大'], sound: ['サウンド', '音'], desktop: ['デスクトップ'],
       status: ['状態', 'ステータス'], details: ['詳細'], level: ['レベル'], wear: ['着せ替え', '着る'], shield: ['シールド'],
       alerts: ['通知'], lang: ['言語'], auto: ['自動'], none: ['なし'],
       card: ['カード'], wrapped: ['まとめ'], snap: ['スナップ'], year: ['年'],

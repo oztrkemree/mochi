@@ -735,8 +735,8 @@ export const pl: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, pokaż/ukryj, szczegóły, poziom, ubierz, odznaki, czaty, tarcza, powiadomienia, CI, porady, przerwy, dźwięk, wtyczki, karta, podsumowanie, zrzut, wprowadzenie, nowości, urodziny, język, mały/duży, eksport, resetuj, opinia, aktualizuj, stan',
-    hint: '[standup | week | desk | prs | city | szczegóły | poziom | ubierz [rzecz] | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język [kod] | mały | duży | ukryj | pokaż | eksport | resetuj | opinia | aktualizuj | stan]',
+    description: 'Mochi: standup, week, desk, prs, city, pokaż/ukryj, szczegóły, poziom, ubierz, odznaki, czaty, tarcza, powiadomienia, CI, porady, przerwy, dźwięk, wtyczki, karta, podsumowanie, zrzut, wprowadzenie, nowości, urodziny, język, mały/duży, pulpit, eksport, resetuj, opinia, aktualizuj, stan',
+    hint: '[standup | week | desk | prs | city | szczegóły | poziom | ubierz [rzecz] | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język [kod] | mały | duży | ukryj | pokaż | pulpit | eksport | resetuj | opinia | aktualizuj | stan]',
     small: 'Mochi w jednej linii.',
     big: 'Mochi w pełnym rozmiarze.',
     detailOpened: 'Panel szczegółów otwarty.',
@@ -764,6 +764,8 @@ export const pl: typeof en = {
     soundOff: 'Dźwięk wyłączony.',
     hidden: 'Mochi ukryty. Żeby go przywrócić: /mochi',
     shown: 'Mochi włączony.',
+    desktopOn: 'Pulpit włączony: gdy Mochi jest na pulpicie, pasek rysuje się bez niego.',
+    desktopOff: 'Pulpit wyłączony: Mochi zostaje w pasku.',
     statusLine: (label, line) => `Stan: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Kontekst: ${ctx} · działający agenci: ${agents} · narzędzia w tej turze: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -771,14 +773,14 @@ export const pl: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Porady: ${tips ? 'wł.' : 'wył.'} · Przerwy: ${breaks ? 'wł.' : 'wył.'} · Reakcje wtyczek: ${plugins ? 'wł.' : 'wył.'}`,
     peersLine: (level, peers) => `Poziom ${level} · inne czaty: ${peers}`,
-    commands: 'Polecenia: /mochi (pokaż/ukryj) | standup | week | desk | prs | city | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | eksport | resetuj | opinia | aktualizuj | stan',
+    commands: 'Polecenia: /mochi (pokaż/ukryj) | standup | week | desk | prs | city | szczegóły | poziom | ubierz | odznaki | czaty | tarcza | powiadomienia | ci | porady | przerwy | dźwięk | wtyczki | karta | podsumowanie | zrzut | wprowadzenie | nowości | urodziny | język | mały | duży | pulpit | eksport | resetuj | opinia | aktualizuj | stan',
     langNow: (name, list) => `Język: ${name}. Dostępne: ${list} · /mochi język <kod> lub auto`,
     langSet: name => `Język: ${name}.`,
     langAuto: name => `Język zgodny z Claude Code i systemem: ${name}.`,
     langUnknown: (code, list) => `Nieznany język: ${code}. Dostępne: ${list}`,
     words: {
       on: ['włącz', 'wlacz'], off: ['wyłącz', 'wylacz'],
-      hide: ['ukryj', 'schowaj'], show: ['pokaż'], small: ['mały', 'maly', 'mini'], big: ['duży'], sound: ['dźwięk'],
+      hide: ['ukryj', 'schowaj'], show: ['pokaż'], small: ['mały', 'maly', 'mini'], big: ['duży'], sound: ['dźwięk'], desktop: ['pulpit'],
       status: ['stan'], details: ['szczegóły', 'szczegoly'], level: ['poziom'], wear: ['ubierz', 'załóż', 'zaloz', 'garderoba'], shield: ['tarcza', 'ochrona'],
       alerts: ['powiadomienia', 'alerty'], lang: ['język'], auto: ['automatycznie'], none: ['nic', 'brak'],
       card: ['karta', 'wizytówka'], wrapped: ['podsumowanie'], snap: ['zrzut', 'migawka'], year: ['rok'],

@@ -38,6 +38,7 @@ const said = atom({ plugin: 'mochi-buddy', key: 'said' } as const, NO_SAID)
 const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
 const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
 const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
+const away = atom({ plugin: 'mochi-buddy', key: 'away' } as const, false)
 
 const width = (s: string) => [...s].length
 const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0, Math.max(1, max - 1)).join('')}…`)
@@ -650,6 +651,8 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
   chat.canClick = e.surface === 'desktop'
   const p = await read($, prefs)
   if (p.isHidden) return next(e)
+  // Out on the desktop, Mochi is not drawn here as well: the band keeps its line and its facts.
+  const isAway = p.goesOut && (await read($, away))
 
   if (e.surface === 'desktop' || e.surface === 'mobile' || e.surface === 'vscode') {
     // The desktop rebuilds the whole band on every redraw, so this branch
@@ -663,7 +666,7 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     const alt = `${pane.info.label}: ${pane.info.detail}`
     let drawn: ReturnType<typeof panelSvg>
     try {
-      drawn = panelSvg({ panel: pane, now, width })
+      drawn = panelSvg({ panel: pane, now, width, isAway })
     } catch {
       // Never an empty band: the mascot alone if the panel cannot be drawn.
       return (
@@ -714,7 +717,7 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
   const room = Math.max(12, e.props.bodyColumns)
 
   if (p.isCompact || e.props.maxRows < 5) {
-    const head = `${kaomoji(f.mood, n)} `
+    const head = isAway ? '' : `${kaomoji(f.mood, n)} `
     const tail = facts === '' ? '' : `  ${facts}`
     return (
       <Box flexDirection="row" gap={1}>
@@ -728,11 +731,13 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
 
   return (
     <Box flexDirection="row" gap={1}>
-      <Box flexDirection="column">
-        {withHat(asciiRows(f.mood, n, n === f.frameAt), outfitNow(p, v, f.mood, now).head, LOOKS[f.mood].isShaking === true && n % 2 === 0).map(row => (
-          <Text color={look.color} wrap="truncate">{row}</Text>
-        ))}
-      </Box>
+      {isAway ? null : (
+        <Box flexDirection="column">
+          {withHat(asciiRows(f.mood, n, n === f.frameAt), outfitNow(p, v, f.mood, now).head, LOOKS[f.mood].isShaking === true && n % 2 === 0).map(row => (
+            <Text color={look.color} wrap="truncate">{row}</Text>
+          ))}
+        </Box>
+      )}
       <Box flexDirection="column" flexShrink={1} justifyContent="center">
         <Text bold color={look.color} wrap="truncate">{cut(status, room - 12)}</Text>
         <Text dimColor color={factsColor} wrap="truncate">{facts === '' ? ' ' : facts}</Text>

@@ -719,8 +719,8 @@ export const es: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, mostrar/ocultar, detalles, nivel, poner, insignias, conversaciones, escudo, alertas, CI, consejos, pausas, sonido, complementos, tarjeta, resumen, captura, recorrido, novedades, cumpleaños, idioma, pequeño/grande, exportar, restablecer, comentarios, actualizar, estado',
-    hint: '[standup | week | desk | prs | city | detalles | nivel | poner [accesorio] | insignias | conversaciones | escudo | alertas | ci | consejos | pausas | sonido | complementos | tarjeta | resumen | captura | recorrido | novedades | cumpleaños | idioma [código] | pequeño | grande | ocultar | mostrar | exportar | restablecer | comentarios | actualizar | estado]',
+    description: 'Mochi: standup, week, desk, prs, city, mostrar/ocultar, detalles, nivel, poner, insignias, conversaciones, escudo, alertas, CI, consejos, pausas, sonido, complementos, tarjeta, resumen, captura, recorrido, novedades, cumpleaños, idioma, pequeño/grande, escritorio, exportar, restablecer, comentarios, actualizar, estado',
+    hint: '[standup | week | desk | prs | city | detalles | nivel | poner [accesorio] | insignias | conversaciones | escudo | alertas | ci | consejos | pausas | sonido | complementos | tarjeta | resumen | captura | recorrido | novedades | cumpleaños | idioma [código] | pequeño | grande | ocultar | mostrar | escritorio | exportar | restablecer | comentarios | actualizar | estado]',
     small: 'Mochi en una línea.',
     big: 'Mochi a tamaño completo.',
     detailOpened: 'Panel de detalles abierto.',
@@ -748,6 +748,8 @@ export const es: typeof en = {
     soundOff: 'Sonido desactivado.',
     hidden: 'Mochi oculto. Para volver a mostrarlo: /mochi',
     shown: 'Mochi activado.',
+    desktopOn: 'Escritorio activado: mientras Mochi está en el escritorio, la franja se muestra sin él.',
+    desktopOff: 'Escritorio desactivado: Mochi se queda en la franja.',
     statusLine: (label, line) => `Estado: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Contexto: ${ctx} · agentes en ejecución: ${agents} · herramientas en este turno: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -755,14 +757,14 @@ export const es: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Consejos: ${tips ? 'sí' : 'no'} · Pausas: ${breaks ? 'sí' : 'no'} · Reacciones de plugins: ${plugins ? 'sí' : 'no'}`,
     peersLine: (level, peers) => `Nivel ${level} · otros chats: ${peers}`,
-    commands: 'Comandos: /mochi (mostrar/ocultar) | standup | week | desk | prs | city | detalles | nivel | poner | insignias | conversaciones | escudo | alertas | ci | consejos | pausas | sonido | complementos | tarjeta | resumen | captura | recorrido | novedades | cumpleaños | idioma | pequeño | grande | exportar | restablecer | comentarios | actualizar | estado',
+    commands: 'Comandos: /mochi (mostrar/ocultar) | standup | week | desk | prs | city | detalles | nivel | poner | insignias | conversaciones | escudo | alertas | ci | consejos | pausas | sonido | complementos | tarjeta | resumen | captura | recorrido | novedades | cumpleaños | idioma | pequeño | grande | escritorio | exportar | restablecer | comentarios | actualizar | estado',
     langNow: (name, list) => `Idioma: ${name}. Disponibles: ${list} · /mochi idioma <código> o automático`,
     langSet: name => `Idioma: ${name}.`,
     langAuto: name => `El idioma sigue a Claude Code y al sistema: ${name}.`,
     langUnknown: (code, list) => `Idioma desconocido: ${code}. Disponibles: ${list}`,
     words: {
       on: ['activar', 'encender'], off: ['desactivar', 'apagar'],
-      hide: ['ocultar', 'esconder'], show: ['mostrar'], small: ['pequeño', 'pequeno'], big: ['grande'], sound: ['sonido'],
+      hide: ['ocultar', 'esconder'], show: ['mostrar'], small: ['pequeño', 'pequeno'], big: ['grande'], sound: ['sonido'], desktop: ['escritorio'],
       status: ['estado'], details: ['detalles', 'detalle'], level: ['nivel'], wear: ['poner', 'vestir'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma'], auto: ['automático', 'automatico'], none: ['nada', 'ninguno'],
       card: ['tarjeta'], wrapped: ['resumen'], snap: ['captura'], year: ['año'],

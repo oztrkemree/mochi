@@ -719,8 +719,8 @@ export const fr: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi : standup, week, desk, prs, city, afficher/cacher, détails, niveau, porter, insignes, conversations, bouclier, alertes, CI, astuces, pauses, son, extensions, carte, bilan, capture, visite, nouveautés, anniversaire, langue, petit/grand, exporter, réinitialiser, avis, maj, statut',
-    hint: '[standup | week | desk | prs | city | détails | niveau | porter [nom] | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue [code] | petit | grand | cacher | afficher | exporter | réinitialiser | avis | maj | statut]',
+    description: 'Mochi : standup, week, desk, prs, city, afficher/cacher, détails, niveau, porter, insignes, conversations, bouclier, alertes, CI, astuces, pauses, son, extensions, carte, bilan, capture, visite, nouveautés, anniversaire, langue, petit/grand, bureau, exporter, réinitialiser, avis, maj, statut',
+    hint: '[standup | week | desk | prs | city | détails | niveau | porter [nom] | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue [code] | petit | grand | cacher | afficher | bureau | exporter | réinitialiser | avis | maj | statut]',
     small: 'Mochi sur une ligne.',
     big: 'Mochi en grand.',
     detailOpened: 'Panneau de détails ouvert.',
@@ -747,6 +747,8 @@ export const fr: typeof en = {
     soundOff: 'Son désactivé.',
     hidden: 'Mochi masqué. Pour le faire revenir : /mochi',
     shown: 'Mochi est affiché.',
+    desktopOn: 'Bureau activé : tant que Mochi est sur le bureau, le bandeau s’affiche sans lui.',
+    desktopOff: 'Bureau désactivé : Mochi reste dans le bandeau.',
     statusLine: (label, line) => `Statut : ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Contexte : ${ctx} · agents en cours : ${agents} · outils ce tour : ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -754,14 +756,14 @@ export const fr: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Astuces : ${tips ? 'activées' : 'désactivées'} · Pauses : ${breaks ? 'activées' : 'désactivées'} · Réactions des plugins : ${plugins ? 'activées' : 'désactivées'}`,
     peersLine: (level, peers) => `Niveau ${level} · autres conversations : ${peers}`,
-    commands: 'Commandes : /mochi (afficher/cacher) | standup | week | desk | prs | city | détails | niveau | porter | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue | petit | grand | exporter | réinitialiser | avis | maj | statut',
+    commands: 'Commandes : /mochi (afficher/cacher) | standup | week | desk | prs | city | détails | niveau | porter | insignes | conversations | bouclier | alertes | ci | astuces | pauses | son | extensions | carte | bilan | capture | visite | nouveautés | anniversaire | langue | petit | grand | bureau | exporter | réinitialiser | avis | maj | statut',
     langNow: (name, list) => `Langue : ${name}. Disponibles : ${list} · /mochi langue <code> ou auto`,
     langSet: name => `Langue : ${name}.`,
     langAuto: name => `La langue suit Claude Code et le système : ${name}.`,
     langUnknown: (code, list) => `Langue inconnue : ${code}. Disponibles : ${list}`,
     words: {
       on: ['activer'], off: ['désactiver'],
-      hide: ['cacher', 'masquer'], show: ['afficher', 'montrer'], small: ['petit'], big: ['grand'], sound: ['son'],
+      hide: ['cacher', 'masquer'], show: ['afficher', 'montrer'], small: ['petit'], big: ['grand'], sound: ['son'], desktop: ['bureau'],
       status: ['statut', 'état', 'etat'], details: ['détails', 'détail', 'detail'], level: ['niveau'], wear: ['porter', 'accessoire'], shield: ['bouclier'],
       alerts: ['alertes', 'alerte'], lang: ['langue'], auto: ['automatique'], none: ['aucun', 'rien'],
       card: ['carte'], wrapped: ['bilan'], snap: ['capture'], year: ['année', 'an'],

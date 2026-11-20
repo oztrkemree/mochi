@@ -715,8 +715,8 @@ export const ko: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, 표시/숨기기, 상세, 레벨, 착용, 배지, 채팅, 보호막, 알림, CI, 팁, 휴식, 소리, 플러그인, 카드, 결산, 스냅샷, 둘러보기, 새소식, 생일, 언어, 크기, 내보내기, 초기화, 피드백, 업데이트, 상태',
-    hint: '[standup | week | desk | prs | city | details | level | wear [아이템] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [코드] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, 표시/숨기기, 상세, 레벨, 착용, 배지, 채팅, 보호막, 알림, CI, 팁, 휴식, 소리, 플러그인, 카드, 결산, 스냅샷, 둘러보기, 새소식, 생일, 언어, 크기, 데스크톱, 내보내기, 초기화, 피드백, 업데이트, 상태',
+    hint: '[standup | week | desk | prs | city | details | level | wear [아이템] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [코드] | small | big | hide | show | desktop | export | reset | feedback | update | status]',
     small: 'Mochi를 한 줄로.',
     big: 'Mochi를 전체 크기로.',
     detailOpened: '상세 패널을 열었습니다.',
@@ -742,6 +742,8 @@ export const ko: typeof en = {
     soundOff: '소리 꺼짐.',
     hidden: 'Mochi 숨김. 다시 켜려면: /mochi',
     shown: 'Mochi 켜짐.',
+    desktopOn: '데스크톱 켜짐: Mochi가 데스크톱에 나와 있는 동안 밴드는 Mochi 없이 그려집니다.',
+    desktopOff: '데스크톱 꺼짐: Mochi가 밴드에 남습니다.',
     statusLine: (label, line) => `상태: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `컨텍스트: ${ctx} · 실행 중인 에이전트: ${agents} · 이번 턴 도구: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -749,14 +751,14 @@ export const ko: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `팁: ${tips ? '켜짐' : '꺼짐'} · 휴식 알림: ${breaks ? '켜짐' : '꺼짐'} · 플러그인 반응: ${plugins ? '켜짐' : '꺼짐'}`,
     peersLine: (level, peers) => `레벨 ${level} · 다른 채팅: ${peers}`,
-    commands: '명령: /mochi (표시/숨기기) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: '명령: /mochi (표시/숨기기) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | desktop | export | reset | feedback | update | status',
     langNow: (name, list) => `언어: ${name}. 사용 가능: ${list} · /mochi lang <코드> 또는 auto`,
     langSet: name => `언어: ${name}.`,
     langAuto: name => `언어는 Claude Code와 시스템 설정을 따릅니다: ${name}.`,
     langUnknown: (code, list) => `알 수 없는 언어: ${code}. 사용 가능: ${list}`,
     words: {
       on: ['켜기', '켜'], off: ['끄기', '꺼'],
-      hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'],
+      hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'], desktop: ['데스크톱', '바탕화면'],
       status: ['상태'], details: ['상세', '자세히'], level: ['레벨'], wear: ['착용', '입기'], shield: ['보호막', '실드'],
       alerts: ['알림'], lang: ['언어'], auto: ['자동'], none: ['없음', '벗기'],
       card: ['카드'], wrapped: ['결산'], snap: ['스냅샷'], year: ['년', '연간'],

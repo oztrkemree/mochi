@@ -715,8 +715,8 @@ export const tr: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, aktar, sıfırla, geribildirim, güncelle, durum',
-    hint: '[standup | week | desk | prs | city | detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | aktar | sıfırla | geribildirim | güncelle | durum]',
+    description: 'Mochi: standup, week, desk, prs, city, göster/gizle, detay, seviye, aksesuar, rozetler, sohbetler, kalkan, bildirim, CI, ipucu, mola, ses, eklentiler, kart, özet, fotoğraf, tanıtım, yenilikler, doğumgünü, dil, küçük/büyük, masaüstü, aktar, sıfırla, geribildirim, güncelle, durum',
+    hint: '[standup | week | desk | prs | city | detay | seviye | aksesuar [ad] | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil [kod] | küçük | büyük | gizle | göster | masaüstü | aktar | sıfırla | geribildirim | güncelle | durum]',
     small: 'Mochi tek satır.',
     big: 'Mochi tam boy.',
     detailOpened: 'Detay paneli açıldı.',
@@ -742,6 +742,8 @@ export const tr: typeof en = {
     soundOff: 'Ses kapalı.',
     hidden: 'Mochi gizlendi. Geri getirmek için: /mochi',
     shown: 'Mochi açık.',
+    desktopOn: 'Masaüstü açık: Mochi masaüstündeyken bant onsuz çizilir.',
+    desktopOff: 'Masaüstü kapalı: Mochi bantta kalır.',
     statusLine: (label, line) => `Durum: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Context: ${ctx} · çalışan ajan: ${agents} · bu turdaki araç: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -749,14 +751,14 @@ export const tr: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `İpuçları: ${tips ? 'açık' : 'kapalı'} · Mola: ${breaks ? 'açık' : 'kapalı'} · Eklenti tepkileri: ${plugins ? 'açık' : 'kapalı'}`,
     peersLine: (level, peers) => `Seviye ${level} · diğer sohbetler: ${peers}`,
-    commands: 'Komutlar: /mochi (göster/gizle) | standup | week | desk | prs | city | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | aktar | sıfırla | geribildirim | güncelle | durum',
+    commands: 'Komutlar: /mochi (göster/gizle) | standup | week | desk | prs | city | detay | seviye | aksesuar | rozetler | sohbetler | kalkan | bildirim | ci | ipucu | mola | ses | eklentiler | kart | özet | fotoğraf | tanıtım | yenilikler | doğumgünü | dil | küçük | büyük | masaüstü | aktar | sıfırla | geribildirim | güncelle | durum',
     langNow: (name, list) => `Dil: ${name}. Seçenekler: ${list} · /mochi dil <kod> ya da otomatik`,
     langSet: name => `Dil: ${name}.`,
     langAuto: name => `Dil Claude Code’a ve sisteme göre seçiliyor: ${name}.`,
     langUnknown: (code, list) => `Bilinmeyen dil: ${code}. Seçenekler: ${list}`,
     words: {
       on: ['aç', 'açık'], off: ['kapat', 'kapalı'],
-      hide: ['gizle'], show: ['göster', 'goster'], small: ['küçük', 'kucuk'], big: ['büyük', 'buyuk'], sound: ['ses'],
+      hide: ['gizle'], show: ['göster', 'goster'], small: ['küçük', 'kucuk'], big: ['büyük', 'buyuk'], sound: ['ses'], desktop: ['masaüstü', 'masaustu'],
       status: ['durum'], details: ['detay'], level: ['seviye'], wear: ['aksesuar', 'giy'], shield: ['kalkan'],
       alerts: ['bildirim'], lang: ['dil'], auto: ['otomatik'], none: ['yok', 'hiçbiri', 'hicbiri'],
       card: ['kart'], wrapped: ['özet'], snap: ['fotoğraf', 'anlık'], year: ['yıl', 'sene'],

@@ -720,8 +720,8 @@ export const hi: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, दिखाना/छिपाना, विवरण, लेवल, पहनावा, बैज, चैट, कवच, अलर्ट, CI, सुझाव, ब्रेक, आवाज़, प्लगइन, कार्ड, लेखा-जोखा, तस्वीर, परिचय, नया क्या है, जन्मदिन, भाषा, छोटा/बड़ा, एक्सपोर्ट, रीसेट, फ़ीडबैक, अपडेट, स्थिति',
-    hint: '[standup | week | desk | prs | city | details | level | wear [चीज़] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [कोड] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, दिखाना/छिपाना, विवरण, लेवल, पहनावा, बैज, चैट, कवच, अलर्ट, CI, सुझाव, ब्रेक, आवाज़, प्लगइन, कार्ड, लेखा-जोखा, तस्वीर, परिचय, नया क्या है, जन्मदिन, भाषा, छोटा/बड़ा, डेस्कटॉप, एक्सपोर्ट, रीसेट, फ़ीडबैक, अपडेट, स्थिति',
+    hint: '[standup | week | desk | prs | city | details | level | wear [चीज़] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [कोड] | small | big | hide | show | desktop | export | reset | feedback | update | status]',
     small: 'Mochi एक लाइन में।',
     big: 'Mochi पूरे आकार में।',
     detailOpened: 'विवरण पैनल खुल गया।',
@@ -747,6 +747,8 @@ export const hi: typeof en = {
     soundOff: 'आवाज़ बंद।',
     hidden: 'Mochi छिप गया। वापस लाने के लिए: /mochi',
     shown: 'Mochi हाज़िर है।',
+    desktopOn: 'डेस्कटॉप चालू: जब तक Mochi डेस्कटॉप पर है, पट्टी उसके बिना दिखेगी।',
+    desktopOff: 'डेस्कटॉप बंद: Mochi पट्टी में ही रहेगा।',
     statusLine: (label, line) => `स्थिति: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Context: ${ctx} · चल रहे एजेंट: ${agents} · इस टर्न के टूल: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -754,14 +756,14 @@ export const hi: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `सुझाव: ${tips ? 'चालू' : 'बंद'} · ब्रेक: ${breaks ? 'चालू' : 'बंद'} · प्लगइन प्रतिक्रियाएँ: ${plugins ? 'चालू' : 'बंद'}`,
     peersLine: (level, peers) => `लेवल ${level} · दूसरी चैट: ${peers}`,
-    commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | desktop | export | reset | feedback | update | status',
     langNow: (name, list) => `भाषा: ${name}। उपलब्ध: ${list} · /mochi lang <कोड> या auto`,
     langSet: name => `भाषा: ${name}।`,
     langAuto: name => `भाषा Claude Code और सिस्टम के हिसाब से: ${name}।`,
     langUnknown: (code, list) => `अनजान भाषा: ${code}। उपलब्ध: ${list}`,
     words: {
       on: ['चालू'], off: ['बंद'],
-      hide: ['छिपाओ', 'छुपाओ'], show: ['दिखाओ'], small: ['छोटा'], big: ['बड़ा'], sound: ['आवाज़', 'आवाज'],
+      hide: ['छिपाओ', 'छुपाओ'], show: ['दिखाओ'], small: ['छोटा'], big: ['बड़ा'], sound: ['आवाज़', 'आवाज'], desktop: ['डेस्कटॉप'],
       status: ['स्थिति'], details: ['विवरण'], level: ['लेवल'], wear: ['पहनो', 'पहनाओ'], shield: ['कवच', 'शील्ड'],
       alerts: ['अलर्ट', 'सूचना'], lang: ['भाषा'], auto: ['ऑटो', 'अपने-आप'], none: ['कुछ नहीं', 'कोई नहीं'],
       card: ['कार्ड'], wrapped: ['लेखा-जोखा'], snap: ['तस्वीर', 'स्नैप'], year: ['साल', 'वर्ष'],

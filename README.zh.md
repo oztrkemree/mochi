@@ -269,6 +269,7 @@ Mochi 空闲时，偶尔会针对刚发生的事给一条简短的 Claude Code �
 | `/mochi shield [on \| off]` | 查看护盾是否开启、哪里始终允许了什么 |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | 保存一张图片拿去分享 |
 | `/mochi small` · `/mochi big` | 单行显示或全尺寸 |
+| `/mochi desktop` | 开启或关闭为桌面应用让位：桌面应用的 Mochi 出现时，状态栏不再画它 |
 
 <details>
 <summary><b>全部命令</b></summary>
@@ -304,6 +305,7 @@ Mochi 空闲时，偶尔会针对刚发生的事给一条简短的 Claude Code �
 | `/mochi birthday [MM-DD \| none]` | 告诉 Mochi 你的生日、查看它，或者删掉它 |
 | `/mochi lang [code \| auto]` | 查看或切换语言 |
 | `/mochi small` · `/mochi big` | 单行显示或全尺寸 |
+| `/mochi desktop` | 开启或关闭为桌面应用让位：桌面应用的 Mochi 出现时，状态栏不再画它 |
 | `/mochi export` | 把 Mochi 保存的一切存进一个 JSON 文件 |
 | `/mochi reset [level \| history \| all]` | 清除等级记录、历史，或者连同设置在内的一切；清除前会先问你，导出的文件和你的 `shield.json` 会保留 |
 | `/mochi feedback` | 给你一个 bug 报告链接，版本、系统、界面和语言都已填好 |

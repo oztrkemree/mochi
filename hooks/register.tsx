@@ -21,7 +21,7 @@ import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
 import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
-import { CREW_MAX, activityOf, appLink, appSessionOf, peerLabel, peerNews, peerOf } from './live'
+import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
 import { floorOf, partyOf, spotAt } from './party'
 import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
@@ -59,6 +59,8 @@ const said = atom({ plugin: 'mochi-buddy', key: 'said' } as const, NO_SAID)
 const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
 const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
 const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
+/** The desktop app's Mochi is out now, as its file last said. */
+const away = atom({ plugin: 'mochi-buddy', key: 'away' } as const, false)
 
 const TICK_MS = 450
 /** The pane's figures wait this long for a change that is only the other chats' heartbeats; a chat counts as there for ALIVE_MS (45s) after its last. */
@@ -674,6 +676,8 @@ async function liveNow($: Dollar): Promise<Omit<Peer, 'at'>> {
     context: v.context < 0 ? -1 : Math.round(v.context / 5) * 5,
     cost: Math.round(v.cost * 100) / 100,
     limit: used === undefined ? null : { kind: used.kind, resetsAt: used.resetsAt },
+    // In whole percents, so that a fraction more does not rewrite the file.
+    windows: v.limits.slice(0, WINDOWS_MAX).map(l => ({ kind: l.kind, p: Math.min(100, Math.max(0, Math.round(l.percent))), resetsAt: l.resetsAt })),
     app: app?.app ?? '',
   }
 }
@@ -717,6 +721,9 @@ async function readPeers($: Dollar) {
   if (chat.dataDir === '') return
   const now = await $.clock.now()
   chat.peersAt = now
+  // The desktop app's own file, there while it runs: while its Mochi is out, the band's steps aside. Gone, or caught mid-write, it reads as not out.
+  const isOut = deskOf(await $.fs.read(`${chat.dataDir}/app.json`).then(text => JSON.parse(text) as unknown).catch(() => null), now)
+  if (isOut !== (await read($, away))) await update($, away, () => isOut)
   const seen: Record<string, number> = {}
   for (const entry of await $.fs.list(`${chat.dataDir}/live`).catch(() => [])) {
     const path = `${chat.dataDir}/live/${entry.name}`
@@ -1211,6 +1218,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'sound', english: ['sound'], run: arg => toggleSound($, arg) },
     { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
+    { name: 'desktop', english: ['desktop'], run: arg => toggleDesktop($, arg) },
     { name: 'chats', english: ['chats', 'board'], run: () => chatsNow($) },
     { name: 'standup', english: ['standup', 'daily', 'stand-up'], run: () => standup($) },
     { name: 'week', english: ['week', 'weekly', 'hafta', 'haftalik'], run: () => week($) },
@@ -1348,6 +1356,12 @@ async function toggleSound($: Dollar, arg: string): Promise<string> {
 async function setHidden($: Dollar, isHidden: boolean): Promise<string> {
   await setPrefs($, v => ({ ...v, isHidden }))
   return isHidden ? t().cmd.hidden : t().cmd.shown
+}
+
+/** Whether the band goes without its mascot while the desktop app's Mochi is out. */
+async function toggleDesktop($: Dollar, arg: string): Promise<string> {
+  const after = await setPrefs($, v => ({ ...v, goesOut: wanted(arg, v.goesOut) }))
+  return after.goesOut ? t().cmd.desktopOn : t().cmd.desktopOff
 }
 
 /** A setting turned over from the details pane, as its command does with no word after it; the shield's command alone only looks, so it is told which way. */

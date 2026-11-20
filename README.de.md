@@ -269,6 +269,7 @@ Du brauchst keinen einzigen: Mochi legt los, sobald er installiert ist. Wenn du 
 | `/mochi shield [on \| off]` | Sehen, ob der Schild an ist und was wo immer erlaubt ist |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Ein Bild zum Teilen speichern |
 | `/mochi small` · `/mochi big` | Eine Zeile oder volle Größe |
+| `/mochi desktop` | Platz machen für die Desktop-App an- oder ausschalten: Solange deren Mochi draußen ist, erscheint die Leiste ohne Mochi |
 
 <details>
 <summary><b>Alle Befehle</b></summary>
@@ -304,6 +305,7 @@ Du brauchst keinen einzigen: Mochi legt los, sobald er installiert ist. Wenn du 
 | `/mochi birthday [MM-DD \| none]` | Mochi deinen Geburtstag verraten, ihn anzeigen oder vergessen lassen |
 | `/mochi lang [code \| auto]` | Sprache anzeigen oder ändern |
 | `/mochi small` · `/mochi big` | Eine Zeile oder volle Größe |
+| `/mochi desktop` | Platz machen für die Desktop-App an- oder ausschalten: Solange deren Mochi draußen ist, erscheint die Leiste ohne Mochi |
 | `/mochi export` | Alles, was Mochi speichert, in einer JSON-Datei sichern |
 | `/mochi reset [level \| history \| all]` | Den Level-Speicher, den Verlauf oder alles löschen, Einstellungen eingeschlossen; Mochi fragt vorher nach, und Exporte und deine `shield.json` bleiben erhalten |
 | `/mochi feedback` | Ein Link zu einem Bugreport, schon ausgefüllt mit den Versionen, deinem System, der Oberfläche und der Sprache |

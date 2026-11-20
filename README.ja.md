@@ -269,6 +269,7 @@ Mochiが手すきのとき、たまに、いま起きたことに合わせてCla
 | `/mochi shield [on \| off]` | シールドがONかどうかと、どこで何を常に許可しているかの確認 |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | シェア用の画像を保存 |
 | `/mochi small` · `/mochi big` | 1行表示か、フルサイズか |
+| `/mochi desktop` | デスクトップアプリに場所をゆずるかのON/OFF：アプリのMochiが出ている間、バーはMochiなしで表示 |
 
 <details>
 <summary><b>すべてのコマンド</b></summary>
@@ -304,6 +305,7 @@ Mochiが手すきのとき、たまに、いま起きたことに合わせてCla
 | `/mochi birthday [MM-DD \| none]` | 誕生日を教える、確認する、または忘れさせる |
 | `/mochi lang [code \| auto]` | 言語の確認と切り替え |
 | `/mochi small` · `/mochi big` | 1行表示か、フルサイズか |
+| `/mochi desktop` | デスクトップアプリに場所をゆずるかのON/OFF：アプリのMochiが出ている間、バーはMochiなしで表示 |
 | `/mochi export` | Mochiが保存しているものをすべて1つのJSONファイルに書き出す |
 | `/mochi reset [level \| history \| all]` | レベルの記憶、履歴、またはすべて（設定も含む）を消す。消す前に確認があり、エクスポートと`shield.json`は残る |
 | `/mochi feedback` | バージョン、OS、使っている画面、言語が入力済みのバグ報告へのリンク |

@@ -269,6 +269,7 @@ Você nunca precisa de nenhum: o Mochi funciona assim que é instalado. Quando q
 | `/mochi shield [on \| off]` | Diz se o escudo está ligado e mostra o que está sempre permitido e onde |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Salva uma imagem para compartilhar |
 | `/mochi small` · `/mochi big` | Uma linha ou tamanho completo |
+| `/mochi desktop` | Liga ou desliga dar lugar ao app de desktop: enquanto o Mochi dele está à mostra, a faixa aparece sem ele |
 
 <details>
 <summary><b>Todos os comandos</b></summary>
@@ -304,6 +305,7 @@ Você nunca precisa de nenhum: o Mochi funciona assim que é instalado. Quando q
 | `/mochi birthday [MM-DD \| none]` | Conta ao Mochi quando é seu aniversário, mostra a data salva ou a esquece |
 | `/mochi lang [code \| auto]` | Mostra ou troca o idioma |
 | `/mochi small` · `/mochi big` | Uma linha ou tamanho completo |
+| `/mochi desktop` | Liga ou desliga dar lugar ao app de desktop: enquanto o Mochi dele está à mostra, a faixa aparece sem ele |
 | `/mochi export` | Salva tudo o que o Mochi guarda num único arquivo JSON |
 | `/mochi reset [level \| history \| all]` | Apaga a memória do nível, o histórico ou tudo, inclusive as configurações; pergunta antes, e as exportações e o seu `shield.json` ficam |
 | `/mochi feedback` | Um link para um relato de bug, já preenchido com as versões, seu sistema, a interface e o idioma |

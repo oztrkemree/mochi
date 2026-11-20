@@ -269,6 +269,7 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
 | `/mochi shield [on \| off]` | 보호막이 켜져 있는지, 어디서 무엇을 항상 허용했는지 보기 |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | 공유할 그림 저장 |
 | `/mochi small` · `/mochi big` | 한 줄 또는 전체 크기 |
+| `/mochi desktop` | 데스크톱 앱에 자리 비켜주기 켜기/끄기: 앱의 Mochi가 나와 있는 동안 밴드는 Mochi 없이 그려짐 |
 
 <details>
 <summary><b>전체 명령어</b></summary>
@@ -304,6 +305,7 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
 | `/mochi birthday [MM-DD \| none]` | 생일 알려 주기, 확인하기, 또는 지우기 |
 | `/mochi lang [code \| auto]` | 언어 확인 또는 변경 |
 | `/mochi small` · `/mochi big` | 한 줄 또는 전체 크기 |
+| `/mochi desktop` | 데스크톱 앱에 자리 비켜주기 켜기/끄기: 앱의 Mochi가 나와 있는 동안 밴드는 Mochi 없이 그려짐 |
 | `/mochi export` | Mochi가 보관하는 모든 것을 JSON 파일 하나로 저장 |
 | `/mochi reset [level \| history \| all]` | 레벨 정보, 기록, 또는 설정까지 전부 지우기. 먼저 물어보고, 내보낸 파일과 `shield.json`은 남아요 |
 | `/mochi feedback` | 버전, 시스템, 화면, 언어가 미리 채워진 버그 신고 링크 |

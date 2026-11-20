@@ -717,8 +717,8 @@ export const de: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
-    hint: '[standup | week | desk | prs | city | details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
+    description: 'Mochi: standup, week, desk, prs, city, zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, schreibtisch, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
+    hint: '[standup | week | desk | prs | city | details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | schreibtisch | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
     small: 'Mochi in einer Zeile.',
     big: 'Mochi in voller Größe.',
     detailOpened: 'Detailansicht geöffnet.',
@@ -746,6 +746,8 @@ export const de: typeof en = {
     soundOff: 'Ton aus.',
     hidden: 'Mochi ausgeblendet. Zurückholen mit: /mochi',
     shown: 'Mochi ist da.',
+    desktopOn: 'Schreibtisch an: Ist Mochi auf dem Schreibtisch unterwegs, erscheint die Leiste ohne Mochi.',
+    desktopOff: 'Schreibtisch aus: Mochi bleibt in der Leiste.',
     statusLine: (label, line) => `Status: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Kontext: ${ctx} · aktive Agenten: ${agents} · Tools in dieser Runde: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -753,14 +755,14 @@ export const de: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tipps: ${tips ? 'an' : 'aus'} · Pausen: ${breaks ? 'an' : 'aus'} · Plugin-Reaktionen: ${plugins ? 'an' : 'aus'}`,
     peersLine: (level, peers) => `Level ${level} · andere Chats: ${peers}`,
-    commands: 'Befehle: /mochi (zeigen/verstecken) | standup | week | desk | prs | city | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
+    commands: 'Befehle: /mochi (zeigen/verstecken) | standup | week | desk | prs | city | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | schreibtisch | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
     langNow: (name, list) => `Sprache: ${name}. Verfügbar: ${list} · /mochi sprache <Code> oder automatisch`,
     langSet: name => `Sprache: ${name}.`,
     langAuto: name => `Sprache folgt Claude Code und dem System: ${name}.`,
     langUnknown: (code, list) => `Unbekannte Sprache: ${code}. Verfügbar: ${list}`,
     words: {
       on: ['an', 'ein'], off: ['aus'],
-      hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'],
+      hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'], desktop: ['schreibtisch'],
       status: [], details: [], level: [], wear: ['tragen', 'anziehen'], shield: ['schild', 'schutz'],
       alerts: ['hinweise', 'benachrichtigungen', 'meldungen'], lang: ['sprache'], auto: ['automatisch'], none: ['nichts', 'keins'],
       card: ['karte'], wrapped: ['rückblick'], snap: ['schnappschuss', 'foto'], year: ['jahr'],

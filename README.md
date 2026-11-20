@@ -269,6 +269,7 @@ You never need one: Mochi works the moment it is installed. When you want to ste
 | `/mochi shield [on \| off]` | See whether the shield is on and what is always allowed where |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Save a picture to share |
 | `/mochi small` · `/mochi big` | One line or full size |
+| `/mochi desktop` | Turn stepping aside for the desktop app on or off: while its Mochi is out, the band is drawn without one |
 
 <details>
 <summary><b>All commands</b></summary>
@@ -304,6 +305,7 @@ You never need one: Mochi works the moment it is installed. When you want to ste
 | `/mochi birthday [MM-DD \| none]` | Tell Mochi your birthday, see it, or forget it |
 | `/mochi lang [code \| auto]` | Show or change the language |
 | `/mochi small` · `/mochi big` | One line or full size |
+| `/mochi desktop` | Turn stepping aside for the desktop app on or off: while its Mochi is out, the band is drawn without one |
 | `/mochi export` | Save everything Mochi keeps in one JSON file |
 | `/mochi reset [level \| history \| all]` | Clear the level's memory, the history, or everything, settings included; it asks first, and exports and your `shield.json` stay |
 | `/mochi feedback` | A link to a bug report, filled in with the versions, your system, the surface and the language |

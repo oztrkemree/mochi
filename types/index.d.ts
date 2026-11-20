@@ -228,6 +228,8 @@ export type Peer = {
   cost?: number
   /** A usage window used up: which, and when it resets (epoch ms); null when none is. */
   limit?: { kind: string; resetsAt: number } | null
+  /** The usage windows the chat knows now, at most 4: which (five_hour, seven_day…), percent used as a whole number 0-100, and when it resets (epoch ms, 0 when not known). */
+  windows?: { kind: string; p: number; resetsAt: number }[]
   /** The chat's session in the desktop app (local_…), which a link opens; '' when it runs elsewhere or the app does not say. */
   app?: string
 }
@@ -298,6 +300,8 @@ export type Prefs = {
   hasPlugins: boolean
   /** A stretch suggested after two hours of work without a break. */
   hasBreaks: boolean
+  /** The band is drawn without its mascot while the desktop app's Mochi is out. */
+  goesOut: boolean
   /** The person's birthday as "MM-DD", '' when not given. */
   birthday: string
   /** The first day Mochi ran on this machine ("2026-10-09"), for its anniversary; '' until recorded. */
@@ -431,6 +435,8 @@ declare module 'claude-code' {
       party: { pick: string }
       /** The folders opened in the details pane's Changes, from the repository's root. */
       dirs: { open: string[] }
+      /** The desktop app's Mochi is out now, as its file (app.json) last said. */
+      away: boolean
     }
   }
 }
