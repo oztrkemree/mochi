@@ -69,17 +69,28 @@ const drawn = (inner: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-${ROOM.left} -${ROOM.top} ${100 + ROOM.left + ROOM.right} ${100 + ROOM.top + ROOM.bottom}" width="100%" height="100%" preserveAspectRatio="xMidYMax meet">${SHADOW}<svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">${inner}</svg></svg>`
 
 /** One agent in the list: the chat, how it stands in words and ink, the link that opens it, and its subagents. */
-export type Row = { id: string; name: string; status: Status; line: string; ink: string; link: string; agents: { type: string; task: string }[] }
+export type Row = { id: string; name: string; status: Status; line: string; ink: string; link: string; where: Where; agents: { type: string; task: string }[] }
+
+/** Where a chat runs: the Claude app (a press opens it), Codex, or a terminal or editor, which a press cannot reach. */
+export type Where = 'app' | 'codex' | 'terminal'
+
+const whereOf = (p: Peer): Where => (appLink(p.app) ? 'app' : p.id.startsWith('codex:') ? 'codex' : 'terminal')
+
+/** Since when a chat has been at rest: when it came to rest, else when its last turn ended; 0 when it does not say. */
+const restingSince = (p: Peer): number => p.stateAt || p.lastTurn?.at || 0
 
 /** Every agent, the most pressing first, as the list beside Mochi shows them. */
-export function rowsOf(peers: readonly Peer[], now: number): Row[] {
-  return membersOf(crowdOf(peers, now)).map(m => ({
+export function rowsOf(peers: readonly Peer[], now: number, hideIdleAfterMs = 0): Row[] {
+  const isStale = (m: { peer: Peer; status: Status }) =>
+    hideIdleAfterMs > 0 && (m.status === 'idle' || m.status === 'quiet') && restingSince(m.peer) > 0 && now - restingSince(m.peer) >= hideIdleAfterMs
+  return membersOf(crowdOf(peers, now)).filter(m => !isStale(m)).map(m => ({
     id: m.peer.id,
     name: nameOf(m.peer),
     status: m.status,
     line: statusLine(m),
     ink: STATUS_INK[m.status],
     link: appLink(m.peer.app),
+    where: whereOf(m.peer),
     agents: (m.peer.agents ?? []).map(a => ({ type: a.type, task: a.task })),
   }))
 }

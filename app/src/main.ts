@@ -138,7 +138,7 @@ async function hush() {
 
 /** Fills the list of agents from what was last read, and the button's count and dot. */
 function drawAgents() {
-  const rows = view ? rowsOf(view.peers, Date.now()) : []
+  const rows = view ? rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000) : []
   const w = words()
   count.textContent = String(rows.length)
   agentsButton.style.setProperty('--ink', rows[0]?.ink ?? QUIET_INK)
@@ -161,7 +161,10 @@ function drawAgents() {
     if (row.link) {
       item.dataset.link = row.link
       item.title = w.openHint
-    } else item.tabIndex = -1
+    } else {
+      item.tabIndex = -1
+      item.title = w.notHere(w.where[row.where as 'codex' | 'terminal'])
+    }
     const dot = document.createElement('span')
     dot.className = 'dot'
     dot.style.background = row.ink
@@ -170,7 +173,8 @@ function drawAgents() {
     name.textContent = row.name
     const line = document.createElement('span')
     line.className = 'line'
-    line.textContent = row.line
+    // Where a chat a press cannot open runs, beside how it stands.
+    line.textContent = row.where === 'app' ? row.line : `${row.line} · ${w.where[row.where]}`
     item.append(dot, name, line)
     for (const a of row.agents) {
       const sub = document.createElement('span')

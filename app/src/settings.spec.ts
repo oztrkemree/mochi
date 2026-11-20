@@ -7,8 +7,11 @@ test('settings read from what was kept fill in what is missing and drop what is 
   expect(settingsFrom('not json')).toEqual(DEFAULTS)
   const kept = settingsFrom(JSON.stringify({ size: 'large', talk: { done: false }, talkSeconds: 15, onTop: false, lang: 'tr', extra: 1 }))
   expect(kept).toEqual({ ...DEFAULTS, size: 'large', talk: { asking: true, done: false, failed: true }, talkSeconds: 15, onTop: false, lang: 'tr' })
+  expect(settingsFrom(JSON.stringify({ idleMinutes: 60 })).idleMinutes).toBe(60)
+  expect(settingsFrom(JSON.stringify({ idleMinutes: 0 })).idleMinutes).toBe(0)
+  expect(DEFAULTS.idleMinutes).toBe(30)
   // Values that are not among the choices fall back to the default, one by one.
-  expect(settingsFrom(JSON.stringify({ size: 'giant', talkSeconds: 7, lang: 'xx', onTop: 'yes', showAgents: 0 }))).toEqual(DEFAULTS)
+  expect(settingsFrom(JSON.stringify({ size: 'giant', talkSeconds: 7, lang: 'xx', onTop: 'yes', showAgents: 0, idleMinutes: 45 }))).toEqual(DEFAULTS)
 })
 
 test('each size is a side in points, the default the one Mochi had', () => {

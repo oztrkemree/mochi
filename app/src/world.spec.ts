@@ -80,6 +80,24 @@ test('the list of agents: the most pressing first, each with its status in words
   expect(rowsOf([], NOW)).toEqual([])
 })
 
+test('a chat at rest longer than the setting leaves the list; one that works, waits or failed stays however old', () => {
+  const peers = peersOf([
+    file('fresh', { stateAt: NOW - 10 * MIN }),
+    file('old', { stateAt: NOW - 45 * MIN }),
+    file('old-turn', { stateAt: 0, lastTurn: { at: NOW - 50 * MIN, reason: 'answer', seconds: 9 } }),
+    file('waiting', { state: 'asking', stateAt: NOW - 3 * 60 * MIN }),
+    file('working', { state: 'busy', since: NOW - 2 * 60 * MIN, stateAt: NOW - 2 * 60 * MIN }),
+  ], NOW)
+  expect(rowsOf(peers, NOW, 30 * MIN).map(r => r.id)).toEqual(['waiting', 'working', 'fresh'])
+  // 0 keeps every one.
+  expect(rowsOf(peers, NOW, 0)).toHaveLength(5)
+})
+
+test('each row says where its chat runs, so one that cannot be opened from here is not mistaken for a broken press', () => {
+  const rows = rowsOf([...peersOf([file('desk', { app: 'local_abc-1' }), file('term')], NOW), { ...peersOf([file('codex:s1', { label: 'shop' })], NOW)[0] }], NOW)
+  expect(Object.fromEntries(rows.map(r => [r.name, r.where]))).toEqual({ desk: 'app', term: 'terminal', shop: 'codex' })
+})
+
 test('Mochi is drawn with room around it, so what it holds or has beside it is never cut off', () => {
   const svg = viewOf([], NOW).svg
   expect(svg).toMatch(/viewBox="-\d+ -\d+ \d+ \d+"/)

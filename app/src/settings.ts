@@ -17,14 +17,17 @@ export type Settings = {
   showAgents: boolean
   /** The language Mochi speaks; 'auto' follows the system. */
   lang: 'auto' | Lang
+  /** A chat at rest this many minutes leaves the list of agents; 0 keeps every one. */
+  idleMinutes: number
 }
 
 export type Size = 'small' | 'medium' | 'large' | 'huge'
 /** The side of the square Mochi stands in, in points. */
 export const SIZES: Record<Size, number> = { small: 96, medium: 128, large: 160, huge: 200 }
 export const TALK_SECONDS = [5, 9, 15, 30] as const
+export const IDLE_MINUTES = [15, 30, 60, 0] as const
 
-export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true }, talkSeconds: 9, onTop: true, showAgents: true, lang: 'auto' }
+export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true }, talkSeconds: 9, onTop: true, showAgents: true, lang: 'auto', idleMinutes: 30 }
 
 export const KEY = 'settings'
 /** The event the settings window sends Mochi's window with every change. */
@@ -49,6 +52,7 @@ export function settingsFrom(text: string | null): Settings {
     onTop: flag(v.onTop, DEFAULTS.onTop),
     showAgents: flag(v.showAgents, DEFAULTS.showAgents),
     lang: v.lang === 'auto' || (LANGS as unknown[]).includes(v.lang) ? (v.lang as Settings['lang']) : DEFAULTS.lang,
+    idleMinutes: (IDLE_MINUTES as readonly unknown[]).includes(v.idleMinutes) ? (v.idleMinutes as number) : DEFAULTS.idleMinutes,
   }
 }
 
