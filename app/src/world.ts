@@ -94,3 +94,12 @@ export function rowsOf(peers: readonly Peer[], now: number, hideIdleAfterMs = 0)
     agents: (m.peer.agents ?? []).map(a => ({ type: a.type, task: a.task })),
   }))
 }
+
+/** The most dots at Mochi's feet; past it, one fewer and a "+N". */
+export const DOTS_MAX = 5
+
+/** The dots at Mochi's feet: one per chat in the list, in its ink, the waiting ones marked to glow. */
+export function dotsOf(rows: readonly Row[]): { dots: { ink: string; isAsking: boolean }[]; more: number } {
+  const shown = rows.length > DOTS_MAX ? rows.slice(0, DOTS_MAX - 1) : rows
+  return { dots: shown.map(r => ({ ink: r.ink, isAsking: r.status === 'asking' })), more: rows.length - shown.length }
+}

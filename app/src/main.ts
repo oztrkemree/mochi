@@ -10,14 +10,13 @@ import { type Sessions, agentPeers, hookedOf, noted } from './agents'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { words } from './words'
-import { type View, newsOf, peersOf, rowsOf, viewOf } from './world'
+import { type View, dotsOf, newsOf, peersOf, rowsOf, viewOf } from './world'
 
 const root = document.getElementById('root')!
 const stage = document.getElementById('stage')!
 const say = document.getElementById('say')!
 const list = document.getElementById('list')!
 const agentsButton = document.getElementById('agents') as HTMLButtonElement
-const count = document.getElementById('count')!
 const win = getCurrentWindow()
 
 /** The gap kept to the screen's edge, in points. */
@@ -136,13 +135,27 @@ async function hush() {
 
 // ---------- the agents ----------
 
-/** Fills the list of agents from what was last read, and the button's count and dot. */
+/** Fills the list of agents from what was last read, and the dots at Mochi's feet. */
 function drawAgents() {
   const rows = view ? rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000) : []
   const w = words()
-  count.textContent = String(rows.length)
-  agentsButton.style.setProperty('--ink', rows[0]?.ink ?? QUIET_INK)
-  agentsButton.title = w.agents
+  const { dots, more } = dotsOf(rows)
+  const marks = dots.map(d => {
+    const dot = document.createElement('span')
+    dot.className = d.isAsking ? 'dot asking' : 'dot'
+    dot.style.setProperty('--ink', d.ink)
+    return dot
+  })
+  if (more > 0) {
+    const plus = document.createElement('span')
+    plus.className = 'more'
+    plus.textContent = `+${more}`
+    marks.push(plus)
+  }
+  agentsButton.replaceChildren(...marks)
+  agentsButton.classList.toggle('empty', rows.length === 0)
+  agentsButton.title = `${w.agents} · ${rows.length}`
+  agentsButton.setAttribute('aria-label', `${w.agents} · ${rows.length}`)
   if (!list.classList.contains('on')) return
   list.replaceChildren()
   const title = document.createElement('h2')
