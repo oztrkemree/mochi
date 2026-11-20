@@ -301,10 +301,12 @@ fn stand_over_full_screen(window: &tauri::WebviewWindow, on: bool) {
     }
 }
 
-/// Over the other windows or among them, as the person set it.
-#[tauri::command]
-fn on_top(app: AppHandle, on: bool) {
+/// Whether Mochi stays over the other windows, as the person last set it; on until the window says otherwise.
+static ON_TOP: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+fn stand(app: &AppHandle) {
     let Some(window) = app.get_webview_window("main") else { return };
+    let on = ON_TOP.load(std::sync::atomic::Ordering::Relaxed);
     let _ = window.set_always_on_top(on);
     #[cfg(target_os = "macos")]
     {
@@ -313,9 +315,18 @@ fn on_top(app: AppHandle, on: bool) {
     }
 }
 
+/// Over the other windows or among them, as the person set it.
+#[tauri::command]
+fn on_top(app: AppHandle, on: bool) {
+    ON_TOP.store(on, std::sync::atomic::Ordering::Relaxed);
+    stand(&app);
+}
+
 /// The window says its first drawing is on screen.
 #[tauri::command]
 fn shown(app: AppHandle) {
+    // Only a window already on screen takes the spaces of an app that fills the screen: set before it shows, it stays off them.
+    stand(&app);
     // Said at once: the mod's Mochi steps aside now, not at the next beat.
     beat_now(&app);
 }
@@ -390,7 +401,12 @@ pub fn run() {
                 "settings" => open_settings_window(app),
                 "toggle" => {
                     if let Some(window) = app.get_webview_window("main") {
-                        let _ = if is_shown(app) { window.hide() } else { window.show() };
+                        if is_shown(app) {
+                            let _ = window.hide();
+                        } else {
+                            let _ = window.show();
+                            stand(app);
+                        }
                     }
                     // Said at once, so the mod's Mochi comes back or leaves without waiting for the next beat.
                     beat_now(app);

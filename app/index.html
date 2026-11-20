@@ -11,7 +11,7 @@
       body { font: 500 12.5px/1.4 ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; color: var(--fg); }
       /* Everything stands in the window's bottom right corner; the window is sized to it. */
       #root { position: absolute; right: 0; bottom: 0; width: max-content; display: flex; flex-direction: column; align-items: flex-end; }
-      #row { display: flex; align-items: flex-end; }
+      #row { position: relative; display: flex; align-items: flex-end; }
       /* Mochi's own square is --size; the drawing has room around it for what it holds (see ROOM in world.ts). */
       #stage { width: calc(var(--size) * 1.48); height: calc(var(--size) * 1.2); }
       #stage > svg { display: block; width: 100%; height: 100%; }
@@ -19,20 +19,22 @@
       .card { background: var(--card); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line), 0 4px 14px rgba(0, 0, 0, 0.22); }
 
       /* The band's own bubble: a dark pill, a dot in the news's ink, a tail down to Mochi. */
-      #say { display: none; position: relative; max-width: 240px; margin: 0 calc(var(--size) * 0.3) 2px 0; padding: 7px 12px 7px 24px; border-radius: 13px; white-space: pre-line; font-weight: 650; }
+      #say { display: none; position: relative; z-index: 2; max-width: 240px; margin: 0 calc(var(--size) * 0.3) calc(var(--size) * -0.16) 0; padding: 7px 12px 7px 24px; border-radius: 13px; white-space: pre-line; font-weight: 650; }
       #say::before { content: ""; position: absolute; left: 11px; top: 13px; width: 7px; height: 7px; border-radius: 50%; background: var(--ink, #6E6D69); }
       #say::after { content: ""; position: absolute; right: 22px; bottom: -6px; width: 12px; height: 12px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
       #say.on { display: block; }
 
       /* The agents button, at Mochi's feet. */
-      #agents { display: flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px 0 7px; margin: 0 -6px 10px 0; border: 0; border-radius: 12px; font: inherit; font-weight: 650; cursor: pointer; z-index: 1; }
+      /* Right by Mochi's feet, on the side its hands are, not the ground things on its left. */
+      #agents { position: absolute; right: calc(var(--size) * 0.06); bottom: calc(var(--size) * 0.07); display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px 0 7px; border: 0; border-radius: 11px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; z-index: 1; }
       #agents:hover { filter: brightness(1.12); }
       #agents:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
       #agents .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink, #6E6D69); }
       #agents[hidden] { display: none; }
 
       /* The list of agents, over Mochi. */
-      #list { display: none; width: 290px; max-height: 330px; overflow-y: auto; margin: 0 4px 6px 0; padding: 6px; border-radius: 14px; }
+      /* Close over Mochi's head, into the empty room the drawing keeps above it. */
+      #list { display: none; position: relative; z-index: 2; width: 290px; max-height: 330px; overflow-y: auto; margin: 0 0 calc(var(--size) * -0.2) 0; padding: 6px; border-radius: 14px; }
       #list.on { display: block; }
       #list h2 { margin: 4px 8px 6px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
       #list .empty { margin: 6px 8px 8px; color: var(--dim); }

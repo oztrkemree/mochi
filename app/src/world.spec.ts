@@ -84,4 +84,7 @@ test('Mochi is drawn with room around it, so what it holds or has beside it is n
   const svg = viewOf([], NOW).svg
   expect(svg).toMatch(/viewBox="-\d+ -\d+ \d+ \d+"/)
   expect(svg).toContain('overflow="visible"')
+  // A soft shadow under its feet, drawn before Mochi so Mochi stands on it.
+  expect(svg.indexOf('class="shadow"')).toBeGreaterThan(-1)
+  expect(svg.indexOf('class="shadow"')).toBeLessThan(svg.indexOf('overflow="visible"'))
 })

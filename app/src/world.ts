@@ -62,8 +62,11 @@ export const newsOf = (before: readonly Peer[], after: readonly Peer[], now: num
  * the band gives it that room too.
  */
 export const ROOM = { left: 26, top: 14, right: 22, bottom: 6 }
+/** A soft shadow on the ground under Mochi's feet (at 90 in its square), there to stand on, not to be looked at. */
+const SHADOW = '<defs><filter id="mochi-shadow" x="-30%" y="-200%" width="160%" height="500%"><feGaussianBlur stdDeviation="1.8"/></filter></defs>' +
+  '<ellipse class="shadow" cx="50" cy="90.5" rx="25" ry="3.4" fill="#000" opacity="0.2" filter="url(#mochi-shadow)"/>'
 const drawn = (inner: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-${ROOM.left} -${ROOM.top} ${100 + ROOM.left + ROOM.right} ${100 + ROOM.top + ROOM.bottom}" width="100%" height="100%" preserveAspectRatio="xMidYMax meet"><svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">${inner}</svg></svg>`
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-${ROOM.left} -${ROOM.top} ${100 + ROOM.left + ROOM.right} ${100 + ROOM.top + ROOM.bottom}" width="100%" height="100%" preserveAspectRatio="xMidYMax meet">${SHADOW}<svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">${inner}</svg></svg>`
 
 /** One agent in the list: the chat, how it stands in words and ink, the link that opens it, and its subagents. */
 export type Row = { id: string; name: string; status: Status; line: string; ink: string; link: string; agents: { type: string; task: string }[] }
