@@ -7,7 +7,7 @@ export default defineConfig({
   tsconfig: './tsconfig.json',
   server: { port: 1420, strictPort: true, fs: { allow: ['..'] } },
   // The dependency scan would read the mod's files with the mod's tsconfig, which is not there outside Claude Code: the few packages are named instead.
-  optimizeDeps: { noDiscovery: true, include: ['@tauri-apps/api/core', '@tauri-apps/api/window', '@tauri-apps/plugin-opener'] },
-  build: { target: ['chrome105', 'safari15'], outDir: 'dist', emptyOutDir: true },
+  optimizeDeps: { noDiscovery: true, include: ['@tauri-apps/api/core', '@tauri-apps/api/window', '@tauri-apps/api/event', '@tauri-apps/api/app', '@tauri-apps/plugin-opener', '@tauri-apps/plugin-autostart'] },
+  build: { target: ['chrome105', 'safari15'], outDir: 'dist', emptyOutDir: true, rolldownOptions: { input: { main: 'index.html', settings: 'settings.html' } } },
   test: { include: ['src/**/*.spec.ts'] },
 })

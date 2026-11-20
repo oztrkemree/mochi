@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { setLang } from '../../hooks/i18n'
 import { ALIVE_MS } from '../../hooks/live'
 import { lookFrom } from '../../hooks/level'
-import { newsOf, peersOf, viewOf } from './world'
+import { newsOf, peersOf, rowsOf, viewOf } from './world'
 
 setLang('en')
 
@@ -62,4 +62,26 @@ test('Mochi wears what the band’s Mochi wears, by the look the mod writes; wit
   // Asleep with no chat open, still in the person's own hat.
   expect(viewOf([], NOW, look).outfit?.head).toBe('tophat')
   expect(viewOf([], NOW).outfit).toBeUndefined()
+})
+
+test('the list of agents: the most pressing first, each with its status in words, its ink, its link and its subagents', () => {
+  const rows = rowsOf(peersOf([
+    file('docs', { title: 'Write the docs' }),
+    file('api', { state: 'busy', activity: 'testing', since: NOW - 3 * MIN, agents: [{ id: 'a1', type: 'Explore', task: 'find the client', activity: 'reading', since: NOW }] }),
+    file('fix-login', { state: 'asking', waitingFor: 'permission', app: 'local_abc-1', stateAt: NOW - 2 * MIN }),
+  ], NOW), NOW)
+  expect(rows.map(r => [r.name, r.status, r.line, r.link])).toEqual([
+    ['fix-login', 'asking', 'awaiting approval', 'claude://code/continue?session=local_abc-1'],
+    ['api', 'busy', 'test', ''],
+    ['Write the docs', 'idle', 'idle', ''],
+  ])
+  expect(rows[0].ink).toBe('#F2C14E')
+  expect(rows[1].agents).toEqual([{ type: 'Explore', task: 'find the client' }])
+  expect(rowsOf([], NOW)).toEqual([])
+})
+
+test('Mochi is drawn with room around it, so what it holds or has beside it is never cut off', () => {
+  const svg = viewOf([], NOW).svg
+  expect(svg).toMatch(/viewBox="-\d+ -\d+ \d+ \d+"/)
+  expect(svg).toContain('overflow="visible"')
 })

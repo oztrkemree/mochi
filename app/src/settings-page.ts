@@ -1,0 +1,104 @@
+import { getVersion } from '@tauri-apps/api/app'
+import { invoke } from '@tauri-apps/api/core'
+import { emit } from '@tauri-apps/api/event'
+import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
+
+import { LANGS, type Lang, pickLang, setLang } from '../../hooks/i18n'
+import { CHANGED, KEY, SIZES, type Settings, type Size, TALK_SECONDS, loadSettings } from './settings'
+import { words } from './words'
+
+/** Each language by its own name, as a person looks for it. */
+const NATIVE: Record<Lang, string> = {
+  en: 'English', tr: 'Türkçe', es: 'Español', de: 'Deutsch', fr: 'Français', pt: 'Português', ru: 'Русский', zh: '中文',
+  ja: '日本語', ko: '한국어', it: 'Italiano', pl: 'Polski', uk: 'Українська', hi: 'हिन्दी', id: 'Bahasa Indonesia', ar: 'العربية',
+}
+
+const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T
+let settings = loadSettings()
+
+/** Keeps the settings and tells Mochi's window at once. */
+async function save(change: Partial<Settings>) {
+  settings = { ...settings, ...change }
+  try {
+    localStorage.setItem(KEY, JSON.stringify(settings))
+  } catch {
+    // Not kept for the next start; Mochi still hears it now.
+  }
+  await emit(CHANGED, settings)
+  if (change.lang !== undefined) draw()
+}
+
+/** A segmented choice: one button per value, the chosen one pressed. */
+function segment<T extends string | number>(id: string, values: readonly T[], label: (v: T) => string, chosen: T, pick: (v: T) => void) {
+  const box = $(id)
+  box.replaceChildren(...values.map(v => {
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.textContent = label(v)
+    b.setAttribute('aria-pressed', String(v === chosen))
+    b.addEventListener('click', () => {
+      for (const other of box.children) other.setAttribute('aria-pressed', String(other === b))
+      pick(v)
+    })
+    return b
+  }))
+}
+
+function switchOf(id: string, on: boolean, change: (on: boolean) => void) {
+  const input = $<HTMLInputElement>(id)
+  input.checked = on
+  input.onchange = () => change(input.checked)
+}
+
+async function drawCodex() {
+  const w = words()
+  const state = await invoke<string>('codex_state').catch(() => 'broken')
+  $('codexState').textContent = state === 'on' ? w.codexOn : state === 'off' ? w.codexOff : w.codexBroken
+  const button = $<HTMLButtonElement>('codex')
+  button.textContent = state === 'on' ? w.disconnect : w.connect
+  button.disabled = state === 'broken'
+  button.onclick = async () => {
+    button.disabled = true
+    await invoke('set_codex', { on: state !== 'on' }).catch(() => undefined)
+    await drawCodex()
+  }
+}
+
+function draw() {
+  setLang(settings.lang === 'auto' ? (pickLang(navigator.language) ?? 'en') : settings.lang)
+  const w = words()
+  document.title = w.settings
+  const text: Record<string, string> = {
+    title: w.settings, 'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents,
+    'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talkSeconds': w.talkSeconds,
+    'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-codex': w.codex,
+    'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
+  }
+  for (const [id, value] of Object.entries(text)) $(id).textContent = value
+
+  segment('size', Object.keys(SIZES) as Size[], v => w.sizes[v], settings.size, v => void save({ size: v }))
+  switchOf('onTop', settings.onTop, on => void save({ onTop: on }))
+  switchOf('showAgents', settings.showAgents, on => void save({ showAgents: on }))
+  for (const kind of ['asking', 'done', 'failed'] as const) switchOf(`talk-${kind}`, settings.talk[kind], on => void save({ talk: { ...settings.talk, [kind]: on } }))
+  segment('talkSeconds', TALK_SECONDS, w.seconds, settings.talkSeconds, v => void save({ talkSeconds: v }))
+
+  const lang = $<HTMLSelectElement>('lang')
+  lang.replaceChildren(new Option(w.sameAsSystem, 'auto'), ...LANGS.map(l => new Option(NATIVE[l], l)))
+  lang.value = settings.lang
+  lang.onchange = () => void save({ lang: lang.value as Settings['lang'] })
+
+  $('resetPlace').onclick = () => void emit('reset-place')
+  void drawCodex()
+}
+
+async function start() {
+  draw()
+  const version = await getVersion().catch(() => '')
+  $('version').textContent = version ? words().version(version) : ''
+  const atLogin = await isEnabled().catch(() => false)
+  switchOf('atLogin', atLogin, async on => {
+    await (on ? enable() : disable()).catch(() => undefined)
+    $<HTMLInputElement>('atLogin').checked = await isEnabled().catch(() => on)
+  })
+}
+void start()

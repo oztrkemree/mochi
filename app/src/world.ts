@@ -1,8 +1,8 @@
 import type { Mood, Outfit, Peer } from '../../types'
 import { type Look, dressAs } from '../../hooks/level'
-import { type PeerNews, appLink, peerNews, peerOf, peersLine } from '../../hooks/live'
-import { crowdOf, membersOf, moodOf } from '../../hooks/party'
-import { svgFor } from '../../hooks/rig'
+import { type PeerNews, appLink, nameOf, peerNews, peerOf, peersLine } from '../../hooks/live'
+import { STATUS_INK, type Status, crowdOf, membersOf, moodOf, statusLine } from '../../hooks/party'
+import { mascotInner } from '../../hooks/rig'
 import { t } from '../../hooks/i18n'
 
 /**
@@ -44,7 +44,7 @@ export function viewOf(peers: readonly Peer[], now: number, look: Look | null = 
   const mood = lead ? moodOf(lead, now) : 'sleeping'
   const outfit = look ? dressAs(look, mood, now) : undefined
   return {
-    svg: svgFor({ mood, scene: { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0), outfit }, from: null }),
+    svg: drawn(mascotInner({ mood, scene: { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0), outfit }, from: null })),
     mood,
     outfit,
     link: appLink(lead?.peer.app),
@@ -55,3 +55,28 @@ export function viewOf(peers: readonly Peer[], now: number, look: Look | null = 
 
 /** What Mochi has to say about the change from one read to the next: a chat waits, ended a long turn, or failed. */
 export const newsOf = (before: readonly Peer[], after: readonly Peer[], now: number): PeerNews[] => peerNews(before, after, now)
+
+/**
+ * Mochi's drawing with room around its own square: what it holds, wears on
+ * the ground beside it or has floating over it reaches past that square, and
+ * the band gives it that room too.
+ */
+export const ROOM = { left: 26, top: 14, right: 22, bottom: 6 }
+const drawn = (inner: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-${ROOM.left} -${ROOM.top} ${100 + ROOM.left + ROOM.right} ${100 + ROOM.top + ROOM.bottom}" width="100%" height="100%" preserveAspectRatio="xMidYMax meet"><svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">${inner}</svg></svg>`
+
+/** One agent in the list: the chat, how it stands in words and ink, the link that opens it, and its subagents. */
+export type Row = { id: string; name: string; status: Status; line: string; ink: string; link: string; agents: { type: string; task: string }[] }
+
+/** Every agent, the most pressing first, as the list beside Mochi shows them. */
+export function rowsOf(peers: readonly Peer[], now: number): Row[] {
+  return membersOf(crowdOf(peers, now)).map(m => ({
+    id: m.peer.id,
+    name: nameOf(m.peer),
+    status: m.status,
+    line: statusLine(m),
+    ink: STATUS_INK[m.status],
+    link: appLink(m.peer.app),
+    agents: (m.peer.agents ?? []).map(a => ({ type: a.type, task: a.task })),
+  }))
+}

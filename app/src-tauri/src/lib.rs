@@ -226,7 +226,7 @@ fn codex_config(path: &Path) -> Option<Value> {
 }
 
 /// Adds or takes out Mochi's entries in Codex's hooks file. The file as it was is kept once beside it; a file this cannot read is left alone.
-fn set_codex(path: &Path, exe: &Path, on: bool) -> bool {
+fn write_codex(path: &Path, exe: &Path, on: bool) -> bool {
     let Some(config) = codex_config(path) else { return false };
     let Some(next) = (if on { connected(config, &codex_command(exe)) } else { disconnected(config) }) else { return false };
     let backup = path.with_extension("json.mochi-backup");
@@ -234,14 +234,6 @@ fn set_codex(path: &Path, exe: &Path, on: bool) -> bool {
         return false;
     }
     serde_json::to_string_pretty(&next).is_ok_and(|text| write_whole(path, &(text + "\n")))
-}
-
-fn codex_label(path: Option<&Path>) -> &'static str {
-    match path.and_then(codex_config) {
-        None => "Codex: its hooks file cannot be read",
-        Some(config) if is_connected(&config) => "Disconnect Codex (in Codex, run /hooks once to approve)",
-        Some(_) => "Connect Codex",
-    }
 }
 
 // ---------- updates ----------
@@ -289,9 +281,9 @@ fn keep_updated(app: AppHandle) {
 
 // ---------- the window ----------
 
-/// macOS keeps a window off the screen an app fills unless the window says it belongs there too.
+/// macOS keeps a window off the screen an app fills unless the window says it belongs there too; and only the status level stands over it.
 #[cfg(target_os = "macos")]
-fn stand_over_full_screen(window: &tauri::WebviewWindow) {
+fn stand_over_full_screen(window: &tauri::WebviewWindow, on: bool) {
     use objc2_app_kit::{NSWindow, NSWindowCollectionBehavior};
     let Ok(pointer) = window.ns_window() else { return };
     // SAFETY: the pointer is Tauri's own live NSWindow, and this runs on the main thread.
@@ -299,24 +291,77 @@ fn stand_over_full_screen(window: &tauri::WebviewWindow) {
     #[allow(unused_unsafe)]
     unsafe {
         ns_window.setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces | NSWindowCollectionBehavior::FullScreenAuxiliary | NSWindowCollectionBehavior::Stationary);
-        // The status level (25), over the windows of an app that fills the screen.
-        ns_window.setLevel(25);
+        // 25 is the status level, over the windows of an app that fills the screen; 0 is an ordinary window's.
+        ns_window.setLevel(if on { 25 } else { 0 });
         // A window keeps the spaces it had when it came to the screen: it comes again to take the new ones.
-        ns_window.orderOut(None);
-        ns_window.orderFrontRegardless();
+        if ns_window.isVisible() {
+            ns_window.orderOut(None);
+            ns_window.orderFrontRegardless();
+        }
+    }
+}
+
+/// Over the other windows or among them, as the person set it.
+#[tauri::command]
+fn on_top(app: AppHandle, on: bool) {
+    let Some(window) = app.get_webview_window("main") else { return };
+    let _ = window.set_always_on_top(on);
+    #[cfg(target_os = "macos")]
+    {
+        let same = window.clone();
+        let _ = window.run_on_main_thread(move || stand_over_full_screen(&same, on));
     }
 }
 
 /// The window says its first drawing is on screen.
 #[tauri::command]
 fn shown(app: AppHandle) {
-    #[cfg(target_os = "macos")]
-    if let Some(window) = app.get_webview_window("main") {
-        let same = window.clone();
-        let _ = window.run_on_main_thread(move || stand_over_full_screen(&same));
-    }
     // Said at once: the mod's Mochi steps aside now, not at the next beat.
     beat_now(&app);
+}
+
+/// The settings window, opened or brought to the front.
+fn open_settings_window(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("settings") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+        return;
+    }
+    let built = tauri::WebviewWindowBuilder::new(app, "settings", tauri::WebviewUrl::App("settings.html".into()))
+        .title("Mochi")
+        .inner_size(440.0, 780.0)
+        .resizable(false)
+        .maximizable(false)
+        .minimizable(false)
+        .center()
+        .build();
+    if let Ok(window) = built {
+        let _ = window.set_focus();
+    }
+}
+
+#[tauri::command]
+fn open_settings(app: AppHandle) {
+    open_settings_window(&app);
+}
+
+/// Whether Codex is connected: "on", "off", or "broken" for a hooks file this cannot read.
+#[tauri::command]
+fn codex_state() -> String {
+    match codex_hooks_path().as_deref().and_then(codex_config) {
+        None => "broken".into(),
+        Some(config) if is_connected(&config) => "on".into(),
+        Some(_) => "off".into(),
+    }
+}
+
+#[tauri::command]
+fn set_codex(on: bool) -> bool {
+    match (codex_hooks_path(), std::env::current_exe()) {
+        (Some(path), Ok(exe)) => write_codex(&path, &exe, on),
+        _ => false,
+    }
 }
 
 /// What went wrong in the window, said where a person who starts the app from a terminal can read it.
@@ -329,19 +374,20 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![read_live, read_look, take_inbox, note, shown])
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
+        .invoke_handler(tauri::generate_handler![read_live, read_look, take_inbox, note, shown, on_top, open_settings, codex_state, set_codex])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            let codex_path = codex_hooks_path();
             let toggle = MenuItemBuilder::with_id("toggle", "Show or hide Mochi").build(app)?;
-            let codex = MenuItemBuilder::with_id("codex", codex_label(codex_path.as_deref())).build(app)?;
+            let settings = MenuItemBuilder::with_id("settings", "Settings…").build(app)?;
             let quit = MenuItemBuilder::with_id("quit", "Quit Mochi").build(app)?;
-            let menu = MenuBuilder::new(app).items(&[&toggle, &codex]).separator().item(&quit).build()?;
+            let menu = MenuBuilder::new(app).items(&[&toggle, &settings]).separator().item(&quit).build()?;
             let mut tray = TrayIconBuilder::new().menu(&menu).tooltip("Mochi Buddy").on_menu_event(move |app, event| match event.id().as_ref() {
                 "quit" => app.exit(0),
+                "settings" => open_settings_window(app),
                 "toggle" => {
                     if let Some(window) = app.get_webview_window("main") {
                         let _ = if is_shown(app) { window.hide() } else { window.show() };
@@ -349,15 +395,14 @@ pub fn run() {
                     // Said at once, so the mod's Mochi comes back or leaves without waiting for the next beat.
                     beat_now(app);
                 }
-                "codex" => {
-                    if let (Some(path), Ok(exe)) = (codex_path.as_deref(), std::env::current_exe()) {
-                        let on = !codex_config(path).is_some_and(|c| is_connected(&c));
-                        set_codex(path, &exe, on);
-                    }
-                    let _ = codex.set_text(codex_label(codex_path.as_deref()));
-                }
                 _ => {}
             });
+            // On macOS a template image, which the menu bar tints for itself, light or dark; elsewhere the app's own icon.
+            #[cfg(target_os = "macos")]
+            {
+                tray = tray.icon(tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?).icon_as_template(true);
+            }
+            #[cfg(not(target_os = "macos"))]
             if let Some(icon) = app.default_window_icon() {
                 tray = tray.icon(icon.clone());
             }
@@ -498,15 +543,15 @@ mod tests {
         let dir = scratch("codex");
         let path = dir.join("hooks.json");
         // No file yet: one is made, and there is nothing to keep.
-        assert!(set_codex(&path, Path::new("/Apps/Mochi Buddy"), true));
+        assert!(write_codex(&path, Path::new("/Apps/Mochi Buddy"), true));
         assert!(is_connected(&codex_config(&path).unwrap()));
         assert!(fs::read_to_string(&path).unwrap().contains("\\\"/Apps/Mochi Buddy\\\" hook codex"));
         assert!(!dir.join("hooks.json.mochi-backup").exists());
-        assert!(set_codex(&path, Path::new("/Apps/Mochi Buddy"), false));
+        assert!(write_codex(&path, Path::new("/Apps/Mochi Buddy"), false));
         assert!(!is_connected(&codex_config(&path).unwrap()));
         assert!(dir.join("hooks.json.mochi-backup").exists());
         fs::write(&path, "{ broken").unwrap();
-        assert!(!set_codex(&path, Path::new("/Apps/Mochi Buddy"), true));
+        assert!(!write_codex(&path, Path::new("/Apps/Mochi Buddy"), true));
         assert_eq!(fs::read_to_string(&path).unwrap(), "{ broken");
         fs::remove_dir_all(&dir).unwrap();
     }

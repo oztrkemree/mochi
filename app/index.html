@@ -5,31 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mochi</title>
     <style>
+      :root { --size: 128px; --card: #2B2A28; --fg: #F0EFEC; --dim: #A1A09B; --line: rgba(255, 255, 255, 0.08); }
+      @media (prefers-color-scheme: light) { :root { --card: #FAF9F5; --fg: #1F1E1D; --dim: #73726C; --line: rgba(0, 0, 0, 0.1); } }
       html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
-      /* Mochi stands in the window's bottom right corner; what it says sits above it and the window grows to hold it. */
-      #stage { position: absolute; right: 0; bottom: 0; width: 128px; height: 128px; }
+      body { font: 500 12.5px/1.4 ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; color: var(--fg); }
+      /* Everything stands in the window's bottom right corner; the window is sized to it. */
+      #root { position: absolute; right: 0; bottom: 0; width: max-content; display: flex; flex-direction: column; align-items: flex-end; }
+      #row { display: flex; align-items: flex-end; }
+      /* Mochi's own square is --size; the drawing has room around it for what it holds (see ROOM in world.ts). */
+      #stage { width: calc(var(--size) * 1.48); height: calc(var(--size) * 1.2); }
       #stage > svg { display: block; width: 100%; height: 100%; }
-      /* As wide as the widest thing Mochi says, whatever the window's width is now, so a line can be measured before the window grows. */
-      #talk { position: absolute; right: 0; bottom: 130px; width: 264px; display: flex; justify-content: flex-end; }
-      /* The band's own bubble: a dark pill, a dot in the news's ink, the words in its weight. */
-      #say {
-        display: none; position: relative; max-width: 240px; margin-right: 18px; padding: 7px 12px 7px 24px; border-radius: 13px; white-space: pre-line;
-        font: 650 12.5px/1.4 ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-        background: #2B2A28; color: #F0EFEC; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 2px 10px rgba(0, 0, 0, 0.25);
-      }
+
+      .card { background: var(--card); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line), 0 4px 14px rgba(0, 0, 0, 0.22); }
+
+      /* The band's own bubble: a dark pill, a dot in the news's ink, a tail down to Mochi. */
+      #say { display: none; position: relative; max-width: 240px; margin: 0 calc(var(--size) * 0.3) 2px 0; padding: 7px 12px 7px 24px; border-radius: 13px; white-space: pre-line; font-weight: 650; }
       #say::before { content: ""; position: absolute; left: 11px; top: 13px; width: 7px; height: 7px; border-radius: 50%; background: var(--ink, #6E6D69); }
-      /* The tail points down at Mochi. */
-      #say::after { content: ""; position: absolute; right: 26px; bottom: -6px; width: 12px; height: 12px; background: #2B2A28; transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.08); }
+      #say::after { content: ""; position: absolute; right: 22px; bottom: -6px; width: 12px; height: 12px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
       #say.on { display: block; }
-      @media (prefers-color-scheme: light) {
-        #say, #say::after { background: #FAF9F5; }
-        #say { color: #1F1E1D; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 10px rgba(0, 0, 0, 0.12); }
-      }
+
+      /* The agents button, at Mochi's feet. */
+      #agents { display: flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px 0 7px; margin: 0 -6px 10px 0; border: 0; border-radius: 12px; font: inherit; font-weight: 650; cursor: pointer; z-index: 1; }
+      #agents:hover { filter: brightness(1.12); }
+      #agents:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
+      #agents .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink, #6E6D69); }
+      #agents[hidden] { display: none; }
+
+      /* The list of agents, over Mochi. */
+      #list { display: none; width: 290px; max-height: 330px; overflow-y: auto; margin: 0 4px 6px 0; padding: 6px; border-radius: 14px; }
+      #list.on { display: block; }
+      #list h2 { margin: 4px 8px 6px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+      #list .empty { margin: 6px 8px 8px; color: var(--dim); }
+      .agent { display: grid; grid-template-columns: 10px 1fr; column-gap: 8px; align-items: baseline; width: 100%; padding: 6px 8px; border: 0; border-radius: 9px; background: none; color: inherit; font: inherit; text-align: left; }
+      .agent[data-link] { cursor: pointer; }
+      .agent[data-link]:hover, .agent[data-link]:focus-visible { background: var(--line); outline: none; }
+      .agent .dot { width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); }
+      .agent .name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .agent .line, .agent .sub { grid-column: 2; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .agent .sub::before { content: "↳ "; }
     </style>
   </head>
   <body>
-    <div id="talk"><div id="say" role="status"></div></div>
-    <div id="stage" role="img"></div>
+    <div id="root">
+      <div id="list" class="card" role="dialog"></div>
+      <div id="say" class="card" role="status"></div>
+      <div id="row">
+        <button id="agents" class="card" type="button"><span class="dot"></span><span id="count">0</span></button>
+        <div id="stage" role="img"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
