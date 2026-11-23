@@ -17,7 +17,7 @@ import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled }
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { words } from './words'
-import { ROOM, type View, badgeOf, peersOf, rowsOf, viewOf } from './world'
+import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, viewOf } from './world'
 
 /**
  * Mochi's window. It runs nothing on a clock: the app tells it when a hook
@@ -507,6 +507,7 @@ function draw() {
   // The drawing loops by itself: it is put on screen again only when it differs, so its motion never starts over for nothing.
   if (!before || next.svg !== before.svg) stage.innerHTML = next.svg
   stage.setAttribute('aria-label', next.line)
+  watch(next.mood)
   drawAgents()
   const usedBefore = usage
   drawLimits(usageOf(next.peers, now), now)
@@ -515,6 +516,32 @@ function draw() {
     hear([...withoutStalled(newsOf(before.peers, next.peers, now), stalledOf(sessions, now)), ...usageNews(usedBefore, usage, now)].filter(n => talksAbout(settings, n.kind)), next.peers)
   }
   hot()
+}
+
+// ---------- the eyes ----------
+
+/** The moods in which Mochi looks about: awake, and not busy with a face of its own. */
+const LOOKS_ABOUT: readonly Mood[] = ['idle', 'listening', 'waiting', 'asking', 'proud', 'pleased', 'thinking', 'reading', 'searching', 'writing', 'running', 'web', 'agent', 'nervous']
+/** Where the pointer was last said to be, in the window's points. */
+let pointer: { x: number; y: number } | null = null
+let isGazing: boolean | null = null
+
+/** Turns the eyes toward the pointer. The eyes are the drawing's own group; only where they sit is moved. */
+function gaze() {
+  const eyes = stage.querySelector<SVGGElement>('g[transform="translate(0 -52)"]')
+  if (!eyes) return
+  const s = stage.getBoundingClientRect()
+  const unit = s.width / (100 + ROOM.left + ROOM.right)
+  const turn = pointer && isGazing ? gazeOf({ x: s.left + (ROOM.left + 50) * unit, y: s.top + (ROOM.top + 52) * unit }, pointer) : { dx: 0, dy: 0 }
+  eyes.style.translate = `${turn.dx}px ${turn.dy}px`
+}
+
+/** The app says where the pointer is only while Mochi looks about, and never to someone who asked for less motion. */
+function watch(mood: Mood) {
+  const on = LOOKS_ABOUT.includes(mood) && !matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (on !== isGazing) void invoke('gaze', { on }).catch(note)
+  isGazing = on
+  gaze()
 }
 
 // ---------- settings ----------
@@ -593,6 +620,10 @@ async function start() {
     draw()
   })
   // What only time changes: a chat silent too long is at rest or gone, and the file the app keeps of it must say so too.
+  await listen<[number, number]>('pointer', e => {
+    pointer = { x: e.payload[0], y: e.payload[1] }
+    gaze()
+  })
   await listen('minute', () => void take([]).catch(note))
   // Everything is told from the start now that someone listens.
   await invoke('ready')

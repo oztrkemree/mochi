@@ -8,7 +8,21 @@ One Mochi on your screen, for every agent you run. It stands in a corner above y
 
 News of several chats comes one at a time, the most pressing first. Press the bubble to open its chat in the Claude app; press Mochi for the list of chats, or to hear how things stand. Drag it anywhere: it stays where you leave it. Everything around Mochi lets your presses through to the window behind. With no chat open it sleeps.
 
+It shows your usage limits too: the session and the week as two small rings by its feet, and in full at the top of the list. It says so when one passes four fifths, when one is nearly gone and when it is back, and it is tired near the end of one. For now the limits come from the mod's chats.
+
+Its eyes follow your pointer while it is awake, two quick presses are a pat, and in Settings you can give its news a soft sound.
+
 It works for macOS and Windows, with the Mochi Buddy mod or without it.
+
+## Answering a request for permission from the bubble
+
+Off until you say yes; Mochi asks once, the first time it starts. With it on, when a Claude Code chat asks for permission its hook waits up to thirty seconds on Mochi's bubble, which shows the tool and what it is for.
+
+- **Allow** is offered only for a shell command you can read whole: on one line and short enough for the bubble. You answer for what you see.
+- An edit (the bubble shows the file, not the change), a long command, or a tool that says nothing of itself can be **denied** here, or opened by pressing the bubble. They are never waved through.
+- Answer in Claude Code instead, or do nothing, and the request is Claude Code's own dialog's as always: the hook lets go when the chat goes on, and after thirty seconds at the latest.
+
+In the Claude app the dialog and the bubble are both up and the first answer counts. In a terminal Claude Code may hold its own dialog back while the hook waits.
 
 ## Where it gets what it knows
 
@@ -53,6 +67,7 @@ You need Node 22 or later, pnpm, Rust and, on macOS, the Xcode Command Line Tool
 cd app
 pnpm install
 pnpm tauri dev      # runs it, and reloads as you edit
+pnpm dev            # then open http://localhost:1420/preview.html: the window in a browser tab, the app played by a script
 pnpm test           # the window's logic
 cd src-tauri && cargo test   # files, the inbox, the agents' hooks files, where a press is Mochi's
 ```

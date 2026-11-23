@@ -3,7 +3,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 /// macOS keeps a window off the screen an app fills unless the window says it belongs there too; and only the status level stands over it.
 #[cfg(target_os = "macos")]
@@ -98,12 +98,28 @@ fn within(cursor: (f64, f64), f: &Frame, is_mac: bool) -> (f64, f64) {
     }
 }
 
-/// Whether the pointer is on Mochi now. When the system will not say where things are, it is: a Mochi that cannot be pressed is worse than one in the way.
-fn is_pointed_at(app: &AppHandle) -> bool {
+/// Where the pointer is in the window's own points; None when the system will not say.
+fn pointer_in_window(app: &AppHandle) -> Option<(f64, f64)> {
     let frame = *FRAME.lock().unwrap_or_else(|e| e.into_inner());
-    let (Some(frame), Ok(cursor)) = (frame, app.cursor_position()) else { return true };
-    let (x, y) = within((cursor.x, cursor.y), &frame, cfg!(target_os = "macos"));
-    is_over(&HOT.lock().unwrap_or_else(|e| e.into_inner()), x, y)
+    let (Some(frame), Ok(cursor)) = (frame, app.cursor_position()) else { return None };
+    Some(within((cursor.x, cursor.y), &frame, cfg!(target_os = "macos")))
+}
+
+// ---------- Mochi's eyes follow the pointer ----------
+
+/// Whether the window wants to hear where the pointer is: only while Mochi is awake and looks about.
+static GAZE: AtomicBool = AtomicBool::new(false);
+/// Where the pointer was when the window was last told.
+static TOLD: Mutex<(f64, f64)> = Mutex::new((f64::MAX, f64::MAX));
+
+pub fn set_gaze(on: bool) {
+    GAZE.store(on, Ordering::Relaxed);
+}
+
+/// Whether a move of the pointer is worth telling the window: it moved enough to see in Mochi's eyes, and is near enough for them to matter.
+fn is_worth_telling(told: (f64, f64), now: (f64, f64)) -> bool {
+    let moved = (now.0 - told.0).hypot(now.1 - told.1);
+    moved >= 8.0 && now.0.abs() < 2000.0 && now.1.abs() < 2000.0
 }
 
 /// One look at the pointer: the window takes presses while it is on Mochi and lets them through to what is behind the rest of the time.
@@ -112,7 +128,16 @@ pub fn follow_pointer(app: &AppHandle, was: &mut Option<bool>) {
     if !SHOWN.load(Ordering::Relaxed) {
         return;
     }
-    let over = is_pointed_at(app);
+    let at = pointer_in_window(app);
+    // When the system will not say where things are, the pointer counts as on Mochi: a Mochi that cannot be pressed is worse than one in the way.
+    let over = at.is_none_or(|(x, y)| is_over(&HOT.lock().unwrap_or_else(|e| e.into_inner()), x, y));
+    if let (Some(now), true) = (at, GAZE.load(Ordering::Relaxed)) {
+        let mut told = TOLD.lock().unwrap_or_else(|e| e.into_inner());
+        if is_worth_telling(*told, now) {
+            *told = now;
+            let _ = app.emit_to("main", "pointer", now);
+        }
+    }
     if *was == Some(over) {
         return;
     }
@@ -134,6 +159,15 @@ mod tests {
         assert!(!is_over(&rects, 10.0, 10.0));
         assert!(!is_over(&rects, 100.0, 120.0));
         assert!(!is_over(&[], 250.0, 200.0));
+    }
+
+    #[test]
+    fn the_window_hears_of_the_pointer_only_when_it_moved_and_is_near() {
+        assert!(is_worth_telling((f64::MAX, f64::MAX), (100.0, 100.0)));
+        assert!(!is_worth_telling((100.0, 100.0), (103.0, 104.0)));
+        assert!(is_worth_telling((100.0, 100.0), (100.0, 108.0)));
+        // Across the desk on another screen, Mochi's eyes would not move for it.
+        assert!(!is_worth_telling((100.0, 100.0), (4000.0, 100.0)));
     }
 
     #[test]

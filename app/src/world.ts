@@ -109,3 +109,18 @@ export function badgeOf(rows: readonly Row[]): { count: number; ink: string; isA
   const lead = rows[0]
   return lead ? { count: rows.length, ink: lead.ink, isAsking: lead.status === 'asking' } : null
 }
+
+/** How far Mochi's eyes turn, in the units of its drawing: all the way for a pointer this many points off or more. */
+const GAZE_REACH = 1.7
+const GAZE_FULL_AT = 160
+
+/** Where Mochi's eyes turn for a pointer, both in the window's points: toward it, further the further off it is, up to their reach, and less up and down than across. */
+export function gazeOf(face: { x: number; y: number }, pointer: { x: number; y: number }): { dx: number; dy: number } {
+  const x = pointer.x - face.x
+  const y = pointer.y - face.y
+  const far = Math.hypot(x, y)
+  if (far < 1) return { dx: 0, dy: 0 }
+  const reach = Math.min(1, far / GAZE_FULL_AT) * GAZE_REACH
+  const round = (v: number) => Math.round(v * 100) / 100 + 0
+  return { dx: round((x / far) * reach), dy: round((y / far) * reach * 0.8) }
+}

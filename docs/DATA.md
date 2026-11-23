@@ -28,8 +28,9 @@ This page is the contract between the two. Change a file's shape here first.
 | `reset-<kind>.json` | the first Mochi to see a usage window reset | `{at, id}`: who says so, so it is said once |
 | `repos.json` | the mod | `{"<repo root>": lastSeenMs}` |
 | `coach.json` | the mod | which tips were shown, and rules a person repeats |
-| `app.json` | the app, every 15 s while it runs; removed when it quits | `{v: 1, at, isShown, version}` |
-| `inbox/<ms>-<pid>.json` | the app's `hook` command, one file per hook call; the app takes each out as it reads it | `{source, at, event}` |
+| `app.json` | the app, every 15 s while it runs; removed when it quits | `{v: 1, at, isShown, version, approve}` |
+| `inbox/<ms>-<pid>.json` | the app's `hook` command, one file per hook call; the app takes each out as it reads it | `{source, at, event, ask?}` |
+| `answers/<ms>-<pid>.json` | the app, when the person answers a request for permission in Mochi's bubble; the waiting hook takes it out | `{behavior}`: `allow`, `deny` or `none` |
 | `shield.json` | the person, by hand | `{add, off}`: their own shield rules |
 | `share/`, `export-*.json` | the mod, when asked | pictures and exports |
 
@@ -61,4 +62,6 @@ The app counts a chat it follows from the agent's hook calls, the same way the m
 
 While `app.json` is fresh (60 seconds), the app is running. The mod's band steps its Mochi aside when `isShown` is true, and the `hook` command leaves calls in the inbox only then: with the app closed nobody would empty it.
 
-A call in the inbox keeps only what the app reads, cut short: the event's name, the session, the folder, the tool's name, the first 200 characters of a prompt (for the chat's label), the first 300 of a shell command (to tell a test or a commit), a subagent's id and type, and the chat's title.
+`approve` in `app.json` is for how many seconds a Claude Code request for permission may wait on Mochi's bubble; 0, the default, means the person has not asked for that and no hook waits. A hook that waits says so in its call (`ask: {id, until}`), and prints Claude Code's own decision only when the bubble's answer (`answers/<id>.json`) is `allow` or `deny`. With `none`, or no answer by `until`, it prints nothing and the request is Claude Code's own dialog's, as always.
+
+A call in the inbox keeps only what the app reads, cut short: the event's name, the session, the folder, the tool's name, the first 200 characters of a prompt (for the chat's label), the first 300 of a shell command (to tell a test or a commit, and to show the person what a request is for; `cut` says when there was more), a file's path, a subagent's id and type, and the chat's title.

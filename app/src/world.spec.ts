@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { setLang } from '../../hooks/i18n'
 import { ALIVE_MS } from '../../hooks/live'
 import { lookFrom } from '../../hooks/level'
-import { badgeOf, peersOf, rowsOf, viewOf } from './world'
+import { badgeOf, gazeOf, peersOf, rowsOf, viewOf } from './world'
 
 setLang('en')
 
@@ -130,4 +130,18 @@ test('with a limit nearly gone Mochi is tired while nothing else is going on, an
   expect(viewOf(peersOf([file('docs')], NOW), NOW, null, { isTired: true }).mood).toBe('tired')
   expect(viewOf(peersOf([file('api', { state: 'busy', activity: 'writing' })], NOW), NOW, null, { isTired: true }).mood).toBe('writing')
   expect(viewOf(peersOf([file('api', { state: 'asking' })], NOW), NOW, null, { isTired: true }).mood).toBe('asking')
+})
+
+test('Mochi’s eyes turn toward the pointer: a little for one close by, no further than their reach for one far off, and not at all for one on its face', () => {
+  const face = { x: 200, y: 300 }
+  expect(gazeOf(face, { x: 200, y: 300 })).toEqual({ dx: 0, dy: 0 })
+  // Far to the right: all the way right, and no further however far.
+  expect(gazeOf(face, { x: 1200, y: 300 })).toEqual({ dx: 1.7, dy: 0 })
+  expect(gazeOf(face, { x: 5000, y: 300 })).toEqual({ dx: 1.7, dy: 0 })
+  // Up and to the left, close by: part of the way, less up than across, as eyes move.
+  const near = gazeOf(face, { x: 160, y: 270 })
+  expect(near.dx).toBeLessThan(0)
+  expect(near.dy).toBeLessThan(0)
+  expect(Math.hypot(near.dx, near.dy)).toBeLessThan(1)
+  expect(gazeOf(face, { x: 200, y: -700 })).toEqual({ dx: 0, dy: -1.36 })
 })

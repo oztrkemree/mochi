@@ -184,6 +184,12 @@ fn answer(id: String, behavior: String) -> bool {
     data_dir().is_some_and(|d| agents::answer(&d.join("answers"), &id, &behavior))
 }
 
+/// Whether Mochi looks about now: the window is told where the pointer is only then.
+#[tauri::command]
+fn gaze(on: bool) {
+    stage::set_gaze(on);
+}
+
 /// Where in the window a press is Mochi's own; everywhere else it goes to what is behind.
 #[tauri::command]
 fn set_hot(rects: Vec<[f64; 4]>) {
@@ -290,7 +296,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, answer, set_hot, own_live, read_days, write_days, agent_state, set_agent, open_settings, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, answer, gaze, set_hot, own_live, read_days, write_days, agent_state, set_agent, open_settings, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
