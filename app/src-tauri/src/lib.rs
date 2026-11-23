@@ -360,8 +360,8 @@ fn open_room_window(app: &AppHandle, tab: Option<&str>) {
     let page = tab.map_or_else(|| "room.html".to_owned(), |tab| format!("room.html?tab={tab}"));
     let built = tauri::WebviewWindowBuilder::new(app, "room", tauri::WebviewUrl::App(page.into()))
         .title("Mochi")
-        .inner_size(940.0, 660.0)
-        .min_inner_size(780.0, 560.0)
+        .inner_size(1180.0, 800.0)
+        .min_inner_size(860.0, 600.0)
         .center()
         .build();
     if let Ok(window) = built {

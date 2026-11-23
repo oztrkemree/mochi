@@ -12,6 +12,13 @@
       /* The window keeps one size, with room over Mochi for what it says and shows: everything stands in its bottom right corner, and the empty room lets every press through. */
       #root { position: absolute; right: 0; bottom: 0; width: 340px; height: calc(var(--size) * 1.2 + 540px); display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
       #row { position: relative; display: flex; align-items: flex-end; }
+      /* A thought cloud at the end of the dots Mochi draws when it thinks (they end at 78, 7 in its square). Still; it only comes and goes. */
+      #think { display: none; position: absolute; right: calc(var(--size) * 0.15); bottom: calc(var(--size) * 0.99); width: calc(var(--size) * 0.36); pointer-events: none; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35)); }
+      #think svg { display: block; width: 100%; height: auto; }
+      #think.on { display: block; animation: think-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1); transform-origin: 20% 100%; }
+      #say.on ~ #row #think, #list.on ~ #row #think, .peek #think { display: none; }
+      @keyframes think-in { from { opacity: 0; transform: scale(0.6); } }
+      @media (prefers-reduced-motion: reduce) { #think.on { animation: none; } }
       /* Mochi's own square is --size; the drawing has room around it for what it holds (see ROOM in world.ts). */
       #stage { width: calc(var(--size) * 1.48); height: calc(var(--size) * 1.2); }
       #stage > svg { display: block; width: 100%; height: 100%; }
@@ -116,6 +123,7 @@
         <button id="limits" class="card" type="button"></button>
         <button id="agents" class="card" type="button"></button>
         <div id="stage" role="button" tabindex="0"></div>
+        <div id="think"><svg viewBox="0 0 52 36" aria-hidden="true"><path d="M13 31c-6 0-10-4-10-9s4-8.6 9-8.6C13.4 7.6 18.6 4 24.6 4c5.4 0 9.8 3 11.4 7.4 1-.3 2-.4 3-.4 6 0 10 4.2 10 9.6S45 30 39.4 30.6c-1.2.3-2.4.4-3.6.4z" fill="#F6F1EC" stroke="#E2D7CE" stroke-width="1"/><g fill="#8E8178"><circle cx="17" cy="20" r="2.6"/><circle cx="26" cy="20" r="2.6"/><circle cx="35" cy="20" r="2.6"/></g></svg></div>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

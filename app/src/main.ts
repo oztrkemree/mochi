@@ -916,6 +916,8 @@ function draw() {
     move(1300)
   }
   stage.setAttribute('aria-label', next.line)
+  // Thinking, Mochi's dots lead up to a cloud.
+  document.getElementById('think')?.classList.toggle('on', next.mood === 'thinking')
   watch(next.mood)
   drawAgents()
   const usedBefore = usage
