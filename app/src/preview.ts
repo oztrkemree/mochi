@@ -23,7 +23,13 @@ const day = (back: number) => new Date(Date.now() - back * 86_400_000).toISOStri
 // /preview.html?room&all: a long, busy history, so every item and colour is open to try on.
 const isAll = location.search.includes('all')
 const allDays = [JSON.stringify({ id: 'demo', label: 'shop', days: Object.fromEntries(Array.from({ length: isAll ? 120 : 26 }, (_, i) => [day(i), isAll ? { turns: 600, tools: 3000, edits: 500, errors: 1, commits: 60, cost: 0, secs: 40_000, night: 12, add: 9000, del: 9500, early: 6, langs: 63 } : { turns: 4 + ((i * 7) % 11), tools: 30, edits: 6 + (i % 5) * 4, errors: 1, commits: i % 3 === 0 ? 0 : 1 + (i % 4), cost: 0, secs: 900, night: i % 6 === 0 ? 1 : 0, add: 120, del: 40, early: 0, langs: 3 }])) })]
-const shared: Record<string, string> = { 'level.json': JSON.stringify({ level: 1, items: [] }), 'badges.json': '[]' }
+const shared: Record<string, string> = { 'level.json': JSON.stringify({ level: 1, items: [] }), 'badges.json': '[]', 'repos.json': JSON.stringify({ '/w/shop': 1, '/w/shop/.claude/worktrees/loop-2': 1, '/w/api': 1 }) }
+// For the Work tab: more projects, one worked in from a worktree of shop, a busy day of chats side by side, and a chat tied to no project.
+if (isRoom && !isAll) {
+  const more = [{ label: 'api', secs: 5400, every: 11 }, { label: 'docs', secs: 1800, every: 5 }, { label: 'loop-2', secs: 7200, every: 3 }, { label: 'site', secs: 2400, every: 9 }, { label: 'fervent-boyd-1df155', secs: 1200, every: 2 }]
+  for (const m of more) allDays.push(JSON.stringify({ id: m.label, label: m.label, days: Object.fromEntries(Array.from({ length: 40 }, (_, i) => [day(i), { turns: 6, commits: i % 3, secs: i % m.every === 0 ? m.secs * 2 : Math.round((m.secs * ((i * 7) % 5)) / 4), night: i % 4 === 0 ? 2 : 0, add: 200, del: 60 }])) }))
+  for (let w = 1; w <= 6; w++) allDays.push(JSON.stringify({ id: `w${w}`, label: `night-w${w}`, days: { [day(9)]: { turns: 40, commits: 5, secs: 14_000 + w * 1800, add: 900, del: 120 } } }))
+}
 
 mockWindows('main')
 mockIPC((cmd, args) => {

@@ -27,7 +27,9 @@ import { animationOf, tracksIn } from './play'
 import { TRANSITION_MS } from '../../hooks/rig'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
+import { effortOf, weekDue, weekTop } from './effort'
 import { words } from './words'
+import { spell } from './work-tab'
 import { ROOM, type Row, type View, badgeOf, gazeOf, jobsOf, peersOf, rowsOf, stillOf, viewOf } from './world'
 
 /**
@@ -1025,6 +1027,27 @@ function sayNewer() {
   speak(w.newer(version), 30_000, NEWS_INK.level, null, { acts: [{ label: w.get, isMain: true, run: () => { void openUrl(url); sayNext() } }, { label: w.notNow, run: sayNext }] })
 }
 
+/** Friday's word on the week: from 18:00 that Friday, once, the project with the most time in the last seven days, and
+ * the room's Work tab a press away. Said only while no news is up or waiting; a week with under half an hour says nothing. */
+async function sayWeek() {
+  if (isBusy() || weekDue(Date.now(), tz(), localStorage.getItem('week')) === null) return
+  const files = await invoke<string[]>('read_all_days').catch(() => [] as string[])
+  let roots: string[] = []
+  try {
+    const v: unknown = JSON.parse((await invoke<string | null>('read_shared', { name: 'repos.json' }).catch(() => null)) ?? '{}')
+    if (typeof v === 'object' && v !== null && !Array.isArray(v)) roots = Object.keys(v)
+  } catch {
+    // Without it, a worktree's work counts under the worktree's own name.
+  }
+  const due = weekDue(Date.now(), tz(), localStorage.getItem('week'))
+  if (due === null || isBusy() || say.classList.contains('on')) return
+  localStorage.setItem('week', due)
+  const top = weekTop(effortOf(files, roots, dayKey(Date.now(), tz())))
+  if (!top) return
+  const w = words()
+  speak(w.work.week(top.name, spell(top.secs)), 20_000, NEWS_INK.level, null, { acts: [{ label: w.work.show, isMain: true, run: () => { void invoke('open_room', { tab: 'work' }).catch(note); sayNext() } }, { label: w.notNow, run: sayNext }] })
+}
+
 /** Whether Mochi is saying news, or has news waiting: what it says of itself waits for it. */
 const isBusy = () => saying !== null || queue.length > 0
 
@@ -1356,6 +1379,7 @@ async function start() {
     if (!isBusy() && !say.classList.contains('on')) {
       void meet().catch(note)
       sayNewer()
+      void sayWeek().catch(note)
     }
     tip()
     // Now and then something Mochi does by itself.

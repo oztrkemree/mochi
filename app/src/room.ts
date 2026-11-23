@@ -10,12 +10,14 @@ import { itemIcon, svgFor } from '../../hooks/rig'
 import { SKINS, type Skin, skinOf, skinsAt } from '../../hooks/skins'
 import { bestOutfit, cardSvg } from '../../hooks/share'
 import { BADGE_PLACE, CATS, type Cat, type Feat, TIERS, featsOf, tally } from './feats'
+import { type Effort, effortOf, sumOf } from './effort'
 import { growthOf, historyOf } from './growth'
 import { SIGN, medalSvg } from './medal'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
 import { chosen, lookNow, skinNow } from './wardrobe'
 import { words } from './words'
+import { PERIODS, type WorkState, drawWork } from './work-tab'
 import { stillOf } from './world'
 
 /**
@@ -48,7 +50,7 @@ let modLook: Look | null = null
 let prefs: Choice | null = null
 let badges: Badge[] = []
 let look: Look | null = null
-const TABS = ['wardrobe', 'feats', 'settings'] as const
+const TABS = ['wardrobe', 'feats', 'work', 'settings'] as const
 type Tab = (typeof TABS)[number]
 const isTab = (v: unknown): v is Tab => (TABS as readonly unknown[]).includes(v)
 /** The tab asked for (the tray's Settings), else the one last open. */
@@ -59,6 +61,9 @@ let tab: Tab = (() => {
 })()
 let isSettingsUp = false
 let shelf: Slot | 'colour' = 'colour'
+/** Where the work went, for the Work tab; the stretch shown is kept between openings. */
+let effort: Effort | null = null
+let work: WorkState = { period: Math.min(PERIODS.length - 1, Math.max(0, Number(localStorage.getItem('workPeriod') ?? PERIODS.length - 1) || 0)), focus: null }
 
 /** What Mochi has on, as it stands at rest; with an item tried on, that item in its slot. */
 function outfit(trying: Item | null = null): Outfit {
@@ -109,7 +114,7 @@ function drawTabs() {
   tabs.replaceChildren()
   const open = look?.items.length ?? 0
   const all = Object.values(SLOT_ITEMS).flat().length
-  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['settings', t().pane.tabs.settings, '']] as const) {
+  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
     const b = el('button', '', label)
     b.type = 'button'
     b.setAttribute('role', 'tab')
@@ -296,6 +301,7 @@ function drawFeats(into: HTMLElement) {
 }
 
 function show(name: Tab) {
+  if (tab === 'work' && name !== 'work') $('said').textContent = ''
   tab = name
   localStorage.setItem('roomTab', name)
   draw()
@@ -314,9 +320,23 @@ function draw() {
     }
     return
   }
+  const y = panel.scrollTop
   panel.replaceChildren()
   if (tab === 'wardrobe') drawWardrobe(panel)
-  else drawFeats(panel)
+  else if (tab === 'feats') drawFeats(panel)
+  else if (effort) {
+    drawWork(panel, effort, work, next => {
+      work = next
+      localStorage.setItem('workPeriod', String(next.period))
+      draw()
+    })
+    // Mochi says one thing of the stretch: the turns after midnight, if there were any.
+    const from = effort.days.length - Math.min(PERIODS[work.period] ?? 42, effort.days.length)
+    const night = [...effort.projects, effort.unmatched].reduce((s, p) => s + sumOf(p.daily, from).night, 0)
+    $('said').textContent = night > 0 ? words().work.yawn(new Intl.NumberFormat(lang()).format(night)) : ''
+  }
+  // Drawn again in place: the panel stays where it was scrolled to.
+  panel.scrollTop = y
 }
 
 /** The language changed in the settings: the room says everything again in it. */
@@ -354,7 +374,10 @@ const parse = (text: string | null): unknown => {
 /** Everything read again: the room is opened often, and other Mochis count and choose too. */
 async function read() {
   const now = Date.now()
-  history = historyOf(await invoke<string[]>('read_all_days').catch(() => []), dayKey(now, tz()))
+  const files = await invoke<string[]>('read_all_days').catch(() => [])
+  history = historyOf(files, dayKey(now, tz()))
+  const repos = parse(await invoke<string | null>('read_shared', { name: 'repos.json' }).catch(() => null))
+  effort = effortOf(files, typeof repos === 'object' && repos !== null && !Array.isArray(repos) ? Object.keys(repos) : [], dayKey(now, tz()))
   modLook = lookFrom(parse(await invoke<string | null>('read_look').catch(() => null)))
   prefs = choiceFrom(await invoke<string | null>('read_shared', { name: 'prefs.json' }).catch(() => null))
   const kept = badgesOf(parse(await invoke<string | null>('read_shared', { name: 'badges.json' }).catch(() => null))) ?? []
