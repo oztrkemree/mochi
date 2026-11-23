@@ -85,6 +85,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(jq -r .version app/src-tauri/tauri.conf.json)
+          # A draft's files are not public yet: installed apps are pointed at them once it is published (run this again then).
+          if [ "$(gh release view "desktop-v$version" --json isDraft --jq .isDraft)" = "true" ]; then
+            echo "desktop-v$version is a draft: publish it, then run this workflow again to point installed apps at it."
+            exit 0
+          fi
           gh release edit "desktop-v$version" --latest=false
           mod=$(gh release list --exclude-drafts --exclude-pre-releases --limit 100 --json tagName,createdAt --jq '[.[] | select(.tagName | test("^v[0-9]"))] | sort_by(.createdAt) | last | .tagName // empty')
           if [ -n "$mod" ]; then gh release edit "$mod" --latest; fi

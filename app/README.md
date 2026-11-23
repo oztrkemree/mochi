@@ -38,7 +38,7 @@ In the Claude app the dialog and the bubble are both up and the first answer cou
 
 ## The shield
 
-On by default, a switch in Settings. In a Claude Code chat the app follows (not one the mod writes, which the mod shields itself), a shell command that might destroy something waits up to 2.5 seconds while Mochi reads it whole by the mod's own rules and yours in `~/.claude/mochi/shield.json`. One that would (a force push, `rm -rf`, a dropped table, a script piped from the internet…) is asked about first: Claude Code shows its own dialog, with what the command would do, and Mochi says it too. Commands with none of the words the shield looks for (`app/src-tauri/shield-words.json`) do not wait at all; with Mochi hidden, none waits.
+On by default, a switch in Settings. In a Claude Code chat the app follows (not one the mod writes, which the mod shields itself), a shell command that might destroy something waits up to 2.5 seconds while Mochi reads it whole by the mod's own rules and yours in `~/.claude/mochi/shield.json`. One that would (a force push, `rm -rf`, a dropped table, a script piped from the internet…) is asked about first: Claude Code shows its own dialog, with what the command would do, and Mochi says it too. Commands with none of the words the shield looks for (`app/src-tauri/shield-words.json`) do not wait at all, unless you wrote rules of your own into `shield.json`, which any command may match; with Mochi hidden, none waits.
 
 ## Where it gets what it knows
 

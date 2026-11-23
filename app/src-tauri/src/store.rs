@@ -261,8 +261,9 @@ pub fn log(dir: &Path, text: &str) {
     let line = format!("{} {}\n", now_ms(), text.replace('\n', " ").chars().take(2000).collect::<String>());
     let mut all = was + &line;
     if all.len() > 64_000 {
+        // From the first whole line in the last 48 KB: a line break is one byte, never inside a letter.
         let cut = all.len() - 48_000;
-        let from = all[cut..].find('\n').map_or(cut, |i| cut + i + 1);
+        let from = all.as_bytes()[cut..].iter().position(|&b| b == b'\n').map_or(all.len(), |i| cut + i + 1);
         all = all[from..].to_owned();
     }
     let _ = write_whole(&path, &all);
@@ -437,6 +438,12 @@ pub mod tests {
         let text = fs::read_to_string(dir.join("app.log")).unwrap();
         assert!(text.len() <= 64_000 && !text.contains("first"));
         assert!(text.lines().all(|l| l.ends_with('x')));
+        // Letters of more than one byte, wherever the cut falls: never cut inside one.
+        for n in 0..60 {
+            log(&dir, &format!("{}{}", "ş".repeat(997 + n), "ğ"));
+        }
+        let text = fs::read_to_string(dir.join("app.log")).unwrap();
+        assert!(text.len() <= 64_000 && text.lines().all(|l| l.ends_with('ğ') || l.ends_with('x')));
         fs::remove_dir_all(&dir).unwrap();
     }
 

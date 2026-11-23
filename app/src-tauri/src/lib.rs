@@ -270,7 +270,10 @@ fn write_days(id: String, text: String) -> bool {
 #[tauri::command]
 fn agent_state(agent: String) -> String {
     let Some(agent) = agents::agent_named(&agent) else { return "broken".into() };
-    if agent.config_path().as_deref().and_then(std::path::Path::parent).is_some_and(|dir| !dir.is_dir()) {
+    // Claude Code's folder holds Mochi's own files too: it is there when Claude Code has run, with its settings or its chats.
+    let dir = agent.config_path().as_deref().and_then(std::path::Path::parent).map(std::path::Path::to_path_buf);
+    let has_run = |dir: &std::path::Path| if agent.name == "claude" { dir.join("settings.json").exists() || dir.join("projects").is_dir() } else { dir.is_dir() };
+    if dir.as_deref().is_some_and(|dir| !has_run(dir)) {
         return "missing".into();
     }
     match agent.config_path().as_deref().and_then(agents::config_at) {

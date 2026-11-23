@@ -20,12 +20,11 @@ export function nextStep(seen: ReadonlySet<string>, agents: Record<'claude' | 'c
 export const TIPS = ['rightClick', 'drag', 'edge', 'today', 'wardrobe', 'pat', 'shield', 'line'] as const
 export type Tip = (typeof TIPS)[number]
 
-/** How long after the last one a tip may come, and how long Mochi must have been quiet first. */
-export const TIP_EVERY_MS = 20 * 60 * 60_000
+/** How long Mochi must have been quiet before a tip. */
 export const TIP_QUIET_MS = 10 * 60_000
 
-/** The tip to tell now, or null: the tour done, none told for a day, Mochi quiet a while, and one not yet told. */
-export function tipNow(told: readonly string[], lastAt: number, quietSince: number, now: number, isTourDone: boolean): Tip | null {
-  if (!isTourDone || now - lastAt < TIP_EVERY_MS || now - quietSince < TIP_QUIET_MS) return null
+/** The tip to tell now, or null: the tour done, none told today (a local day), Mochi quiet a while, and one not yet told. */
+export function tipNow(told: readonly string[], lastDay: string, today: string, quietSince: number, now: number, isTourDone: boolean): Tip | null {
+  if (!isTourDone || lastDay === today || now - quietSince < TIP_QUIET_MS) return null
   return TIPS.find(tip => !told.includes(tip)) ?? null
 }

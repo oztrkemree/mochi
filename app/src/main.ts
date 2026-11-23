@@ -419,7 +419,8 @@ function hear(fresh: News[], peers: View['peers'], isRequest = false) {
   if (saying && !stillHolds(saying, peers) && !requests.has(saying.id)) return sayNext()
   const first = queue[0]
   if (!first) return
-  if (!say.classList.contains('on')) return sayNext()
+  // Nothing up, or only something Mochi says of itself (a step of the first meeting, a tip): the news goes first; a step comes back.
+  if (!say.classList.contains('on') || saying === null) return sayNext()
   if (saying && isMorePressing(first, saying)) {
     queue = queued(queue, [saying])
     sayNext()
@@ -853,8 +854,25 @@ const seenSteps = (): Set<string> => {
   }
 }
 
-/** The next step of the first meeting, said with its answers; each answer takes the person to the step after. */
+/** A newer version to tell of, once it can be said: when no news is up. */
+let newer: [string, string] | null = null
+function sayNewer() {
+  if (!newer || isBusy()) return
+  const [version, url] = newer
+  newer = null
+  if (localStorage.getItem('newer') === version) return
+  localStorage.setItem('newer', version)
+  const w = words()
+  speak(w.newer(version), 30_000, NEWS_INK.level, null, { acts: [{ label: w.get, isMain: true, run: () => { void openUrl(url); sayNext() } }, { label: w.notNow, run: sayNext }] })
+}
+
+/** Whether Mochi is saying news, or has news waiting: what it says of itself waits for it. */
+const isBusy = () => saying !== null || queue.length > 0
+
+/** The next step of the first meeting, said with its answers; each answer takes the person to the step after. Said only
+ * while no news is up or waiting; tried again each minute until it is. */
 async function meet() {
+  if (isBusy()) return
   const seen = seenSteps()
   const state = (agent: string) => invoke<AgentState>('agent_state', { agent }).catch((): AgentState => 'broken')
   const step = nextStep(seen, { claude: await state('claude'), codex: await state('codex') })
@@ -884,6 +902,7 @@ async function meet() {
     pocket: [w.tour.pocket, [{ label: w.tour.next, isMain: true, run: then() }]],
   }
   const [line, acts] = asks[step]
+  if (isBusy()) return
   speak(line, 120_000, QUIET_INK, null, { acts })
 }
 
@@ -896,10 +915,11 @@ function tip() {
     told = []
   }
   const now = Date.now()
-  const next = tipNow(told, Number(localStorage.getItem('tipAt') ?? 0), saidAt, now, nextStep(seenSteps(), { claude: 'on', codex: 'on' }) === null)
-  if (next === null || saying || queue.length > 0 || peek) return
+  const today = dayKey(now, tz())
+  const next = tipNow(told, localStorage.getItem('tipDay') ?? '', today, saidAt, now, nextStep(seenSteps(), { claude: 'on', codex: 'on' }) === null)
+  if (next === null || isBusy() || peek) return
   localStorage.setItem('tips', JSON.stringify([...told, next]))
-  localStorage.setItem('tipAt', String(now))
+  localStorage.setItem('tipDay', today)
   speak(words().tips[next], settings.talkSeconds * 1000 + 4000, QUIET_INK, null)
 }
 
@@ -1085,7 +1105,7 @@ stage.addEventListener('pointerup', () => {
   pressMochi()
 })
 stage.addEventListener('keydown', e => {
-  if (e.key !== 'Enter' && e.key !== ' ') return
+  if ((e.key !== 'Enter' && e.key !== ' ') || e.repeat) return
   e.preventDefault()
   pressMochi()
 })
@@ -1127,14 +1147,15 @@ async function start() {
   readRules()
   // Told once for each version: a newer Mochi, and where to get it.
   await listen<[string, string]>('newer', e => {
-    const [version, url] = e.payload
-    if (localStorage.getItem('newer') === version) return
-    localStorage.setItem('newer', version)
-    const w = words()
-    speak(w.newer(version), 30_000, NEWS_INK.level, null, { acts: [{ label: w.get, isMain: true, run: () => { void openUrl(url); sayNext() } }, { label: w.notNow, run: sayNext }] })
+    newer = e.payload
+    sayNewer()
   })
   await listen('minute', () => {
     if (Date.now() - rulesAt > 5 * 60_000) readRules()
+    if (!isBusy() && !say.classList.contains('on')) {
+      void meet().catch(note)
+      sayNewer()
+    }
     tip()
     // A breath a minute, so a Mochi with nothing to do is still alive.
     move(1500)
