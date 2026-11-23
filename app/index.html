@@ -118,21 +118,21 @@
       .agent .plan { grid-column: 2 / -1; color: var(--fg); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .peek #agents, .peek #limits, .away #agents, .away #limits, .away #think { display: none; }
       /* With nothing going on Mochi leaves the screen by its nearest edge: the window stands flush against that edge, so its edge is the
-         screen's, and Mochi goes out through it: a crouch, a hop, a dive over the bottom or a tumble out over a side, its antenna's lit tip
-         left showing. Back in, it pops up and lands. The tip is a third of the drawing's height, 68% of its width turned. */
+         screen's, and Mochi goes out through it, all of it: a crouch, a hop, a dive over the bottom or a tumble out over a side. Back in,
+         it pops up and lands. */
       .away-right #row, .back-right #row, .away-left #row, .back-left #row { transform-origin: 51.35% 58.33%; }
-      .away-bottom #row { transform: translateY(69%); animation: out-bottom 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
+      .away-bottom #row { transform: translateY(115%); animation: out-bottom 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
       .back-bottom #row { animation: in-bottom 0.65s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
-      @keyframes out-bottom { 0% { transform: none; } 22% { transform: translateY(4%) scale(1.06, 0.9); } 45% { transform: translateY(-22%) scale(0.96, 1.05); } 100% { transform: translateY(69%); } }
-      @keyframes in-bottom { 0% { transform: translateY(69%); } 60% { transform: translateY(-12%) scale(0.96, 1.05); } 82% { transform: translateY(2%) scale(1.05, 0.94); } 100% { transform: none; } }
-      .away-right #row { transform: translateX(68%) rotate(-90deg); animation: out-right 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
+      @keyframes out-bottom { 0% { transform: none; } 22% { transform: translateY(4%) scale(1.06, 0.9); } 45% { transform: translateY(-22%) scale(0.96, 1.05); } 100% { transform: translateY(115%); } }
+      @keyframes in-bottom { 0% { transform: translateY(115%); } 60% { transform: translateY(-12%) scale(0.96, 1.05); } 82% { transform: translateY(2%) scale(1.05, 0.94); } 100% { transform: none; } }
+      .away-right #row { transform: translateX(120%) rotate(-90deg); animation: out-right 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
       .back-right #row { animation: in-right 0.65s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
-      @keyframes out-right { 0% { transform: none; } 20% { transform: translateY(3%) scale(1.05, 0.92); } 45% { transform: translate(8%, -16%) rotate(-25deg); } 100% { transform: translateX(68%) rotate(-90deg); } }
-      @keyframes in-right { 0% { transform: translateX(68%) rotate(-90deg); } 60% { transform: translate(-5%, -12%) rotate(10deg); } 100% { transform: none; } }
-      .away-left #row { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 68%)) rotate(90deg); animation: out-left 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
+      @keyframes out-right { 0% { transform: none; } 20% { transform: translateY(3%) scale(1.05, 0.92); } 45% { transform: translate(8%, -16%) rotate(-25deg); } 100% { transform: translateX(120%) rotate(-90deg); } }
+      @keyframes in-right { 0% { transform: translateX(120%) rotate(-90deg); } 60% { transform: translate(-5%, -12%) rotate(10deg); } 100% { transform: none; } }
+      .away-left #row { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 120%)) rotate(90deg); animation: out-left 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
       .back-left #row { animation: in-left 0.65s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
-      @keyframes out-left { 0% { transform: none; } 20% { transform: translateY(3%) scale(1.05, 0.92); } 45% { transform: translate(-30%, -16%) rotate(25deg); } 100% { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 68%)) rotate(90deg); } }
-      @keyframes in-left { 0% { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 68%)) rotate(90deg); } 60% { transform: translate(5%, -12%) rotate(-10deg); } 100% { transform: none; } }
+      @keyframes out-left { 0% { transform: none; } 20% { transform: translateY(3%) scale(1.05, 0.92); } 45% { transform: translate(-30%, -16%) rotate(25deg); } 100% { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 120%)) rotate(90deg); } }
+      @keyframes in-left { 0% { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 120%)) rotate(90deg); } 60% { transform: translate(5%, -12%) rotate(-10deg); } 100% { transform: none; } }
       @media (prefers-reduced-motion: reduce) { #row { animation: none !important; } }
       #list h3 { margin: 10px 6px 6px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
       #list h4 { margin: 8px 6px 4px; font-size: 11.5px; font-weight: 650; }

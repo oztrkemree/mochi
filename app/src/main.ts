@@ -274,8 +274,10 @@ function standUp(isPlaced = true) {
 
 // ---------- with nothing going on, Mochi leaves the screen ----------
 
-/** The edge Mochi went out of the screen by; null while it is here. Only its antenna's lit tip shows, at that edge. */
+/** The edge Mochi went out of the screen by; null while it is here. */
 let away: Edge | null = null
+/** Whether Mochi is all the way out: nothing is drawn and nothing plays then, so it costs nothing. */
+let isGone = false
 /** Where the window stands while Mochi is away: flush against that edge, so the window's edge is the screen's. */
 let awayAt: Point | null = null
 /** How long the way out and the way back in take (see the stage's style). */
@@ -300,6 +302,14 @@ async function goAway() {
   hold('whee', OUT_MS)
   root.classList.add('away', `away-${edge}`)
   hot()
+  // Out of sight: nothing drawn, nothing played, until it comes back.
+  window.setTimeout(() => {
+    if (away !== edge) return
+    isGone = true
+    clearTimeout(stillTimer)
+    clearInterval(liveTimer)
+    stage.replaceChildren()
+  }, OUT_MS)
 }
 
 /** Mochi comes back in by the edge it left by: it pops up, lands, and leaps back to where it stood. */
@@ -307,8 +317,11 @@ function comeBack() {
   if (!away) return
   const edge = away
   away = null
+  isGone = false
   root.classList.remove('away', `away-${edge}`)
   root.classList.add(`back-${edge}`)
+  // Drawn afresh: nothing was while it was out.
+  view = null
   hold('whee', IN_MS)
   window.setTimeout(() => {
     root.classList.remove(`back-${edge}`)
@@ -347,11 +360,9 @@ function rest(peers: readonly { state: string }[]) {
  */
 function hot() {
   const rects: number[][] = []
-  // Mochi's body; on its side, turned a quarter about its middle. Away, only its antenna's tip, at the edge it went out by.
+  // Mochi's body, on its side turned a quarter about its middle; none while it is out of the screen.
   const b = bodyBox()
-  const TIP = 28
-  if (away) rects.push(away === 'bottom' ? [b.x + b.w / 2 - TIP / 2, innerHeight - TIP, TIP, TIP] : away === 'right' ? [innerWidth - TIP, b.y + b.h / 2 - TIP / 2, TIP, TIP] : [0, b.y + b.h / 2 - TIP / 2, TIP, TIP])
-  else hotBody(rects, b)
+  if (!away) hotBody(rects, b)
   for (const el of [say, list, agentsButton, limitsButton]) {
     const r = el.getBoundingClientRect()
     if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
@@ -406,8 +417,9 @@ const WORK_MOVES_MS = 900
 let stillTimer = 0
 let isStill = false
 
-/** Shows a drawing, the eyes where they were turned; between moves, its layers are played (see `liven`). */
+/** Shows a drawing, the eyes where they were turned; between moves, its layers are played (see `liven`). Nothing while Mochi is out. */
 function show(svg: string) {
+  if (isGone) return
   stage.innerHTML = svg
   gaze()
   liven()
