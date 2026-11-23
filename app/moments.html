@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mochi · anlar</title>
+    <!-- Every moment Mochi plays, one after another, for looking at them while working on them: `pnpm dev`, then /moments.html. Not part of the app. -->
+    <style>
+      html, body { margin: 0; height: 100%; background: radial-gradient(ellipse at 50% 38%, #3a2c26 0%, #1E1B19 62%); color: #F3EEE9; font: 15px/1.4 -apple-system, system-ui, sans-serif; overflow: hidden; }
+      main { height: 100%; display: grid; grid-template-rows: 1fr auto; justify-items: center; }
+      #stage { width: min(64vh, 82vw); aspect-ratio: 1; align-self: end; position: relative; }
+      #stage::after { content: ''; position: absolute; left: 22%; right: 22%; bottom: 7%; height: 5%; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.45), transparent); z-index: -1; }
+      #stage svg { overflow: visible; }
+      footer { padding: 8px 0 34px; text-align: center; display: grid; gap: 10px; justify-items: center; }
+      #name { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
+      #when { color: #C9B8AE; min-height: 1.4em; }
+      #dots { display: flex; gap: 6px; }
+      #dots button { width: 9px; height: 9px; border-radius: 50%; border: 0; padding: 0; background: #4a3f39; cursor: pointer; }
+      #dots button.on { background: #D97757; transform: scale(1.3); }
+      #dots button.seen { background: #8a6656; }
+      nav { display: flex; gap: 10px; }
+      nav button { background: #2c2522; color: #F3EEE9; border: 1px solid #4a3f39; border-radius: 999px; padding: 7px 16px; font: inherit; cursor: pointer; }
+      nav button:hover { border-color: #D97757; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div id="stage"></div>
+      <footer>
+        <div id="name"></div>
+        <div id="when"></div>
+        <div id="dots"></div>
+        <nav><button id="prev" type="button">◀ Önceki</button><button id="pause" type="button">❚❚ Durdur</button><button id="next" type="button">Sonraki ▶</button></nav>
+      </footer>
+    </main>
+    <script type="module" src="/src/moments.ts"></script>
+  </body>
+</html>
