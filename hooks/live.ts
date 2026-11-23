@@ -62,6 +62,12 @@ export function deskOf(value: unknown, now: number): boolean {
   return v.isShown === true && typeof v.at === 'number' && now - v.at <= ALIVE_MS
 }
 
+/** Whether the desktop app runs now, shown or not, by the same file: it counts the same work, so news of the level is claimed before it is said. */
+export function appRunsOf(value: unknown, now: number): boolean {
+  const at = typeof value === 'object' && value !== null ? (value as { at?: unknown }).at : undefined
+  return typeof at === 'number' && now - at <= ALIVE_MS
+}
+
 /** A chat's subagents in its file: at most this many. */
 export const CREW_MAX = 8
 /** A chat's usage windows in its file: at most this many. */

@@ -358,12 +358,10 @@ export function lookOf(p: Prefs, v: Env): Look | null {
   return { pick, items, tz: v.tz, birthday: p.birthday, firstDay: p.firstDay }
 }
 
-/** A look file's content, checked field by field: a version this does not know, or no picks or items, is no look. */
-export function lookFrom(value: unknown): Look | null {
-  if (typeof value !== 'object' || value === null) return null
-  const v = value as { v?: unknown; pick?: unknown; items?: unknown; tz?: unknown; birthday?: unknown; firstDay?: unknown }
-  if (v.v !== 1 || typeof v.pick !== 'object' || v.pick === null || Array.isArray(v.pick) || !Array.isArray(v.items)) return null
-  const picked = v.pick as Record<string, unknown>
+/** A choice as a file holds it, slot by slot: an item, null for nothing; an item this version does not know is left to Mochi. */
+export function pickOf(value: unknown): Partial<Outfit> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return {}
+  const picked = value as Record<string, unknown>
   const pick: Partial<Outfit> = {}
   for (const slot of SLOTS) {
     if (picked[slot] === null) pick[slot] = null
@@ -372,8 +370,31 @@ export function lookFrom(value: unknown): Look | null {
       if (item !== null) pick[slot] = item
     }
   }
+  return pick
+}
+
+/** The wardrobe choice last made in either Mochi, the mod or the desktop app, and when (prefs.json). */
+export type Choice = { at: number; pick: Partial<Outfit> }
+
+/** prefs.json's content; null when there is none, or not one this version reads. */
+export function choiceFrom(text: string | null): Choice | null {
+  try {
+    const v = JSON.parse(text ?? '') as { v?: unknown; at?: unknown; pick?: unknown }
+    return v.v === 1 && typeof v.at === 'number' ? { at: v.at, pick: pickOf(v.pick) } : null
+  } catch {
+    return null
+  }
+}
+
+export const choiceText = (c: Choice): string => JSON.stringify({ v: 1, at: c.at, pick: c.pick })
+
+/** A look file's content, checked field by field: a version this does not know, or no picks or items, is no look. */
+export function lookFrom(value: unknown): Look | null {
+  if (typeof value !== 'object' || value === null) return null
+  const v = value as { v?: unknown; pick?: unknown; items?: unknown; tz?: unknown; birthday?: unknown; firstDay?: unknown }
+  if (v.v !== 1 || typeof v.pick !== 'object' || v.pick === null || Array.isArray(v.pick) || !Array.isArray(v.items)) return null
   return {
-    pick,
+    pick: pickOf(v.pick),
     items: v.items.map(itemOf).filter((i): i is Item => i !== null),
     tz: typeof v.tz === 'number' && Math.abs(v.tz) <= 14 * 60 ? v.tz : 0,
     birthday: typeof v.birthday === 'string' && /^\d\d-\d\d$/.test(v.birthday) ? v.birthday : '',

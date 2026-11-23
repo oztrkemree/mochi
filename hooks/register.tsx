@@ -20,8 +20,8 @@ import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
-import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
-import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
+import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, choiceFrom, choiceText, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
+import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appRunsOf, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
 import { floorOf, partyOf, spotAt } from './party'
 import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
@@ -729,8 +729,11 @@ async function readPeers($: Dollar) {
   const now = await $.clock.now()
   chat.peersAt = now
   // The desktop app's own file, there while it runs: while its Mochi is out, the band's steps aside. Gone, or caught mid-write, it reads as not out.
-  const isOut = deskOf(await $.fs.read(`${chat.dataDir}/app.json`).then(text => JSON.parse(text) as unknown).catch(() => null), now)
+  const app = await $.fs.read(`${chat.dataDir}/app.json`).then(text => JSON.parse(text) as unknown).catch(() => null)
+  const isOut = deskOf(app, now)
+  chat.appRuns = appRunsOf(app, now)
   if (isOut !== (await read($, away))) await update($, away, () => isOut)
+  await wearChoice($)
   const seen: Record<string, number> = {}
   for (const entry of await $.fs.list(`${chat.dataDir}/live`).catch(() => [])) {
     const path = `${chat.dataDir}/live/${entry.name}`
@@ -836,7 +839,7 @@ async function checkLevel($: Dollar) {
   const fresh = items.filter(i => !had.includes(i))
   if (saved !== null && (saved.level ?? 1) >= level && fresh.length === 0) return
   await $.fs.write(path, JSON.stringify({ level, items })).catch(() => undefined)
-  if (saved === null) return
+  if (saved === null || !(await mayTell($, 'said-level', level * 1000 + items.length))) return
   const parts = [...((saved.level ?? 1) < level ? [t().st.level(level)] : []), ...(fresh.length > 0 ? [t().st.newItems([...fresh.slice(0, 4).map(itemName), ...(fresh.length > 4 ? [`+${fresh.length - 4}`] : [])].join(', '))] : [])]
   if (mayCelebrate(await read($, face), await $.clock.now())) await show($, { mood: 'party', line: parts.join(' · '), holdMs: 8000, sound: 'party' })
   $.ui.toast(`${parts.join(' · ')}${fresh.length > 0 ? t().note.seeWardrobe : ''}`, { timeoutMs: 8000 })
@@ -988,9 +991,26 @@ async function openDetail($: Dollar) {
   if (!opened.isPlaced) $.ui.toast(t().note.detailFailed(opened.reason))
 }
 
-async function setPrefs($: Dollar, change: (p: Prefs) => Prefs) {
+/**
+ * The wardrobe choice made in another Mochi (the desktop app, or another chat),
+ * as prefs.json last says it: worn here too, once, if it is newer than the one
+ * this chat last wore or made.
+ */
+async function wearChoice($: Dollar) {
+  const c = choiceFrom(await $.fs.read(`${chat.dataDir}/prefs.json`).catch(() => null))
+  if (c === null || c.at <= chat.choiceAt) return
+  chat.choiceAt = c.at
+  if (JSON.stringify(c.pick) !== JSON.stringify((await read($, prefs)).pick)) await setPrefs($, p => ({ ...p, pick: c.pick }), false)
+}
+
+async function setPrefs($: Dollar, change: (p: Prefs) => Prefs, isOwnChoice = true) {
   const before = await read($, prefs)
   const after = await update($, prefs, change)
+  // A choice made here is written for the other Mochi to wear too.
+  if (isOwnChoice && chat.dataDir !== '' && JSON.stringify(after.pick) !== JSON.stringify(before.pick)) {
+    chat.choiceAt = await $.clock.now()
+    await $.fs.write(`${chat.dataDir}/prefs.json`, choiceText({ at: chat.choiceAt, pick: after.pick })).catch(() => undefined)
+  }
   // The store is every chat's: only what this change altered goes in, over what the other chats saved since this one started.
   const changed = Object.fromEntries(Object.entries(after).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(before[k as keyof Prefs])))
   const stored = (await $.store.get('prefs').catch(() => undefined)) as Partial<Prefs> | undefined
@@ -1509,6 +1529,15 @@ async function claim($: Dollar, name: string, at: number): Promise<boolean> {
   await $.fs.write(path, JSON.stringify({ at, id: chat.sessionId })).catch(() => undefined)
   await $.clock.sleep(CLAIM_SETTLE_MS)
   return (await holder()) === 'mine'
+}
+
+/**
+ * Whether this chat says a level or badges every Mochi may see at once. While
+ * the desktop app runs it counts the same work, so the news is claimed first,
+ * under the names and numbers the app claims it by; without it, as always.
+ */
+async function mayTell($: Dollar, name: string, at: number): Promise<boolean> {
+  return !chat.appRuns || claim($, name, at)
 }
 
 /** /mochi chats: every chat on the machine, this one first. */
@@ -2262,7 +2291,7 @@ async function awardNow($: Dollar, fresh: Badge[]) {
   if (saved !== null && news.length === 0) return
   await $.fs.write(path, JSON.stringify(all)).catch(() => undefined)
   const told = saved === null ? news.filter(b => fresh.includes(b)) : news
-  if (told.length === 0) return
+  if (told.length === 0 || !(await mayTell($, 'said-badges', all.length))) return
   const line = t().fun.newBadge(told.map(badgeName).join(', '))
   if (mayCelebrate(await read($, face), await $.clock.now())) await show($, { mood: 'party', line, holdMs: 8000, sound: 'party' })
   $.ui.toast(`${line}${t().fun.seeBadges}`, { timeoutMs: 8000 })

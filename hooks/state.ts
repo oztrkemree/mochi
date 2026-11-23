@@ -163,6 +163,10 @@ export const chat = {
   liveKey: '',
   /** The look last written to look.json by this chat. */
   lookKey: '',
+  /** When the wardrobe choice this chat last wore or made was made (prefs.json). */
+  choiceAt: 0,
+  /** Whether the desktop app runs, as app.json last said. */
+  appRuns: false,
   peersAt: 0,
   peerMtimes: {} as Record<string, number>,
   peerCache: {} as Record<string, Peer>,

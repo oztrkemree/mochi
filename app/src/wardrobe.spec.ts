@@ -1,18 +1,19 @@
 import { expect, test } from 'vitest'
 
 import { historyOf } from './growth'
-import { chosen, lookNow, prefsFrom, prefsText, shelvesOf } from './wardrobe'
+import { choiceFrom, choiceText } from '../../hooks/level'
+import { chosen, lookNow, shelvesOf } from './wardrobe'
 
 const days = (record: Record<string, Record<string, number>>) => JSON.stringify({ id: 'c', label: 'c', days: record })
 // Enough work for the first hats: 2 days, 60 turns, 4 commits.
 const worked = historyOf([days({ '2026-11-22': { turns: 30, commits: 2 }, '2026-11-23': { turns: 30, commits: 2 } })], '2026-11-23')
 
 test('prefs.json is read slot by slot; a version or an item this does not know is left out', () => {
-  expect(prefsFrom(prefsText(5, { head: 'beanie', neck: null }))).toEqual({ at: 5, pick: { head: 'beanie', neck: null } })
-  expect(prefsFrom('{"v":1,"at":7,"pick":{"head":"bere","eyes":"laser","nope":"beanie"}}')).toEqual({ at: 7, pick: { head: 'beanie' } })
-  expect(prefsFrom('{"v":2,"at":7,"pick":{}}')).toBeNull()
-  expect(prefsFrom('{ half')).toBeNull()
-  expect(prefsFrom(null)).toBeNull()
+  expect(choiceFrom(choiceText({ at: 5, pick: { head: 'beanie', neck: null } }))).toEqual({ at: 5, pick: { head: 'beanie', neck: null } })
+  expect(choiceFrom('{"v":1,"at":7,"pick":{"head":"bere","eyes":"laser","nope":"beanie"}}')).toEqual({ at: 7, pick: { head: 'beanie' } })
+  expect(choiceFrom('{"v":2,"at":7,"pick":{}}')).toBeNull()
+  expect(choiceFrom('{ half')).toBeNull()
+  expect(choiceFrom(null)).toBeNull()
 })
 
 test('Mochi wears what the history opened, by the last choice made in either Mochi, and never what it has not earned', () => {

@@ -8,7 +8,7 @@ import { badgeName, badgeSvg } from '../../hooks/badges'
 import { citySvg } from '../../hooks/city'
 import { dayKey, local, shiftDay } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
-import { type Look, type Slot, addDay, itemShort, levelOf, lookFrom, slotName, unlocked, xpOf } from '../../hooks/level'
+import { type Choice, type Look, type Slot, addDay, choiceFrom, choiceText, itemShort, levelOf, lookFrom, slotName, unlocked, xpOf } from '../../hooks/level'
 import { PRS_QUERY, PRS_SEARCH } from '../../hooks/prs'
 import { LOOK_BACK_DAYS } from '../../hooks/standup'
 import { PEER_INK, appLink, nameOf } from '../../hooks/live'
@@ -22,7 +22,7 @@ import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled }
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type PullBox, type Ran, ciNow, ciSaid, commitsOf, deskOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed, standupOf } from './today'
-import { type Prefs, chosen, lookNow, prefsFrom, prefsText, shelvesOf } from './wardrobe'
+import { chosen, lookNow, shelvesOf } from './wardrobe'
 import { words } from './words'
 import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, stillOf, viewOf } from './world'
 
@@ -86,7 +86,7 @@ function remembered(): { x: number; y: number } | null {
 
 /** The look the mod writes (look.json), the person's last choice in either Mochi (prefs.json), and what this Mochi wears by them. */
 let modLook: Look | null = null
-let prefs: Prefs | null = null
+let prefs: Choice | null = null
 let look: Look | null = null
 function wear(text: string | null) {
   let value: unknown = null
@@ -113,7 +113,7 @@ function choose(slot: Slot, item: Item | null | undefined) {
   prefs = { at: Date.now(), pick: chosen(prefs?.pick ?? modLook?.pick ?? {}, slot, item) }
   dress()
   drawAgents()
-  void invoke('write_shared', { name: 'prefs.json', text: prefsText(prefs.at, prefs.pick) }).catch(note)
+  void invoke('write_shared', { name: 'prefs.json', text: choiceText(prefs) }).catch(note)
 }
 
 // ---------- where the window stands ----------
@@ -940,7 +940,7 @@ async function start() {
     draw()
   })
   await listen<string | null>('prefs', e => {
-    prefs = prefsFrom(e.payload)
+    prefs = choiceFrom(e.payload)
     dress()
     if (side === 'mochi') drawAgents()
   })

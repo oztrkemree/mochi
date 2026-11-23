@@ -471,6 +471,26 @@ test('the person’s look is written for the desktop app (look.json), and again 
   expect(look().pick.head).toBeNull()
 })
 
+test('a wardrobe choice goes to prefs.json, and a newer one made in the desktop app is worn here too', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const P = '/h/.claude/mochi/prefs.json'
+  const look = () => JSON.parse(files.get('/h/.claude/mochi/look.json') ?? 'null')
+  await $.command.run({ command: 'mochi', args: 'wear none' } as never)
+  expect(JSON.parse(files.get(P) ?? 'null')).toMatchObject({ v: 1, pick: { head: null } })
+  // The app gives the head back to Mochi: this chat wears that too, and does not write it back.
+  files.set(P, JSON.stringify({ v: 1, at: NOW + 60_000, pick: {} }))
+  await clock.advance(20_000)
+  expect(look().pick.head).toBeUndefined()
+  expect(JSON.parse(files.get(P) ?? 'null')).toEqual({ v: 1, at: NOW + 60_000, pick: {} })
+  // A choice older than the one worn is not worn.
+  files.set(P, JSON.stringify({ v: 1, at: NOW, pick: { head: null } }))
+  await clock.advance(20_000)
+  expect(look().pick.head).toBeUndefined()
+})
+
 test('a peer file’s usage windows are read one by one: junk is dropped, percents are whole, four at most; a file without them has none', async () => {
   const at = NOW + 60 * MIN
   const base = { id: 'y', label: 'new', state: 'idle', line: '', since: 0, at: NOW, v: 2 }
