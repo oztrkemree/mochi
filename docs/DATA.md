@@ -1,0 +1,64 @@
+# Mochi's files
+
+Mochi keeps everything it knows in one folder, `~/.claude/mochi/`. The mod inside Claude Code and the desktop app both read and write it, so a person can use either, or both, and meet the same Mochi: the same level, the same wardrobe, the same chats.
+
+This page is the contract between the two. Change a file's shape here first.
+
+## Rules
+
+1. **One writer per file.** A chat's files (`live/<id>.json`, `days/<id>.json`) are written by whichever Mochi follows that chat, never by both.
+   - A chat in Claude Code with the mod on is the mod's.
+   - Every other chat is the app's: Claude Code without the mod, Codex, any agent whose hooks call the app.
+   - The app checks before each write. A fresh `live/<id>.json` that does not say `"by": "app"` belongs to the mod, and the app lets go of that chat: no file, no counting.
+2. **A reader never trusts a file.** Each field is checked, a file that does not parse is read again next time, and a missing field counts as its zero.
+3. **The app writes whole files**: beside the file first, then over it. The mod writes through Claude Code's own file call, which this page does not promise is whole; rule 2 covers it.
+4. **Names are plain.** A chat's id is letters, digits, `-` and `_`. A Claude Code chat's id is its session id, whoever writes it. Another agent's is `<agent>-<session>`, for example `codex-019a…`.
+5. **Nothing secret is written.** No prompt text beyond a chat's short label, no file contents, no tokens.
+
+## Files
+
+| File | Written by | What it holds |
+|---|---|---|
+| `live/<id>.json` | the chat's Mochi: on a change (the mod at most every 1.5 s) and again every 15 s | Where the chat stands now. See below. |
+| `days/<id>.json` | the chat's Mochi, when a turn ends | `{id, label, isLabelFromPrompt, days: {"YYYY-MM-DD": DayRec}}` |
+| `level.json` | any Mochi, when the level or the wardrobe grew | `{level, items}`: what was last celebrated, so it is celebrated once |
+| `badges.json` | any Mochi, when a badge is won | the badges, oldest first |
+| `look.json` | the mod, when the look changes | `{v: 1, pick, items, tz, birthday, firstDay}`: what Mochi wears |
+| `usage.json` | the mod, every 5 minutes | `[{kind, at, p}]`: readings of the usage windows |
+| `reset-<kind>.json` | the first Mochi to see a usage window reset | `{at, id}`: who says so, so it is said once |
+| `repos.json` | the mod | `{"<repo root>": lastSeenMs}` |
+| `coach.json` | the mod | which tips were shown, and rules a person repeats |
+| `app.json` | the app, every 15 s while it runs; removed when it quits | `{v: 1, at, isShown, version}` |
+| `inbox/<ms>-<pid>.json` | the app's `hook` command, one file per hook call; the app takes each out as it reads it | `{source, at, event}` |
+| `shield.json` | the person, by hand | `{add, off}`: their own shield rules |
+| `share/`, `export-*.json` | the mod, when asked | pictures and exports |
+
+### `live/<id>.json`
+
+One chat as its Mochi last saw it. A file not written for 45 seconds is a closed chat.
+
+| Field | Meaning |
+|---|---|
+| `id`, `label`, `title` | the chat's id, its short name (its folder, or its first words), and its title in the app if it has one |
+| `state` | `busy`, `asking`, `idle` or `error` |
+| `since`, `stateAt`, `at` | when the turn began, when the chat came to its state, when the file was written (ms) |
+| `v` | `2` when the fields below are there |
+| `activity` | what a busy chat does: `thinking`, `reading`, `writing`, `testing`… |
+| `waitingFor` | what an asking chat waits for: `permission`, `question`, `plan` |
+| `lastTurn` | `{at, reason, seconds}` of the last finished turn |
+| `agents` | the chat's subagents running now, at most 8 |
+| `context`, `cost`, `limit`, `windows` | context use, cost, and the usage windows, where the writer knows them |
+| `folder`, `branch`, `isWorktree`, `app` | where the chat works, and its session in the Claude app if a link can open it |
+| `by` | `"app"` in a file the desktop app wrote; absent in the mod's |
+
+### `DayRec`
+
+One day of work in one chat: `turns`, `tools`, `edits`, `errors`, `commits`, `cost`, `secs`, `night`, `add`, `del`, `early`, `langs`. All are sums except `langs`, a set of bits. Every Mochi adds every chat's days into one history; experience is `turns × 10 + edits × 2 + commits × 25 + active days × 30`.
+
+The app counts a chat it follows from the agent's hook calls, the same way the mod counts its own, so work in Codex earns what work in Claude Code does. From hooks alone it cannot know `cost`, `add`, `del` or `langs`; they stay 0 for now.
+
+### `app.json` and the inbox
+
+While `app.json` is fresh (60 seconds), the app is running. The mod's band steps its Mochi aside when `isShown` is true, and the `hook` command leaves calls in the inbox only then: with the app closed nobody would empty it.
+
+A call in the inbox keeps only what the app reads, cut short: the event's name, the session, the folder, the tool's name, the first 200 characters of a prompt (for the chat's label), the first 300 of a shell command (to tell a test or a commit), a subagent's id and type, and the chat's title.
