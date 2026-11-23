@@ -6,12 +6,10 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import type { Badge, Ci, DayRec, History, Item, Mood } from '../../types'
 import { badgeName, badgeSvg } from '../../hooks/badges'
 import { citySvg } from '../../hooks/city'
-import { dayKey, local, shiftDay } from '../../hooks/facts'
+import { dayKey, local } from '../../hooks/facts'
 import { lang, pickLang, setLang } from '../../hooks/i18n'
 import { type Choice, type Look, type Slot, addDay, choiceFrom, choiceText, dressAs, itemShort, levelOf, lookFrom, slotName, unlocked, xpOf } from '../../hooks/level'
-import { PRS_QUERY, PRS_SEARCH } from '../../hooks/prs'
 import { bestOutfit, cardMarkdown, cardSvg } from '../../hooks/share'
-import { LOOK_BACK_DAYS } from '../../hooks/standup'
 import { PEER_INK, appLink, nameOf } from '../../hooks/live'
 import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
@@ -22,7 +20,7 @@ import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, type Body, type Point, areaOf, fit, isPushedDown, peekAt } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
-import { COMMIT_STALE_MS, type FolderState, type PullBox, type Ran, ciNow, ciSaid, ciStep, commitsOf, deskOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed, standupOf } from './today'
+import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
 import { chosen, lookNow, shelvesOf } from './wardrobe'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
@@ -557,64 +555,8 @@ function drawWardrobe(l: Look): HTMLElement {
   return box
 }
 
-// ---------- the day: the stand-up, the desk, the pull requests ----------
-
-/** What the Today side shows, read from the person's git and gh when it is opened; again when it is two minutes old. */
-let today: { at: number; standup: string; desk: string; box: PullBox } | null = null
-let isReadingToday = false
-const TODAY_FRESH_MS = 2 * 60_000
-
-async function readToday() {
-  if (isReadingToday) return
-  isReadingToday = true
-  try {
-    const now = Date.now()
-    const z = tz()
-    const day = dayKey(now, z)
-    const [y = 1970, m = 1, d = 1] = shiftDay(day, -LOOK_BACK_DAYS).split('-').map(Number)
-    const since = Math.floor((Date.UTC(y, m - 1, d) - z * 60_000) / 1000)
-    const [lines, raw, ran] = await Promise.all([
-      invoke<string[]>('commits', { since }).catch(() => []),
-      invoke<unknown[]>('desks').catch(() => []),
-      invoke<Ran>('prs', { query: PRS_QUERY, vars: Object.entries(PRS_SEARCH) }).catch(() => null),
-    ])
-    today = { at: now, standup: standupOf(day, history?.days ?? {}, commitsOf(lines, z)), desk: deskOf(desksOf(raw)), box: pullBoxOf(ran, now) }
-  } finally {
-    isReadingToday = false
-  }
-  if (side === 'today') drawAgents()
-}
-
-function drawToday(into: HTMLElement) {
-  if (!today) return void into.append(el('p', 'empty', words().reading))
-  const day = today
-  const part = (title: string, ...body: HTMLElement[]) => {
-    const section = el('section', 'day')
-    section.append(el('h3', '', title), ...body)
-    into.append(section)
-  }
-  const copy = el('button', 'copy', words().copy)
-  copy.type = 'button'
-  copy.addEventListener('click', () => void navigator.clipboard.writeText(day.standup).then(() => { copy.textContent = words().copied }, note))
-  part(t().pane.standup, el('pre', '', day.standup), copy)
-  part(t().pane.desk, el('pre', '', day.desk))
-  const pulls: HTMLElement[] = []
-  for (const s of day.box.sections) {
-    pulls.push(el('h4', '', s.title))
-    for (const r of s.rows) {
-      const b = el('button', 'pull')
-      b.type = 'button'
-      b.append(el('b', '', r.text), el('span', '', r.state))
-      b.addEventListener('click', () => void openUrl(r.url))
-      pulls.push(b)
-    }
-  }
-  if (day.box.note) pulls.push(el('p', 'empty', day.box.note))
-  part(t().pane.prs, ...pulls)
-}
-
 /** Which side of the pocket is open. */
-let side: 'now' | 'today' | 'mochi' = 'now'
+let side: 'now' | 'mochi' = 'now'
 
 /** Fills the list of agents from what was last read, and the count at Mochi's feet. */
 function drawAgents() {
@@ -635,8 +577,8 @@ function drawAgents() {
   const tabs = el('div')
   tabs.id = 'tabs'
   tabs.setAttribute('role', 'tablist')
-  for (const name of ['now', 'today', 'mochi'] as const) {
-    const tab = el('button', '', name === 'today' ? words().today : t().pane.tabs[name])
+  for (const name of ['now', 'mochi'] as const) {
+    const tab = el('button', '', t().pane.tabs[name])
     tab.type = 'button'
     tab.setAttribute('role', 'tab')
     tab.setAttribute('aria-selected', String(side === name))
@@ -644,7 +586,6 @@ function drawAgents() {
       side = name
       // Counted again when it is looked at, if that was a while ago: other chats work too.
       if (name === 'mochi' && Date.now() - countedAt > 5 * 60_000) void count().catch(note)
-      if (name === 'today' && (!today || Date.now() - today.at > TODAY_FRESH_MS)) void readToday().catch(note)
       drawAgents()
       hot()
     })
@@ -652,7 +593,6 @@ function drawAgents() {
   }
   list.append(tabs)
   if (side === 'mochi') return drawGrowth(list)
-  if (side === 'today') return drawToday(list)
   const use = document.createElement('div')
   use.id = 'use'
   for (const u of usage) {

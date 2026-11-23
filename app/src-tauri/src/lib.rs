@@ -329,22 +329,6 @@ fn see_repo(cwd: String) -> bool {
     data_dir().is_some_and(|d| work::see_repo(&d, &cwd, now_ms()))
 }
 
-/// The person's commits since `since` (seconds) in every repository any Mochi saw lately: `repo\tat\tsubject`.
-#[tauri::command(async)]
-fn commits(since: i64) -> Vec<String> {
-    data_dir().map(|d| work::commits(&work::roots(&d, now_ms()), since)).unwrap_or_default()
-}
-
-#[tauri::command(async)]
-fn desks() -> Vec<Value> {
-    data_dir().map(|d| work::desks(&work::roots(&d, now_ms()))).unwrap_or_default()
-}
-
-#[tauri::command(async)]
-fn prs(query: String, vars: Vec<(String, String)>) -> Value {
-    work::prs(&query, &vars)
-}
-
 #[tauri::command(async)]
 fn git_state(cwd: String) -> Option<Value> {
     work::git_state(&cwd)
@@ -436,7 +420,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, commits, desks, prs, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]

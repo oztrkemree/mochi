@@ -97,16 +97,11 @@
       #list h4 { margin: 8px 6px 4px; font-size: 11.5px; font-weight: 650; }
       .shelf { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0 4px 8px; }
       .shelf span { width: 100%; color: var(--dim); font-size: 11px; }
-      .shelf button, .day .copy { height: 22px; padding: 0 8px; border: 0; border-radius: 7px; background: var(--line); color: var(--fg); font: inherit; font-size: 11.5px; cursor: pointer; }
+      .shelf button { height: 22px; padding: 0 8px; border: 0; border-radius: 7px; background: var(--line); color: var(--fg); font: inherit; font-size: 11.5px; cursor: pointer; }
       .shelf button[aria-pressed="true"] { background: #E08A6A; color: #fff; }
-      .shelf button:focus-visible, .day button:focus-visible { outline: 2px solid #E08A6A; outline-offset: 1px; }
-      .day pre { margin: 0 4px 6px; padding: 8px; border-radius: 10px; background: var(--line); font: inherit; font-size: 11.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
-      .day .copy { margin: 0 4px 4px; }
+      .shelf button:focus-visible { outline: 2px solid #E08A6A; outline-offset: 1px; }
       .share { display: block; margin: 0 4px 8px; height: 26px; padding: 0 10px; border: 0; border-radius: 8px; background: var(--line); color: var(--fg); font: inherit; font-size: 12px; cursor: pointer; }
       .share:focus-visible { outline: 2px solid #E08A6A; outline-offset: 1px; }
-      .pull { display: block; width: calc(100% - 8px); margin: 0 4px 4px; padding: 6px 8px; border: 0; border-radius: 9px; background: var(--line); color: var(--fg); font: inherit; text-align: start; cursor: pointer; }
-      .pull b { display: block; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .pull span { display: block; color: var(--dim); font-size: 11px; }
 
       /* The limits, at the top of the list: each a ring with its number in it, what it is, and when it comes back. */
       #use { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 2px 2px 8px; }

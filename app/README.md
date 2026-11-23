@@ -13,7 +13,6 @@ It shows your usage limits too: the session and the week as two small rings by i
 Press Mochi for its pocket.
 
 - **Now**: the limits, and the chats, each with how far its plan is (`2/4 · Writing the tests`) and its subagents.
-- **Today**: your stand-up (the last day you worked and today, your commits and turns, ready to copy), what is not yet safe on a remote, and the pull requests waiting on you. Read from your own `git` and `gh` when you open it.
 - **Mochi**: the level and how far to the next, your streak, your badges, the wardrobe, the card to share, and the last weeks as a city. The level is counted from every chat's days, so it is the same level the mod shows, and a new level or badge is said once, by one Mochi. What you pick in the wardrobe the mod's Mochi wears too.
 
 After a `git push` in a chat it follows, Mochi watches that commit's CI and says how it ended. When a turn ends with changes left uncommitted and no commit for an hour and a half, it says so once.
