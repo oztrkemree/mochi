@@ -153,7 +153,7 @@ async function place(isLeap = false) {
   const k = isMac ? 1 : monitor.scaleFactor
   const size = { w: Math.round(w * k), h: Math.round(h * k) }
   const from = { x: put.x, y: put.y }
-  put = { ...(peek ?? fit(corner!, size.w, size.h, area)), ...size }
+  put = { ...(peek ?? awayAt ?? fit(corner!, size.w, size.h, area)), ...size }
   if (isLeap && !calm.matches && (from.x !== 0 || from.y !== 0)) await leap(from, { x: put.x, y: put.y }, size)
   if (isMac) {
     await win.setSize(new LogicalSize(w, h))
@@ -260,6 +260,7 @@ async function dropped() {
  * where it stood if it went there by itself, else just inside the edge.
  */
 function standUp(isPlaced = true) {
+  if (away) return comeBack()
   if (!peek) return
   const isLeap = home !== null
   const shown = peekShown?.bottom ?? put.h
@@ -271,7 +272,54 @@ function standUp(isPlaced = true) {
   if (isPlaced) void place(isLeap).then(hot).catch(note)
 }
 
-/** With nothing going on this long, Mochi leaps to the nearest edge of the screen and waits there, peeking. */
+// ---------- with nothing going on, Mochi leaves the screen ----------
+
+/** The edge Mochi went out of the screen by; null while it is here. Only its antenna's lit tip shows, at that edge. */
+let away: Edge | null = null
+/** Where the window stands while Mochi is away: flush against that edge, so the window's edge is the screen's. */
+let awayAt: Point | null = null
+/** How long the way out and the way back in take (see the stage's style). */
+const OUT_MS = 950
+const IN_MS = 650
+
+/**
+ * Mochi leaves by the nearest edge of the screen: the window leaps flush
+ * against it, then Mochi crouches, hops and goes out through it, its antenna's
+ * tip left showing. A system will not move a window past the bottom of the
+ * screen, so it is Mochi that goes, inside its window.
+ */
+async function goAway() {
+  const { body, at, area } = await where()
+  if (!area || away || peek) return
+  const edge = nearestEdge(at, body, area)
+  toggleAgents(false)
+  home = corner
+  awayAt = edge === 'bottom' ? { x: put.x, y: area.y + area.h - put.h } : edge === 'right' ? { x: area.x + area.w - put.w, y: put.y } : { x: area.x, y: put.y }
+  await place(true)
+  away = edge
+  hold('whee', OUT_MS)
+  root.classList.add('away', `away-${edge}`)
+  hot()
+}
+
+/** Mochi comes back in by the edge it left by: it pops up, lands, and leaps back to where it stood. */
+function comeBack() {
+  if (!away) return
+  const edge = away
+  away = null
+  root.classList.remove('away', `away-${edge}`)
+  root.classList.add(`back-${edge}`)
+  hold('whee', IN_MS)
+  window.setTimeout(() => {
+    root.classList.remove(`back-${edge}`)
+    awayAt = null
+    if (home) corner = home
+    home = null
+    void place(true).then(hot).catch(note)
+  }, IN_MS)
+}
+
+/** With nothing going on this long, Mochi leaves the screen by its nearest edge, and waits there. */
 const TUCK_AFTER_MS = 45_000
 let restSince = Date.now()
 let tuckTimer = 0
@@ -283,14 +331,13 @@ let tuckTimer = 0
  */
 function rest(peers: readonly { state: string }[]) {
   const isWork = peers.some(p => p.state === 'busy' || p.state === 'asking' || p.state === 'error')
-  if (isWork && peek && home) return standUp()
+  if (isWork && (away || (peek && home))) return standUp()
   if (isWork || held || isBusy() || say.classList.contains('on') || list.classList.contains('on')) restSince = Date.now()
   clearTimeout(tuckTimer)
-  if (peek) return
+  if (peek || away) return
   tuckTimer = window.setTimeout(() => {
-    if (peek || held || isBusy() || say.classList.contains('on') || list.classList.contains('on') || Date.now() - restSince < TUCK_AFTER_MS - 100) return
-    home = corner
-    void toEdge(null, true).catch(note)
+    if (peek || away || held || isBusy() || say.classList.contains('on') || list.classList.contains('on') || Date.now() - restSince < TUCK_AFTER_MS - 100) return
+    void goAway().catch(note)
   }, Math.max(1000, TUCK_AFTER_MS - (Date.now() - restSince)))
 }
 
@@ -300,19 +347,26 @@ function rest(peers: readonly { state: string }[]) {
  */
 function hot() {
   const rects: number[][] = []
-  // Mochi's body; on its side, turned a quarter about its middle.
+  // Mochi's body; on its side, turned a quarter about its middle. Away, only its antenna's tip, at the edge it went out by.
   const b = bodyBox()
+  const TIP = 28
+  if (away) rects.push(away === 'bottom' ? [b.x + b.w / 2 - TIP / 2, innerHeight - TIP, TIP, TIP] : away === 'right' ? [innerWidth - TIP, b.y + b.h / 2 - TIP / 2, TIP, TIP] : [0, b.y + b.h / 2 - TIP / 2, TIP, TIP])
+  else hotBody(rects, b)
+  for (const el of [say, list, agentsButton, limitsButton]) {
+    const r = el.getBoundingClientRect()
+    if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
+  }
+  void invoke('set_hot', { rects }).catch(note)
+}
+
+/** Mochi's body as a press may land on it: on its side turned, and peeking only what shows on the screen. */
+function hotBody(rects: number[][], b: Body) {
   const box = peek && peekEdge !== 'bottom' ? { x: b.x + b.w / 2 - b.h / 2, y: b.y + b.h / 2 - b.w / 2, w: b.h, h: b.w } : b
   // Peeking, only what shows on the screen: past its edge is the Dock, the taskbar or another window, and a press there is theirs.
   const cut = peekShown ?? { left: -Infinity, top: -Infinity, right: Infinity, bottom: Infinity }
   const left = Math.max(box.x, cut.left)
   const top = Math.max(box.y, cut.top)
   rects.push([left, top, Math.max(0, Math.min(box.x + box.w, cut.right) - left), Math.max(0, Math.min(box.y + box.h, cut.bottom) - top)])
-  for (const el of [say, list, agentsButton, limitsButton]) {
-    const r = el.getBoundingClientRect()
-    if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
-  }
-  void invoke('set_hot', { rects }).catch(note)
 }
 
 // ---------- what Mochi says ----------
@@ -1159,6 +1213,8 @@ stage.addEventListener('pointerdown', e => {
 addEventListener('pointermove', e => {
   if (!pressed || Math.hypot(e.screenX - pressed.x, e.screenY - pressed.y) < 4) return
   pressed = null
+  // Away, a pull on its antenna's tip brings it back instead.
+  if (away) return standUp()
   // Carried off: arms up and away while the window moves (see `onMoved`), and set down after (see `dropped`).
   isCarried = true
   hold('whee')
@@ -1167,7 +1223,7 @@ addEventListener('pointermove', e => {
 // A press on Mochi opens the list of chats; with none open, Mochi says how it is. Enter or Space does the same.
 function pressMochi() {
   if (!view) return
-  if (peek) return standUp()
+  if (peek || away) return standUp()
   if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0 || usage.length > 0) toggleAgents()
   else speak(view.line, ANSWER_MS, QUIET_INK, null)
 }
