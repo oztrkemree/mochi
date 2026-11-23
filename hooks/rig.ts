@@ -1511,7 +1511,7 @@ export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, 
   const eyeBase = `translate(${dx(to.eyeDx)}, ${dy(to.eyeDy)})`
   const blinks = (pose.eyeLoop ?? 'blink') === 'blink' || pose.eyeLoop === 'glance' || pose.eyeLoop === 'dart'
   const eyeLayer = layer('look',
-    layer('blink', eyeSvg, at(50, 52), 'scale(1, 1)', blinks ? { tpl: 'scale(1, {0})', frames: [[1], [1], [0.12], [1], [1]] } : null, 4.2, [0, 0.93, 0.955, 0.98, 1]),
+    layer('blink', eyeSvg, at(50, 52), 'scale(1, 1)', blinks ? { tpl: 'scale(1, {0})', frames: [[1], [1], [0.08], [1]] } : null, 4.2, [0, 0.93, 0.965, 1]),
     at(50, 52), eyeBase,
     look ? { tpl: 'translate({0}%, {1}%)', frames: look[0].map(([x, y]) => [pc(to.eyeDx + x, W), pc(to.eyeDy + y, H)]) } : null, look?.[1], look?.[2] ?? null)
 

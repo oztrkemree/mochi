@@ -22,6 +22,8 @@ test('every pose held a while is drawn in layers that keep moving by themselves,
   expect(['squash', 'look', 'blink'].map(l => plays(idle, l))).toEqual([true, true, true])
   expect(plays(layersFor({ mood: 'writing', scene }, ROOM), 'armR')).toBe(true)
   expect(plays(layersFor({ mood: 'talking', scene }, ROOM), 'mouth')).toBe(true)
+  // The blink is the drawing's own (eyeLoops in the rig: shut to 0.08 at 0.965 of 4.2 s), so a hand-off between them never flickers the eyes.
+  expect(idle).toMatch(/<div class="blink"[^>]*data-frames="\[\[1\],\[1\],\[0\.08\],\[1\]\]" data-times="\[0,0\.93,0\.965,1\]" data-dur="4\.2"/)
   // A moment's once-only loop is played whole by the app, not held looping here.
   expect(plays(layersFor({ mood: 'spin', scene }, ROOM), 'squash')).toBe(false)
 })
