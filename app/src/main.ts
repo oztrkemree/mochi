@@ -1109,6 +1109,14 @@ async function start() {
     gaze()
   })
   readRules()
+  // Told once for each version: a newer Mochi, and where to get it.
+  await listen<[string, string]>('newer', e => {
+    const [version, url] = e.payload
+    if (localStorage.getItem('newer') === version) return
+    localStorage.setItem('newer', version)
+    const w = words()
+    speak(w.newer(version), 30_000, NEWS_INK.level, null, { acts: [{ label: w.get, isMain: true, run: () => { void openUrl(url); sayNext() } }, { label: w.notNow, run: sayNext }] })
+  })
   await listen('minute', () => {
     if (Date.now() - rulesAt > 5 * 60_000) readRules()
     tip()

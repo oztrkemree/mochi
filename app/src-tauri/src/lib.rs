@@ -143,6 +143,18 @@ async fn update_once(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
 
 fn keep_updated(app: AppHandle) {
     if !can_update(&app) {
+        // Unsigned, it cannot put a new version in: it tells of one, and the person fetches it.
+        thread::spawn(move || {
+            thread::sleep(FIRST_LOOK);
+            loop {
+                if let Some(json) = work::releases() {
+                    if let Some((version, url)) = work::newer_release(&json, env!("CARGO_PKG_VERSION")) {
+                        let _ = app.emit_to("main", "newer", (version, url));
+                    }
+                }
+                thread::sleep(LOOK_EVERY);
+            }
+        });
         return;
     }
     thread::spawn(move || {
@@ -375,6 +387,9 @@ fn open_settings(app: AppHandle) {
 #[tauri::command]
 fn note(text: String) {
     eprintln!("mochi: {}", text.chars().take(400).collect::<String>());
+    if let Some(dir) = data_dir() {
+        store::log(&dir, &format!("window: {text}"));
+    }
 }
 
 fn show_or_hide(app: &AppHandle) {
@@ -394,6 +409,14 @@ fn show_or_hide(app: &AppHandle) {
 }
 
 pub fn run() {
+    // A crash leaves a line in app.log (where, and what), for the person to send if they want; then it goes on as Rust would.
+    let before = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        if let Some(dir) = data_dir() {
+            store::log(&dir, &format!("crash {}: {info}", env!("CARGO_PKG_VERSION")));
+        }
+        before(info);
+    }));
     tauri::Builder::default()
         // Opened a second time, the Mochi already out comes to the front: two would each take the other's hook calls.
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {

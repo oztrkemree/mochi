@@ -252,6 +252,22 @@ pub fn write_shared(dir: &Path, name: &str, text: &str) -> bool {
     write_whole(&dir.join(name), &next.to_string())
 }
 
+// ---------- what went wrong ----------
+
+/// Adds a line to the app's own log (app.log): a crash, or an error in the window. Kept to its last 64 KB, so it never grows.
+pub fn log(dir: &Path, text: &str) {
+    let path = dir.join("app.log");
+    let was = fs::read_to_string(&path).unwrap_or_default();
+    let line = format!("{} {}\n", now_ms(), text.replace('\n', " ").chars().take(2000).collect::<String>());
+    let mut all = was + &line;
+    if all.len() > 64_000 {
+        let cut = all.len() - 48_000;
+        let from = all[cut..].find('\n').map_or(cut, |i| cut + i + 1);
+        all = all[from..].to_owned();
+    }
+    let _ = write_whole(&path, &all);
+}
+
 // ---------- the look, and the app's own beat ----------
 
 /// The person's look as the mod last wrote it, for this Mochi to wear the same; None before there is one.
@@ -407,6 +423,20 @@ pub mod tests {
         // A file that is there but cannot be read is not the same as none: the caller must not write over it.
         fs::write(dir.join("level.json"), "x".repeat(70_000)).unwrap();
         assert!(read_shared(&dir, "level.json").is_err());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn the_log_keeps_its_last_lines_only() {
+        let dir = scratch("log");
+        log(&dir, "first\nline");
+        assert!(fs::read_to_string(dir.join("app.log")).unwrap().ends_with(" first line\n"));
+        for _ in 0..100 {
+            log(&dir, &"x".repeat(1500));
+        }
+        let text = fs::read_to_string(dir.join("app.log")).unwrap();
+        assert!(text.len() <= 64_000 && !text.contains("first"));
+        assert!(text.lines().all(|l| l.ends_with('x')));
         fs::remove_dir_all(&dir).unwrap();
     }
 

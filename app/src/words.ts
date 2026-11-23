@@ -49,6 +49,8 @@ const EN = {
   copied: 'Copied',
   reading: 'Reading…',
   tooLong: 'a command too long for Mochi to read whole',
+  newer: (v: string) => `Mochi ${v} is out.`,
+  get: 'Get it',
   tour: {
     hello: 'Hi, I’m Mochi. I sit here and tell you when a chat in Claude Code or Codex finishes, waits for you, or hits an error.',
     claude: 'Shall I listen to Claude Code? I add my hooks to its settings, and keep a copy of them as they were.',
@@ -127,6 +129,8 @@ const TR: typeof EN = {
   copied: 'Kopyalandı',
   reading: 'Okunuyor…',
   tooLong: 'Mochi’nin bütününü okuyamadığı kadar uzun bir komut',
+  newer: (v: string) => `Mochi ${v} çıktı.`,
+  get: 'İndir',
   tour: {
     hello: 'Merhaba, ben Mochi. Burada durup Claude Code ya da Codex’teki bir sohbet bitince, seni bekleyince ya da hata verince haber veririm.',
     claude: 'Claude Code’u dinleyeyim mi? Kancalarımı ayarlarına eklerim, ayarların eski hâlini de saklarım.',

@@ -231,9 +231,47 @@ pub fn ci(cwd: &str, sha: Option<&str>) -> Value {
     json!({ "sha": sha, "out": told(out) })
 }
 
+// ---------- a newer version ----------
+
+/// A version's numbers, for comparing: "1.2.10" is after "1.2.9".
+fn numbers(version: &str) -> Vec<u64> {
+    version.trim_start_matches('v').split('.').map(|n| n.parse().unwrap_or(0)).collect()
+}
+
+/// The newest desktop release GitHub lists (tags `desktop-v…`, not drafts or previews) when it is newer than `current`: its version and page.
+pub fn newer_release(json: &str, current: &str) -> Option<(String, String)> {
+    let releases: Vec<Value> = serde_json::from_str(json).ok()?;
+    releases
+        .iter()
+        .filter(|r| r["draft"] != true && r["prerelease"] != true)
+        .filter_map(|r| Some((r["tag_name"].as_str()?.strip_prefix("desktop-v")?.to_owned(), r["html_url"].as_str()?.to_owned())))
+        .filter(|(v, url)| url.starts_with("https://github.com/") && numbers(v) > numbers(current))
+        .max_by(|a, b| numbers(&a.0).cmp(&numbers(&b.0)))
+}
+
+/// Asks GitHub, with the person's own curl and nothing about them, which desktop releases there are.
+pub fn releases() -> Option<String> {
+    let out = run("curl", &["-fsSL", "--max-time", "10", "-H", "Accept: application/vnd.github+json", "https://api.github.com/repos/oztrkemree/mochi/releases?per_page=20"], None, Duration::from_secs(15))?;
+    (out.code == 0).then_some(out.stdout)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_newer_desktop_release_is_found_and_nothing_else() {
+        let json = json!([
+            { "tag_name": "v0.10.0", "html_url": "https://github.com/o/m/releases/tag/v0.10.0" },
+            { "tag_name": "desktop-v1.2.0", "html_url": "https://github.com/o/m/releases/tag/desktop-v1.2.0", "prerelease": true },
+            { "tag_name": "desktop-v1.0.10", "html_url": "https://github.com/o/m/releases/tag/desktop-v1.0.10" },
+            { "tag_name": "desktop-v1.0.9", "html_url": "https://github.com/o/m/releases/tag/desktop-v1.0.9" },
+            { "tag_name": "desktop-v9.0.0", "html_url": "https://evil.example/x" },
+        ]).to_string();
+        assert_eq!(newer_release(&json, "1.0.0"), Some(("1.0.10".into(), "https://github.com/o/m/releases/tag/desktop-v1.0.10".into())));
+        assert_eq!(newer_release(&json, "1.0.10"), None);
+        assert_eq!(newer_release("not json", "1.0.0"), None);
+    }
 
     #[test]
     fn the_repositories_are_kept_by_the_mods_rules() {

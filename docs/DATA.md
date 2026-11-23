@@ -32,6 +32,7 @@ This page is the contract between the two. Change a file's shape here first.
 | `repos.json` | any Mochi, at most once an hour for each repository a chat works in | `{"<repo root>": lastSeenMs}`, without those quiet for 30 days; the stand-up reads those seen in 14 |
 | `coach.json` | the mod | which tips were shown, and rules a person repeats |
 | `app.json` | the app, every 15 s while it runs; removed when it quits | `{v: 1, at, isShown, version, approve, shield}` |
+| `app.log` | the app: a crash, or an error in its window, a line each; kept to its last 64 KB | `<ms> <what>` lines, for the person to send with a bug report if they want. Nothing is sent anywhere |
 | `inbox/<ms>-<pid>.json` | the app's `hook` command, one file per hook call; the app takes each out as it reads it. A call that waits on Mochi is named `<ms>-<pid>-ask.json`, and read at once | `{source, at, event, ask?}` |
 | `answers/<ms>-<pid>-ask.json` | the app: the person's answer to a request for permission in Mochi's bubble, or the shield's word on a shell command; the waiting hook takes it out | `{behavior, why}`: `allow`, `deny`, `none`, or `ask` with why |
 | `shield.json` | the person, by hand | `{add, off}`: their own shield rules |
