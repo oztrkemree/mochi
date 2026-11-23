@@ -1414,6 +1414,157 @@ function markup(shot: Drawn): string {
   ].join('')
 }
 
+/** The room around Mochi's own square a drawing gives it, in its units: what it holds or floats over it reaches past that square. */
+export type Room = { left: number; top: number; right: number; bottom: number }
+
+/** SMIL's own animations taken out of a drawing, leaving it as it stands. */
+const still = (svg: string) => svg.replace(/<(animate|animateTransform|animateMotion|set)\b[^>]*?(?:\/>|>[\s\S]*?<\/\1>)/g, '')
+
+/** How a mouth's loop is played by a layer: stretched open and shut (or narrowed), keyframe by keyframe, over its time. */
+const MOUTH_PLAY: Record<NonNullable<Pose['mouthLoop']>, [number[][], number]> = {
+  talk: [[[1, 1], [1.05, 1.9], [1, 1.3], [1, 1], [1.05, 1.8], [1, 1]], 0.9],
+  wobble: [[[1, 1], [0.82, 1.1], [1, 1]], 0.7],
+  yawn: [[[1, 1], [1, 1], [1.1, 2.4], [1.1, 2.4], [1, 1]], 4],
+  hum: [[[1, 1], [0.9, 1.6], [1, 1], [0.9, 1.6], [1, 1]], 1.2],
+  laugh: [[[1, 1], [1, 1.35], [1, 1], [1, 1.35], [1, 1]], 0.36],
+  achoo: [[[1, 1], [1, 1], [1.1, 1.6], [1, 1]], 1.4],
+}
+
+/** Where the eyes look about, as keyframes of a move in the drawing's units (see `eyeLoops`), with their timing. */
+const EYE_PLAY: Partial<Record<NonNullable<Pose['eyeLoop']>, [[number, number][], number, number[]]>> = {
+  glance: [[[0, 0], [0, 0], [-2.2, 0], [-2.2, 0], [0, 0], [0, 0], [2.2, 0], [2.2, 0], [0, 0]], 9, [0, 0.3, 0.34, 0.46, 0.5, 0.72, 0.76, 0.88, 1]],
+  dart: [[[0, 0], [-2.4, 0], [-2.4, 0], [2.4, 0], [2.4, 0], [0, 0]], 2.4, [0, 0.08, 0.42, 0.5, 0.92, 1]],
+  scan: [[[0, 0], [2.2, 0], [-2.2, 0.8], [2.2, 0.8], [-2.2, 0], [0, 0]], 3.6, [0, 0.25, 0.3, 0.7, 0.75, 1]],
+  juggle: [[[-2.2, 0], [0, -1.6], [2.2, 0], [0, -1.6], [-2.2, 0]], 1.2, [0, 0.25, 0.5, 0.75, 1]],
+}
+
+/**
+ * A pose as it is held a while, in layers that move: the body breathing,
+ * bobbing or swaying, the arms swinging, the eyes looking about and blinking,
+ * the mouth talking. Each layer is drawn once; its motion is a transform the
+ * app plays from the numbers each layer carries (`data-tpl`, `data-frames`,
+ * `data-times`, `data-dur`), at a frame rate of its choosing, so Mochi never
+ * stops moving and costs little. What only SMIL can play (a note floating, a
+ * cursor blinking) stays in small layers of its own.
+ *
+ * The layers stack in one box: give `.mochi-layers` and every element in it
+ * the whole box (see the app's style). `back` is drawn under all of it.
+ */
+export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, back = ''): string {
+  const { mood, scene } = shot
+  const pose = poseOf(mood)
+  const to = target(mood)
+  const W = 100 + room.left + room.right
+  const H = 100 + room.top + room.bottom
+  const at = (x: number, y: number) => `${n(((x + room.left) / W) * 100)}% ${n(((y + room.top) / H) * 100)}%`
+  const dx = (v: number) => `${n((v / W) * 100)}%`
+  const dy = (v: number) => `${n((v / H) * 100)}%`
+  const svg = (inner: string, cls = '') =>
+    `<svg${cls ? ` class="${cls}"` : ''} viewBox="${-room.left} ${-room.top} ${W} ${H}" preserveAspectRatio="xMidYMax meet"><svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">${inner}</svg></svg>`
+  /**
+   * A layer about `origin` holding `base`, or playing keyframes: `tpl` with each `{i}` filled by a frame's numbers, eased from
+   * frame to frame over `dur` seconds (at `times`, 0 to 1, when not evenly spaced). The numbers are the app's to play.
+   */
+  const layer = (name: string, inner: string, origin: string, base: string, play: { tpl: string; frames: number[][] } | null, dur = 0, times: number[] | null = null) => {
+    const style = `transform-origin:${origin};transform:${base}`
+    if (play === null || play.frames.length < 2) return `<div class="${name}" style="${style}">${inner}</div>`
+    const at = times ?? play.frames.map((_, i) => i / (play.frames.length - 1))
+    return `<div class="${name}" style="${style}" data-tpl="${play.tpl}" data-frames="${JSON.stringify(play.frames.map(f => f.map(v => Math.round(v * 1000) / 1000)))}" data-times="${JSON.stringify(at)}" data-dur="${dur}">${inner}</div>`
+  }
+  const pc = (v: number, of: number) => (v / of) * 100
+
+  // The body's own loop, played whole: a moment's once-only loop is the app's to play in full, not held here.
+  const loop = pose.loop && !pose.loop.once ? pose.loop : undefined
+  const keys = loop?.keys ?? []
+  const has = (k: 'lift' | 'shift' | 'tilt' | 'sx' | 'sy') => keys.some(x => x[k] !== undefined)
+  const moveF = has('lift') || has('shift') ? { tpl: 'translate({0}%, {1}%)', frames: keys.map(k => [pc(to.shift + (k.shift ?? 0), W), pc(to.lift + (k.lift ?? 0), H)]) } : null
+  const turnF = has('tilt') ? { tpl: 'rotate({0}deg)', frames: keys.map(k => [to.tilt + (k.tilt ?? 0)]) } : null
+  const squashF = has('sx') || has('sy') ? { tpl: 'scale({0}, {1})', frames: keys.map(k => [to.sx * (k.sx ?? 1), to.sy * (k.sy ?? 1)]) } : null
+
+  const skin = skinOf(scene.skin)
+  const fx = skin?.map ? ` filter="url(#skin-map-${skin.id})"` : ''
+  const ink = (v: string) => (skin?.ink ? v.replaceAll('#2B1B17', skin.ink) : v)
+  const fit = (o: Outfit | undefined): Outfit => {
+    const v = { ...NO_OUTFIT, ...o }
+    for (const slot of Object.keys(NO_OUTFIT) as (keyof Outfit)[]) if (!Object.hasOwn(WEAR_AT, v[slot] ?? '')) v[slot] = null
+    return scene.agents >= 1 && v.ground ? { ...v, ground: null } : v
+  }
+  const outfit = fit(scene.outfit)
+  const wear = (slot: keyof Outfit) => wearSlot(slot, outfit, outfit)
+
+  const defs = '<defs>' +
+    `<mask id="bm" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100" style="mask-type:alpha">${img(ART.body, BODY.x, BODY.y, BODY.w)}</mask>` +
+    '<radialGradient id="glow"><stop offset="0" stop-color="#FFE7CF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFE7CF" stop-opacity="0"/></radialGradient>' +
+    '<radialGradient id="blush"><stop offset="0" stop-color="#FF7A95" stop-opacity="0.8"/><stop offset="1" stop-color="#FF7A95" stop-opacity="0"/></radialGradient>' +
+    skinFilter(skin) + '</defs>'
+
+  const eyes = ink(([[-1, 40, to.eyeL], [1, 60, to.eyeR]] as const).map(([side, cx, shape]) =>
+    `<path d="${pathOf(shape, cx, 52)}" fill="#2B1B17"/>` +
+    `<circle cx="${cx + 1.3}" cy="50.2" r="1.15" fill="#fff" opacity="${n(to.catchlight * 0.9)}"/>` +
+    (to.x ? `<path d="M${cx - 3.6} 48.4L${cx + 3.6} 55.6M${cx + 3.6} 48.4L${cx - 3.6} 55.6" stroke="#2B1B17" stroke-width="2.4" stroke-linecap="round"/>` : '') +
+    (to.star ? img(ART.sparkle, cx - 5, 47, 10) : '') +
+    (to.spiral ? `<g>${loopT('rotate', [`0 ${cx} 52`, `${side * 360} ${cx} 52`], 1.1, '', '0s')}<path d="M${cx} 52m-0.9 0a0.9 0.9 0 1 1 1.8 0a2.3 2.3 0 1 1 -4.6 0a3.8 3.8 0 1 1 7.6 0" stroke="#2B1B17" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>` : ''),
+  ).join(''))
+  // The group the app turns toward the pointer (see its `gaze`).
+  const eyeSvg = svg(`<g transform="translate(0 52)"><g transform="translate(0 -52)">${eyes}</g></g>`)
+  const look = pose.eyeLoop ? EYE_PLAY[pose.eyeLoop] : undefined
+  const eyeBase = `translate(${dx(to.eyeDx)}, ${dy(to.eyeDy)})`
+  const blinks = (pose.eyeLoop ?? 'blink') === 'blink' || pose.eyeLoop === 'glance' || pose.eyeLoop === 'dart'
+  const eyeLayer = layer('look',
+    layer('blink', eyeSvg, at(50, 52), 'scale(1, 1)', blinks ? { tpl: 'scale(1, {0})', frames: [[1], [1], [0.12], [1], [1]] } : null, 4.2, [0, 0.93, 0.955, 0.98, 1]),
+    at(50, 52), eyeBase,
+    look ? { tpl: 'translate({0}%, {1}%)', frames: look[0].map(([x, y]) => [pc(to.eyeDx + x, W), pc(to.eyeDy + y, H)]) } : null, look?.[1], look?.[2] ?? null)
+
+  const mouth = svg(ink(`<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17"/>`))
+  const talk = pose.mouthLoop ? MOUTH_PLAY[pose.mouthLoop] : undefined
+  const mouthLayer = layer('mouth', mouth, at(50, 64), 'none', talk ? { tpl: 'scale({0}, {1})', frames: talk[0] } : null, talk?.[1])
+
+  const armSvg = (side: 'L' | 'R') => {
+    const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
+    return svg(`<g${fx}><rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g>`)
+  }
+  const armLayer = (side: 'L' | 'R') => {
+    const base = side === 'L' ? to.armL : to.armR
+    const swing = side === 'L' ? pose.armLoopL : pose.armLoopR
+    const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
+    return layer(`arm${side}`, armSvg(side), at(px, py), `rotate(${n(base)}deg)`, swing ? { tpl: 'rotate({0}deg)', frames: swing.values.map(v => [base + v]) } : null, swing?.dur)
+  }
+
+  const isHatless = !outfit.head
+  const body = svg(still(
+    (isHatless ? `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/><circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>${img(ART.bulb, 45.6, 13.1, 8.8)}` : '') +
+    `<g${fx}><rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>${img(ART.body, BODY.x, BODY.y, BODY.w)}</g>` +
+    (skin?.over ? `<g mask="url(#bm)">${skin.over}</g>` : '') +
+    `<rect x="18" y="28" width="64" height="56" fill="${rgb(to.tint)}" opacity="${n(to.tintOp)}" mask="url(#bm)"/>` +
+    `<g opacity="${n(to.blush)}"><ellipse cx="31" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/><ellipse cx="69" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/></g>`))
+  // The bulb's glow, held lit: a pulse here would be one more thing drawn again on every frame.
+  const glow = isHatless ? svg('<circle cx="50" cy="17.5" r="8" fill="url(#glow)" opacity="0.8"/>') : ''
+  const worn = svg(still(wear('chin') + wear('lip') + wear('face') + wear('eyes') + wear('neck') + wear('head')))
+  const held = (['laptop', 'book', 'glass', 'flag'] as const).filter(k => pose.held === k).map(heldSvg).join('')
+  const hold = svg(wear('held') + held)
+  const sweat = pose.sweat ? `<g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 9" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.7;1" dur="1.5s" repeatCount="indefinite"/>${img(ART.drop, 24, 30, 5)}</g>` : ''
+  const over = pose.over ? overSvg(pose.over) : ''
+  const tap = pose.tapsFoot ? loopT('rotate', ['0 55 84', '-14 55 84', '0 55 84', '0 55 84'], 0.5, '', '0s') : ''
+  const feet = svg(`<g${fx}><rect x="33.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 33, 79, 15)}</g><g${fx}>${tap}<rect x="52.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 52, 79, 15)}</g>`)
+  const waves = pose.waves ? `<path d="M-10 93 Q0 88 10 93 T30 93 T50 93 T70 93 T90 93 T110 93" stroke="#5B8DEF" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.8">${loopT('translate', ['0 0', '-20 0'], 1, '', '0s')}</path>` : ''
+
+  const squash = layer('squash', body + glow + eyeLayer + mouthLayer + worn + armLayer('L') + armLayer('R') + hold,
+    at(50, 82), `scale(${n(to.sx)}, ${n(to.sy)})`, squashF, loop?.dur)
+  // What floats over Mochi bobs as one layer, as the helpers do: SMIL playing on there would draw it all again on every frame.
+  // Held, what floats up and fades (the z's of a sleep, the notes of a hum, a drop of sweat) is shown where it starts.
+  const overLayer = over || sweat ? layer('over', svg((over + sweat).replaceAll('<g opacity="0">', '<g>')), at(50, 20), 'none', { tpl: 'translate(0%, {0}%)', frames: [[0], [pc(-1.6, H)], [0]] }, 1.8) : ''
+  const turn = layer('turn', feet + squash + overLayer, at(50, 88), `rotate(${n(to.tilt)}deg)`, turnF, loop?.dur)
+  const move = layer('move', turn, '50% 50%', `translate(${dx(to.shift)}, ${dy(to.lift)})`, moveF, loop?.dur)
+
+  // Every SMIL animation is taken out: a layer that plays one is drawn again on every frame, which is what costs (measured, in a
+  // see-through window always on top: about 31% of a core with them, 5% without). What moves here, the app moves.
+  return still('<div class="mochi-layers">' +
+    svg(defs + back + '<ellipse cx="50" cy="88.5" rx="21" ry="3" fill="#2B1B17" opacity="0.13"/>') +
+    (scene.agents ? layer('helpers', svg(helpers(scene.agents, scene.agents)), '50% 50%', 'none', { tpl: 'translate(0%, {0}%)', frames: [[0], [pc(-3.5, H)], [0]] }, 0.7) : '') +
+    (waves ? svg(waves) : '') +
+    move + svg(still(wear('ground'))) + '</div>')
+}
+
 /** An item's picture for the wardrobe, faded and grey while locked: the band's, and the desktop app's room. */
 export function itemIcon(item: Item, isOpen: boolean): string {
   const vector = VECTOR_WEAR[item]

@@ -38,16 +38,13 @@
       .keys #stage:focus-visible { outline: 2px solid #E08A6A; outline-offset: -6px; border-radius: 40%; }
       #stage { transform-origin: 50% 100%; }
       /* The eyes follow the pointer smoothly, not in steps. */
-      #stage g[transform="translate(0 -52)"] { transition: translate 0.2s ease-out, scale 0.07s ease-in; transform-box: fill-box; transform-origin: center; }
-      /* A blink while Mochi is held still: the eyes shut for a moment, and only they are drawn again. */
-      #stage g.blink[transform="translate(0 -52)"] { scale: 1 0.18; }
-      /* Held still, Mochi still breathes: the whole drawing swells a little and back, by its feet. A transform of the drawing
-         as it stands is the compositor's to play, not drawn again each frame, so it costs next to nothing. */
-      #stage.still > svg { animation: breathe 3.4s ease-in-out infinite; transform-origin: 50% 85%; will-change: transform; }
-      #stage.still.asleep > svg { animation-duration: 4.8s; animation-name: breathe-deep; }
-      @keyframes breathe { 50% { transform: scale(1.008, 1.022); } }
-      @keyframes breathe-deep { 50% { transform: scale(1.012, 1.034); } }
-      @media (prefers-reduced-motion: reduce) { #stage.still > svg { animation: none; } }
+      #stage g[transform="translate(0 -52)"] { transition: translate 0.2s ease-out; }
+      /* Between moves Mochi is its pose in layers (see layersFor in hooks/rig.ts), stacked in the stage's box. Each is drawn
+         once; their motion is a transform the compositor plays, so a Mochi that never stops moving costs next to nothing. */
+      #stage { position: relative; }
+      .mochi-layers, .mochi-layers div, .mochi-layers svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      .mochi-layers div { will-change: transform; }
+      @media (prefers-reduced-motion: reduce) { .mochi-layers div { animation: none !important; } }
 
       .card { background: var(--card); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line), 0 4px 14px rgba(0, 0, 0, 0.22); }
 

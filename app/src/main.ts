@@ -23,7 +23,7 @@ import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } f
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
 import { lookNow, skinNow } from './wardrobe'
-import { poseOf } from '../../hooks/rig'
+import { LIVE_FPS, frameAt, tracksIn } from './play'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { words } from './words'
@@ -252,31 +252,47 @@ function chime(name: SoundName) {
   void new Audio(`data:audio/wav;base64,${clip(name)}`).play().catch(() => {})
 }
 
-// ---------- Mochi moves when something happens, and holds still the rest of the time ----------
+// ---------- Mochi never stands still, and costs little ----------
 
 /**
- * The drawing's own motion (breathing, typing, blinking) redraws all of Mochi
- * sixty times a second, which costs a fifth of a processor core for as long as
- * it runs. So it runs in short stretches: when the mood changes, when Mochi
- * speaks, when the pointer comes over it, a moment each minute, and now and
- * then while a chat works. In between Mochi is a drawing with no motion in it
- * (`stillOf`), which costs nothing.
+ * A change of pose, and a moment, is the drawing's own SMIL motion, which draws
+ * all of Mochi again sixty times a second: it plays for a short stretch. The
+ * rest of the time Mochi is its pose in layers the app plays at a clay
+ * figure's frame rate (`liven`): breathing, swaying, typing, looking about,
+ * blinking, never frozen. Measured in the app, in a minute with chats open:
+ * about 6% of a core, against 31% for SMIL that never stops.
  */
 const MOVES_MS = 2400
-/** While a chat works, Mochi moves again no sooner than this after it last did. */
-const WORK_REST_MS = 12_000
 /** While a chat works its Mochi changes what it does every few seconds: each change is eased in and held, not played out. */
 const WORK_MOVES_MS = 900
 let stillTimer = 0
-let movedAt = 0
 let isStill = false
 
-/** Shows a drawing, the eyes where they were turned; held still, it breathes all the same (see the stage's style). */
+/** Shows a drawing, the eyes where they were turned; between moves, its layers are played (see `liven`). */
 function show(svg: string) {
   stage.innerHTML = svg
-  stage.classList.toggle('still', isStill)
-  stage.classList.toggle('asleep', view?.mood === 'sleeping' || view?.mood === 'dream')
   gaze()
+  liven()
+}
+
+let liveTimer = 0
+/**
+ * Plays the layers of the drawing on screen, if it has them, at a clay figure's
+ * frame rate: Mochi never stands frozen between moves, and costs little. Not
+ * while the window is out of sight, nor for someone who asked for less motion.
+ */
+function liven() {
+  clearInterval(liveTimer)
+  const tracks = tracksIn(stage)
+  if (tracks.length === 0 || calm.matches) return
+  const start = performance.now()
+  const tick = () => {
+    if (document.hidden) return
+    const s = (performance.now() - start) / 1000
+    for (const t of tracks) t.el.style.transform = frameAt(t, s)
+  }
+  tick()
+  liveTimer = window.setInterval(tick, 1000 / LIVE_FPS)
 }
 
 /** Lets Mochi move for a while: `svg` is what to show while it does (the pose itself when none is given), and then it holds still. */
@@ -286,7 +302,8 @@ const calm = matchMedia('(prefers-reduced-motion: reduce)')
 function move(ms = MOVES_MS, svg: string | null = null) {
   if (!view) return
   if (calm.matches) return show(stillOf(svg ?? view.rest))
-  movedAt = Date.now()
+  // Already living between moves: nothing more to play.
+  if (svg === null && isStill) return
   const wasStill = isStill
   isStill = false
   if (svg !== null || wasStill) show(svg ?? view.rest)
@@ -294,51 +311,25 @@ function move(ms = MOVES_MS, svg: string | null = null) {
   stillTimer = window.setTimeout(() => {
     if (!view) return
     isStill = true
-    show(stillOf(view.rest))
+    // Between moves Mochi is its pose in layers that keep moving by themselves, played by the compositor at next to no cost.
+    show(view.alive)
   }, ms)
 }
 
-// ---------- between moves: a blink, and now and then a stir ----------
-
-/** Eyes that can blink: open ones. Shut, smiling or crossed eyes stay as they are. */
-const canBlink = (mood: Mood | Act) => {
-  const eye = poseOf(mood).eye
-  return eye === 'dot' || eye === 'wide'
-}
-
-/** A blink every few seconds while Mochi is held still, now and then a double one; each only redraws the eyes, for a moment. */
-function blinkSoon() {
-  window.setTimeout(() => {
-    const eyes = stage.querySelector<SVGGElement>('g[transform="translate(0 -52)"]')
-    if (isStill && view && eyes && canBlink(view.mood) && !calm.matches && !document.hidden) {
-      const shut = (then: number) => window.setTimeout(() => {
-        eyes.classList.add('blink')
-        window.setTimeout(() => eyes.classList.remove('blink'), 140)
-      }, then)
-      shut(0)
-      if (Math.random() < 0.2) shut(320)
-    }
-    blinkSoon()
-  }, 2800 + Math.random() * 3700)
-}
+// ---------- now and then a stir ----------
 
 /** The moods in which Mochi is at ease, with nothing to do: these stir now and then by themselves. */
 const AT_EASE: readonly (Mood | Act)[] = ['idle', 'proud', 'pleased']
 
 /**
- * Every twenty to forty seconds, Mochi held still stirs: at ease, sometimes
- * something it does by itself and else a look about; at work, a moment of the
- * work. Never while it says something or a moment plays.
+ * Every twenty to forty seconds, Mochi at ease now and then does something by
+ * itself. Never while it says something or a moment plays.
  */
 function stirSoon() {
   window.setTimeout(() => {
-    const now = Date.now()
-    if (view && isStill && !held && !peek && !isBusy() && !say.classList.contains('on') && !document.hidden) {
-      if (AT_EASE.includes(view.mood)) {
-        const fidget = Math.random() < 0.35 ? fidgetOf(view.mood as Mood, 0, Math.random()) : null
-        if (fidget) hold(fidget)
-        else move(1800)
-      } else if (view.peers.some(p => p.state === 'busy') && now - movedAt >= WORK_REST_MS) move(1300)
+    if (view && isStill && !held && !peek && !isBusy() && !say.classList.contains('on') && !document.hidden && AT_EASE.includes(view.mood)) {
+      const fidget = Math.random() < 0.35 ? fidgetOf(view.mood as Mood, 0, Math.random()) : null
+      if (fidget) hold(fidget)
     }
     stirSoon()
   }, 20_000 + Math.random() * 20_000)
@@ -986,9 +977,6 @@ function draw() {
   const heldFor = held && held.until > now ? held.until - now + 200 : 0
   if (!before || next.svg !== before.svg) {
     move(heldFor || (before && isAtWork && before.peers.some(p => p.state === 'busy') ? WORK_MOVES_MS : MOVES_MS), next.svg)
-  } else if (isAtWork && now - movedAt >= WORK_REST_MS) {
-    // A chat at work: Mochi works along for a moment, now and then.
-    move(1300)
   }
   stage.setAttribute('aria-label', next.line)
   // Thinking, Mochi's dots lead up to a cloud, in the ink of whoever thinks: Claude Code's clay, Codex's blue.
@@ -1182,13 +1170,11 @@ async function start() {
       sayNewer()
     }
     tip()
-    // A breath a minute, so a Mochi with nothing to do is still alive; now and then something it does by itself.
+    // Now and then something Mochi does by itself.
     const fidget = view && !held && !peek && !isBusy() && !say.classList.contains('on') ? fidgetOf(view.mood as Mood, Math.random(), Math.random()) : null
     if (fidget) hold(fidget)
-    else move(1500)
     void take([]).catch(note)
   })
-  blinkSoon()
   stirSoon()
   // Everything is told from the start now that someone listens.
   await invoke('ready')

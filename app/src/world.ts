@@ -2,7 +2,7 @@ import type { Act, Mood, Outfit, Params, Peer, Scene } from '../../types'
 import { type Look, dressAs } from '../../hooks/level'
 import { appLink, nameOf, peerOf, peersLine } from '../../hooks/live'
 import { STATUS_INK, type Status, crowdOf, membersOf, moodOf, statusLine } from '../../hooks/party'
-import { mascotInner, paramsAt } from '../../hooks/rig'
+import { layersFor, mascotInner, paramsAt } from '../../hooks/rig'
 import { isDuo } from './acts'
 import { t } from '../../hooks/i18n'
 
@@ -16,6 +16,8 @@ export type View = {
   svg: string
   /** The same pose with nothing to ease in from: what Mochi goes back to when it moves again, and what it holds still in (see `stillOf`). */
   rest: string
+  /** The same pose held, in layers that keep moving by themselves at next to no cost: what Mochi shows between moves (see `layersFor`). */
+  alive: string
   /** A mood, or a moment Mochi plays (a pat, a chat's turn done, Claude Code and Codex at work together). */
   mood: Mood | Act
   /** What Mochi wears, by the look the mod writes; undefined before there is one. */
@@ -75,7 +77,8 @@ export function viewOf(peers: readonly Peer[], now: number, look: Look | null = 
   if (was && was.mood === mood && JSON.stringify(was.scene) === JSON.stringify(scene)) return { ...was, ...said }
   const from = was ? { params: paramsAt(was.from, was.mood, now - was.at), mood: was.mood, scene: was.scene } : null
   const rest = drawn(mascotInner({ mood, scene, from: null }))
-  return { svg: from ? drawn(mascotInner({ mood, scene, from })) : rest, rest, mood, outfit, scene, at: now, from: from?.params ?? null, ...said }
+  const alive = layersFor({ mood, scene }, ROOM, SHADOW)
+  return { svg: from ? drawn(mascotInner({ mood, scene, from })) : rest, rest, alive, mood, outfit, scene, at: now, from: from?.params ?? null, ...said }
 }
 
 /**
