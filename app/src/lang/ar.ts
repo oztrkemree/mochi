@@ -85,7 +85,7 @@ const AR: Words = {
   room: 'غرفة Mochi',
   colour: 'اللون',
   levelN: (n: number) => `المستوى ${n}`,
-  skins: { clay: 'طين', peach: 'خوخ', cream: 'كريمي', rose: 'ورد', coral: 'مرجان', lemon: 'ليمون', mint: 'نعناع', sky: 'سماء', lavender: 'خزامى', sage: 'مريمية', teal: 'فيروزي', plum: 'برقوق', cocoa: 'كاكاو', charcoal: 'فحم', snow: 'ثلج', cherry: 'كرز', ocean: 'محيط', forest: 'غابة', sunset: 'غروب', bubblegum: 'علكة', gold: 'ذهب', chrome: 'كروم', zombie: 'زومبي', ghost: 'شبح', lava: 'حمم', ice: 'جليد', galaxy: 'مجرة', neon: 'نيون', rainbow: 'قوس قزح', hologram: 'هولوغرام' },
+  skins: { clay: 'طين', peach: 'خوخ', cream: 'كريمي', rose: 'ورد', coral: 'مرجان', lemon: 'ليمون', mint: 'نعناع', sky: 'سماء', lavender: 'خزامى', sage: 'مريمية', teal: 'فيروزي', plum: 'برقوق', cocoa: 'كاكاو', charcoal: 'فحم', snow: 'ثلج', cherry: 'كرز', ocean: 'محيط', forest: 'غابة', sunset: 'غروب', bubblegum: 'علكة', gold: 'ذهب', chrome: 'كروم', zombie: 'زومبي', ghost: 'شبح', lava: 'حمم', ice: 'جليد', galaxy: 'مجرة', neon: 'نيون', rainbow: 'قوس قزح', hologram: 'هولوغرام', sorbet: 'سوربيه', aurora: 'شفق قطبي', lagoon: 'بحيرة', dusk: 'غسق', opal: 'أوبال', ember: 'جمر' },
   feats: {
     title: 'الإنجازات',
     done: (a: number, b: number) => `أُنجز ${a} من ${b}`,

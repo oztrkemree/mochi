@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 
 import { historyOf } from './growth'
 import { choiceFrom, choiceText } from '../../hooks/level'
+import { svgFor } from '../../hooks/rig'
 import { SKINS, skinFilter, skinOf, skinsAt } from '../../hooks/skins'
 import { chosen, lookNow, skinNow } from './wardrobe'
 
@@ -36,11 +37,16 @@ test('a choice can be given back to Mochi, or made nothing', () => {
   expect(chosen({ head: 'beanie' }, 'head', undefined)).toEqual({})
 })
 
-test('thirty colours open by level; the one chosen is worn while the level opens it, and prefs.json carries it', () => {
-  expect(SKINS).toHaveLength(30)
-  expect(new Set(SKINS.map(k => k.id)).size).toBe(30)
+test('thirty-six colours open by level; the one chosen is worn while the level opens it, and prefs.json carries it', () => {
+  expect(SKINS).toHaveLength(36)
+  expect(new Set(SKINS.map(k => k.id)).size).toBe(36)
   expect(skinsAt(1).map(k => k.id)).toEqual(['clay'])
-  expect(skinsAt(10).length).toBe(5)
+  expect(skinsAt(10).length).toBe(8)
+  // Each is a run of five colours, shade to glint.
+  for (const k of SKINS) if (k.map) expect(k.map).toHaveLength(5)
+  // What a skin lays over the clay blends into it only if each layer is cut to the body by itself: a group holding them all would keep the blend to itself.
+  expect(skinOf('rainbow')!.over).toMatch(/^<g mask="url\(#bm\)" style="mix-blend-mode:multiply">/)
+  expect(svgFor({ mood: 'idle', scene: { context: -1, agents: 0, skin: 'rainbow' }, from: null })).not.toContain('<g mask="url(#bm)"><g mask')
   // Mochi's own clay needs no filter; any other colour has one of its own name, so several Mochis on a page keep theirs.
   expect(skinFilter(skinOf('clay'))).toBe('')
   expect(skinFilter(skinOf('mint'))).toContain('id="skin-map-mint"')

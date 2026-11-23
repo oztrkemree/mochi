@@ -73,7 +73,7 @@ const DE: Words = {
   room: 'Mochis Zimmer',
   colour: 'Farbe',
   levelN: (n: number) => `Level ${n}`,
-  skins: { clay: 'Ton', peach: 'Pfirsich', cream: 'Creme', rose: 'Rose', coral: 'Koralle', lemon: 'Zitrone', mint: 'Minze', sky: 'Himmel', lavender: 'Lavendel', sage: 'Salbei', teal: 'Petrol', plum: 'Pflaume', cocoa: 'Kakao', charcoal: 'Anthrazit', snow: 'Schnee', cherry: 'Kirsche', ocean: 'Ozean', forest: 'Wald', sunset: 'Abendrot', bubblegum: 'Kaugummi', gold: 'Gold', chrome: 'Chrom', zombie: 'Zombie', ghost: 'Geist', lava: 'Lava', ice: 'Eis', galaxy: 'Galaxie', neon: 'Neon', rainbow: 'Regenbogen', hologram: 'Hologramm' },
+  skins: { clay: 'Ton', peach: 'Pfirsich', cream: 'Creme', rose: 'Rose', coral: 'Koralle', lemon: 'Zitrone', mint: 'Minze', sky: 'Himmel', lavender: 'Lavendel', sage: 'Salbei', teal: 'Petrol', plum: 'Pflaume', cocoa: 'Kakao', charcoal: 'Anthrazit', snow: 'Schnee', cherry: 'Kirsche', ocean: 'Ozean', forest: 'Wald', sunset: 'Abendrot', bubblegum: 'Kaugummi', gold: 'Gold', chrome: 'Chrom', zombie: 'Zombie', ghost: 'Geist', lava: 'Lava', ice: 'Eis', galaxy: 'Galaxie', neon: 'Neon', rainbow: 'Regenbogen', hologram: 'Hologramm', sorbet: 'Sorbet', aurora: 'Polarlicht', lagoon: 'Lagune', dusk: 'Dämmerung', opal: 'Opal', ember: 'Glut' },
   feats: {
     title: 'Erfolge',
     done: (a: number, b: number) => `${a} von ${b} geschafft`,

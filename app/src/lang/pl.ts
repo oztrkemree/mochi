@@ -78,7 +78,7 @@ const PL: Words = {
   room: 'Pokój Mochi',
   colour: 'Kolor',
   levelN: (n: number) => `poziom ${n}`,
-  skins: { clay: 'Glina', peach: 'Brzoskwinia', cream: 'Krem', rose: 'Róża', coral: 'Koral', lemon: 'Cytryna', mint: 'Mięta', sky: 'Niebo', lavender: 'Lawenda', sage: 'Szałwia', teal: 'Turkus', plum: 'Śliwka', cocoa: 'Kakao', charcoal: 'Węgiel', snow: 'Śnieg', cherry: 'Wiśnia', ocean: 'Ocean', forest: 'Las', sunset: 'Zmierzch', bubblegum: 'Balonówka', gold: 'Złoto', chrome: 'Chrom', zombie: 'Zombie', ghost: 'Duch', lava: 'Lawa', ice: 'Lód', galaxy: 'Galaktyka', neon: 'Neon', rainbow: 'Tęcza', hologram: 'Hologram' },
+  skins: { clay: 'Glina', peach: 'Brzoskwinia', cream: 'Krem', rose: 'Róża', coral: 'Koral', lemon: 'Cytryna', mint: 'Mięta', sky: 'Niebo', lavender: 'Lawenda', sage: 'Szałwia', teal: 'Turkus', plum: 'Śliwka', cocoa: 'Kakao', charcoal: 'Węgiel', snow: 'Śnieg', cherry: 'Wiśnia', ocean: 'Ocean', forest: 'Las', sunset: 'Zmierzch', bubblegum: 'Balonówka', gold: 'Złoto', chrome: 'Chrom', zombie: 'Zombie', ghost: 'Duch', lava: 'Lawa', ice: 'Lód', galaxy: 'Galaktyka', neon: 'Neon', rainbow: 'Tęcza', hologram: 'Hologram', sorbet: 'Sorbet', aurora: 'Zorza', lagoon: 'Laguna', dusk: 'Zmierzch', opal: 'Opal', ember: 'Żar' },
   feats: {
     title: 'Osiągnięcia',
     done: (a: number, b: number) => `Zdobyte: ${a} z ${b}`,

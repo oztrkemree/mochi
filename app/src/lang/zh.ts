@@ -70,7 +70,7 @@ const ZH: Words = {
   room: 'Mochi 的房间',
   colour: '颜色',
   levelN: (n: number) => `等级 ${n}`,
-  skins: { clay: '陶土', peach: '蜜桃', cream: '奶油', rose: '玫瑰', coral: '珊瑚', lemon: '柠檬', mint: '薄荷', sky: '天空', lavender: '薰衣草', sage: '鼠尾草', teal: '青绿', plum: '梅子', cocoa: '可可', charcoal: '炭黑', snow: '白雪', cherry: '樱桃', ocean: '海洋', forest: '森林', sunset: '日落', bubblegum: '泡泡糖', gold: '黄金', chrome: '镀铬', zombie: '僵尸', ghost: '幽灵', lava: '熔岩', ice: '寒冰', galaxy: '银河', neon: '霓虹', rainbow: '彩虹', hologram: '全息' },
+  skins: { clay: '陶土', peach: '蜜桃', cream: '奶油', rose: '玫瑰', coral: '珊瑚', lemon: '柠檬', mint: '薄荷', sky: '天空', lavender: '薰衣草', sage: '鼠尾草', teal: '青绿', plum: '梅子', cocoa: '可可', charcoal: '炭黑', snow: '白雪', cherry: '樱桃', ocean: '海洋', forest: '森林', sunset: '日落', bubblegum: '泡泡糖', gold: '黄金', chrome: '镀铬', zombie: '僵尸', ghost: '幽灵', lava: '熔岩', ice: '寒冰', galaxy: '银河', neon: '霓虹', rainbow: '彩虹', hologram: '全息', sorbet: '雪葩', aurora: '极光', lagoon: '泻湖', dusk: '暮色', opal: '欧泊', ember: '余烬' },
   feats: {
     title: '成就',
     done: (a: number, b: number) => `已完成 ${a}/${b}`,

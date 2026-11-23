@@ -1380,7 +1380,7 @@ function markup(shot: Drawn): string {
     outfit.head ? '' : '<circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>',
     outfit.head ? '' : img(ART.bulb, 45.6, 13.1, 8.8),
     `<g${fx}><rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>${img(ART.body, BODY.x, BODY.y, BODY.w)}</g>`,
-    skin?.over ? `<g mask="url(#bm)">${skin.over}</g>` : '',
+    skin?.over ?? '',
     `<rect x="18" y="${n(liquidY(scene.context))}" width="64" height="${n(BODY_H * level(scene.context) + 2)}" fill="url(#liq)" opacity="${n(liquidOp(scene.context))}" mask="url(#bm)">` +
       tween('y', n(liquidY(wasScene.context)), n(liquidY(scene.context))) +
       tween('height', n(BODY_H * level(wasScene.context) + 2), n(BODY_H * level(scene.context) + 2)) +
@@ -1534,7 +1534,7 @@ export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, 
   const body = svg(still(
     (isHatless ? `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/><circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>${img(ART.bulb, 45.6, 13.1, 8.8)}` : '') +
     `<g${fx}><rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>${img(ART.body, BODY.x, BODY.y, BODY.w)}</g>` +
-    (skin?.over ? `<g mask="url(#bm)">${skin.over}</g>` : '') +
+    (skin?.over ?? '') +
     `<rect x="18" y="28" width="64" height="56" fill="${rgb(to.tint)}" opacity="${n(to.tintOp)}" mask="url(#bm)"/>` +
     `<g opacity="${n(to.blush)}"><ellipse cx="31" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/><ellipse cx="69" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/></g>`))
   // The bulb's glow, held lit: a pulse here would be one more thing drawn again on every frame.

@@ -73,7 +73,7 @@ const HI: Words = {
   room: 'Mochi का कमरा',
   colour: 'रंग',
   levelN: (n: number) => `लेवल ${n}`,
-  skins: { clay: 'मिट्टी', peach: 'आड़ू', cream: 'क्रीम', rose: 'गुलाब', coral: 'मूंगा', lemon: 'नींबू', mint: 'पुदीना', sky: 'आसमान', lavender: 'लैवेंडर', sage: 'सेज', teal: 'फ़िरोज़ी', plum: 'जामुनी', cocoa: 'कोको', charcoal: 'कोयला', snow: 'हिम', cherry: 'चेरी', ocean: 'सागर', forest: 'जंगल', sunset: 'सूर्यास्त', bubblegum: 'बबलगम', gold: 'सोना', chrome: 'क्रोम', zombie: 'ज़ॉम्बी', ghost: 'भूत', lava: 'लावा', ice: 'बर्फ़', galaxy: 'आकाशगंगा', neon: 'नियॉन', rainbow: 'इंद्रधनुष', hologram: 'होलोग्राम' },
+  skins: { clay: 'मिट्टी', peach: 'आड़ू', cream: 'क्रीम', rose: 'गुलाब', coral: 'मूंगा', lemon: 'नींबू', mint: 'पुदीना', sky: 'आसमान', lavender: 'लैवेंडर', sage: 'सेज', teal: 'फ़िरोज़ी', plum: 'जामुनी', cocoa: 'कोको', charcoal: 'कोयला', snow: 'हिम', cherry: 'चेरी', ocean: 'सागर', forest: 'जंगल', sunset: 'सूर्यास्त', bubblegum: 'बबलगम', gold: 'सोना', chrome: 'क्रोम', zombie: 'ज़ॉम्बी', ghost: 'भूत', lava: 'लावा', ice: 'बर्फ़', galaxy: 'आकाशगंगा', neon: 'नियॉन', rainbow: 'इंद्रधनुष', hologram: 'होलोग्राम', sorbet: 'शर्बत', aurora: 'अरोरा', lagoon: 'लैगून', dusk: 'सांझ', opal: 'ओपल', ember: 'अंगारा' },
   feats: {
     title: 'उपलब्धियाँ',
     done: (a: number, b: number) => `${b} में से ${a} पूरी`,
