@@ -24,21 +24,28 @@ export const slotName = (s: Slot): string => t().item.slot[s]
 export const SLOT_ITEMS: Record<Slot, Item[]> = {
   head: ['beanie', 'hardhat', 'gradcap', 'chefhat', 'cowboy', 'crown', 'pirate', 'viking', 'wizard', 'partyhat', 'propeller', 'fez', 'nightcap', 'witchhat', 'santahat', 'sakura',
     'bandana', 'sailorhat', 'strawhat', 'daisyhat', 'leaf', 'catears', 'bunnyears', 'flowercrown', 'beret', 'tophat', 'jester', 'nursecap', 'sombrero', 'antlers', 'farmer', 'sunflowercrown', 'bee', 'halo', 'unicorn', 'shortcake', 'rainbow', 'dragon', 'astronaut',
-    'bowler', 'flatcap', 'explorer', 'baseballcap'],
+    'bowler', 'flatcap', 'explorer', 'baseballcap',
+    'kabuto', 'tiara', 'knight', 'pharaoh', 'brain', 'ufo', 'phoenix'],
   eyes: ['glasses', 'sunglasses', 'monocle',
     'heartglasses', 'eyepatch', 'goggles', 'starglasses', 'cinema3d', 'nerdglasses', 'visor',
-    'aviators', 'cateye', 'pixelshades', 'masquerade', 'divemask', 'vrheadset'],
+    'aviators', 'cateye', 'pixelshades', 'masquerade', 'divemask', 'vrheadset',
+    'skigoggles', 'steampunk', 'xray', 'diamondshades'],
   face: ['clownnose', 'catwhiskers', 'plaster', 'freckles', 'bushybrows', 'eyelashes', 'fangs', 'teardrop',
-    'goldstars', 'wheat', 'facemask', 'lollipop', 'bubblegum', 'rose'],
-  lip: ['mustache', 'pencilstache', 'chevron', 'handlebar', 'horseshoe', 'walrus'],
+    'goldstars', 'wheat', 'facemask', 'lollipop', 'bubblegum', 'rose',
+    'butterfly', 'heartcheeks', 'warpaint', 'diamondtear'],
+  lip: ['mustache', 'pencilstache', 'chevron', 'handlebar', 'horseshoe', 'walrus',
+    'curlystache', 'rainbowstache', 'flamestache'],
   chin: ['beard', 'goatee', 'soulpatch', 'chinstrap', 'wizardbeard', 'braidbeard'],
   neck: ['bowtie', 'necktie', 'scarf', 'evileye', 'medal', 'pin', 'rosette',
     'spikedcollar', 'pearls', 'bellcollar', 'neckerchief', 'lei', 'goldchain', 'overalls',
-    'sailorcollar', 'whistle', 'lanyard', 'camera', 'stethoscope', 'binoculars', 'headphones', 'bib', 'ruff', 'bolotie', 'boa', 'locket'],
+    'sailorcollar', 'whistle', 'lanyard', 'camera', 'stethoscope', 'binoculars', 'headphones', 'bib', 'ruff', 'bolotie', 'boa', 'locket',
+    'lifebuoy', 'pendant', 'dragonamulet'],
   held: ['mug', 'tea', 'pencil', 'simit', 'wrench', 'balloon', 'candy', 'lantern', 'envelope',
-    'flag', 'whisk', 'pinwheel', 'compass', 'key', 'icecream', 'cupcake', 'sunflower', 'clover', 'toadstool', 'cactuspot', 'wand', 'potion', 'paddle', 'joystick', 'bubblewand', 'rollingpin', 'harmonica', 'tambourine'],
+    'flag', 'whisk', 'pinwheel', 'compass', 'key', 'icecream', 'cupcake', 'sunflower', 'clover', 'toadstool', 'cactuspot', 'wand', 'potion', 'paddle', 'joystick', 'bubblewand', 'rollingpin', 'harmonica', 'tambourine',
+    'guitar', 'trophy', 'katana', 'rubberchicken', 'thunderbolt'],
   ground: ['sprout', 'bunny', 'horse', 'cactus', 'duck', 'cat', 'gift', 'pumpkin', 'diya', 'songpyeon', 'cake',
-    'mushroom', 'frog', 'robot', 'ramen', 'snail', 'campfire', 'bonsai', 'penguin', 'lavalamp', 'taco', 'tent', 'hedgehog', 'wateringcan', 'macaron', 'arcade', 'snowman', 'rocket', 'watermelon', 'chest', 'axolotl'],
+    'mushroom', 'frog', 'robot', 'ramen', 'snail', 'campfire', 'bonsai', 'penguin', 'lavalamp', 'taco', 'tent', 'hedgehog', 'wateringcan', 'macaron', 'arcade', 'snowman', 'rocket', 'watermelon', 'chest', 'axolotl',
+    'slime', 'ghostie', 'robodog', 'babydragon', 'portal'],
 }
 
 export const SLOT: Record<Item, Slot> = Object.fromEntries(
@@ -192,6 +199,8 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'envelope', badge: 'craftsman' },
   { item: 'candy', badge: 'bulldozer' },
   { item: 'witchhat', badge: 'vampire' }, { item: 'pumpkin', badge: 'vampire' },
+  // Added with the desktop app's 1.0: higher, now that every agent's work counts.
+  { item: 'kabuto', level: 42 }, { item: 'tiara', level: 46 }, { item: 'knight', level: 54 }, { item: 'pharaoh', level: 62 }, { item: 'brain', level: 66 }, { item: 'ufo', level: 80 }, { item: 'phoenix', level: 95 }, { item: 'skigoggles', level: 44 }, { item: 'steampunk', level: 56 }, { item: 'xray', level: 66 }, { item: 'diamondshades', level: 85 }, { item: 'butterfly', level: 45 }, { item: 'heartcheeks', level: 55 }, { item: 'warpaint', level: 62 }, { item: 'diamondtear', level: 75 }, { item: 'curlystache', level: 50 }, { item: 'rainbowstache', level: 70 }, { item: 'flamestache', level: 90 }, { item: 'lifebuoy', level: 46 }, { item: 'pendant', level: 60 }, { item: 'dragonamulet', level: 80 }, { item: 'guitar', level: 48 }, { item: 'trophy', level: 55 }, { item: 'katana', level: 60 }, { item: 'rubberchicken', level: 65 }, { item: 'thunderbolt', level: 85 }, { item: 'slime', level: 48 }, { item: 'ghostie', level: 56 }, { item: 'robodog', level: 62 }, { item: 'babydragon', level: 70 }, { item: 'portal', level: 95 },
 // By level, the habits and badges after them, so the first one still locked is the next to come.
 ] satisfies ({ item: Item } & Need)[]).sort((a, b) => (a.level ?? Infinity) - (b.level ?? Infinity))
 
@@ -449,4 +458,5 @@ export const ASCII_HAT: Partial<Record<Item, string>> = {
   flatcap: '▁▄▆▄▁',
   explorer: '▁▟█▙▁',
   baseballcap: '▄██▄▁',
+  kabuto: '╰▄█▄╯', tiara: ' ▴▴▴ ', knight: ' ▟█▙ ', pharaoh: '▐▄▀▄▌', brain: ' ▄▓▄ ', ufo: ' ▁▆▁ ', phoenix: ' ╿╿╿ ',
 }

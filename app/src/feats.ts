@@ -1,6 +1,6 @@
 import type { Badge, History } from '../../types'
 import { BADGES } from '../../hooks/badges'
-import { levelOf, unlocked, xpOf } from '../../hooks/level'
+import { SLOT_ITEMS, levelOf, unlocked, xpOf } from '../../hooks/level'
 
 /**
  * Achievements: the mod's badges, and sixty milestones more counted from the
@@ -47,7 +47,7 @@ export const MILESTONES: Milestone[] = [
 
   m('legend', 'impossible', 'turns', 50_000), m('million', 'impossible', 'edits', 100_000), m('armada', 'impossible', 'commits', 10_000), m('thousandHours', 'impossible', 'hours', 1_000),
   m('yearRound', 'impossible', 'days', 365), m('hundredInRow', 'impossible', 'streak', 100), m('library', 'impossible', 'added', 1_000_000), m('levelSeventyFive', 'impossible', 'level', 75),
-  m('everything', 'impossible', 'items', 170), m('allBadges', 'impossible', 'badges', BADGES.length),
+  m('everything', 'impossible', 'items', Object.values(SLOT_ITEMS).flat().length), m('allBadges', 'impossible', 'badges', BADGES.length),
 ]
 
 /** Where the mod's badges stand among them: a theme and a tier each. */

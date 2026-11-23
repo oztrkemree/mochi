@@ -416,6 +416,7 @@ export const en = {
       lavalamp: 'lava lamp', taco: 'taco', tent: 'camping tent', hedgehog: 'hedgehog',
       wateringcan: 'watering can', macaron: 'macaron stack', arcade: 'arcade machine', snowman: 'snowman',
       rocket: 'toy rocket', watermelon: 'watermelon slice', chest: 'treasure chest', axolotl: 'axolotl', horse: 'little horse', sprout: 'sprout in a pot', bunny: 'bunny',
+      kabuto: 'samurai helmet', tiara: 'tiara', knight: 'knight’s helmet', pharaoh: 'pharaoh’s headdress', brain: 'zombie brain', ufo: 'flying saucer', phoenix: 'phoenix crown', skigoggles: 'ski goggles', steampunk: 'steampunk goggles', xray: 'x-ray specs', diamondshades: 'diamond shades', butterfly: 'butterfly face paint', heartcheeks: 'heart cheeks', warpaint: 'war paint', diamondtear: 'diamond tear', curlystache: 'curly mustache', rainbowstache: 'rainbow mustache', flamestache: 'flame mustache', lifebuoy: 'life ring', pendant: 'crystal pendant', dragonamulet: 'dragon amulet', guitar: 'electric guitar', trophy: 'trophy', katana: 'katana', rubberchicken: 'rubber chicken', thunderbolt: 'thunderbolt', slime: 'slime', ghostie: 'little ghost', robodog: 'robot dog', babydragon: 'baby dragon', portal: 'magic portal',
     },
     short: {
       hardhat: 'hard hat', crown: 'crown', partyhat: 'party', witchhat: 'witch', santahat: 'Santa', nightcap: 'nightcap', gradcap: 'grad cap',
@@ -452,6 +453,7 @@ export const en = {
       lavalamp: 'lava lamp', taco: 'taco', tent: 'tent', hedgehog: 'hedgehog',
       wateringcan: 'water can', macaron: 'macarons', arcade: 'arcade', snowman: 'snowman',
       rocket: 'rocket', watermelon: 'watermelon', chest: 'treasure', axolotl: 'axolotl', horse: 'horse', sprout: 'sprout', bunny: 'bunny',
+      kabuto: 'kabuto', tiara: 'tiara', knight: 'knight', pharaoh: 'pharaoh', brain: 'brain', ufo: 'UFO', phoenix: 'phoenix', skigoggles: 'ski', steampunk: 'steampunk', xray: 'x-ray', diamondshades: 'diamond', butterfly: 'butterfly', heartcheeks: 'hearts', warpaint: 'war paint', diamondtear: 'diamond', curlystache: 'curly', rainbowstache: 'rainbow', flamestache: 'flame', lifebuoy: 'life ring', pendant: 'pendant', dragonamulet: 'amulet', guitar: 'guitar', trophy: 'trophy', katana: 'katana', rubberchicken: 'chicken', thunderbolt: 'bolt', slime: 'slime', ghostie: 'ghost', robodog: 'robot dog', babydragon: 'dragon', portal: 'portal',
     },
     slot: { head: 'Head', eyes: 'Glasses', face: 'Face', lip: 'Mustache', chin: 'Beard', neck: 'Neck', held: 'Hand', ground: 'Beside' },
     hint: {

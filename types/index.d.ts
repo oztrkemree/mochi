@@ -83,6 +83,8 @@ export type Item =
   | 'sailorcollar' | 'whistle' | 'lanyard' | 'camera' | 'stethoscope' | 'binoculars' | 'headphones' | 'bib' | 'ruff' | 'bolotie' | 'boa' | 'locket'
   | 'flag' | 'whisk' | 'pinwheel' | 'compass'  | 'key' | 'icecream' | 'cupcake' | 'sunflower' | 'clover' | 'toadstool' | 'cactuspot' | 'wand' | 'potion' | 'paddle' | 'joystick' | 'bubblewand' | 'rollingpin' | 'harmonica' | 'tambourine'
   | 'mushroom' | 'frog' | 'robot' | 'ramen' | 'snail' | 'campfire' | 'bonsai' | 'penguin' | 'lavalamp' | 'taco' | 'tent' | 'hedgehog' | 'wateringcan' | 'macaron' | 'arcade' | 'snowman' | 'rocket' | 'watermelon' | 'chest' | 'axolotl' | 'horse' | 'sprout' | 'bunny'
+  // Added with the desktop app's 1.0, opened from level 42 to 95.
+  | 'kabuto' | 'tiara' | 'knight' | 'pharaoh' | 'brain' | 'ufo' | 'phoenix' | 'skigoggles' | 'steampunk' | 'xray' | 'diamondshades' | 'butterfly' | 'heartcheeks' | 'warpaint' | 'diamondtear' | 'curlystache' | 'rainbowstache' | 'flamestache' | 'lifebuoy' | 'pendant' | 'dragonamulet' | 'guitar' | 'trophy' | 'katana' | 'rubberchicken' | 'thunderbolt' | 'slime' | 'ghostie' | 'robodog' | 'babydragon' | 'portal'
 
 /** Something earned once from real work (see hooks/badges.ts). */
 export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' | 'owl' | 'bird' | 'polyglot' | 'marathon' | 'week' | 'hundred' | 'month' | 'fivehundred' | 'regular' | 'craftsman' | 'bulldozer' | 'vampire'

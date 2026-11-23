@@ -393,6 +393,7 @@ export const de: typeof en = {
       lavalamp: 'Lavalampe', taco: 'Taco', tent: 'Campingzelt', hedgehog: 'Igel',
       wateringcan: 'Gießkanne', macaron: 'Macaron-Turm', arcade: 'Arcade-Automat', snowman: 'Schneemann',
       rocket: 'Spielzeugrakete', watermelon: 'Wassermelonenstück', chest: 'Schatztruhe', axolotl: 'Axolotl', horse: 'kleines Pferd', sprout: 'Keimling im Topf', bunny: 'Hase',
+      kabuto: 'Samuraihelm', tiara: 'Tiara', knight: 'Ritterhelm', pharaoh: 'Pharaonenkopfschmuck', brain: 'Zombiegehirn', ufo: 'fliegende Untertasse', phoenix: 'Phönixkrone', skigoggles: 'Skibrille', steampunk: 'Steampunk-Brille', xray: 'Röntgenbrille', diamondshades: 'Diamantbrille', butterfly: 'Schmetterlings-Schminke', heartcheeks: 'Herzchen auf den Wangen', warpaint: 'Kriegsbemalung', diamondtear: 'Diamantträne', curlystache: 'Kringelbart', rainbowstache: 'Regenbogenbart', flamestache: 'Flammenbart', lifebuoy: 'Schwimmring', pendant: 'Kristallanhänger', dragonamulet: 'Drachenamulett', guitar: 'E-Gitarre', trophy: 'Pokal', katana: 'Katana', rubberchicken: 'Gummihuhn', thunderbolt: 'Blitz', slime: 'Slime', ghostie: 'kleines Gespenst', robodog: 'Roboterhund', babydragon: 'Babydrache', portal: 'Zauberportal',
     },
     short: {
       hardhat: 'Helm', crown: 'Krone', partyhat: 'Party', witchhat: 'Hexe', santahat: 'Nikolaus', nightcap: 'Schlafmütze', gradcap: 'Doktorhut',
@@ -429,6 +430,7 @@ export const de: typeof en = {
       lavalamp: 'Lava', taco: 'Taco', tent: 'Zelt', hedgehog: 'Igel',
       wateringcan: 'Kanne', macaron: 'Macarons', arcade: 'Arcade', snowman: 'Schneemann',
       rocket: 'Rakete', watermelon: 'Melone', chest: 'Schatz', axolotl: 'Axolotl', horse: 'Pferd', sprout: 'Keimling', bunny: 'Hase',
+      kabuto: 'Kabuto', tiara: 'Tiara', knight: 'Ritter', pharaoh: 'Pharao', brain: 'Gehirn', ufo: 'UFO', phoenix: 'Phönix', skigoggles: 'Ski', steampunk: 'Steampunk', xray: 'Röntgen', diamondshades: 'Diamant', butterfly: 'Schmetterling', heartcheeks: 'Wangen', warpaint: 'Kriegsbemalung', diamondtear: 'Diamant', curlystache: 'Kringel', rainbowstache: 'Regenbogen', flamestache: 'Flammen', lifebuoy: 'Schwimmring', pendant: 'Anhänger', dragonamulet: 'Amulett', guitar: 'Gitarre', trophy: 'Pokal', katana: 'Katana', rubberchicken: 'Huhn', thunderbolt: 'Blitz', slime: 'Slime', ghostie: 'Gespenst', robodog: 'Roboterhund', babydragon: 'Babydrache', portal: 'Portal',
     },
     slot: { head: 'Kopf', eyes: 'Brille', face: 'Gesicht', lip: 'Schnurrbart', chin: 'Bart', neck: 'Hals', held: 'Hand', ground: 'Daneben' },
     hint: {

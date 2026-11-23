@@ -392,6 +392,7 @@ export const ko: typeof en = {
       lavalamp: '용암 램프', taco: '타코', tent: '캠핑 텐트', hedgehog: '고슴도치',
       wateringcan: '물뿌리개', macaron: '마카롱 탑', arcade: '아케이드 게임기', snowman: '눈사람',
       rocket: '장난감 로켓', watermelon: '수박 조각', chest: '보물 상자', axolotl: '아홀로틀', horse: '아기 말', sprout: '화분 새싹', bunny: '토끼',
+      kabuto: '사무라이 투구', tiara: '티아라', knight: '기사 투구', pharaoh: '파라오 머리장식', brain: '좀비 뇌', ufo: '비행접시', phoenix: '불사조 왕관', skigoggles: '스키 고글', steampunk: '스팀펑크 고글', xray: '엑스레이 안경', diamondshades: '다이아몬드 선글라스', butterfly: '나비 페이스페인팅', heartcheeks: '하트 볼터치', warpaint: '전투 페인트', diamondtear: '다이아몬드 눈물', curlystache: '곱슬 콧수염', rainbowstache: '무지개 콧수염', flamestache: '불꽃 콧수염', lifebuoy: '튜브', pendant: '크리스탈 펜던트', dragonamulet: '용 부적', guitar: '일렉 기타', trophy: '트로피', katana: '카타나', rubberchicken: '고무 닭', thunderbolt: '번개', slime: '슬라임', ghostie: '꼬마 유령', robodog: '로봇 강아지', babydragon: '아기 용', portal: '마법 포털',
     },
     short: {
       hardhat: '안전모', crown: '왕관', partyhat: '파티', witchhat: '마녀', santahat: '산타', nightcap: '수면모', gradcap: '학사모',
@@ -428,6 +429,7 @@ export const ko: typeof en = {
       lavalamp: '용암', taco: '타코', tent: '텐트', hedgehog: '고슴도치',
       wateringcan: '물뿌리개', macaron: '마카롱', arcade: '오락기', snowman: '눈사람',
       rocket: '로켓', watermelon: '수박', chest: '보물', axolotl: '아홀로틀', horse: '말', sprout: '새싹', bunny: '토끼',
+      kabuto: '카부토', tiara: '티아라', knight: '기사', pharaoh: '파라오', brain: '뇌', ufo: 'UFO', phoenix: '불사조', skigoggles: '스키', steampunk: '스팀펑크', xray: '엑스레이', diamondshades: '다이아', butterfly: '나비', heartcheeks: '볼터치', warpaint: '페인트', diamondtear: '다이아', curlystache: '곱슬', rainbowstache: '무지개', flamestache: '불꽃', lifebuoy: '튜브', pendant: '크리스탈', dragonamulet: '부적', guitar: '기타', trophy: '트로피', katana: '카타나', rubberchicken: '고무 닭', thunderbolt: '번개', slime: '슬라임', ghostie: '유령', robodog: '로봇개', babydragon: '아기 용', portal: '포털',
     },
     slot: { head: '머리', eyes: '안경', face: '얼굴', lip: '콧수염', chin: '턱수염', neck: '목', held: '손', ground: '옆' },
     hint: {

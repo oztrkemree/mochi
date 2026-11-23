@@ -392,6 +392,7 @@ export const tr: typeof en = {
       lavalamp: 'lav lambası', taco: 'taco', tent: 'kamp çadırı', hedgehog: 'kirpi',
       wateringcan: 'sulama kabı', macaron: 'makaron kulesi', arcade: 'atari makinesi', snowman: 'kardan adam',
       rocket: 'oyuncak roket', watermelon: 'karpuz dilimi', chest: 'hazine sandığı', axolotl: 'aksolotl', horse: 'minik at', sprout: 'saksıda filiz', bunny: 'tavşan',
+      kabuto: 'samuray miğferi', tiara: 'prenses tacı', knight: 'şövalye miğferi', pharaoh: 'firavun başlığı', brain: 'zombi beyni', ufo: 'uçan daire', phoenix: 'anka tacı', skigoggles: 'kayak gözlüğü', steampunk: 'steampunk gözlük', xray: 'röntgen gözlüğü', diamondshades: 'elmas gözlük', butterfly: 'kelebek yüz boyası', heartcheeks: 'kalp yanaklar', warpaint: 'savaş boyası', diamondtear: 'elmas gözyaşı', curlystache: 'kıvrık bıyık', rainbowstache: 'gökkuşağı bıyık', flamestache: 'alev bıyık', lifebuoy: 'can simidi', pendant: 'kristal kolye', dragonamulet: 'ejderha muskası', guitar: 'elektro gitar', trophy: 'kupa', katana: 'katana', rubberchicken: 'lastik tavuk', thunderbolt: 'yıldırım', slime: 'jöle', ghostie: 'küçük hayalet', robodog: 'robot köpek', babydragon: 'yavru ejderha', portal: 'sihirli geçit',
     },
     short: {
       hardhat: 'baret', crown: 'taç', partyhat: 'parti', witchhat: 'cadı', santahat: 'noel', nightcap: 'gece', gradcap: 'kep',
@@ -428,6 +429,7 @@ export const tr: typeof en = {
       lavalamp: 'lav', taco: 'taco', tent: 'çadır', hedgehog: 'kirpi',
       wateringcan: 'sulama', macaron: 'makaron', arcade: 'atari', snowman: 'kardan adam',
       rocket: 'roket', watermelon: 'karpuz', chest: 'hazine', axolotl: 'aksolotl', horse: 'at', sprout: 'filiz', bunny: 'tavşan',
+      kabuto: 'kabuto', tiara: 'diadem', knight: 'şövalye', pharaoh: 'firavun', brain: 'beyin', ufo: 'UFO', phoenix: 'anka', skigoggles: 'kayak', steampunk: 'steampunk', xray: 'röntgen', diamondshades: 'elmas', butterfly: 'kelebek', heartcheeks: 'kalpler', warpaint: 'savaş boyası', diamondtear: 'elmas', curlystache: 'kıvrık', rainbowstache: 'gökkuşağı', flamestache: 'alev', lifebuoy: 'can simidi', pendant: 'kolye', dragonamulet: 'muska', guitar: 'gitar', trophy: 'kupa', katana: 'katana', rubberchicken: 'tavuk', thunderbolt: 'yıldırım', slime: 'jöle', ghostie: 'hayalet', robodog: 'robot köpek', babydragon: 'ejderha', portal: 'geçit',
     },
     slot: { head: 'Baş', eyes: 'Gözlük', face: 'Yüz', lip: 'Bıyık', chin: 'Sakal', neck: 'Boyun', held: 'El', ground: 'Yanında' },
     hint: {

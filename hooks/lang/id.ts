@@ -393,6 +393,7 @@ export const id: typeof en = {
       lavalamp: 'lampu lava', taco: 'taco', tent: 'tenda kemah', hedgehog: 'landak',
       wateringcan: 'poci penyiram', macaron: 'tumpukan makaron', arcade: 'mesin arkade', snowman: 'manusia salju',
       rocket: 'roket mainan', watermelon: 'irisan semangka', chest: 'peti harta karun', axolotl: 'axolotl', horse: 'kuda kecil', sprout: 'tunas di pot', bunny: 'kelinci',
+      kabuto: 'helm samurai', tiara: 'tiara', knight: 'helm ksatria', pharaoh: 'hiasan kepala firaun', brain: 'otak zombi', ufo: 'piring terbang', phoenix: 'mahkota feniks', skigoggles: 'kacamata ski', steampunk: 'kacamata steampunk', xray: 'kacamata sinar-X', diamondshades: 'kacamata berlian', butterfly: 'lukisan wajah kupu-kupu', heartcheeks: 'gambar hati di pipi', warpaint: 'cat perang', diamondtear: 'air mata berlian', curlystache: 'kumis keriting', rainbowstache: 'kumis pelangi', flamestache: 'kumis api', lifebuoy: 'ban renang', pendant: 'liontin kristal', dragonamulet: 'jimat naga', guitar: 'gitar listrik', trophy: 'piala', katana: 'katana', rubberchicken: 'ayam karet', thunderbolt: 'petir', slime: 'slime', ghostie: 'hantu kecil', robodog: 'anjing robot', babydragon: 'bayi naga', portal: 'portal ajaib',
     },
     short: {
       hardhat: 'helm', crown: 'mahkota', partyhat: 'pesta', witchhat: 'penyihir', santahat: 'Sinterklas', nightcap: 'topi tidur', gradcap: 'toga',
@@ -429,6 +430,7 @@ export const id: typeof en = {
       lavalamp: 'lava', taco: 'taco', tent: 'tenda', hedgehog: 'landak',
       wateringcan: 'penyiram', macaron: 'makaron', arcade: 'arkade', snowman: 'salju',
       rocket: 'roket', watermelon: 'semangka', chest: 'harta', axolotl: 'axolotl', horse: 'kuda', sprout: 'tunas', bunny: 'kelinci',
+      kabuto: 'kabuto', tiara: 'tiara', knight: 'ksatria', pharaoh: 'firaun', brain: 'otak', ufo: 'UFO', phoenix: 'feniks', skigoggles: 'ski', steampunk: 'steampunk', xray: 'sinar-X', diamondshades: 'berlian', butterfly: 'kupu-kupu', heartcheeks: 'pipi', warpaint: 'cat perang', diamondtear: 'berlian', curlystache: 'keriting', rainbowstache: 'pelangi', flamestache: 'api', lifebuoy: 'ban renang', pendant: 'kristal', dragonamulet: 'jimat', guitar: 'gitar', trophy: 'piala', katana: 'katana', rubberchicken: 'ayam', thunderbolt: 'petir', slime: 'slime', ghostie: 'hantu', robodog: 'anjing robot', babydragon: 'bayi naga', portal: 'portal',
     },
     slot: { head: 'Kepala', eyes: 'Kacamata', face: 'Wajah', lip: 'Kumis', chin: 'Janggut', neck: 'Leher', held: 'Tangan', ground: 'Di samping' },
     hint: {

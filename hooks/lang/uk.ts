@@ -414,6 +414,7 @@ export const uk: typeof en = {
       lavalamp: 'лава-лампа', taco: 'тако', tent: 'намет', hedgehog: 'їжак',
       wateringcan: 'лійка', macaron: 'вежа макаронс', arcade: 'ігровий автомат', snowman: 'сніговик',
       rocket: 'іграшкова ракета', watermelon: 'скибка кавуна', chest: 'скриня зі скарбами', axolotl: 'аксолотль', horse: 'конячка', sprout: 'паросток у горщику', bunny: 'зайчик',
+      kabuto: 'шолом самурая', tiara: 'тіара', knight: 'лицарський шолом', pharaoh: 'головний убір фараона', brain: 'мозок зомбі', ufo: 'літаюча тарілка', phoenix: 'корона фенікса', skigoggles: 'гірськолижна маска', steampunk: 'стімпанк-окуляри', xray: 'рентгенівські окуляри', diamondshades: 'діамантові окуляри', butterfly: 'грим-метелик', heartcheeks: 'сердечка на щічках', warpaint: 'бойове розфарбування', diamondtear: 'діамантова сльоза', curlystache: 'кучеряві вуса', rainbowstache: 'райдужні вуса', flamestache: 'вогняні вуса', lifebuoy: 'надувне коло', pendant: 'кришталевий кулон', dragonamulet: 'амулет дракона', guitar: 'електрогітара', trophy: 'кубок', katana: 'катана', rubberchicken: 'гумова курка', thunderbolt: 'блискавка', slime: 'слайм', ghostie: 'привидик', robodog: 'робопес', babydragon: 'драконятко', portal: 'чарівний портал',
     },
     short: {
       hardhat: 'каска', crown: 'корона', partyhat: 'свято', witchhat: 'відьма', santahat: 'Санта', nightcap: 'нічний ковпак', gradcap: 'випускник',
@@ -450,6 +451,7 @@ export const uk: typeof en = {
       lavalamp: 'лава', taco: 'тако', tent: 'намет', hedgehog: 'їжак',
       wateringcan: 'лійка', macaron: 'макаронс', arcade: 'автомат', snowman: 'сніговик',
       rocket: 'ракета', watermelon: 'кавун', chest: 'скриня', axolotl: 'аксолотль', horse: 'кінь', sprout: 'паросток', bunny: 'зайчик',
+      kabuto: 'кабуто', tiara: 'тіара', knight: 'лицар', pharaoh: 'фараон', brain: 'мозок', ufo: 'НЛО', phoenix: 'фенікс', skigoggles: 'лижі', steampunk: 'стімпанк', xray: 'рентген', diamondshades: 'діамант', butterfly: 'метелик', heartcheeks: 'щічки', warpaint: 'розфарбування', diamondtear: 'діамант', curlystache: 'кучеряві', rainbowstache: 'веселка', flamestache: 'вогонь', lifebuoy: 'коло', pendant: 'кулон', dragonamulet: 'амулет', guitar: 'гітара', trophy: 'кубок', katana: 'катана', rubberchicken: 'курка', thunderbolt: 'блискавка', slime: 'слайм', ghostie: 'привид', robodog: 'робопес', babydragon: 'драконятко', portal: 'портал',
     },
     slot: { head: 'Голова', eyes: 'Окуляри', face: 'Обличчя', lip: 'Вуса', chin: 'Борода', neck: 'Шия', held: 'У руці', ground: 'Поруч' },
     hint: {

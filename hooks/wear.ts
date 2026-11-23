@@ -8,5 +8,7 @@ import type { Item } from '../types'
 import type { Asset } from './assets'
 import { WEAR_1 } from './wear-1'
 import { WEAR_2 } from './wear-2'
+import { WEAR_3 } from './wear-3'
+import { WEAR_4 } from './wear-4'
 
-export const WEAR: Partial<Record<Item, Asset>> = { ...WEAR_1, ...WEAR_2 }
+export const WEAR: Partial<Record<Item, Asset>> = { ...WEAR_1, ...WEAR_2, ...WEAR_3, ...WEAR_4 }

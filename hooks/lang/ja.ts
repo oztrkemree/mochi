@@ -392,6 +392,7 @@ export const ja: typeof en = {
       lavalamp: 'ラバランプ', taco: 'タコス', tent: 'テント', hedgehog: 'ハリネズミ',
       wateringcan: 'じょうろ', macaron: 'マカロン', arcade: 'ゲーム筐体', snowman: '雪だるま',
       rocket: 'ロケット', watermelon: 'スイカ', chest: '宝箱', axolotl: 'ウーパールーパー', horse: '子馬', sprout: '鉢の芽', bunny: 'うさぎ',
+      kabuto: '侍の兜', tiara: 'ティアラ', knight: '騎士の兜', pharaoh: 'ファラオの頭飾り', brain: 'ゾンビの脳みそ', ufo: '空飛ぶ円盤', phoenix: '不死鳥の王冠', skigoggles: 'スキーゴーグル', steampunk: 'スチームパンクゴーグル', xray: 'X線メガネ', diamondshades: 'ダイヤのサングラス', butterfly: '蝶のフェイスペイント', heartcheeks: 'ハートのほっぺ', warpaint: 'ウォーペイント', diamondtear: 'ダイヤの涙', curlystache: 'くるくるひげ', rainbowstache: '虹色ひげ', flamestache: '炎のひげ', lifebuoy: '浮き輪', pendant: 'クリスタルのペンダント', dragonamulet: 'ドラゴンのお守り', guitar: 'エレキギター', trophy: 'トロフィー', katana: '刀', rubberchicken: 'ラバーチキン', thunderbolt: '稲妻', slime: 'スライム', ghostie: 'ちびおばけ', robodog: 'ロボット犬', babydragon: '子ドラゴン', portal: '魔法のポータル',
     },
     short: {
       hardhat: 'メット', crown: '王冠', partyhat: 'パーティー', witchhat: '魔女', santahat: 'サンタ', nightcap: 'ナイト帽', gradcap: '角帽',
@@ -428,6 +429,7 @@ export const ja: typeof en = {
       lavalamp: 'ラバ', taco: 'タコス', tent: 'テント', hedgehog: 'ハリネズミ',
       wateringcan: 'じょうろ', macaron: 'マカロン', arcade: '筐体', snowman: '雪だるま',
       rocket: 'ロケット', watermelon: 'スイカ', chest: '宝箱', axolotl: 'ウパ', horse: '馬', sprout: '芽', bunny: 'うさぎ',
+      kabuto: '兜', tiara: 'ティアラ', knight: '騎士', pharaoh: 'ファラオ', brain: '脳みそ', ufo: 'UFO', phoenix: '不死鳥', skigoggles: 'スキー', steampunk: 'スチーム', xray: 'X線', diamondshades: 'ダイヤ', butterfly: '蝶', heartcheeks: 'ほっぺ', warpaint: 'ペイント', diamondtear: 'ダイヤ', curlystache: 'くるくる', rainbowstache: '虹', flamestache: '炎', lifebuoy: '浮き輪', pendant: 'クリスタル', dragonamulet: 'お守り', guitar: 'ギター', trophy: 'トロフィー', katana: '刀', rubberchicken: 'チキン', thunderbolt: '稲妻', slime: 'スライム', ghostie: 'おばけ', robodog: 'ロボ犬', babydragon: '子ドラゴン', portal: 'ポータル',
     },
     slot: { head: '頭', eyes: 'メガネ', face: '顔', lip: '口ひげ', chin: 'あごひげ', neck: '首', held: '手', ground: '足元' },
     hint: {

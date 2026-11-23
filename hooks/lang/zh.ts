@@ -392,6 +392,7 @@ export const zh: typeof en = {
       lavalamp: '熔岩灯', taco: '塔可', tent: '露营帐篷', hedgehog: '刺猬',
       wateringcan: '洒水壶', macaron: '马卡龙塔', arcade: '街机', snowman: '雪人',
       rocket: '玩具火箭', watermelon: '西瓜片', chest: '宝箱', axolotl: '美西螈', horse: '小马', sprout: '盆栽幼苗', bunny: '兔子',
+      kabuto: '武士头盔', tiara: '小皇冠', knight: '骑士头盔', pharaoh: '法老头饰', brain: '僵尸大脑', ufo: '飞碟', phoenix: '凤凰王冠', skigoggles: '滑雪镜', steampunk: '蒸汽朋克护目镜', xray: 'X光眼镜', diamondshades: '钻石墨镜', butterfly: '蝴蝶脸绘', heartcheeks: '爱心腮红', warpaint: '战纹彩绘', diamondtear: '钻石泪', curlystache: '卷胡子', rainbowstache: '彩虹胡子', flamestache: '火焰胡子', lifebuoy: '游泳圈', pendant: '水晶吊坠', dragonamulet: '龙之护符', guitar: '电吉他', trophy: '奖杯', katana: '武士刀', rubberchicken: '尖叫鸡', thunderbolt: '闪电', slime: '史莱姆', ghostie: '小幽灵', robodog: '机器狗', babydragon: '幼龙', portal: '魔法传送门',
     },
     short: {
       hardhat: '安全帽', crown: '王冠', partyhat: '派对', witchhat: '女巫', santahat: '圣诞', nightcap: '睡帽', gradcap: '学士帽',
@@ -428,6 +429,7 @@ export const zh: typeof en = {
       lavalamp: '熔岩灯', taco: '塔可', tent: '帐篷', hedgehog: '刺猬',
       wateringcan: '水壶', macaron: '马卡龙', arcade: '街机', snowman: '雪人',
       rocket: '火箭', watermelon: '西瓜', chest: '宝箱', axolotl: '美西螈', horse: '马', sprout: '幼苗', bunny: '兔子',
+      kabuto: '武士盔', tiara: '小皇冠', knight: '骑士', pharaoh: '法老', brain: '大脑', ufo: '飞碟', phoenix: '凤凰', skigoggles: '滑雪', steampunk: '蒸汽朋克', xray: 'X光', diamondshades: '钻石', butterfly: '蝴蝶', heartcheeks: '腮红', warpaint: '战纹', diamondtear: '钻石', curlystache: '卷胡', rainbowstache: '彩虹', flamestache: '火焰', lifebuoy: '泳圈', pendant: '水晶', dragonamulet: '护符', guitar: '吉他', trophy: '奖杯', katana: '武士刀', rubberchicken: '尖叫鸡', thunderbolt: '闪电', slime: '史莱姆', ghostie: '幽灵', robodog: '机器狗', babydragon: '幼龙', portal: '传送门',
     },
     slot: { head: '头部', eyes: '眼镜', face: '脸部', lip: '小胡子', chin: '胡须', neck: '颈部', held: '手持', ground: '身旁' },
     hint: {

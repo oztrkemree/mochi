@@ -412,6 +412,7 @@ export const pl: typeof en = {
       lavalamp: 'lampa lava', taco: 'taco', tent: 'namiot', hedgehog: 'jeż',
       wateringcan: 'konewka', macaron: 'wieża makaroników', arcade: 'automat arcade', snowman: 'bałwan',
       rocket: 'rakieta zabawka', watermelon: 'kawałek arbuza', chest: 'skrzynia skarbów', axolotl: 'aksolotl', horse: 'konik', sprout: 'kiełek w doniczce', bunny: 'króliczek',
+      kabuto: 'hełm samuraja', tiara: 'tiara', knight: 'hełm rycerza', pharaoh: 'nakrycie głowy faraona', brain: 'mózg zombie', ufo: 'latający talerz', phoenix: 'korona feniksa', skigoggles: 'gogle narciarskie', steampunk: 'gogle steampunk', xray: 'okulary rentgenowskie', diamondshades: 'diamentowe okulary', butterfly: 'motyl na twarzy', heartcheeks: 'serduszka na policzkach', warpaint: 'barwy wojenne', diamondtear: 'diamentowa łza', curlystache: 'kręcone wąsy', rainbowstache: 'tęczowe wąsy', flamestache: 'ogniste wąsy', lifebuoy: 'koło do pływania', pendant: 'kryształowy wisiorek', dragonamulet: 'amulet smoka', guitar: 'gitara elektryczna', trophy: 'puchar', katana: 'katana', rubberchicken: 'gumowy kurczak', thunderbolt: 'piorun', slime: 'glut', ghostie: 'mały duszek', robodog: 'robopies', babydragon: 'mały smok', portal: 'magiczny portal',
     },
     short: {
       hardhat: 'kask', crown: 'korona', partyhat: 'impreza', witchhat: 'czarownica', santahat: 'Mikołaj', nightcap: 'szlafmyca', gradcap: 'biret',
@@ -448,6 +449,7 @@ export const pl: typeof en = {
       lavalamp: 'lava', taco: 'taco', tent: 'namiot', hedgehog: 'jeż',
       wateringcan: 'konewka', macaron: 'makaroniki', arcade: 'arcade', snowman: 'bałwan',
       rocket: 'rakieta', watermelon: 'arbuz', chest: 'skarb', axolotl: 'aksolotl', horse: 'koń', sprout: 'kiełek', bunny: 'królik',
+      kabuto: 'kabuto', tiara: 'tiara', knight: 'rycerz', pharaoh: 'faraon', brain: 'mózg', ufo: 'UFO', phoenix: 'feniks', skigoggles: 'narty', steampunk: 'steampunk', xray: 'rentgen', diamondshades: 'diament', butterfly: 'motyl', heartcheeks: 'policzki', warpaint: 'barwy', diamondtear: 'diament', curlystache: 'kręcone', rainbowstache: 'tęcza', flamestache: 'ogień', lifebuoy: 'koło', pendant: 'wisiorek', dragonamulet: 'amulet', guitar: 'gitara', trophy: 'puchar', katana: 'katana', rubberchicken: 'kurczak', thunderbolt: 'piorun', slime: 'glut', ghostie: 'duszek', robodog: 'robopies', babydragon: 'mały smok', portal: 'portal',
     },
     slot: { head: 'Głowa', eyes: 'Okulary', face: 'Twarz', lip: 'Wąsy', chin: 'Broda', neck: 'Szyja', held: 'W ręce', ground: 'Obok' },
     hint: {

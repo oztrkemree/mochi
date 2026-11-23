@@ -418,6 +418,7 @@ export const ar: typeof en = {
       lavalamp: 'مصباح الحمم', taco: 'تاكو', tent: 'خيمة تخييم', hedgehog: 'قنفذ',
       wateringcan: 'إبريق ري', macaron: 'برج ماكارون', arcade: 'آلة أركيد', snowman: 'رجل ثلج',
       rocket: 'صاروخ لعبة', watermelon: 'شريحة بطيخ', chest: 'صندوق كنز', axolotl: 'أكسولوتل', horse: 'حصان صغير', sprout: 'برعم في أصيص', bunny: 'أرنب',
+      kabuto: 'خوذة الساموراي', tiara: 'تاج صغير', knight: 'خوذة الفارس', pharaoh: 'غطاء رأس الفرعون', brain: 'دماغ زومبي', ufo: 'صحن طائر', phoenix: 'تاج العنقاء', skigoggles: 'نظارة تزلج', steampunk: 'نظارة ستيمبانك', xray: 'نظارة الأشعة السينية', diamondshades: 'نظارة ألماس', butterfly: 'رسم فراشة على الوجه', heartcheeks: 'قلوب على الخدين', warpaint: 'طلاء الحرب', diamondtear: 'دمعة ألماس', curlystache: 'شارب مجعد', rainbowstache: 'شارب قوس قزح', flamestache: 'شارب ناري', lifebuoy: 'عوامة سباحة', pendant: 'قلادة كريستال', dragonamulet: 'تميمة تنين', guitar: 'غيتار كهربائي', trophy: 'كأس', katana: 'كاتانا', rubberchicken: 'دجاجة مطاطية', thunderbolt: 'صاعقة', slime: 'سلايم', ghostie: 'شبح صغير', robodog: 'كلب روبوت', babydragon: 'تنين صغير', portal: 'بوابة سحرية',
     },
     short: {
       hardhat: 'خوذة', crown: 'تاج', partyhat: 'حفلة', witchhat: 'ساحرة', santahat: 'بابا نويل', nightcap: 'طاقية', gradcap: 'تخرج',
@@ -454,6 +455,7 @@ export const ar: typeof en = {
       lavalamp: 'حمم', taco: 'تاكو', tent: 'خيمة', hedgehog: 'قنفذ',
       wateringcan: 'إبريق', macaron: 'ماكارون', arcade: 'أركيد', snowman: 'ثلج',
       rocket: 'صاروخ', watermelon: 'بطيخ', chest: 'كنز', axolotl: 'أكسولوتل', horse: 'حصان', sprout: 'برعم', bunny: 'أرنب',
+      kabuto: 'كابوتو', tiara: 'تاج صغير', knight: 'فارس', pharaoh: 'فرعون', brain: 'دماغ', ufo: 'صحن طائر', phoenix: 'عنقاء', skigoggles: 'تزلج', steampunk: 'ستيمبانك', xray: 'أشعة', diamondshades: 'ألماس', butterfly: 'فراشة', heartcheeks: 'خدود', warpaint: 'حرب', diamondtear: 'ألماس', curlystache: 'مجعد', rainbowstache: 'قوس قزح', flamestache: 'ناري', lifebuoy: 'عوامة', pendant: 'كريستال', dragonamulet: 'تميمة', guitar: 'غيتار', trophy: 'كأس', katana: 'كاتانا', rubberchicken: 'دجاجة', thunderbolt: 'صاعقة', slime: 'سلايم', ghostie: 'شبح', robodog: 'كلب روبوت', babydragon: 'تنين صغير', portal: 'بوابة',
     },
     slot: { head: 'الرأس', eyes: 'نظارات', face: 'الوجه', lip: 'شارب', chin: 'لحية', neck: 'العنق', held: 'اليد', ground: 'بجانبه' },
     hint: {
