@@ -16,7 +16,7 @@ import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPr
 import { type Growth, badgesNews, growthOf, historyOf, levelNews } from './growth'
 import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
-import { type Area, type Body, type Point, areaOf, fit, isPushedDown, peekAt } from './place'
+import { type Area, type Body, type Edge, type Point, areaOf, fit, nearestEdge, peekAt, pushedPast, shownIn } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
 import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } from './acts'
@@ -134,7 +134,7 @@ function areaIn(m: Monitor): Area {
  * screen. The window keeps one size whatever Mochi says or shows, so it never
  * jumps; the room around Mochi lets every press through (see `hot`).
  */
-async function place() {
+async function place(isLeap = false) {
   const monitors = await availableMonitors()
   const areas = monitors.map(areaIn)
   let area = corner ? areaOf(corner, areas) : null
@@ -152,7 +152,9 @@ async function place() {
   const h = Math.ceil(root.offsetHeight)
   const k = isMac ? 1 : monitor.scaleFactor
   const size = { w: Math.round(w * k), h: Math.round(h * k) }
+  const from = { x: put.x, y: put.y }
   put = { ...(peek ?? fit(corner!, size.w, size.h, area)), ...size }
+  if (isLeap && !calm.matches && (from.x !== 0 || from.y !== 0)) await leap(from, { x: put.x, y: put.y }, size)
   if (isMac) {
     await win.setSize(new LogicalSize(w, h))
     await win.setPosition(new LogicalPosition(put.x, put.y))
@@ -162,54 +164,134 @@ async function place() {
   }
 }
 
-// ---------- the edge: pushed off the bottom of the screen, Mochi peeks ----------
+/**
+ * Carries the window from `from` to `to` in a hop, as Mochi leaps: up in an
+ * arc and down, arms up on the way and a squash where it lands. Each step is
+ * noted as where this put the window, so none of it is taken for the person's own move.
+ */
+async function leap(from: Point, to: Point, size: { w: number; h: number }) {
+  const STEPS = 18
+  const arc = Math.min(90, 30 + Math.hypot(to.x - from.x, to.y - from.y) * 0.25)
+  hold('whee', 1200)
+  for (let i = 1; i <= STEPS; i++) {
+    const t = i / STEPS
+    const e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2
+    const x = from.x + (to.x - from.x) * e
+    const y = from.y + (to.y - from.y) * e - arc * Math.sin(Math.PI * t)
+    put = { x, y, ...size }
+    await (isMac ? win.setPosition(new LogicalPosition(x, y)) : win.setPosition(new PhysicalPosition(Math.round(x), Math.round(y))))
+    await new Promise(r => setTimeout(r, 30))
+  }
+  hold('land')
+}
+
+// ---------- the edge: Mochi peeks over the bottom of the screen or a side ----------
 
 /** Where the window stands while Mochi peeks, in the window's units; null while it stands whole on the screen. */
 let peek: Point | null = null
-/** Where the bottom of the screen is in the window while Mochi peeks (CSS pixels from its top): a press below it goes to what is there. */
-let peekCut = Infinity
+/** The edge Mochi peeks over: on a side it lies on its side, its head toward the screen. */
+let peekEdge: Edge = 'bottom'
+/** What of the window shows on the screen while Mochi peeks (CSS pixels from its top left): a press beyond it goes to what is there. */
+let peekShown: { left: number; top: number; right: number; bottom: number } | null = null
+/** Where Mochi stood before it leapt to an edge by itself, with nothing going on: it leaps back there when there is. */
+let home: Point | null = null
 let dropTimer = 0
+
+/** Mochi's body in the window in CSS pixels, as laid out: a turn on a side is not counted, the turn is about its middle. */
+function bodyBox(): Body {
+  const row = document.getElementById('row')!.getBoundingClientRect()
+  const unit = stage.offsetWidth / (100 + ROOM.left + ROOM.right)
+  return { x: row.left + stage.offsetLeft + (ROOM.left + 10) * unit, y: row.top + stage.offsetTop + (ROOM.top + 14) * unit, w: 80 * unit, h: 84 * unit }
+}
 
 /** Mochi's body in the window, in the window's units (points on macOS, pixels at the screen's scale elsewhere). */
 function bodyIn(k: number): Body {
-  const s = stage.getBoundingClientRect()
-  const unit = s.width / (100 + ROOM.left + ROOM.right)
-  return { x: (s.left + (ROOM.left + 10) * unit) * k, y: (s.top + (ROOM.top + 14) * unit) * k, w: 80 * unit * k, h: 84 * unit * k }
+  const b = bodyBox()
+  return { x: b.x * k, y: b.y * k, w: b.w * k, h: b.h * k }
 }
 
-/** After the person lets go of the window: pushed more than halfway off the bottom, Mochi peeks; pulled back up, it stands again. */
+/** The screens, the scale of the one the window is on, Mochi's body, and the screen it stands on (the nearest one when it is past an edge). */
+async function where() {
+  const areas = (await availableMonitors()).map(areaIn)
+  const k = isMac ? 1 : (await currentMonitor())?.scaleFactor ?? 1
+  const body = bodyIn(k)
+  const at = { x: put.x, y: put.y }
+  const mid = { x: at.x + body.x + body.w / 2, y: at.y + body.y }
+  const area = areaOf(mid, areas) ?? (corner ? areaOf(corner, areas) : null) ?? areas[0] ?? null
+  return { k, body, at, area }
+}
+
+/** Takes Mochi to peek over an edge (the nearest one when none is given): put there by the person, or leaping there by itself. */
+async function toEdge(edge: Edge | null, isLeap: boolean) {
+  const { k, body, at, area } = await where()
+  if (!area) return
+  const e = edge ?? nearestEdge(at, body, area)
+  toggleAgents(false)
+  peek = peekAt(at, body, area, e)
+  peekEdge = e
+  const shown = shownIn(peek, put.w, put.h, area)
+  peekShown = { left: shown.left / k, top: shown.top / k, right: shown.right / k, bottom: shown.bottom / k }
+  root.classList.remove('peek-bottom', 'peek-left', 'peek-right')
+  root.classList.add('peek', `peek-${e}`)
+  await place(isLeap)
+  hot()
+}
+
+/** After the person lets go of the window: pushed more than halfway past the bottom or a side, Mochi peeks there; pulled back, it stands again. */
 async function dropped() {
   // Set down after being carried: a squash and a puff of dust.
   if (isCarried) {
     isCarried = false
     hold('land')
   }
-  const monitors = await availableMonitors()
-  const areas = monitors.map(areaIn)
-  const k = isMac ? 1 : (await currentMonitor())?.scaleFactor ?? 1
-  const body = bodyIn(k)
-  const at = { x: put.x, y: put.y }
-  const area = areaOf({ x: at.x + body.x + body.w / 2, y: at.y + body.y }, areas)
-  if (!area || !isPushedDown(at, body, area)) {
+  const { body, at, area } = await where()
+  const edge = area ? pushedPast(at, body, area) : null
+  // Put where it is by the person: that is where it stays, not where it stood before.
+  home = null
+  if (edge === null) {
     if (peek) standUp(false)
     return
   }
-  toggleAgents(false)
-  peek = peekAt(at, body, area)
-  peekCut = (area.y + area.h - peek.y) / k
-  root.classList.add('peek')
-  await place()
-  hot()
+  await toEdge(edge, false)
 }
 
-/** Mochi comes back up from the edge, just above it, to be pressed or to speak. */
+/**
+ * Mochi comes back from the edge, to be pressed or to speak: leaping back to
+ * where it stood if it went there by itself, else just inside the edge.
+ */
 function standUp(isPlaced = true) {
   if (!peek) return
-  corner = { x: peek.x + put.w, y: peek.y + peekCut * (isMac ? 1 : put.h / root.offsetHeight) - EDGE }
+  const isLeap = home !== null
+  const shown = peekShown?.bottom ?? put.h
+  corner = home ?? (peekEdge === 'bottom' ? { x: peek.x + put.w, y: peek.y + shown * (isMac ? 1 : put.h / root.offsetHeight) - EDGE } : { x: peek.x + put.w, y: peek.y + put.h })
+  home = null
   peek = null
-  peekCut = Infinity
-  root.classList.remove('peek')
-  if (isPlaced) void place().then(hot).catch(note)
+  peekShown = null
+  root.classList.remove('peek', 'peek-bottom', 'peek-left', 'peek-right')
+  if (isPlaced) void place(isLeap).then(hot).catch(note)
+}
+
+/** With nothing going on this long, Mochi leaps to the nearest edge of the screen and waits there, peeking. */
+const TUCK_AFTER_MS = 45_000
+let restSince = Date.now()
+let tuckTimer = 0
+
+/**
+ * Keeps the time since anything went on: a chat working, waiting or failed,
+ * something said, the list open, a moment played. When there is work again and
+ * Mochi went to the edge by itself, it leaps back; after a while of nothing, it goes.
+ */
+function rest(peers: readonly { state: string }[]) {
+  const isWork = peers.some(p => p.state === 'busy' || p.state === 'asking' || p.state === 'error')
+  if (isWork && peek && home) return standUp()
+  if (isWork || held || isBusy() || say.classList.contains('on') || list.classList.contains('on')) restSince = Date.now()
+  clearTimeout(tuckTimer)
+  if (peek) return
+  tuckTimer = window.setTimeout(() => {
+    if (peek || held || isBusy() || say.classList.contains('on') || list.classList.contains('on') || Date.now() - restSince < TUCK_AFTER_MS - 100) return
+    home = corner
+    void toEdge(null, true).catch(note)
+  }, Math.max(1000, TUCK_AFTER_MS - (Date.now() - restSince)))
 }
 
 /**
@@ -218,12 +300,14 @@ function standUp(isPlaced = true) {
  */
 function hot() {
   const rects: number[][] = []
-  const s = stage.getBoundingClientRect()
-  // Mochi's own square inside the drawing's room, and its body inside that square.
-  const unit = s.width / (100 + ROOM.left + ROOM.right)
-  // Peeking, only what shows above the bottom of the screen: below it is the Dock or the taskbar, and a press there is theirs.
-  const top = s.top + (ROOM.top + 14) * unit
-  rects.push([s.left + (ROOM.left + 10) * unit, top, 80 * unit, Math.max(0, Math.min(84 * unit, peekCut - top))])
+  // Mochi's body; on its side, turned a quarter about its middle.
+  const b = bodyBox()
+  const box = peek && peekEdge !== 'bottom' ? { x: b.x + b.w / 2 - b.h / 2, y: b.y + b.h / 2 - b.w / 2, w: b.h, h: b.w } : b
+  // Peeking, only what shows on the screen: past its edge is the Dock, the taskbar or another window, and a press there is theirs.
+  const cut = peekShown ?? { left: -Infinity, top: -Infinity, right: Infinity, bottom: Infinity }
+  const left = Math.max(box.x, cut.left)
+  const top = Math.max(box.y, cut.top)
+  rects.push([left, top, Math.max(0, Math.min(box.x + box.w, cut.right) - left), Math.max(0, Math.min(box.y + box.h, cut.bottom) - top)])
   for (const el of [say, list, agentsButton, limitsButton]) {
     const r = el.getBoundingClientRect()
     if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
@@ -987,6 +1071,7 @@ function draw() {
   drawAgents()
   const usedBefore = usage
   drawLimits(usageOf(next.peers, now), now)
+  rest(next.peers)
   if (before) {
     // A chat taken as stopped because it went silent is at rest, which is no news of a turn that finished.
     hear([...withoutStalled(newsOf(before.peers, next.peers, now), stalledOf(sessions, now)), ...usageNews(usedBefore, usage, now)].filter(n => talksAbout(settings, n.kind)), next.peers)

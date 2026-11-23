@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { areaOf, fit, isPushedDown, peekAt } from './place'
+import { areaOf, fit, isPushedDown, nearestEdge, peekAt, pushedPast, shownIn } from './place'
 
 // The main screen, a second one to its left, and a third above it, as the system lays them out.
 const MAIN = { x: 0, y: 25, w: 1440, h: 875 }
@@ -38,4 +38,30 @@ test('Mochi pushed more than halfway off the bottom of the screen peeks: only it
   expect(peekAt({ x: 1000, y: 380 }, body, MAIN)).toEqual({ x: 1000, y: 900 - 500 - 104 * 0.45 })
   // Pushed off to the right as well: the body is brought back whole across.
   expect(peekAt({ x: 1300, y: 380 }, body, MAIN).x).toBe(1440 - 230 - 100)
+})
+
+test('with nothing to do Mochi goes to the nearest edge: the bottom, or a side, where it lies on its side and its head peeks in', () => {
+  const body = { x: 230, y: 500, w: 100, h: 104 }
+  // Its body's middle at 1000 + 280 across, its feet at 330 + 604 down: the bottom (900) is nearer than either side.
+  expect(nearestEdge({ x: 1000, y: 330 }, body, MAIN)).toBe('bottom')
+  // Near the right side, high up: the right.
+  expect(nearestEdge({ x: 1100, y: -300 }, body, MAIN)).toBe('right')
+  expect(nearestEdge({ x: -250, y: -300 }, body, MAIN)).toBe('left')
+  // On a side, turned a quarter about its middle (280, 552 in the window): 45% of its height shows inside the screen.
+  const right = peekAt({ x: 1100, y: -300 }, body, MAIN, 'right')
+  expect(right.x + 280 - 104 / 2).toBeCloseTo(1440 - 104 * 0.45)
+  const left = peekAt({ x: -250, y: -300 }, body, MAIN, 'left')
+  expect(left.x + 280 + 104 / 2).toBeCloseTo(0 + 104 * 0.45)
+  // Up and down it stays where it was, kept whole on the screen (turned, it is the body's width tall).
+  expect(right.y).toBe(-300)
+  expect(peekAt({ x: 1100, y: -600 }, body, MAIN, 'right').y).toBe(25 - (552 - 50))
+  expect(peekAt({ x: 1100, y: 600 }, body, MAIN, 'right').y).toBe(900 - (552 + 50))
+  // Pushed past a side by more than half its body, it peeks there; past none, it stands.
+  expect(pushedPast({ x: 1300, y: 100 }, body, MAIN)).toBe('right')
+  expect(pushedPast({ x: -300, y: 100 }, body, MAIN)).toBe('left')
+  expect(pushedPast({ x: 1000, y: 360 }, body, MAIN)).toBe('bottom')
+  expect(pushedPast({ x: 1000, y: 100 }, body, MAIN)).toBeNull()
+  // What of the window shows on the screen, in its own units from its top left.
+  expect(shownIn({ x: 1300, y: 100 }, 340, 700, MAIN)).toEqual({ left: 0, top: 0, right: 140, bottom: 700 })
+  expect(shownIn({ x: 1000, y: 400 }, 340, 700, MAIN)).toEqual({ left: 0, top: 0, right: 340, bottom: 500 })
 })

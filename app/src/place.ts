@@ -23,8 +23,46 @@ export const PEEK_SHOWS = 0.45
 /** Whether a window left at `at` has more than half Mochi's body below the bottom of the screen: pushed to the edge, to peek. */
 export const isPushedDown = (at: Point, body: Body, area: Area): boolean => at.y + body.y + body.h / 2 > area.y + area.h
 
-/** Where the window stands for Mochi to peek: where it was left across (its body whole on the screen), and down so only the top shows. */
-export function peekAt(at: Point, body: Body, area: Area): Point {
-  const x = Math.min(Math.max(at.x, area.x - body.x), area.x + area.w - body.x - body.w)
-  return { x, y: area.y + area.h - body.y - body.h * PEEK_SHOWS }
+/** An edge of the screen Mochi peeks over. The top has the menu bar, which a window does not go past. */
+export type Edge = 'bottom' | 'left' | 'right'
+
+/** The edge nearest Mochi's body in a window at `at`: its feet to the bottom, its middle to either side. */
+export function nearestEdge(at: Point, body: Body, area: Area): Edge {
+  const mid = at.x + body.x + body.w / 2
+  const far: Record<Edge, number> = { bottom: area.y + area.h - (at.y + body.y + body.h), left: mid - area.x, right: area.x + area.w - mid }
+  return (['bottom', 'right', 'left'] as const).reduce((a, b) => (far[b] < far[a] ? b : a))
 }
+
+/** The edge a window left at `at` has more than half Mochi's body past, to peek over; null when it is past none. */
+export function pushedPast(at: Point, body: Body, area: Area): Edge | null {
+  const mid = at.x + body.x + body.w / 2
+  return isPushedDown(at, body, area) ? 'bottom' : mid > area.x + area.w ? 'right' : mid < area.x ? 'left' : null
+}
+
+/**
+ * Where the window stands for Mochi to peek over an edge. Over the bottom:
+ * where it was left across (its body whole on the screen), and down so only the
+ * top shows. Over a side Mochi lies on its side, turned a quarter about its
+ * body's middle, its head toward the screen: across so 45% of it shows, and up
+ * and down where it was, whole on the screen.
+ */
+export function peekAt(at: Point, body: Body, area: Area, edge: Edge = 'bottom'): Point {
+  if (edge === 'bottom') {
+    const x = Math.min(Math.max(at.x, area.x - body.x), area.x + area.w - body.x - body.w)
+    return { x, y: area.y + area.h - body.y - body.h * PEEK_SHOWS }
+  }
+  // Turned, the body is its height wide and its width tall, about the same middle.
+  const mx = body.x + body.w / 2
+  const my = body.y + body.h / 2
+  const y = Math.min(Math.max(at.y, area.y - (my - body.w / 2)), area.y + area.h - (my + body.w / 2))
+  const x = edge === 'right' ? area.x + area.w - body.h * PEEK_SHOWS - (mx - body.h / 2) : area.x + body.h * PEEK_SHOWS - (mx + body.h / 2)
+  return { x, y }
+}
+
+/** What of a window w × h at `at` shows on the screen: a box in the window's units, from its top left. */
+export const shownIn = (at: Point, w: number, h: number, area: Area): { left: number; top: number; right: number; bottom: number } => ({
+  left: Math.max(0, area.x - at.x),
+  top: Math.max(0, area.y - at.y),
+  right: Math.min(w, area.x + area.w - at.x),
+  bottom: Math.min(h, area.y + area.h - at.y),
+})

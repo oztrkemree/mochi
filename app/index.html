@@ -36,7 +36,12 @@
       @media (prefers-reduced-motion: reduce) { #stage.hop { animation: none; } #stage g { transition: none !important; } }
       #stage:focus { outline: none; }
       .keys #stage:focus-visible { outline: 2px solid #E08A6A; outline-offset: -6px; border-radius: 40%; }
-      #stage { transform-origin: 50% 100%; }
+      #stage { transform-origin: 50% 100%; transition: rotate 0.35s cubic-bezier(0.3, 1.4, 0.5, 1); }
+      /* Peeking over a side, Mochi lies on its side, its head toward the screen: turned a quarter about its body's middle (see peekAt). */
+      .peek-left #stage, .peek-right #stage { transform-origin: 51.35% 58.33%; }
+      .peek-left #stage { rotate: 90deg; }
+      .peek-right #stage { rotate: -90deg; }
+      @media (prefers-reduced-motion: reduce) { #stage { transition: none; } }
       /* The eyes follow the pointer smoothly, not in steps. */
       #stage g[transform="translate(0 -52)"] { transition: translate 0.2s ease-out; }
       /* Between moves Mochi is its pose in layers (see layersFor in hooks/rig.ts), stacked in the stage's box. Each is drawn
