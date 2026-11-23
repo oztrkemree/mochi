@@ -1,10 +1,10 @@
-import type { Badge, DayRec, Env, History, Item, Mood, Outfit, Prefs } from '../types'
+import type { Act, Badge, DayRec, Env, History, Item, Mood, Outfit, Prefs } from '../types'
 import { badgeName, provenBy } from './badges'
 import { dayKey, local, shiftDay } from './facts'
 import { NO_OWN, occasions } from './fun'
 import type { Occasion, Own } from './fun'
 import { t } from './i18n'
-import { POSES } from './rig'
+import { poseOf } from './rig'
 
 // Mochi grows with the work done in every chat: experience from turns,
 // edits, commits and days, levels from experience, and things to wear that
@@ -330,13 +330,13 @@ const MUG_MOODS: ReadonlySet<Mood> = new Set(['idle', 'listening', 'pleased', 's
  * then the best item earned; coffee in the morning. A held item only while
  * the pose leaves the hand free.
  */
-export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood, canHold: boolean, own: Own = NO_OWN): Outfit {
+export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood | Act, canHold: boolean, own: Own = NO_OWN): Outfit {
   const s = season(now, tz, own)
   const dressed = (i: Item | null | undefined) => (i != null && items.includes(i) ? i : undefined)
   const isAsleep = mood === 'sleeping' || mood === 'sleepy'
   const head = pick.head !== undefined ? pick.head : dressed(s.head) ?? (isAsleep || s.isNight ? 'nightcap' : HEAD_RANK.find(i => items.includes(i)) ?? null)
   const neck = pick.neck !== undefined ? pick.neck : dressed(s.neck) ?? NECK_RANK.find(i => items.includes(i)) ?? null
-  const held = pick.held !== undefined ? pick.held : dressed(s.held) ?? (s.isMorning && MUG_MOODS.has(mood) ? 'mug' : null)
+  const held = pick.held !== undefined ? pick.held : dressed(s.held) ?? (s.isMorning && MUG_MOODS.has(mood as Mood) ? 'mug' : null)
   return {
     head,
     eyes: pick.eyes ?? null,
@@ -350,7 +350,7 @@ export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: nu
 }
 
 /** Whether the pose leaves the right hand down and empty, to hold a cup or a balloon. */
-const canHold = (mood: Mood) => POSES[mood].held === undefined && POSES[mood].armR >= -40 && POSES[mood].armR <= 0
+const canHold = (mood: Mood | Act) => poseOf(mood).held === undefined && poseOf(mood).armR >= -40 && poseOf(mood).armR <= 0
 
 /** The person's look as another program reads it (look.json): their own picks, what is open to them, and what the seasons go by. */
 export type Look = { pick: Partial<Outfit>; items: Item[]; tz: number; birthday: string; firstDay: string }
@@ -413,7 +413,7 @@ export function lookFrom(value: unknown): Look | null {
 }
 
 /** What a Mochi wears in a mood by a look, as the band's Mochi would. */
-export const dressAs = (look: Look, mood: Mood, now: number): Outfit => outfitFor(look.pick, look.items, now, look.tz, mood, canHold(mood), look)
+export const dressAs = (look: Look, mood: Mood | Act, now: number): Outfit => outfitFor(look.pick, look.items, now, look.tz, mood, canHold(mood), look)
 
 /** What Mochi has on now: the person's choice (while it can still be worn), what it earned, the season and the hour. */
 export function outfitNow(p: Prefs, v: Env, mood: Mood, now: number): Outfit {

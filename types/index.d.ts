@@ -30,6 +30,15 @@ export type Mood =
   | 'love'
   | 'wink'
 
+/**
+ * A moment Mochi plays and leaves (the desktop app's): a reaction to a chat, a
+ * pat or a pull, or something it does by itself while nothing happens. Never a
+ * state a chat is in, so never said in words.
+ */
+export type Act =
+  | 'perk' | 'giggle' | 'whee' | 'land' | 'cheer' | 'phew' | 'ready' | 'fistpump' | 'oops' | 'juggle'
+  | 'hum' | 'curious' | 'hop' | 'sneeze' | 'spin' | 'dance' | 'dream' | 'shy'
+
 export type Face = {
   mood: Mood
   /** Short status text: what is happening, never a joke. */

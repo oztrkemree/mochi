@@ -3,7 +3,7 @@ import { listen } from '@tauri-apps/api/event'
 import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import type { Badge, Ci, DayRec, History, Mood } from '../../types'
+import type { Act, Badge, Ci, DayRec, History, Mood } from '../../types'
 import { badgeLook, badgeName } from '../../hooks/badges'
 import { dayKey } from '../../hooks/facts'
 import { lang, pickLang, setLang } from '../../hooks/i18n'
@@ -19,6 +19,7 @@ import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled }
 import { type Area, type Body, type Point, areaOf, fit, isPushedDown, peekAt } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
+import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } from './acts'
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
 import { lookNow, skinNow } from './wardrobe'
@@ -177,6 +178,11 @@ function bodyIn(k: number): Body {
 
 /** After the person lets go of the window: pushed more than halfway off the bottom, Mochi peeks; pulled back up, it stands again. */
 async function dropped() {
+  // Set down after being carried: a squash and a puff of dust.
+  if (isCarried) {
+    isCarried = false
+    hold('land')
+  }
   const monitors = await availableMonitors()
   const areas = monitors.map(areaIn)
   const k = isMac ? 1 : (await currentMonitor())?.scaleFactor ?? 1
@@ -299,18 +305,30 @@ function hop() {
 
 // ---------- a mood held for a moment ----------
 
-/** A mood Mochi keeps for a moment whatever the chats say: a pat, a limit that is back. */
-let held: { mood: Mood; until: number } | null = null
+/** A mood or a moment Mochi keeps a while whatever the chats say: a pat, a limit that is back, a chat's turn done. */
+let held: { mood: Mood | Act; until: number } | null = null
 let heldTimer = 0
+/** What a chat did while another moment played: played when that one is over. */
+let pending: Beat | null = null
+/** Whether the chats open at the window's start have been read: those are not each new to react to. */
+let hasHeard = false
+/** Whether the person carries the window now: only their pull is a flight. */
+let isCarried = false
 
-function hold(mood: Mood, ms: number) {
+function hold(mood: Mood | Act, ms = ACT_MS[mood] ?? MOVES_MS) {
+  const isAgain = held?.mood === mood
   held = { mood, until: Date.now() + ms }
   clearTimeout(heldTimer)
   heldTimer = window.setTimeout(() => {
     held = null
-    draw()
+    const next = pending
+    pending = null
+    if (next) hold(next)
+    else draw()
   }, ms)
   draw()
+  // Held longer (a pull that goes on): the same drawing keeps moving that much longer.
+  if (isAgain) move(ms + 200)
 }
 
 /** What a bubble holds besides its words: what a request is for, and the answers to press. */
@@ -741,6 +759,8 @@ async function take(calls: string[]) {
   // The chats as they stand now, for every other Mochi to read; the app is told which of them the mod writes itself.
   for (const id of await invoke<string[]>('own_live', { peers: agentPeers(sessions, Date.now()) }).catch(() => [])) leave(id)
   draw()
+  // With no mod writing chats there may be no word of them but this.
+  hasHeard = true
   // Each request is said now, with its answers: the news of the chat starting to wait may have come before it, without them.
   if (asked.length > 0 && view) {
     const peers = view.peers
@@ -912,15 +932,19 @@ function draw() {
   view = next
   // A new pose comes to the screen eased in from the last; the same pose is left as it is.
   const isAtWork = peers.some(p => p.state === 'busy')
+  // A moment plays through for as long as it is held; a change of what the chats do is eased in and held.
+  const heldFor = held && held.until > now ? held.until - now + 200 : 0
   if (!before || next.svg !== before.svg) {
-    move(before && isAtWork && before.peers.some(p => p.state === 'busy') ? WORK_MOVES_MS : MOVES_MS, next.svg)
+    move(heldFor || (before && isAtWork && before.peers.some(p => p.state === 'busy') ? WORK_MOVES_MS : MOVES_MS), next.svg)
   } else if (isAtWork && now - movedAt >= WORK_REST_MS) {
     // A chat at work: Mochi works along for a moment, now and then.
     move(1300)
   }
   stage.setAttribute('aria-label', next.line)
-  // Thinking, Mochi's dots lead up to a cloud.
-  document.getElementById('think')?.classList.toggle('on', next.mood === 'thinking')
+  // Thinking, Mochi's dots lead up to a cloud, in the ink of whoever thinks: Claude Code's clay, Codex's blue.
+  const think = document.getElementById('think')
+  think?.classList.toggle('on', next.mood === 'thinking')
+  think?.classList.toggle('codex', peers.some(p => p.state === 'busy' && isCodex(p)) && !peers.some(p => p.state === 'busy' && !isCodex(p)))
   watch(next.mood)
   drawAgents()
   const usedBefore = usage
@@ -930,6 +954,13 @@ function draw() {
     hear([...withoutStalled(newsOf(before.peers, next.peers, now), stalledOf(sessions, now)), ...usageNews(usedBefore, usage, now)].filter(n => talksAbout(settings, n.kind)), next.peers)
   }
   hot()
+  // What a chat just did, played as a moment, or after the one playing now; never over a chat that waits on the person or failed,
+  // which is Mochi's face then.
+  const beat = before && hasHeard ? actOf(before.peers, next.peers, stalledOf(sessions, now)) : null
+  if (beat && !(['asking', 'error', 'denied'] as (Mood | Act)[]).includes(next.mood)) {
+    if (held) pending = louder(pending, beat)
+    else hold(beat)
+  }
 }
 
 // ---------- the eyes ----------
@@ -951,8 +982,8 @@ function gaze() {
 }
 
 /** The app says where the pointer is only while Mochi looks about, and never to someone who asked for less motion. */
-function watch(mood: Mood) {
-  const on = LOOKS_ABOUT.includes(mood) && !matchMedia('(prefers-reduced-motion: reduce)').matches
+function watch(mood: Mood | Act) {
+  const on = LOOKS_ABOUT.includes(mood as Mood) && !matchMedia('(prefers-reduced-motion: reduce)').matches
   if (on !== isGazing) void invoke('gaze', { on }).catch(note)
   isGazing = on
   gaze()
@@ -1005,6 +1036,9 @@ stage.addEventListener('pointerdown', e => {
 addEventListener('pointermove', e => {
   if (!pressed || Math.hypot(e.screenX - pressed.x, e.screenY - pressed.y) < 4) return
   pressed = null
+  // Carried off: arms up and away while the window moves (see `onMoved`), and set down after (see `dropped`).
+  isCarried = true
+  hold('whee')
   void win.startDragging()
 })
 // A press on Mochi opens the list of chats; with none open, Mochi says how it is. Enter or Space does the same.
@@ -1014,9 +1048,20 @@ function pressMochi() {
   if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0 || usage.length > 0) toggleAgents()
   else speak(view.line, ANSWER_MS, QUIET_INK, null)
 }
+/** When Mochi was last pressed, for presses close together. */
+let pokes: number[] = []
 stage.addEventListener('pointerup', () => {
   if (!pressed) return
   pressed = null
+  const now = Date.now()
+  pokes = [...pokes.filter(t => now - t <= 1200), now]
+  // Pressed again and again: it giggles, and then its head spins; the list stays shut.
+  const poked = pokesOf(pokes, now)
+  if (poked) {
+    toggleAgents(false)
+    if (held?.mood !== poked) hold(poked)
+    return
+  }
   pressMochi()
 })
 // The ring around Mochi shows only for someone moving by the keyboard; a press of the mouse takes it away.
@@ -1029,12 +1074,20 @@ stage.addEventListener('keydown', e => {
   e.preventDefault()
   pressMochi()
 })
-// The pointer comes over Mochi: it stirs.
-stage.addEventListener('pointerenter', () => move())
-// A pat: two quick presses, and Mochi is pleased for a moment.
+/** When Mochi last noticed the pointer: once in a while, so passing by is not a show each time. */
+let perkedAt = 0
+const PERK_REST_MS = 25_000
+// The pointer comes over Mochi: it stirs, and now and then it notices with a little hop; asleep, it stretches awake.
+stage.addEventListener('pointerenter', () => {
+  const now = Date.now()
+  if (held || !view || peek || now - perkedAt < PERK_REST_MS || !['idle', 'proud', 'pleased', 'sleeping', 'sleepy'].includes(view.mood)) return move()
+  perkedAt = now
+  hold(view.mood === 'sleeping' || view.mood === 'sleepy' ? 'stretch' : 'perk')
+})
+// A pat: two quick presses, and Mochi is glad of it: mostly love, sometimes bashful, sometimes a twirl.
 stage.addEventListener('dblclick', () => {
   toggleAgents(false)
-  hold('love', 2600)
+  hold(patOf(Math.random()))
   chime('ding')
 })
 addEventListener('contextmenu', e => {
@@ -1049,6 +1102,7 @@ async function start() {
   await listen<string[]>('live', e => {
     liveTexts = e.payload
     draw()
+    hasHeard = true
   })
   await listen<string | null>('look', e => {
     wear(e.payload)
@@ -1078,8 +1132,10 @@ async function start() {
       sayNewer()
     }
     tip()
-    // A breath a minute, so a Mochi with nothing to do is still alive.
-    move(1500)
+    // A breath a minute, so a Mochi with nothing to do is still alive; now and then something it does by itself.
+    const fidget = view && !held && !peek && !isBusy() && !say.classList.contains('on') ? fidgetOf(view.mood as Mood, Math.random(), Math.random()) : null
+    if (fidget) hold(fidget)
+    else move(1500)
     void take([]).catch(note)
   })
   // Everything is told from the start now that someone listens.
@@ -1093,6 +1149,9 @@ async function start() {
     const x = payload.x / k
     const y = payload.y / k
     if (Math.abs(x - put.x) <= 1 && Math.abs(y - put.y) <= 1) return
+    // Carried: whee for as long as the window keeps moving; it stops by itself a moment after it does not. A move the system
+    // made (a screen gone) is no flight.
+    if (isCarried && (held?.mood !== 'whee' || held.until - Date.now() < 2000)) hold('whee')
     corner = { x: x + put.w, y: y + put.h }
     put = { ...put, x, y }
     // Looked at once the person lets go: a move a moment ago is still the drag.

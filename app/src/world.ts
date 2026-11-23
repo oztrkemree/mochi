@@ -1,8 +1,9 @@
-import type { Mood, Outfit, Params, Peer, Scene } from '../../types'
+import type { Act, Mood, Outfit, Params, Peer, Scene } from '../../types'
 import { type Look, dressAs } from '../../hooks/level'
 import { appLink, nameOf, peerOf, peersLine } from '../../hooks/live'
 import { STATUS_INK, type Status, crowdOf, membersOf, moodOf, statusLine } from '../../hooks/party'
 import { mascotInner, paramsAt } from '../../hooks/rig'
+import { isDuo } from './acts'
 import { t } from '../../hooks/i18n'
 
 /**
@@ -15,7 +16,8 @@ export type View = {
   svg: string
   /** The same pose with nothing to ease in from: what Mochi goes back to when it moves again, and what it holds still in (see `stillOf`). */
   rest: string
-  mood: Mood
+  /** A mood, or a moment Mochi plays (a pat, a chat's turn done, Claude Code and Codex at work together). */
+  mood: Mood | Act
   /** What Mochi wears, by the look the mod writes; undefined before there is one. */
   outfit: Outfit | undefined
   /** Opens the chat Mochi stands for, in the Claude app; '' when no chat is open or it runs where a link cannot reach. */
@@ -30,7 +32,7 @@ export type View = {
 }
 
 /** What changes Mochi beyond the chats: the drawing on screen now, a mood held for a moment, a limit nearly gone. */
-export type Now = { was?: View | null; held?: Mood | null; isTired?: boolean; skin?: string }
+export type Now = { was?: View | null; held?: Mood | Act | null; isTired?: boolean; skin?: string }
 
 /** The chats alive now that another Mochi writes, from the text of their files; the first file of a chat wins. */
 export function peersOf(texts: readonly string[], now: number): Peer[] {
@@ -48,6 +50,8 @@ export function peersOf(texts: readonly string[], now: number): Peer[] {
   return [...peers.values()]
 }
 
+const isMood = (m: Mood | Act): m is Mood => Object.hasOwn(t().mood, m)
+
 /** The moods that are Mochi with nothing to do: a limit nearly gone shows on these, and never over a chat that works or waits. */
 const AT_EASE: readonly Mood[] = ['idle', 'sleeping', 'sleepy', 'proud']
 
@@ -59,10 +63,15 @@ const AT_EASE: readonly Mood[] = ['idle', 'sleeping', 'sleepy', 'proud']
 export function viewOf(peers: readonly Peer[], now: number, look: Look | null = null, { was = null, held = null, isTired = false, skin }: Now = {}): View {
   const lead = membersOf(crowdOf(peers, now))[0]
   const calm = lead ? moodOf(lead, now) : 'sleeping'
-  const mood = held ?? (isTired && AT_EASE.includes(calm) ? 'tired' : calm)
+  // Claude Code and Codex both at work, with the lead chat working: a ball in the air for each.
+  const working: Mood | Act = lead?.status === 'busy' && isDuo(peers) ? 'juggle' : calm
+  // A moment is held over anything but a chat that waits on the person or failed: that is Mochi's face then.
+  const isPressing = calm === 'asking' || calm === 'error' || calm === 'denied'
+  const mood = (isPressing ? null : held) ?? (isTired && AT_EASE.includes(calm) ? 'tired' : working)
   const outfit = look ? dressAs(look, mood, now) : undefined
   const scene: Scene = { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0), outfit, ...(skin ? { skin } : {}) }
-  const said = { link: appLink(lead?.peer.app), line: peersLine(peers) ?? t().mood[mood], peers }
+  // A moment is never said: the line is what the chats make Mochi.
+  const said = { link: appLink(lead?.peer.app), line: peersLine(peers) ?? t().mood[isMood(mood) ? mood : calm], peers }
   if (was && was.mood === mood && JSON.stringify(was.scene) === JSON.stringify(scene)) return { ...was, ...said }
   const from = was ? { params: paramsAt(was.from, was.mood, now - was.at), mood: was.mood, scene: was.scene } : null
   const rest = drawn(mascotInner({ mood, scene, from: null }))
