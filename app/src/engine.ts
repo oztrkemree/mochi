@@ -54,6 +54,8 @@ const TESTS = /(^|[\s;&|(])(((p?npm|yarn|bun|cargo|go|dotnet|swift|deno|mvn|grad
 const commandOf = (input: unknown): string => (typeof input === 'object' && input !== null ? text((input as { command?: unknown }).command) : '')
 /** Codex writes files with a tool of its own name. */
 const isEdit = (tool: string): boolean => tool === 'apply_patch' || toolKind(tool) === 'edit'
+/** The tools whose call the mod counts as an edit (hooks/register.tsx), and Codex's own: a list of tasks draws as writing but edits no file. */
+const countsAsEdit = (tool: string): boolean => /^(Edit|MultiEdit|Write|NotebookEdit|apply_patch)$/.test(tool)
 
 /** What a tool call is, by the tool's name and, for a command, what it runs. */
 function activityFor(tool: string, input: unknown): Activity {
@@ -68,6 +70,22 @@ function activityFor(tool: string, input: unknown): Activity {
     // A tool this does not know is still the agent doing something.
     default: return 'running'
   }
+}
+
+/** Whether a turn is running in a chat: it works or waits on the person, and says since when. */
+const isInTurn = (p: Peer | undefined): p is Peer => p !== undefined && (p.state === 'busy' || p.state === 'asking') && p.since > 0
+
+/**
+ * How a call ends the chat's turn, as the mod names a turn's end: '' when it ends none.
+ * Claude Code says nothing when the person cuts a turn short; what it does say, a while later,
+ * is that it waits for input (idle_prompt). While the chat still reads as working, that is the turn's end.
+ */
+function endOf(h: Hooked, before: Peer | undefined): '' | 'answer' | 'aborted' | 'error' {
+  if (h.name === 'Stop') return 'answer'
+  if (h.name === 'Interrupt') return 'aborted'
+  if (h.name === 'StopFailure') return 'error'
+  if (h.name === 'Notification' && text(h.event.notification_type) === 'idle_prompt' && before?.state === 'busy' && before.since > 0) return 'aborted'
+  return ''
 }
 
 const rested = (p: Peer, at: number, reason: string): Peer =>
@@ -93,6 +111,8 @@ export function noted(sessions: Sessions, h: Hooked): Sessions {
   }
   const title = text(h.event.session_title)
   if (title !== '') p = { ...p, title }
+  const end = endOf(h, known)
+  if (end !== '') p = rested(p, h.at, end)
   switch (h.name) {
     case 'UserPromptSubmit':
       p = { ...working({ ...p, state: 'idle' }, h.at, 'thinking'), stateAt: h.at }
@@ -112,15 +132,6 @@ export function noted(sessions: Sessions, h: Hooked): Sessions {
       break
     case 'Notification':
       if (text(h.event.notification_type) === 'permission_prompt' && p.state !== 'asking') p = asking(p, h.at, 'permission')
-      break
-    case 'Stop':
-      p = rested(p, h.at, 'answer')
-      break
-    case 'Interrupt':
-      p = rested(p, h.at, 'aborted')
-      break
-    case 'StopFailure':
-      p = rested(p, h.at, 'error')
       break
     case 'SubagentStart': {
       const agent = text(h.event.agent_id)
@@ -144,39 +155,54 @@ export function agentPeers(sessions: Sessions, now: number): Peer[] {
       sessions.delete(id)
       continue
     }
-    peers.push({ ...(p.state !== 'idle' && silent >= STALLED_AFTER_MS ? { ...p, state: 'idle' as const, activity: '' as const, waitingFor: '' as const, agents: [] } : p), at: now })
+    // Only a chat at work goes quiet without a word: one that waits on the person says nothing because it waits.
+    peers.push({ ...(p.state === 'busy' && silent >= STALLED_AFTER_MS ? { ...p, state: 'idle' as const, activity: '' as const, waitingFor: '' as const, agents: [] } : p), at: now })
   }
   return peers
 }
 
+/** The chats taken as stopped because they went silent at work. That they rest now is no news of a turn that finished. */
+export function stalledOf(sessions: Sessions, now: number): Set<string> {
+  return new Set([...sessions].filter(([, p]) => p.state === 'busy' && now - p.at >= STALLED_AFTER_MS).map(([id]) => id))
+}
+
+/** Whether a chat is named by the person's first words and not by its folder: the mod keeps such a name off pictures to share. */
+export const isNamedByPrompt = (p: Pick<Peer, 'label' | 'folder'>): boolean => peerLabel(p.folder ?? '', '') !== p.label
+
 // ---------- the day's record ----------
 
-const ENDS = ['Stop', 'Interrupt', 'StopFailure']
+/** A turn that ended at `at`, as the day counts it: by the person's own clock a night one before five, an early one from five to seven. */
+const turnAt = (since: number, at: number, tz: number): Partial<DayRec> =>
+  ({ turns: 1, secs: Math.max(0, Math.round((at - since) / 1000)), ...(season(at, tz).isNight ? { night: 1 } : {}), ...(isEarly(at, tz) ? { early: 1 } : {}) })
 
 /**
  * What one hook call adds to its chat's day, counted as the mod counts its own
- * chats, so work in Codex earns what work in Claude Code does. `before` is the
- * chat as it stood before the call, `tz` the person's clock in minutes from UTC.
- * Null for a call that adds nothing.
+ * chats (hooks/register.tsx), so work in Codex earns what work in Claude Code
+ * does. `before` is the chat as it stood before the call, `tz` the person's
+ * clock in minutes from UTC. Null for a call that adds nothing.
  */
 export function tallyOf(h: Hooked, before: Peer | undefined, tz: number): Partial<DayRec> | null {
   const tool = text(h.event.tool_name)
-  if (h.name === 'PostToolUse') return { tools: 1, ...(isEdit(tool) ? { edits: 1 } : {}), ...(toolKind(tool) === 'bash' && isCommit(commandOf(h.event.tool_input)) ? { commits: 1 } : {}) }
-  if (h.name === 'PostToolUseFailure') return { tools: 1, errors: 1 }
+  if (h.name === 'PostToolUse' || h.name === 'PostToolUseFailure') {
+    // A subagent's calls are its own: the mod counts the chat's.
+    if (text(h.event.agent_id) !== '') return null
+    if (h.name === 'PostToolUseFailure') return { tools: 1, errors: 1 }
+    return { tools: 1, ...(countsAsEdit(tool) ? { edits: 1 } : {}), ...(toolKind(tool) === 'bash' && isCommit(commandOf(h.event.tool_input)) ? { commits: 1 } : {}) }
+  }
   // A turn is one that was running: a second stop, or one for a chat first heard of now, ends nothing.
-  if (!ENDS.includes(h.name) || before === undefined || (before.state !== 'busy' && before.state !== 'asking') || before.since <= 0) return null
-  return { turns: 1, secs: Math.max(0, Math.round((h.at - before.since) / 1000)), ...(season(h.at, tz).isNight ? { night: 1 } : {}), ...(isEarly(h.at, tz) ? { early: 1 } : {}) }
+  if (!isInTurn(before)) return null
+  if (endOf(h, before) !== '') return turnAt(before.since, h.at, tz)
+  // A new prompt while a turn still reads as running: that turn ended without a word, when the chat was last heard.
+  if (h.name === 'UserPromptSubmit') return turnAt(before.since, before.at, tz)
+  return null
 }
-
-/** Whether a call ends a turn: what the turn earned is written then, as the mod does. */
-export const endsTurn = (h: Hooked): boolean => ENDS.includes(h.name) || h.name === 'SessionEnd'
 
 /**
  * A chat's days file with one more record added to a day: the file the mod
  * keeps for a chat of its own (days/<id>.json), which every Mochi sums into the
  * one history. `held` is the file as it stands, null before there is one.
  */
-export function dayFile(held: string | null, id: string, label: string, day: string, rec: Partial<DayRec>): string {
+export function dayFile(held: string | null, id: string, label: string, isLabelFromPrompt: boolean, day: string, rec: Partial<DayRec>): string {
   let days: Record<string, Partial<DayRec>> = {}
   try {
     const v: unknown = JSON.parse(held ?? 'null')
@@ -185,5 +211,5 @@ export function dayFile(held: string | null, id: string, label: string, day: str
   } catch {
     // Not a days file: this day starts it.
   }
-  return `${JSON.stringify({ id, label, isLabelFromPrompt: false, days: { ...days, [day]: addDay(days[day] ?? {}, rec) } })}\n`
+  return `${JSON.stringify({ id, label, isLabelFromPrompt, days: { ...days, [day]: addDay(days[day] ?? {}, rec) } })}\n`
 }

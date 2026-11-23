@@ -53,14 +53,15 @@ fn read_files(app: &AppHandle, told: &mut Told) {
     if TELL_ALL.swap(false, Ordering::Relaxed) {
         *told = Told::default();
     }
-    let calls = agents::taken(&dir.join("inbox"));
-    if !calls.is_empty() {
-        let _ = app.emit_to("main", "calls", calls);
-    }
+    // The chats the mod writes are told before the hook calls of the same read: the window must know a chat is the mod's before it counts a call of it.
     let live = store::others_files(&dir.join("live"));
     if told.live.as_ref() != Some(&live) {
         let _ = app.emit_to("main", "live", &live);
         told.live = Some(live);
+    }
+    let calls = agents::taken(&dir.join("inbox"));
+    if !calls.is_empty() {
+        let _ = app.emit_to("main", "calls", calls);
     }
     let look = store::read_look(&dir);
     if told.look.as_ref() != Some(&look) {
@@ -185,7 +186,7 @@ fn read_days(id: String) -> Option<String> {
 
 #[tauri::command]
 fn write_days(id: String, text: String) -> bool {
-    data_dir().is_some_and(|d| store::write_days(&d.join("days"), &id, &text))
+    data_dir().is_some_and(|d| store::write_days(&d.join("days"), &d.join("live"), &id, &text))
 }
 
 /// Whether an agent is connected: "on", "off", or "broken" for a file of its own this cannot read.

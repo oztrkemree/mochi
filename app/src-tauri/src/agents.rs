@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{json, Value};
 
-use crate::store::{data_dir, home_dir, is_fresh, now_ms, write_whole};
+use crate::store::{data_dir, home_dir, is_fresh, now_ms, write_theirs, write_whole};
 
 /// The hook calls one read takes from the inbox; the rest wait a second.
 const MOST_CALLS: usize = 500;
@@ -182,7 +182,7 @@ impl Agent {
         if path.exists() && !backup.exists() && fs::copy(path, &backup).is_err() {
             return false;
         }
-        serde_json::to_string_pretty(&next).is_ok_and(|text| write_whole(path, &(text + "\n")))
+        serde_json::to_string_pretty(&next).is_ok_and(|text| write_theirs(path, &(text + "\n")))
     }
 }
 
@@ -280,9 +280,27 @@ mod tests {
         assert!(CLAUDE.write(&path, Path::new("/Apps/Mochi Buddy"), false));
         assert!(!CLAUDE.is_connected(&config_at(&path).unwrap()));
         assert!(dir.join("settings.json.mochi-backup").exists());
+        // Kept once: the file as it was before Mochi first touched it, not as it was before the last change.
+        let first = fs::read_to_string(dir.join("settings.json.mochi-backup")).unwrap();
+        assert!(first.contains("hook claude"));
+        assert!(CLAUDE.write(&path, Path::new("/Apps/Mochi Buddy"), true));
+        assert_eq!(fs::read_to_string(dir.join("settings.json.mochi-backup")).unwrap(), first);
         fs::write(&path, "{ broken").unwrap();
         assert!(!CLAUDE.write(&path, Path::new("/Apps/Mochi Buddy"), true));
         assert_eq!(fs::read_to_string(&path).unwrap(), "{ broken");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_settings_file_keeps_its_keys_in_the_order_the_person_had_them() {
+        let dir = scratch("order");
+        let path = dir.join("settings.json");
+        fs::write(&path, "{\n  \"model\": \"opus\",\n  \"env\": { \"ZED\": \"1\", \"ABC\": \"2\" },\n  \"alwaysThinkingEnabled\": true\n}\n").unwrap();
+        assert!(CLAUDE.write(&path, Path::new("/Apps/Mochi"), true));
+        let text = fs::read_to_string(&path).unwrap();
+        let at = |key: &str| text.find(key).unwrap();
+        assert!(at("\"model\"") < at("\"env\"") && at("\"env\"") < at("\"alwaysThinkingEnabled\"") && at("\"alwaysThinkingEnabled\"") < at("\"hooks\""));
+        assert!(at("\"ZED\"") < at("\"ABC\""));
         fs::remove_dir_all(&dir).unwrap();
     }
 

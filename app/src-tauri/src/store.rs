@@ -42,6 +42,21 @@ pub fn write_whole(path: &Path, text: &str) -> bool {
     path.parent().is_some_and(|dir| fs::create_dir_all(dir).is_ok()) && fs::write(&tmp, text).is_ok() && fs::rename(&tmp, path).is_ok()
 }
 
+/// Writes another program's file whole, as `write_whole` does, and leaves it the file it was:
+/// a link stays a link (what it points to is written), and who may read it stays as it was.
+pub fn write_theirs(path: &Path, text: &str) -> bool {
+    let real = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    let tmp = real.with_extension("tmp");
+    let kept = fs::metadata(&real).map(|m| m.permissions()).ok();
+    if !(real.parent().is_some_and(|dir| fs::create_dir_all(dir).is_ok()) && fs::write(&tmp, text).is_ok()) {
+        return false;
+    }
+    if let Some(permissions) = kept {
+        let _ = fs::set_permissions(&tmp, permissions);
+    }
+    fs::rename(&tmp, &real).is_ok()
+}
+
 /// A chat's name as a file's: letters, digits, `-` and `_`, so it can never point out of its folder.
 pub fn is_id(id: &str) -> bool {
     !id.is_empty() && id.len() <= 140 && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
@@ -62,6 +77,12 @@ pub fn others_files(dir: &Path) -> Vec<String> {
     paths.into_iter().filter_map(|p| fs::read_to_string(p).ok()).filter(|t| !is_ours(t)).take(MOST).collect()
 }
 
+/// Whether another Mochi writes this chat now: its file is fresh and not the app's own.
+pub fn is_theirs(live: &Path, id: &str) -> bool {
+    let path = live.join(format!("{id}.json"));
+    is_id(id) && is_fresh(&path) && fs::read_to_string(&path).is_ok_and(|text| !is_ours(&text))
+}
+
 /// What became of a chat the app meant to write.
 #[derive(Debug, PartialEq)]
 pub enum Wrote {
@@ -77,7 +98,7 @@ pub fn write_own(dir: &Path, id: &str, peer: &Value, at: u128) -> Wrote {
         return Wrote::Failed;
     }
     let path = dir.join(format!("{id}.json"));
-    if is_fresh(&path) && fs::read_to_string(&path).is_ok_and(|text| !is_ours(&text)) {
+    if is_theirs(dir, id) {
         return Wrote::Theirs;
     }
     let mut peer = peer.clone();
@@ -144,10 +165,11 @@ pub fn read_days(dir: &Path, id: &str) -> Option<String> {
     fs::read_to_string(dir.join(format!("{id}.json"))).ok().filter(|t| t.len() <= MOST_DAYS_BYTES)
 }
 
-/// Keeps a chat's days as the window counted them. Only a days file is written, and only under the chat's own name.
-pub fn write_days(dir: &Path, id: &str, text: &str) -> bool {
+/// Keeps a chat's days as the window counted them. Only a days file is written, only under the chat's own name,
+/// and never for a chat another Mochi writes (`live` is where the chats' own files are): that Mochi counts it.
+pub fn write_days(dir: &Path, live: &Path, id: &str, text: &str) -> bool {
     let is_days = text.len() <= MOST_DAYS_BYTES && serde_json::from_str::<Value>(text).is_ok_and(|v| v["id"] == id && v["days"].is_object());
-    is_id(id) && is_days && write_whole(&dir.join(format!("{id}.json")), text)
+    is_id(id) && is_days && !is_theirs(live, id) && write_whole(&dir.join(format!("{id}.json")), text)
 }
 
 // ---------- the look, and the app's own beat ----------
@@ -234,7 +256,7 @@ pub mod tests {
         for bad in ["", "../x", "a/b", "a\\b", "a.b", "a:b", &"x".repeat(141)] {
             assert!(!is_id(bad), "{bad}");
             assert_eq!(write_own(&dir, bad, &json!({ "id": bad }), 1), Wrote::Failed);
-            assert!(!write_days(&dir, bad, &json!({ "id": bad, "days": {} }).to_string()));
+            assert!(!write_days(&dir, &dir.join("live"), bad, &json!({ "id": bad, "days": {} }).to_string()));
         }
         assert!(is_id("codex-019a_B"));
         assert!(fs::read_dir(&dir).unwrap().next().is_none());
@@ -263,14 +285,57 @@ pub mod tests {
     fn a_chats_days_are_kept_under_its_own_name_only() {
         let dir = scratch("days");
         let text = json!({ "id": "codex-a", "label": "shop", "days": { "2026-11-23": { "turns": 2 } } }).to_string();
+        let live = dir.join("live");
         assert!(read_days(&dir, "codex-a").is_none());
-        assert!(write_days(&dir, "codex-a", &text));
+        assert!(write_days(&dir, &live, "codex-a", &text));
         assert_eq!(read_days(&dir, "codex-a").unwrap(), text);
         // Another chat's days, or something that is not days, is not written.
-        assert!(!write_days(&dir, "codex-b", &text));
-        assert!(!write_days(&dir, "codex-a", "{\"id\":\"codex-a\"}"));
-        assert!(!write_days(&dir, "codex-a", "not json"));
+        assert!(!write_days(&dir, &live, "codex-b", &text));
+        assert!(!write_days(&dir, &live, "codex-a", "{\"id\":\"codex-a\"}"));
+        assert!(!write_days(&dir, &live, "codex-a", "not json"));
         assert_eq!(read_days(&dir, "codex-a").unwrap(), text);
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_chat_the_mod_writes_is_the_mods_to_count() {
+        let dir = scratch("counted");
+        let live = dir.join("live");
+        fs::create_dir_all(&live).unwrap();
+        let days = |id: &str| json!({ "id": id, "label": "api", "days": { "2026-11-23": { "turns": 1 } } }).to_string();
+        // The mod's own file of the chat is there: what the app counted of it is not written.
+        fs::write(live.join("s1.json"), "{\"id\":\"s1\",\"v\":2}").unwrap();
+        assert!(!write_days(&dir, &live, "s1", &days("s1")));
+        assert!(read_days(&dir, "s1").is_none());
+        // A chat the app itself writes is the app's to count.
+        fs::write(live.join("s2.json"), "{\"id\":\"s2\",\"by\":\"app\"}").unwrap();
+        assert!(write_days(&dir, &live, "s2", &days("s2")));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn another_programs_file_stays_the_file_it_was() {
+        let dir = scratch("theirfile");
+        let path = dir.join("settings.json");
+        assert!(write_theirs(&path, "{}"));
+        assert_eq!(fs::read_to_string(&path).unwrap(), "{}");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            // Private to the person stays private.
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+            assert!(write_theirs(&path, "{\"a\":1}"));
+            assert_eq!(fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o600);
+            // A link to a file kept elsewhere stays a link, and the file it points to is the one written.
+            let kept = dir.join("dotfiles");
+            fs::create_dir_all(&kept).unwrap();
+            fs::write(kept.join("real.json"), "{}").unwrap();
+            let link = dir.join("linked.json");
+            std::os::unix::fs::symlink(kept.join("real.json"), &link).unwrap();
+            assert!(write_theirs(&link, "{\"b\":2}"));
+            assert!(fs::symlink_metadata(&link).unwrap().file_type().is_symlink());
+            assert_eq!(fs::read_to_string(kept.join("real.json")).unwrap(), "{\"b\":2}");
+        }
         fs::remove_dir_all(&dir).unwrap();
     }
 }

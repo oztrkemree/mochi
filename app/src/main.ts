@@ -8,7 +8,7 @@ import { dayKey } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
 import { type Look, addDay, lookFrom } from '../../hooks/level'
 import { PEER_INK } from '../../hooks/live'
-import { type Sessions, agentPeers, dayFile, endsTurn, hookedOf, noted, tallyOf } from './engine'
+import { type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, stalledOf, tallyOf } from './engine'
 import { type News, isMorePressing, newsOf, queued, stillHolds } from './news'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
@@ -278,7 +278,7 @@ addEventListener('keydown', e => {
 // ---------- the chats the app follows itself ----------
 
 /** What each chat earned since its days were last written, day by day, with the chat's name. */
-const earned = new Map<string, { label: string; days: Record<string, Partial<DayRec>> }>()
+const earned = new Map<string, { label: string; isLabelFromPrompt: boolean; days: Record<string, Partial<DayRec>> }>()
 
 /** Writes one after another, so two turns ending together never both start from the same file. */
 let writing: Promise<unknown> = Promise.resolve()
@@ -290,7 +290,7 @@ function keepDays(id: string) {
   earned.delete(id)
   writing = writing.then(async () => {
     let text = await invoke<string | null>('read_days', { id })
-    for (const [day, rec] of Object.entries(mine.days)) text = dayFile(text, id, mine.label, day, rec)
+    for (const [day, rec] of Object.entries(mine.days)) text = dayFile(text, id, mine.label, mine.isLabelFromPrompt, day, rec)
     if (text !== null) await invoke('write_days', { id, text })
   }).catch(note)
 }
@@ -310,13 +310,18 @@ async function take(calls: string[]) {
     const rec = tallyOf(h, before, tz())
     noted(sessions, h)
     if (rec) {
-      const mine = earned.get(h.id) ?? { label: '', days: {} }
+      const mine = earned.get(h.id) ?? { label: '', isLabelFromPrompt: false, days: {} }
       const day = dayKey(h.at, tz())
-      mine.label = sessions.get(h.id)?.label ?? before?.label ?? mine.label
+      const chat = sessions.get(h.id) ?? before
+      if (chat) {
+        mine.label = chat.label
+        mine.isLabelFromPrompt = isNamedByPrompt(chat)
+      }
       mine.days[day] = addDay(mine.days[day] ?? {}, rec)
       earned.set(h.id, mine)
     }
-    if (endsTurn(h)) keepDays(h.id)
+    // What a turn earned is written when it ends, as the mod does; and when the chat closes, whatever is left.
+    if (rec?.turns || h.name === 'SessionEnd') keepDays(h.id)
   }
   // The chats as they stand now, for every other Mochi to read; the app is told which of them the mod writes itself.
   for (const id of await invoke<string[]>('own_live', { peers: agentPeers(sessions, Date.now()) }).catch(() => [])) leave(id)
@@ -337,7 +342,11 @@ function draw() {
   if (!before || next.svg !== before.svg) stage.innerHTML = next.svg
   stage.setAttribute('aria-label', next.line)
   drawAgents()
-  if (before) hear(newsOf(before.peers, next.peers, now).filter(n => talksAbout(settings, n.kind)), next.peers)
+  if (before) {
+    // A chat taken as stopped because it went silent is at rest, which is no news of a turn that finished.
+    const stalled = stalledOf(sessions, now)
+    hear(newsOf(before.peers, next.peers, now).filter(n => talksAbout(settings, n.kind) && !(n.kind === 'done' && stalled.has(n.id))), next.peers)
+  }
   hot()
 }
 

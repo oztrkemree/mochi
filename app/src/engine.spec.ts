@@ -3,7 +3,8 @@ import { expect, test } from 'vitest'
 import { setLang } from '../../hooks/i18n'
 import { summarize, xpOf } from '../../hooks/level'
 import { peerOf } from '../../hooks/live'
-import { GONE_AFTER_MS, STALLED_AFTER_MS, agentPeers, dayFile, hookedOf, noted, tallyOf } from './engine'
+import { GONE_AFTER_MS, STALLED_AFTER_MS, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, stalledOf, tallyOf } from './engine'
+import { newsOf } from './news'
 
 setLang('en')
 
@@ -118,13 +119,63 @@ test('a turn that ends before five in the morning is a night one, between five a
 })
 
 test('a chat’s days are kept in the mod’s own file shape, added to what the file held, and earn the same experience', () => {
-  const first = dayFile(null, 'codex-s1', 'shop', '2026-11-23', { turns: 2, edits: 5 })
+  const first = dayFile(null, 'codex-s1', 'shop', false, '2026-11-23', { turns: 2, edits: 5 })
   expect(JSON.parse(first)).toEqual({ id: 'codex-s1', label: 'shop', isLabelFromPrompt: false, days: { '2026-11-23': { turns: 2, tools: 0, edits: 5, errors: 0, commits: 0, cost: 0, secs: 0, night: 0, add: 0, del: 0, early: 0, langs: 0 } } })
-  const second = JSON.parse(dayFile(first, 'codex-s1', 'shop', '2026-11-23', { turns: 1, commits: 1, secs: 90 }))
+  const second = JSON.parse(dayFile(first, 'codex-s1', 'shop', false, '2026-11-23', { turns: 1, commits: 1, secs: 90 }))
   expect(second.days['2026-11-23']).toMatchObject({ turns: 3, edits: 5, commits: 1, secs: 90 })
   // 3 turns × 10 + 5 edits × 2 + 1 commit × 25 + 1 active day × 30.
   expect(xpOf(summarize([second.days], '2026-11-23'))).toBe(95)
   // Another day is another record; a file that is not days starts over.
-  expect(Object.keys(JSON.parse(dayFile(JSON.stringify(second), 'codex-s1', 'shop', '2026-11-24', { turns: 1 })).days)).toEqual(['2026-11-23', '2026-11-24'])
-  expect(JSON.parse(dayFile('half a fi', 'codex-s1', 'shop', '2026-11-24', { turns: 1 })).days['2026-11-24'].turns).toBe(1)
+  expect(Object.keys(JSON.parse(dayFile(JSON.stringify(second), 'codex-s1', 'shop', false, '2026-11-24', { turns: 1 })).days)).toEqual(['2026-11-23', '2026-11-24'])
+  expect(JSON.parse(dayFile('half a fi', 'codex-s1', 'shop', false, '2026-11-24', { turns: 1 })).days['2026-11-24'].turns).toBe(1)
+})
+
+test('only what the mod counts is counted: a list of tasks is no edit, and a subagent’s calls are its own, not the chat’s', () => {
+  const busy = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude')).get('s1')
+  for (const tool of ['TodoWrite', 'TaskCreate', 'TaskUpdate', 'Artifact']) expect(tallyOf(hook(NOW + SEC, 'PostToolUse', { tool_name: tool }, 'claude'), busy, 0)).toEqual({ tools: 1 })
+  for (const tool of ['Edit', 'MultiEdit', 'Write', 'NotebookEdit']) expect(tallyOf(hook(NOW + SEC, 'PostToolUse', { tool_name: tool }, 'claude'), busy, 0)).toEqual({ tools: 1, edits: 1 })
+  expect(tallyOf(hook(NOW + SEC, 'PostToolUse', { tool_name: 'Edit', agent_id: 'a1' }, 'claude'), busy, 0)).toBeNull()
+  expect(tallyOf(hook(NOW + SEC, 'PostToolUse', { tool_name: 'Bash', agent_id: 'a1', tool_input: { command: 'git commit -m x' } }, 'claude'), busy, 0)).toBeNull()
+  expect(tallyOf(hook(NOW + SEC, 'PostToolUseFailure', { tool_name: 'Bash', agent_id: 'a1' }, 'claude'), busy, 0)).toBeNull()
+})
+
+test('a turn the person cut short ends when Claude Code says it waits for input, and is a turn all the same', () => {
+  let s = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude'), hook(NOW + 5 * SEC, 'PreToolUse', { tool_name: 'Read' }, 'claude'))
+  const idle = hook(NOW + 70 * SEC, 'Notification', { notification_type: 'idle_prompt' }, 'claude')
+  expect(tallyOf(idle, s.get('s1'), 0)).toEqual({ turns: 1, secs: 70 })
+  s = noted(s, idle)
+  expect(agentPeers(s, NOW + 70 * SEC)[0]).toMatchObject({ state: 'idle', lastTurn: { reason: 'aborted', seconds: 70 } })
+  // Said again while the chat rests, it ends nothing.
+  expect(tallyOf(hook(NOW + 130 * SEC, 'Notification', { notification_type: 'idle_prompt' }, 'claude'), s.get('s1'), 0)).toBeNull()
+  expect(agentPeers(noted(s, hook(NOW + 130 * SEC, 'Notification', { notification_type: 'idle_prompt' }, 'claude')), NOW + 130 * SEC)[0].lastTurn).toMatchObject({ at: NOW + 70 * SEC })
+})
+
+test('a turn whose end was never said is counted when the next one begins, up to when the chat was last heard', () => {
+  const s = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }), hook(NOW + 40 * SEC, 'PostToolUse', { tool_name: 'Read' }))
+  expect(tallyOf(hook(NOW + 600 * SEC, 'UserPromptSubmit', { prompt: 'again' }), s.get('codex-s1'), 0)).toEqual({ turns: 1, secs: 40 })
+  // A first prompt, or one after a turn that ended, begins a turn and ends none.
+  const rested = noted(s, hook(NOW + 50 * SEC, 'Stop'))
+  expect(tallyOf(hook(NOW + 600 * SEC, 'UserPromptSubmit', { prompt: 'again' }), rested.get('codex-s1'), 0)).toBeNull()
+})
+
+test('a chat that waits on the person keeps waiting however long; one that went silent at work is at rest, and that is no news of a finished turn', () => {
+  const waiting = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }), hook(NOW + SEC, 'PermissionRequest', { tool_name: 'Bash' }))
+  expect(agentPeers(waiting, NOW + STALLED_AFTER_MS + SEC)[0]).toMatchObject({ state: 'asking', waitingFor: 'permission' })
+  expect(stalledOf(waiting, NOW + STALLED_AFTER_MS + SEC).size).toBe(0)
+
+  const silent = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }))
+  const before = agentPeers(silent, NOW + STALLED_AFTER_MS - SEC)
+  const after = agentPeers(silent, NOW + STALLED_AFTER_MS)
+  expect(after[0].state).toBe('idle')
+  expect([...stalledOf(silent, NOW + STALLED_AFTER_MS)]).toEqual(['codex-s1'])
+  // Left to itself the change reads as a turn of half an hour that finished: the window leaves out what `stalledOf` names.
+  expect(newsOf(before, after, NOW + STALLED_AFTER_MS).filter(n => !stalledOf(silent, NOW + STALLED_AFTER_MS).has(n.id))).toEqual([])
+})
+
+test('a chat named by its first words says so in its days file, so those words are never put on a picture to share', () => {
+  const home = run(hookedOf(JSON.stringify({ source: 'codex', at: NOW, event: { hook_event_name: 'UserPromptSubmit', session_id: 's1', cwd: '/Users/me', prompt: 'rename the billing table' } }))!).get('codex-s1')!
+  expect(home.label).toBe('rename the billing')
+  expect(isNamedByPrompt(home)).toBe(true)
+  expect(isNamedByPrompt(run(hook(NOW, 'UserPromptSubmit', { prompt: 'rename the billing table' })).get('codex-s1')!)).toBe(false)
+  expect(JSON.parse(dayFile(null, 'codex-s1', home.label, true, '2026-11-23', { turns: 1 })).isLabelFromPrompt).toBe(true)
 })
