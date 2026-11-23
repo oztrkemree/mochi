@@ -6,8 +6,7 @@ import type { News } from './news'
 
 /**
  * The usage limits (the five-hour session, the week), as the chats know them.
- * They are the account's, not a chat's: every chat reports the same windows,
- * and the one that wrote last knows best.
+ * They are the account's, not a chat's: every chat reports the same windows.
  */
 
 /** One usage window: which, percent used (0-100), and when it resets (epoch ms, 0 when not known). */
@@ -17,17 +16,22 @@ export type Usage = { kind: string; p: number; resetsAt: number }
 const ORDER = ['five_hour', 'seven_day']
 const place = (kind: string) => (ORDER.includes(kind) ? ORDER.indexOf(kind) : ORDER.length)
 
-/** The limits as they stand now: each from the chat that wrote last. A window whose reset has passed is empty until a chat says otherwise. */
+/**
+ * The limits as they stand now. Every chat writes what it last heard, and one
+ * at rest goes on writing an old reading: so the newest window wins (the one
+ * that resets latest), and within a window the most used, since use only grows
+ * until the reset. A window whose reset has passed is empty until a chat says otherwise.
+ */
 export function usageOf(peers: readonly Peer[], now: number): Usage[] {
-  const latest = new Map<string, { usage: Usage; at: number }>()
+  const best = new Map<string, Usage>()
   for (const p of peers) {
     for (const w of p.windows ?? []) {
-      const had = latest.get(w.kind)
-      if (!had || p.at > had.at) latest.set(w.kind, { usage: w, at: p.at })
+      const had = best.get(w.kind)
+      if (!had || w.resetsAt > had.resetsAt || (w.resetsAt === had.resetsAt && w.p > had.p)) best.set(w.kind, w)
     }
   }
-  return [...latest.values()]
-    .map(({ usage }) => (usage.resetsAt > 0 && usage.resetsAt <= now ? { ...usage, p: 0 } : usage))
+  return [...best.values()]
+    .map(usage => (usage.resetsAt > 0 && usage.resetsAt <= now ? { ...usage, p: 0 } : usage))
     .sort((a, b) => place(a.kind) - place(b.kind) || a.kind.localeCompare(b.kind))
 }
 

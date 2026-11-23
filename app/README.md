@@ -10,7 +10,9 @@ News of several chats comes one at a time, the most pressing first. Press the bu
 
 It shows your usage limits too: the session and the week as two small rings by its feet, and in full at the top of the list. It says so when one passes four fifths, when one is nearly gone and when it is back, and it is tired near the end of one. For now the limits come from the mod's chats.
 
-Its eyes follow your pointer while it is awake, two quick presses are a pat, and in Settings you can give its news a soft sound.
+Its eyes follow your pointer when you come near, two quick presses are a pat, and in Settings you can give its news a soft sound.
+
+Mochi moves when something happens and holds still the rest of the time: when its mood changes, when it speaks, when your pointer comes over it, for a breath each minute, and now and then while a chat works. Its drawing in motion costs about a fifth of a processor core; at rest, measured with the screen on, the whole app takes about 0.3% of one.
 
 It works for macOS and Windows, with the Mochi Buddy mod or without it.
 

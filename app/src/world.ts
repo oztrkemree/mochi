@@ -11,7 +11,10 @@ import { t } from '../../hooks/i18n'
  * says, when it happens, and is not on screen the rest of the time.
  */
 export type View = {
+  /** The drawing as it comes to the screen: eased in from what was there. */
   svg: string
+  /** The same pose with nothing to ease in from: what Mochi goes back to when it moves again, and what it holds still in (see `stillOf`). */
+  rest: string
   mood: Mood
   /** What Mochi wears, by the look the mod writes; undefined before there is one. */
   outfit: Outfit | undefined
@@ -62,7 +65,8 @@ export function viewOf(peers: readonly Peer[], now: number, look: Look | null = 
   const said = { link: appLink(lead?.peer.app), line: peersLine(peers) ?? t().mood[mood], peers }
   if (was && was.mood === mood && JSON.stringify(was.scene) === JSON.stringify(scene)) return { ...was, ...said }
   const from = was ? { params: paramsAt(was.from, was.mood, now - was.at), mood: was.mood, scene: was.scene } : null
-  return { svg: drawn(mascotInner({ mood, scene, from })), mood, outfit, scene, at: now, from: from?.params ?? null, ...said }
+  const rest = drawn(mascotInner({ mood, scene, from: null }))
+  return { svg: from ? drawn(mascotInner({ mood, scene, from })) : rest, rest, mood, outfit, scene, at: now, from: from?.params ?? null, ...said }
 }
 
 /**
@@ -124,3 +128,11 @@ export function gazeOf(face: { x: number; y: number }, pointer: { x: number; y: 
   const round = (v: number) => Math.round(v * 100) / 100 + 0
   return { dx: round((x / far) * reach), dy: round((y / far) * reach * 0.8) }
 }
+
+/**
+ * A drawing with its motion taken out: every part where it rests. The drawing's
+ * own motion redraws all of Mochi sixty times a second for as long as it runs,
+ * and a drawing told to pause goes on being redrawn; one with no motion in it
+ * costs nothing. Mochi holds still in this between the moments it moves.
+ */
+export const stillOf = (svg: string): string => svg.replace(/<(animate|animateTransform|animateMotion|set)\b[^>]*?(?:\/>|>[\s\S]*?<\/\1>)/g, '')

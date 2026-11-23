@@ -116,10 +116,17 @@ pub fn set_gaze(on: bool) {
     GAZE.store(on, Ordering::Relaxed);
 }
 
-/// Whether a move of the pointer is worth telling the window: it moved enough to see in Mochi's eyes, and is near enough for them to matter.
+/// How far around the window the pointer still counts as near Mochi, in points.
+const NEAR: f64 = 260.0;
+/// The window is never larger than this; a pointer further in than that is not over it.
+const WINDOW_MOST: f64 = 700.0;
+
+/// Whether a move of the pointer is worth telling the window: it moved enough to see in Mochi's eyes, and is close by.
+/// Each telling redraws Mochi, so a pointer at work across the screen is none of its business; the eyes turn when someone comes near.
 fn is_worth_telling(told: (f64, f64), now: (f64, f64)) -> bool {
     let moved = (now.0 - told.0).hypot(now.1 - told.1);
-    moved >= 8.0 && now.0.abs() < 2000.0 && now.1.abs() < 2000.0
+    let is_near = |v: f64| v > -NEAR && v < WINDOW_MOST + NEAR;
+    moved >= 10.0 && is_near(now.0) && is_near(now.1)
 }
 
 /// One look at the pointer: the window takes presses while it is on Mochi and lets them through to what is behind the rest of the time.
@@ -165,8 +172,11 @@ mod tests {
     fn the_window_hears_of_the_pointer_only_when_it_moved_and_is_near() {
         assert!(is_worth_telling((f64::MAX, f64::MAX), (100.0, 100.0)));
         assert!(!is_worth_telling((100.0, 100.0), (103.0, 104.0)));
-        assert!(is_worth_telling((100.0, 100.0), (100.0, 108.0)));
-        // Across the desk on another screen, Mochi's eyes would not move for it.
+        assert!(is_worth_telling((100.0, 100.0), (100.0, 112.0)));
+        // Just outside the window still counts as near; at work across the screen does not, however much it moves.
+        assert!(is_worth_telling((100.0, 100.0), (-200.0, 100.0)));
+        assert!(!is_worth_telling((100.0, 100.0), (-900.0, 100.0)));
+        assert!(!is_worth_telling((100.0, 100.0), (100.0, 1400.0)));
         assert!(!is_worth_telling((100.0, 100.0), (4000.0, 100.0)));
     }
 

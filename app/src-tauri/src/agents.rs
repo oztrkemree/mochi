@@ -37,6 +37,10 @@ fn kept(event: &Value) -> Value {
     if let Some(path) = short(&event["tool_input"]["file_path"], 300) {
         input.insert("file_path".into(), path);
     }
+    // Said when a command came with more than itself (the sandbox off, say): what is not shown cannot be answered for.
+    if event["tool_input"].as_object().is_some_and(|given| given.contains_key("command") && given.keys().any(|k| !PLAIN_WITH_A_COMMAND.contains(&k.as_str()))) {
+        input.insert("odd".into(), json!(true));
+    }
     if !input.is_empty() {
         out.insert("tool_input".into(), Value::Object(input));
     }
@@ -45,6 +49,10 @@ fn kept(event: &Value) -> Value {
 
 /// As much of a shell command as is kept.
 const MOST_COMMAND: usize = 300;
+/// What a shell command is given besides itself that changes nothing of what it does: why, for how long, and whether to wait for it.
+const PLAIN_WITH_A_COMMAND: [&str; 4] = ["command", "description", "timeout", "run_in_background"];
+/// For how long a request for permission may wait on Mochi's bubble at most, in seconds.
+pub const MOST_WAIT_S: u64 = 120;
 
 /// One hook call into the inbox, named so the calls sort by time; nothing for input that is not a call.
 /// `wait_s` is for how long the call waits for an answer from Mochi's bubble (0: it does not): the call then says so, with the name to answer it by.
@@ -69,7 +77,7 @@ fn drop_in(dir: &Path, source: &str, input: &str, at: u128, pid: u32, wait_s: u6
 fn waits_for(source: &str, event: &Value, beat: &Value) -> u64 {
     let tool = event["tool_name"].as_str().unwrap_or("");
     let is_request = source == "claude" && event["hook_event_name"] == "PermissionRequest" && tool != "AskUserQuestion" && tool != "ExitPlanMode";
-    if is_request { beat["approve"].as_u64().unwrap_or(0).min(120) } else { 0 }
+    if is_request { beat["approve"].as_u64().unwrap_or(0).min(MOST_WAIT_S) } else { 0 }
 }
 
 /// What Claude Code is told for an answer: its own words for a granted or a refused request. None for no answer, which leaves the request to Claude Code's own dialog.
@@ -237,7 +245,10 @@ impl Agent {
         let root = config.as_object_mut()?;
         let events = root.entry("hooks").or_insert_with(|| json!({})).as_object_mut()?;
         for (name, has_matcher) in self.events {
-            let mut group = json!({ "hooks": [{ "type": "command", "command": command, "timeout": 5 }] });
+            // A hook is gone in a moment, and the agent need never wait on one longer than this. The one that may wait on
+            // Mochi's bubble is given the time to: an agent that ends it sooner would leave the bubble's answers going nowhere.
+            let timeout = if *name == "PermissionRequest" { MOST_WAIT_S + 10 } else { 5 };
+            let mut group = json!({ "hooks": [{ "type": "command", "command": command, "timeout": timeout }] });
             if *has_matcher {
                 group["matcher"] = json!("*");
             }
@@ -252,6 +263,14 @@ impl Agent {
         match self.name {
             "codex" => Some(folder("CODEX_HOME", ".codex")?.join("hooks.json")),
             _ => Some(folder("CLAUDE_CONFIG_DIR", ".claude")?.join("settings.json")),
+        }
+    }
+
+    /// Writes Mochi's entries again if the agent's file has them in an older form (a new event, another timeout). A file without them is left without.
+    pub fn refresh(&self, path: &Path, exe: &Path) {
+        let Some(config) = config_at(path) else { return };
+        if self.is_connected(&config) && self.connected(config.clone(), &self.command(exe)).is_some_and(|next| next != config) {
+            self.write(path, exe, true);
         }
     }
 
@@ -326,6 +345,11 @@ mod tests {
         assert_eq!(k["tool_input"]["cut"], true);
         let whole = kept(&json!({ "tool_name": "Bash", "tool_input": { "command": "ls -la", "file_path": "/w/src/cart.ts" } }));
         assert!(whole["tool_input"].get("cut").is_none());
+        // A command given with more than itself says so; with only why and for how long, it does not.
+        assert_eq!(whole["tool_input"]["odd"], true);
+        assert_eq!(kept(&json!({ "tool_input": { "command": "ls", "dangerouslyDisableSandbox": true } }))["tool_input"]["odd"], true);
+        assert!(kept(&json!({ "tool_input": { "command": "ls", "description": "list", "timeout": 5000, "run_in_background": false } }))["tool_input"].get("odd").is_none());
+        assert!(kept(&json!({ "tool_input": { "file_path": "/w/a.ts", "content": "x" } }))["tool_input"].get("odd").is_none());
         assert_eq!(whole["tool_input"]["file_path"], "/w/src/cart.ts");
     }
 
@@ -390,6 +414,10 @@ mod tests {
         assert_eq!(once["hooks"]["Stop"].as_array().unwrap().len(), 2);
         assert_eq!(once["hooks"]["Stop"][0]["hooks"][0]["command"], "say done");
         assert_eq!(once["hooks"]["PreToolUse"][0]["matcher"], "*");
+        // Every hook is gone in a moment but the one that may wait on the bubble, which is given longer than it ever waits.
+        assert_eq!(once["hooks"]["PreToolUse"][0]["hooks"][0]["timeout"], 5);
+        assert_eq!(once["hooks"]["PermissionRequest"][0]["hooks"][0]["timeout"], 130);
+        assert!(once["hooks"]["PermissionRequest"][0]["hooks"][0]["timeout"].as_u64().unwrap() > MOST_WAIT_S);
         assert!(once["hooks"]["Stop"][1].get("matcher").is_none());
         assert_eq!(once["hooks"].as_object().unwrap().len(), 12);
         assert_eq!(CODEX.connected(json!({}), "x hook codex").unwrap()["hooks"].as_object().unwrap().len(), 10);
@@ -433,6 +461,30 @@ mod tests {
         let at = |key: &str| text.find(key).unwrap();
         assert!(at("\"model\"") < at("\"env\"") && at("\"env\"") < at("\"alwaysThinkingEnabled\"") && at("\"alwaysThinkingEnabled\"") < at("\"hooks\""));
         assert!(at("\"ZED\"") < at("\"ABC\""));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn entries_in_an_older_form_are_written_again_and_a_file_without_mochi_is_left_alone() {
+        let dir = scratch("refresh");
+        let path = dir.join("settings.json");
+        // As an earlier version left it: the hook that waits given only five seconds.
+        let old = json!({ "model": "opus", "hooks": { "PermissionRequest": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "\"/Apps/Mochi\" hook claude", "timeout": 5 }] }] } });
+        fs::write(&path, old.to_string()).unwrap();
+        CLAUDE.refresh(&path, Path::new("/Apps/Mochi"));
+        let now = config_at(&path).unwrap();
+        assert_eq!(now["hooks"]["PermissionRequest"][0]["hooks"][0]["timeout"], 130);
+        assert_eq!(now["hooks"].as_object().unwrap().len(), 12);
+        assert_eq!(now["model"], "opus");
+        // Already as it should be: not written again.
+        let text = fs::read_to_string(&path).unwrap();
+        CLAUDE.refresh(&path, Path::new("/Apps/Mochi"));
+        assert_eq!(fs::read_to_string(&path).unwrap(), text);
+        // Never connected: never touched.
+        let other = dir.join("other.json");
+        fs::write(&other, "{\"model\":\"opus\"}").unwrap();
+        CLAUDE.refresh(&other, Path::new("/Apps/Mochi"));
+        assert_eq!(fs::read_to_string(&other).unwrap(), "{\"model\":\"opus\"}");
         fs::remove_dir_all(&dir).unwrap();
     }
 

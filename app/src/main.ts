@@ -7,17 +7,17 @@ import type { DayRec, Mood } from '../../types'
 import { dayKey } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
 import { type Look, addDay, lookFrom } from '../../hooks/level'
-import { PEER_INK, nameOf } from '../../hooks/live'
+import { PEER_INK, appLink, nameOf } from '../../hooks/live'
 import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
 import { clip } from '../../hooks/sound'
-import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, stalledOf, tallyOf } from './engine'
+import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, settles, stalledOf, tallyOf } from './engine'
 import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { words } from './words'
-import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, viewOf } from './world'
+import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, stillOf, viewOf } from './world'
 
 /**
  * Mochi's window. It runs nothing on a clock: the app tells it when a hook
@@ -37,6 +37,8 @@ const win = getCurrentWindow()
 const EDGE = 12
 /** With a limit used this much Mochi is tired while nothing else is going on. */
 const TIRED_AT = 95
+/** A bubble's answers take a press only this long after they came up. */
+const ANSWER_AFTER_MS = 700
 /** For how long a request for permission waits on the bubble before Claude Code's own dialog is all there is. */
 const APPROVE_S = 30
 /** An answer to a press stays up shorter than news. */
@@ -172,8 +174,46 @@ function chime(name: SoundName) {
   void new Audio(`data:audio/wav;base64,${clip(name)}`).play().catch(() => {})
 }
 
+// ---------- Mochi moves when something happens, and holds still the rest of the time ----------
+
+/**
+ * The drawing's own motion (breathing, typing, blinking) redraws all of Mochi
+ * sixty times a second, which costs a fifth of a processor core for as long as
+ * it runs. So it runs in short stretches: when the mood changes, when Mochi
+ * speaks, when the pointer comes over it, a moment each minute, and now and
+ * then while a chat works. In between Mochi is a drawing with no motion in it
+ * (`stillOf`), which costs nothing.
+ */
+const MOVES_MS = 2400
+/** While a chat works, Mochi moves again no sooner than this after it last did. */
+const WORK_REST_MS = 9000
+let stillTimer = 0
+let movedAt = 0
+let isStill = false
+
+/** Shows a drawing, the eyes where they were turned. */
+function show(svg: string) {
+  stage.innerHTML = svg
+  gaze()
+}
+
+/** Lets Mochi move for a while: `svg` is what to show while it does (the pose itself when none is given), and then it holds still. */
+function move(ms = MOVES_MS, svg: string | null = null) {
+  if (!view) return
+  movedAt = Date.now()
+  if (svg !== null || isStill) show(svg ?? view.rest)
+  isStill = false
+  clearTimeout(stillTimer)
+  stillTimer = window.setTimeout(() => {
+    if (!view) return
+    isStill = true
+    show(stillOf(view.rest))
+  }, ms)
+}
+
 /** A small hop, to catch the eye when Mochi has something to say. */
 function hop() {
+  move()
   stage.classList.remove('hop')
   // Read back so the same hop can start again while the last one is still going.
   void stage.offsetWidth
@@ -206,6 +246,7 @@ function speak(text: string, ms: number, ink: string, news: News | null, extra: 
     if (news.kind === 'back') hold('party', 4000)
   }
   saying = news
+  const drawnAt = Date.now()
   say.style.setProperty('--ink', ink)
   say.replaceChildren(text)
   if (extra.what) {
@@ -224,7 +265,8 @@ function speak(text: string, ms: number, ink: string, news: News | null, extra: 
       if (act.isMain) button.className = 'main'
       button.addEventListener('click', e => {
         e.stopPropagation()
-        act.run()
+        // An answer counts only a moment after it came up: a second press meant for the bubble before never lands on this one unread.
+        if (Date.now() - drawnAt >= ANSWER_AFTER_MS) act.run()
       })
       acts.append(button)
     }
@@ -458,7 +500,7 @@ async function take(calls: string[]) {
     if (request && settings.approve) {
       requests.set(request.chat, request)
       asked.push(request)
-    } else if (requests.has(h.id) && h.name !== 'PermissionRequest') {
+    } else if (requests.has(h.id) && settles(h)) {
       // The chat went on: the request was answered in its own window. Its hook is let go.
       answer(requests.get(h.id)!, 'none')
     }
@@ -488,7 +530,7 @@ async function take(calls: string[]) {
     const peers = view.peers
     hear(asked.map(r => {
       const chat = peers.find(p => p.id === r.chat)
-      return { id: r.chat, kind: 'asking' as const, line: t().peer.waiting(chat ? nameOf(chat) : t().word.chat), link: '' }
+      return { id: r.chat, kind: 'asking' as const, line: t().peer.waiting(chat ? nameOf(chat) : t().word.chat), link: appLink(chat?.app) }
     }), peers, true)
   }
 }
@@ -504,8 +546,13 @@ function draw() {
   const before = view
   const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT) })
   view = next
-  // The drawing loops by itself: it is put on screen again only when it differs, so its motion never starts over for nothing.
-  if (!before || next.svg !== before.svg) stage.innerHTML = next.svg
+  // A new pose comes to the screen eased in from the last; the same pose is left as it is.
+  if (!before || next.svg !== before.svg) {
+    move(MOVES_MS, next.svg)
+  } else if (peers.some(p => p.state === 'busy') && now - movedAt >= WORK_REST_MS) {
+    // A chat at work: Mochi works along for a moment, now and then.
+    move(1300)
+  }
   stage.setAttribute('aria-label', next.line)
   watch(next.mood)
   drawAgents()
@@ -596,6 +643,8 @@ stage.addEventListener('pointerup', () => {
   if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0 || usage.length > 0) toggleAgents()
   else speak(view.line, ANSWER_MS, QUIET_INK, null)
 })
+// The pointer comes over Mochi: it stirs.
+stage.addEventListener('pointerenter', () => move())
 // A pat: two quick presses, and Mochi is pleased for a moment.
 stage.addEventListener('dblclick', () => {
   toggleAgents(false)
@@ -624,7 +673,11 @@ async function start() {
     pointer = { x: e.payload[0], y: e.payload[1] }
     gaze()
   })
-  await listen('minute', () => void take([]).catch(note))
+  await listen('minute', () => {
+    // A breath a minute, so a Mochi with nothing to do is still alive.
+    move(1500)
+    void take([]).catch(note)
+  })
   // Everything is told from the start now that someone listens.
   await invoke('ready')
   await win.show()

@@ -34,7 +34,9 @@ static APPROVE_S: AtomicU64 = AtomicU64::new(0);
 
 fn beat_now(app: &AppHandle) {
     if let Some(dir) = data_dir() {
-        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), is_shown(app), APPROVE_S.load(Ordering::Relaxed)));
+        // With Mochi off the screen nobody sees its bubble: no request waits on it.
+        let shown = is_shown(app);
+        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), shown, if shown { APPROVE_S.load(Ordering::Relaxed) } else { 0 }));
     }
 }
 
@@ -174,7 +176,7 @@ fn on_top(app: AppHandle, on: bool) {
 /// Whether requests for permission wait on Mochi's bubble, and for how long: said in the app's beat at once, where the hooks read it.
 #[tauri::command]
 fn set_approve(app: AppHandle, seconds: u64) {
-    APPROVE_S.store(seconds.min(120), Ordering::Relaxed);
+    APPROVE_S.store(seconds.min(agents::MOST_WAIT_S), Ordering::Relaxed);
     beat_now(&app);
 }
 
@@ -322,6 +324,15 @@ pub fn run() {
                 tray = tray.icon(icon.clone());
             }
             tray.build(app)?;
+
+            // Mochi's entries in an agent's file, where the person put them, are kept in the form this version writes.
+            if let Ok(exe) = std::env::current_exe() {
+                for agent in [&agents::CLAUDE, &agents::CODEX] {
+                    if let Some(path) = agent.config_path() {
+                        agent.refresh(&path, &exe);
+                    }
+                }
+            }
 
             keep_updated(app.handle().clone());
             keep_watch(app.handle().clone());

@@ -12,13 +12,21 @@ const HOUR = 3_600_000
 const file = (id: string, at: number, windows: unknown[]): string => JSON.stringify({ id, label: id, state: 'idle', line: '', since: 0, at, v: 2, windows })
 const win = (kind: string, p: number, inHours: number) => ({ kind, p, resetsAt: NOW + inHours * HOUR })
 
-test('the limits are what the chat that wrote last says, the session before the week', () => {
+test('the limits are the newest window any chat knows, and within it the most used, the session before the week', () => {
+  // A chat at rest keeps writing what it last heard: who wrote last says nothing of who knows best.
   const peers = peersOf([
-    file('old', NOW - 20_000, [win('seven_day', 40, 50), win('five_hour', 10, 3)]),
-    file('new', NOW - 1000, [win('seven_day', 41, 50), win('five_hour', 12, 3)]),
+    file('working', NOW - 20_000, [win('seven_day', 41, 50), win('five_hour', 12, 3)]),
+    file('resting', NOW - 1000, [win('seven_day', 40, 50), win('five_hour', 10, 3)]),
   ], NOW)
   expect(usageOf(peers, NOW)).toEqual([win('five_hour', 12, 3), win('seven_day', 41, 50)])
   expect(usageOf(peersOf([file('none', NOW, [])], NOW), NOW)).toEqual([])
+  // After a reset the chat that heard of the new window knows best, however little is used of it.
+  const after = peersOf([file('resting', NOW - 1000, [win('five_hour', 93, 0.2)]), file('working', NOW - 9000, [win('five_hour', 2, 5)])], NOW)
+  expect(usageOf(after, NOW)).toEqual([win('five_hour', 2, 5)])
+  // Two chats that disagree never make news by turns.
+  const one = usageOf(peersOf([file('a', NOW, [win('five_hour', 82, 3)])], NOW), NOW)
+  const two = usageOf(peersOf([file('a', NOW - 5000, [win('five_hour', 82, 3)]), file('b', NOW, [win('five_hour', 40, 3)])], NOW), NOW)
+  expect(usageNews(one, two, NOW)).toEqual([])
 })
 
 test('a window whose reset has passed is empty again, whatever an older word of it says', () => {

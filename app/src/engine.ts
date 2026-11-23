@@ -246,9 +246,15 @@ const SHOWN_MAX = 160
  */
 export function requestOf(h: Hooked): Request | null {
   if (h.name !== 'PermissionRequest' || h.ask === null) return null
-  const input = typeof h.event.tool_input === 'object' && h.event.tool_input !== null ? (h.event.tool_input as { command?: unknown; file_path?: unknown; cut?: unknown }) : {}
+  const input = typeof h.event.tool_input === 'object' && h.event.tool_input !== null ? (h.event.tool_input as { command?: unknown; file_path?: unknown; cut?: unknown; odd?: unknown }) : {}
   const command = text(input.command)
   const all = command || text(input.file_path)
-  const isWhole = command !== '' && input.cut !== true && command.length <= SHOWN_MAX && !/[\n\r]/.test(command)
+  // The shell's own tool, given nothing but the command, and a command of plain characters: a letter that does not show,
+  // or one that turns the line around, makes a command read as another.
+  const isWhole = text(h.event.tool_name) === 'Bash' && command !== '' && input.cut !== true && input.odd !== true && command.length <= SHOWN_MAX && /^[\x20-\x7E]+$/.test(command)
   return { id: h.ask.id, until: h.ask.until, chat: h.id, tool: text(h.event.tool_name), what: all.length > SHOWN_MAX ? `${all.slice(0, SHOWN_MAX)}…` : all, canAllow: isWhole }
 }
+
+/** The calls that mean a waiting request was answered elsewhere: the call went on or failed, the turn ended, or the person said something new. Any other word from the chat leaves it waiting. */
+const SETTLES = ['PostToolUse', 'PostToolUseFailure', 'Stop', 'StopFailure', 'Interrupt', 'UserPromptSubmit', 'SessionEnd']
+export const settles = (h: Hooked): boolean => SETTLES.includes(h.name)

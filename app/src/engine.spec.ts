@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { setLang } from '../../hooks/i18n'
 import { summarize, xpOf } from '../../hooks/level'
 import { peerOf } from '../../hooks/live'
-import { GONE_AFTER_MS, STALLED_AFTER_MS, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, stalledOf, tallyOf } from './engine'
+import { GONE_AFTER_MS, STALLED_AFTER_MS, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, settles, stalledOf, tallyOf } from './engine'
 import { newsOf, withoutStalled } from './news'
 
 setLang('en')
@@ -238,6 +238,24 @@ test('a yes is offered only for a command the person sees whole; anything else c
   // An edit shows its file but not what changes in it; a tool that says nothing of itself shows nothing.
   expect(requestOf(request('Edit', { file_path: '/Users/me/code/shop/src/cart.ts' }))).toMatchObject({ what: '/Users/me/code/shop/src/cart.ts', canAllow: false })
   expect(requestOf(request('mcp__db__query', {}))).toMatchObject({ what: '', canAllow: false })
+  // Only the shell's own tool: another tool with a command of its own has more to it than the command.
+  expect(requestOf(request('mcp__ssh__exec', { command: 'ls' }))?.canAllow).toBe(false)
+  // A command given with more than the command (the sandbox off, say) is not all in the bubble.
+  expect(requestOf(request('Bash', { command: 'ls', odd: true }))?.canAllow).toBe(false)
+  // Letters that do not show, or that turn the line around, make a command read as another: plain characters only.
+  expect(requestOf(request('Bash', { command: 'echo \u202Egnp.exe' }))?.canAllow).toBe(false)
+  expect(requestOf(request('Bash', { command: 'echo a\u200Bb' }))?.canAllow).toBe(false)
+  expect(requestOf(request('Bash', { command: 'echo şey' }))?.canAllow).toBe(false)
+  expect(requestOf(request('Bash', { command: 'git status --short && ls -la ~/code | head -5' }))?.canAllow).toBe(true)
   // What is shown is never longer than the bubble holds.
   expect(requestOf(request('Bash', { command: `echo ${'a'.repeat(200)}` }))!.what.length).toBeLessThanOrEqual(161)
+})
+
+test('a waiting request is let go only by what means it was answered elsewhere, not by any other word from the chat', () => {
+  // Claude Code's own notice that it asks, a subagent starting, a call beginning: the request still waits.
+  expect(settles(hook(NOW, 'Notification', { notification_type: 'permission_prompt' }, 'claude'))).toBe(false)
+  expect(settles(hook(NOW, 'SubagentStart', { agent_id: 'a1' }, 'claude'))).toBe(false)
+  expect(settles(hook(NOW, 'PreToolUse', { tool_name: 'Read' }, 'claude'))).toBe(false)
+  // The call went on or failed, the turn ended, the person said something new: it was answered.
+  for (const name of ['PostToolUse', 'PostToolUseFailure', 'Stop', 'StopFailure', 'UserPromptSubmit', 'SessionEnd']) expect(settles(hook(NOW, name, {}, 'claude'))).toBe(true)
 })
