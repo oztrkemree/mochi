@@ -431,7 +431,7 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   mustache: { x: 50, y: 62.1, w: 35.3 },
   monocle: { x: 62.1, y: 55.7, w: 17.5 },
   bowtie: { x: 50, y: 73.5, w: 30.4 },
-  medal: { x: 50, y: 78.6, w: 16.9 },
+  medal: { x: 64, y: 72, w: 10 },
   scarf: { x: 50.2, y: 75.7, w: 20 },
   necktie: { x: 50, y: 78, w: 12 },
   evileye: { x: 50, y: 73, w: 48.8, stretch: 0.6 },
@@ -447,8 +447,8 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   cat: { x: 13.5, y: 74.4, w: 24, ground: true },
   gift: { x: 12, y: 77.6, w: 20, ground: true },
   sakura: { x: 39, y: 31, w: 18, s: 1.3 },
-  pin: { x: 34.6, y: 70.8, w: 9, s: 1.6 },
-  rosette: { x: 50, y: 76, w: 12, s: 1.5 },
+  pin: { x: 64, y: 72, w: 9, s: 1.2 },
+  rosette: { x: 63.5, y: 67.5, w: 12, s: 1.1 },
   candy: { x: 83, y: 69, w: 14, s: 1.8 },
   lantern: { x: 80.5, y: 73, w: 9, s: 1.9 },
   envelope: { x: 83, y: 70, w: 9, s: 1.8 },
@@ -521,12 +521,12 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   eyelashes: { x: 50.1, y: 47.7, w: 37.4 },
   fangs: { x: 50.5, y: 67.1, w: 16.3, stretch: 1.95 },
   teardrop: { x: 39.7, y: 60.1, w: 6.6 },
-  spikedcollar: { x: 49.9, y: 71.4, w: 59.3, stretch: 0.73 },
-  pearls: { x: 50.1, y: 67.1, w: 56.2, stretch: 0.52 },
-  bellcollar: { x: 50, y: 74.8, w: 58.1, stretch: 0.79 },
+  spikedcollar: { x: 50, y: 69.6, w: 56 },
+  pearls: { x: 50, y: 70.9, w: 56 },
+  bellcollar: { x: 50, y: 72, w: 54 },
   neckerchief: { x: 49.9, y: 74.4, w: 30.4 },
-  lei: { x: 49.9, y: 68.8, w: 56.8, stretch: 0.61 },
-  goldchain: { x: 50.1, y: 72.9, w: 50.7, stretch: 0.58 },
+  lei: { x: 50, y: 73, w: 58 },
+  goldchain: { x: 50, y: 74, w: 52 },
   overalls: { x: 50, y: 72.9, w: 45.8, stretch: 0.81 },
   sailorcollar: { x: 50, y: 73, w: 58 },
   whistle: { x: 54, y: 76.5, w: 11 },
@@ -708,19 +708,22 @@ export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, numb
       '<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.5;0.6;0.9;1" dur="6s" repeatCount="indefinite"/></ellipse>',
   },
   pin: {
-    box: [29, 65, 11.5, 11.5],
+    box: [58.4, 66.2, 11.5, 11.5],
     onSkin: true,
-    svg: '<circle cx="35" cy="71.4" r="4.4" fill="#2B1B17" opacity="0.18"/><circle cx="34.6" cy="70.8" r="4.2" fill="#2B2D5C" stroke="#E9B949" stroke-width="0.9"/>' +
+    // Drawn at the neck, pinned on the chest instead: the wearer's left, as badges are worn.
+    svg: '<g transform="translate(29.4 1.2)">' +
+      '<circle cx="35" cy="71.4" r="4.4" fill="#2B1B17" opacity="0.18"/><circle cx="34.6" cy="70.8" r="4.2" fill="#2B2D5C" stroke="#E9B949" stroke-width="0.9"/>' +
       '<path d="M33 69.2L31.4 70.8L33 72.4M36.2 69.2L37.8 70.8L36.2 72.4M35.2 68.6L34 73" stroke="#FFB38A" stroke-width="0.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '<path d="M31.8 68.6Q32.6 67.4 34 67.2" stroke="#fff" stroke-opacity="0.45" stroke-width="0.7" fill="none" stroke-linecap="round"/>',
+      '<path d="M31.8 68.6Q32.6 67.4 34 67.2" stroke="#fff" stroke-opacity="0.45" stroke-width="0.7" fill="none" stroke-linecap="round"/></g>',
   },
   rosette: {
-    box: [41, 66.5, 18, 20],
+    box: [54.5, 58.5, 18, 20],
     onSkin: true,
-    svg: '<path d="M47.8 76.4L45.4 84.6L47.2 83.6L48.4 85.4L50.6 77Z" fill="#B8322B"/><path d="M52.2 76.4L54.6 84.6L52.8 83.6L51.6 85.4L49.4 77Z" fill="#B8322B"/>' +
+    svg: '<g transform="translate(13.5 -8)">' +
+      '<path d="M47.8 76.4L45.4 84.6L47.2 83.6L48.4 85.4L50.6 77Z" fill="#B8322B"/><path d="M52.2 76.4L54.6 84.6L52.8 83.6L51.6 85.4L49.4 77Z" fill="#B8322B"/>' +
       `<g fill="#D8433B" stroke="#B8322B" stroke-width="0.3">${around(50, 75.5, 4.6, 1.7, 12)}</g>` +
       '<circle cx="50" cy="75.5" r="4.6" fill="#D8433B"/><circle cx="50" cy="75.5" r="3.3" fill="#F3ECE4"/><circle cx="50" cy="75.5" r="2.3" fill="#E9B949" stroke="#B8862A" stroke-width="0.4"/>' +
-      '<path d="M48.7 74.4Q49.2 73.6 50.2 73.5" stroke="#fff" stroke-opacity="0.7" stroke-width="0.6" fill="none" stroke-linecap="round"/>',
+      '<path d="M48.7 74.4Q49.2 73.6 50.2 73.5" stroke="#fff" stroke-opacity="0.7" stroke-width="0.6" fill="none" stroke-linecap="round"/></g>',
   },
   candy: {
     box: [74, 62, 18, 14],
