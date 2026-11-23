@@ -8,11 +8,13 @@ import { mockIPC, mockWindows } from '@tauri-apps/api/mocks'
  * drawing while working on it; the app never loads this.
  */
 
-const page = new DOMParser().parseFromString(await (await fetch('/index.html')).text(), 'text/html')
+// /preview.html?room shows Mochi's room instead of the corner window.
+const isRoom = location.search.includes('room')
+const page = new DOMParser().parseFromString(await (await fetch(isRoom ? '/room.html' : '/index.html')).text(), 'text/html')
 for (const style of page.querySelectorAll('style')) document.head.append(style)
-document.body.innerHTML = page.getElementById('root')!.outerHTML
+document.body.innerHTML = isRoom ? page.querySelector('main')!.outerHTML : page.getElementById('root')!.outerHTML
 // A desk to stand on, so what is see-through shows as it would over other windows.
-document.body.style.cssText = 'background: linear-gradient(160deg, #20242c, #3b3550 60%, #51413f); height: 100vh;'
+if (!isRoom) document.body.style.cssText = 'background: linear-gradient(160deg, #20242c, #3b3550 60%, #51413f); height: 100vh;'
 
 const screen = { name: 'preview', scaleFactor: 1, position: { x: 0, y: 0 }, size: { width: innerWidth, height: innerHeight }, workArea: { position: { x: 0, y: 0 }, size: { width: innerWidth, height: innerHeight } } }
 const asked: { cmd: string; args: unknown }[] = []
@@ -35,6 +37,8 @@ mockIPC((cmd, args) => {
     return true
   }
   if (cmd === 'claim') return true
+  if (cmd === 'read_look') return null
+  if (cmd === 'open_room') return null
   if (cmd === 'agent_state') return (args as { agent: string }).agent === 'claude' ? 'off' : 'missing'
   if (cmd === 'set_agent') return true
   if (cmd === 'save_share') return '/Users/you/.claude/mochi/share/mochi-card.svg'
@@ -66,4 +70,4 @@ Object.assign(window, {
   },
 })
 
-await import('./main')
+await (isRoom ? import('./room') : import('./main'))

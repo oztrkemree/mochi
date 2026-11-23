@@ -17,10 +17,9 @@ import { nameOf } from './live'
 import { PANEL_H, limitName, panelSvg } from './panel'
 import { SHOWN, floorOf, memberLines, membersOf, partyOf, statusLine } from './party'
 import { duration } from './react'
-import { VECTOR_WEAR, mascotInner, shiftTimeline, svgFor } from './rig'
+import { itemIcon, mascotInner, shiftTimeline, svgFor } from './rig'
 import { prsBoard } from './prs'
 import { ALL_ITEMS, DEFAULT_PREFS, NO_DIFF, NO_ENV, NO_FACE, NO_PANEL, NO_SAID, TABS, TAB_OF, chat, inTab } from './state'
-import { WEAR } from './wear'
 
 // What Mochi draws: the band above the prompt (the mascot and its line in the
 // terminal, the panel on the desktop) and the details pane, with its level,
@@ -73,23 +72,6 @@ function floorRegion($: EngineInterface, desk: DeskPane, rows: number) {
 function arrangeRegion($: EngineInterface, desk: DeskPane, props: { rows: { id: Block; title: string; gist: string; isHidden: boolean }[]; shown: string; hidden: string }) {
   const { Client } = $.ui.resolve(desk)
   return <Client key="arrange" module="./arrange.tsx" props={props} width="100%" height={props.rows.length * 2} />
-}
-
-/** An item's picture for the wardrobe, faded and grey while locked. */
-function iconSvg(item: Item, isOpen: boolean): string {
-  const vector = VECTOR_WEAR[item]
-  if (vector) {
-    const [x, y, w, tall] = vector.box
-    // Glasses read as glasses on a patch of Mochi's own clay, not on the dark card.
-    const skin = vector.onSkin ? `<rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${tall - 2}" rx="${Math.min(w, tall) / 2 - 1}" fill="#D97757"/>` : ''
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${tall}" width="100%" height="100%"><g opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}>${skin}${vector.svg}</g></svg>`
-  }
-  const a = WEAR[item]
-  if (a === undefined) return ''
-  const scale = Math.min(44 / a.w, 30 / a.h)
-  const w = a.w * scale
-  const tall = a.h * scale
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${a.uri}" x="${(46 - w) / 2}" y="${(32 - tall) / 2}" width="${w}" height="${tall}" opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}/></svg>`
 }
 
 /** The terminal drawing's hat row, when the mood leaves it empty and something is worn on the head. */
@@ -182,7 +164,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       return (
         <Box key={`cell:${item}`} flexDirection="column" alignItems="center" width={cardW} paddingX={1} paddingTop={0.5} overflow="hidden"
           borderStyle="round" borderColor={isOn ? 'claude' : 'inactive'} borderDimColor={!isOn} hover={isOpen && !isOn ? { borderColor: 'claude', borderDimColor: false } : undefined}>
-          <Svg source={iconSvg(item, isOpen)} alt={itemName(item)} width={46} height={32} />
+          <Svg source={itemIcon(item, isOpen)} alt={itemName(item)} width={46} height={32} />
           {isOpen
             ? <Button key={`wear:${item}`} plain onPress={pressed}>{itemShort(item)}</Button>
             : <Text dimColor wrap="truncate">{itemShort(item)}</Text>}
@@ -199,7 +181,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       return (
         <Box key={`tab:${slot}`} flexDirection="row" alignItems="center" gap={1} paddingX={1} overflow="hidden"
           borderStyle="round" borderColor={isHere ? 'claude' : 'inactive'} borderDimColor={!isHere} hover={isHere ? undefined : { borderColor: 'claude', borderDimColor: false }}>
-          {on ? <Svg source={iconSvg(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
+          {on ? <Svg source={itemIcon(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
           <Button key={`shelf:${slot}`} plain onPress={pressed}>
             {`${slotName(slot)} ${SLOT_ITEMS[slot].filter(i => ok.includes(i)).length}/${SLOT_ITEMS[slot].length}`}
           </Button>
@@ -427,7 +409,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         <Box flexDirection="row" alignItems="center" gap={2}>
           <Text dimColor wrap="truncate">{gists.wardrobe}</Text>
           <Box flexDirection="row" alignItems="center" gap={1}>
-            {worn.map(x => <Svg key={`worn:${x}`} source={iconSvg(x, true)} alt={itemName(x)} width={23} height={16} />)}
+            {worn.map(x => <Svg key={`worn:${x}`} source={itemIcon(x, true)} alt={itemName(x)} width={23} height={16} />)}
           </Box>
         </Box>
       ), () => (

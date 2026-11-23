@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "room",
+  "description": "What Mochi's room may do: read and write Mochi's shared files through the app's own commands, and nothing else",
+  "windows": [
+    "room"
+  ],
+  "permissions": [
+    "core:default"
+  ]
+}

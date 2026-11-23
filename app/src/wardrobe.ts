@@ -1,5 +1,5 @@
 import type { History, Item, Outfit } from '../../types'
-import { type Choice, type Look, type Slot, SLOTS, SLOT_ITEMS, unlocked } from '../../hooks/level'
+import { type Choice, type Look, type Slot, SLOTS, unlocked } from '../../hooks/level'
 
 /**
  * What Mochi wears, chosen in either Mochi. The mod keeps the person's choice
@@ -26,11 +26,6 @@ export function lookNow(history: History | null, modLook: Look | null, prefs: Ch
     if (chosen === null || (chosen !== undefined && items.includes(chosen))) pick[slot] = chosen
   }
   return { pick, items, tz: modLook?.tz ?? tz, birthday: modLook?.birthday ?? '', firstDay: modLook?.firstDay ?? '' }
-}
-
-/** The wardrobe: each slot with something open in it, and its items in the order the mod shows them. */
-export function shelvesOf(items: readonly Item[]): { slot: Slot; items: Item[] }[] {
-  return SLOTS.map(slot => ({ slot, items: SLOT_ITEMS[slot].filter(i => items.includes(i)) })).filter(s => s.items.length > 0)
 }
 
 /** A choice with one slot changed: an item, null for nothing, undefined to leave it to Mochi. */

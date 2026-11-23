@@ -17,7 +17,7 @@ export function nextStep(seen: ReadonlySet<string>, agents: Record<'claude' | 'c
 }
 
 /** The things Mochi tells of itself after the first meeting, one a day at most. */
-export const TIPS = ['rightClick', 'drag', 'edge', 'today', 'wardrobe', 'pat', 'shield', 'line'] as const
+export const TIPS = ['rightClick', 'drag', 'edge', 'room', 'wardrobe', 'pat', 'shield', 'line'] as const
 export type Tip = (typeof TIPS)[number]
 
 /** How long Mochi must have been quiet before a tip. */

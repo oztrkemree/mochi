@@ -1269,3 +1269,20 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     '</svg>',
   ].join('')
 }
+
+/** An item's picture for the wardrobe, faded and grey while locked: the band's, and the desktop app's room. */
+export function itemIcon(item: Item, isOpen: boolean): string {
+  const vector = VECTOR_WEAR[item]
+  if (vector) {
+    const [x, y, w, tall] = vector.box
+    // Glasses read as glasses on a patch of Mochi's own clay, not on the dark card.
+    const skin = vector.onSkin ? `<rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${tall - 2}" rx="${Math.min(w, tall) / 2 - 1}" fill="#D97757"/>` : ''
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${tall}" width="100%" height="100%"><g opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}>${skin}${vector.svg}</g></svg>`
+  }
+  const a = WEAR[item]
+  if (a === undefined) return ''
+  const scale = Math.min(44 / a.w, 30 / a.h)
+  const w = a.w * scale
+  const tall = a.h * scale
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${a.uri}" x="${(46 - w) / 2}" y="${(32 - tall) / 2}" width="${w}" height="${tall}" opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}/></svg>`
+}

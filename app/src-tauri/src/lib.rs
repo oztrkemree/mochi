@@ -370,6 +370,36 @@ fn open_settings(app: AppHandle) {
     open_settings_window(&app);
 }
 
+/// Mochi's room: the wardrobe, the badges, the city, in a window of its own, opened or brought to the front.
+fn open_room_window(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("room") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+        return;
+    }
+    let built = tauri::WebviewWindowBuilder::new(app, "room", tauri::WebviewUrl::App("room.html".into()))
+        .title("Mochi")
+        .inner_size(940.0, 660.0)
+        .min_inner_size(780.0, 560.0)
+        .center()
+        .build();
+    if let Ok(window) = built {
+        let _ = window.set_focus();
+    }
+}
+
+#[tauri::command]
+fn open_room(app: AppHandle) {
+    open_room_window(&app);
+}
+
+/// What the mod writes of the person's look (look.json), for the room to dress Mochi by.
+#[tauri::command]
+fn read_look() -> Option<String> {
+    store::read_look(&data_dir()?)
+}
+
 /// What went wrong in the window, said where a person who starts the app from a terminal can read it.
 #[tauri::command]
 fn note(text: String) {
@@ -420,18 +450,20 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             let toggle = MenuItemBuilder::with_id("toggle", "Show or hide Mochi").build(app)?;
+            let room = MenuItemBuilder::with_id("room", "Mochi’s room…").build(app)?;
             let settings = MenuItemBuilder::with_id("settings", "Settings…").build(app)?;
             let quit = MenuItemBuilder::with_id("quit", "Quit Mochi").build(app)?;
-            let menu = MenuBuilder::new(app).items(&[&toggle, &settings]).separator().item(&quit).build()?;
+            let menu = MenuBuilder::new(app).items(&[&toggle, &room, &settings]).separator().item(&quit).build()?;
             let mut tray = TrayIconBuilder::new().menu(&menu).tooltip("Mochi Buddy").on_menu_event(move |app, event| match event.id().as_ref() {
                 "quit" => app.exit(0),
+                "room" => open_room_window(app),
                 "settings" => open_settings_window(app),
                 "toggle" => show_or_hide(app),
                 _ => {}

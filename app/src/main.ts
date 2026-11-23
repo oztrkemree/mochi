@@ -3,13 +3,11 @@ import { listen } from '@tauri-apps/api/event'
 import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import type { Badge, Ci, DayRec, History, Item, Mood } from '../../types'
+import type { Badge, Ci, DayRec, History, Mood } from '../../types'
 import { badgeName, badgeSvg } from '../../hooks/badges'
-import { citySvg } from '../../hooks/city'
-import { dayKey, local } from '../../hooks/facts'
+import { dayKey } from '../../hooks/facts'
 import { lang, pickLang, setLang } from '../../hooks/i18n'
-import { type Choice, type Look, type Slot, addDay, choiceFrom, choiceText, dressAs, itemShort, levelOf, lookFrom, slotName, unlocked, xpOf } from '../../hooks/level'
-import { bestOutfit, cardMarkdown, cardSvg } from '../../hooks/share'
+import { type Choice, type Look, addDay, choiceFrom, levelOf, lookFrom, unlocked, xpOf } from '../../hooks/level'
 import { PEER_INK, appLink, nameOf } from '../../hooks/live'
 import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
@@ -21,7 +19,7 @@ import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled }
 import { type Area, type Body, type Point, areaOf, fit, isPushedDown, peekAt } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
-import { chosen, lookNow, shelvesOf } from './wardrobe'
+import { lookNow } from './wardrobe'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { words } from './words'
@@ -107,14 +105,6 @@ function dress() {
   if (JSON.stringify(look) === was || !view) return
   view = null
   draw()
-}
-
-/** The person chose in the wardrobe: worn at once, and written for the mod's Mochi to wear too. */
-function choose(slot: Slot, item: Item | null | undefined) {
-  prefs = { at: Date.now(), pick: chosen(prefs?.pick ?? modLook?.pick ?? {}, slot, item) }
-  dress()
-  drawAgents()
-  void invoke('write_shared', { name: 'prefs.json', text: choiceText(prefs) }).catch(note)
 }
 
 // ---------- where the window stands ----------
@@ -510,49 +500,11 @@ function drawGrowth(into: HTMLElement) {
     }
     into.append(medals)
   }
-  if (look) into.append(drawWardrobe(look))
-  into.append(drawShare())
-  const now = Date.now()
-  const city = el('div', 'city')
-  // The city is the mod's own drawing too, held still like Mochi: whatever twinkles in it would redraw the window for as long as the pocket is open.
-  city.innerHTML = stillOf(citySvg(history.days, dayKey(now, tz()), local(now, tz()).hour, 314).svg)
-  into.append(city)
-}
-
-/** The card to share, as the mod makes it with /mochi card: saved, shown in the file manager, and the line for a GitHub profile copied. */
-function drawShare(): HTMLElement {
-  const b = el('button', 'share', words().card)
-  b.type = 'button'
-  b.addEventListener('click', () => void (async () => {
-    const outfit = look ? dressAs(look, 'idle', Date.now()) : bestOutfit([])
-    const path = await invoke<string | null>('save_share', { name: 'mochi-card.svg', svg: cardSvg(history, outfit) })
-    if (path === null) return void speak(t().share.failed('~/.claude/mochi/share'), 6000, NEWS_INK.failed, null)
-    await navigator.clipboard.writeText(cardMarkdown('mochi-card.svg')).catch(() => undefined)
-    speak(`${t().share.cardSaved(path)} ${words().cardCopied}`, 9000, NEWS_INK.level, null)
-  })().catch(note))
-  return b
-}
-
-/** The wardrobe: each slot with something open, Mochi's own pick, nothing, or an item. What is worn now is pressed. */
-function drawWardrobe(l: Look): HTMLElement {
-  const box = el('div', 'wardrobe')
-  box.append(el('h3', '', t().ui.wardrobe))
-  for (const shelf of shelvesOf(l.items)) {
-    const row = el('div', 'shelf')
-    row.setAttribute('role', 'group')
-    row.setAttribute('aria-label', slotName(shelf.slot))
-    row.append(el('span', '', slotName(shelf.slot)))
-    const choices: [string, Item | null | undefined][] = [[t().ui.auto, undefined], [t().ui.nothing, null], ...shelf.items.map((i): [string, Item] => [itemShort(i), i])]
-    for (const [label, item] of choices) {
-      const b = el('button', '', label)
-      b.type = 'button'
-      b.setAttribute('aria-pressed', String(l.pick[shelf.slot] === item))
-      b.addEventListener('click', () => choose(shelf.slot, item))
-      row.append(b)
-    }
-    box.append(row)
-  }
-  return box
+  // The wardrobe, every badge and the city are in Mochi's room, a window of its own.
+  const room = el('button', 'room', words().room)
+  room.type = 'button'
+  room.addEventListener('click', () => void invoke('open_room').catch(note))
+  into.append(room)
 }
 
 /** Which side of the pocket is open. */

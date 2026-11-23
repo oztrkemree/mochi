@@ -19,5 +19,5 @@ test('a tip comes after the first meeting, one a day, once Mochi has been quiet 
   expect(tipNow(['rightClick'], today, today, 0, now, true)).toBeNull()
   expect(tipNow(['rightClick'], '2026-11-22', today, now - TIP_QUIET_MS + 1, now, true)).toBeNull()
   expect(tipNow(['rightClick'], '2026-11-22', today, 0, now, true)).toBe('drag')
-  expect(tipNow(['rightClick', 'drag', 'edge', 'today', 'wardrobe', 'pat', 'shield', 'line'], '', today, 0, now, true)).toBeNull()
+  expect(tipNow(['rightClick', 'drag', 'edge', 'room', 'wardrobe', 'pat', 'shield', 'line'], '', today, 0, now, true)).toBeNull()
 })

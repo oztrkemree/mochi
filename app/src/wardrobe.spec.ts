@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 
 import { historyOf } from './growth'
 import { choiceFrom, choiceText } from '../../hooks/level'
-import { chosen, lookNow, shelvesOf } from './wardrobe'
+import { chosen, lookNow } from './wardrobe'
 
 const days = (record: Record<string, Record<string, number>>) => JSON.stringify({ id: 'c', label: 'c', days: record })
 // Enough work for the first hats: 2 days, 60 turns, 4 commits.
@@ -30,9 +30,7 @@ test('Mochi wears what the history opened, by the last choice made in either Moc
   expect(lookNow(null, null, null, 0)).toBeNull()
 })
 
-test('the wardrobe shows only slots with something open, and a choice can be given back to Mochi', () => {
-  expect(shelvesOf(['mug', 'beanie', 'hardhat'])).toEqual([{ slot: 'head', items: ['beanie', 'hardhat'] }, { slot: 'held', items: ['mug'] }])
-  expect(shelvesOf([])).toEqual([])
+test('a choice can be given back to Mochi, or made nothing', () => {
   expect(chosen({ head: 'beanie' }, 'neck', null)).toEqual({ head: 'beanie', neck: null })
   expect(chosen({ head: 'beanie' }, 'head', undefined)).toEqual({})
 })
