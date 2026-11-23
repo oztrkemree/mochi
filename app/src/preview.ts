@@ -8,7 +8,7 @@ import { mockIPC, mockWindows } from '@tauri-apps/api/mocks'
  * drawing while working on it; the app never loads this.
  */
 
-// /preview.html?room shows Mochi's room instead of the corner window.
+// /preview.html?room shows Mochi's room instead of the corner window; add &all to open everything.
 const isRoom = location.search.includes('room')
 const page = new DOMParser().parseFromString(await (await fetch(isRoom ? '/room.html' : '/index.html')).text(), 'text/html')
 for (const style of page.querySelectorAll('style')) document.head.append(style)
@@ -20,7 +20,9 @@ const screen = { name: 'preview', scaleFactor: 1, position: { x: 0, y: 0 }, size
 const asked: { cmd: string; args: unknown }[] = []
 /** Some weeks of made-up work, so the level, the badges and the city have something to show. */
 const day = (back: number) => new Date(Date.now() - back * 86_400_000).toISOString().slice(0, 10)
-const allDays = [JSON.stringify({ id: 'demo', label: 'shop', days: Object.fromEntries(Array.from({ length: 26 }, (_, i) => [day(i), { turns: 4 + ((i * 7) % 11), tools: 30, edits: 6 + (i % 5) * 4, errors: 1, commits: i % 3 === 0 ? 0 : 1 + (i % 4), cost: 0, secs: 900, night: i % 6 === 0 ? 1 : 0, add: 120, del: 40, early: 0, langs: 3 }])) })]
+// /preview.html?room&all: a long, busy history, so every item and colour is open to try on.
+const isAll = location.search.includes('all')
+const allDays = [JSON.stringify({ id: 'demo', label: 'shop', days: Object.fromEntries(Array.from({ length: isAll ? 120 : 26 }, (_, i) => [day(i), isAll ? { turns: 600, tools: 3000, edits: 500, errors: 1, commits: 60, cost: 0, secs: 40_000, night: 12, add: 9000, del: 9500, early: 6, langs: 63 } : { turns: 4 + ((i * 7) % 11), tools: 30, edits: 6 + (i % 5) * 4, errors: 1, commits: i % 3 === 0 ? 0 : 1 + (i % 4), cost: 0, secs: 900, night: i % 6 === 0 ? 1 : 0, add: 120, del: 40, early: 0, langs: 3 }])) })]
 const shared: Record<string, string> = { 'level.json': JSON.stringify({ level: 1, items: [] }), 'badges.json': '[]' }
 
 mockWindows('main')
