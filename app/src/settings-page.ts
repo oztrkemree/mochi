@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 
-import { LANGS, type Lang, pickLang, setLang } from '../../hooks/i18n'
+import { LANGS, type Lang, lang as langNow, pickLang, setLang } from '../../hooks/i18n'
 import { CHANGED, IDLE_MINUTES, KEY, SIZES, type Settings, type Size, TALK_SECONDS, loadSettings } from './settings'
 import { words } from './words'
 
@@ -84,6 +84,8 @@ async function drawLine() {
 
 function draw() {
   setLang(settings.lang === 'auto' ? (pickLang(navigator.language) ?? 'en') : settings.lang)
+  document.documentElement.lang = langNow()
+  document.documentElement.dir = langNow() === 'ar' ? 'rtl' : 'ltr'
   const w = words()
   document.title = w.settings
   const text: Record<string, string> = {

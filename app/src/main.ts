@@ -7,7 +7,7 @@ import type { Badge, Ci, DayRec, History, Item, Mood } from '../../types'
 import { badgeName, badgeSvg } from '../../hooks/badges'
 import { citySvg } from '../../hooks/city'
 import { dayKey, local, shiftDay } from '../../hooks/facts'
-import { pickLang, setLang } from '../../hooks/i18n'
+import { lang, pickLang, setLang } from '../../hooks/i18n'
 import { type Choice, type Look, type Slot, addDay, choiceFrom, choiceText, dressAs, itemShort, levelOf, lookFrom, slotName, unlocked, xpOf } from '../../hooks/level'
 import { PRS_QUERY, PRS_SEARCH } from '../../hooks/prs'
 import { bestOutfit, cardMarkdown, cardSvg } from '../../hooks/share'
@@ -278,8 +278,12 @@ function show(svg: string) {
 }
 
 /** Lets Mochi move for a while: `svg` is what to show while it does (the pose itself when none is given), and then it holds still. */
+/** The person asked their system for less motion: Mochi changes pose without playing its moves. */
+const calm = matchMedia('(prefers-reduced-motion: reduce)')
+
 function move(ms = MOVES_MS, svg: string | null = null) {
   if (!view) return
+  if (calm.matches) return show(stillOf(svg ?? view.rest))
   movedAt = Date.now()
   if (svg !== null || isStill) show(svg ?? view.rest)
   isStill = false
@@ -1024,6 +1028,9 @@ function watch(mood: Mood) {
 async function apply(next: Settings) {
   settings = next
   setLang(settings.lang === 'auto' ? (pickLang(navigator.language) ?? 'en') : settings.lang)
+  // Read aloud in its language, and Arabic right to left.
+  document.documentElement.lang = lang()
+  document.documentElement.dir = lang() === 'ar' ? 'rtl' : 'ltr'
   root.style.setProperty('--size', `${SIZES[settings.size]}px`)
   agentsButton.hidden = !settings.showAgents
   if (!settings.showAgents) list.classList.remove('on')
@@ -1065,13 +1072,22 @@ addEventListener('pointermove', e => {
   pressed = null
   void win.startDragging()
 })
-// A press on Mochi opens the list of chats; with none open, Mochi says how it is.
-stage.addEventListener('pointerup', () => {
-  if (!pressed || !view) return
-  pressed = null
+// A press on Mochi opens the list of chats; with none open, Mochi says how it is. Enter or Space does the same.
+function pressMochi() {
+  if (!view) return
   if (peek) return standUp()
   if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0 || usage.length > 0) toggleAgents()
   else speak(view.line, ANSWER_MS, QUIET_INK, null)
+}
+stage.addEventListener('pointerup', () => {
+  if (!pressed) return
+  pressed = null
+  pressMochi()
+})
+stage.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return
+  e.preventDefault()
+  pressMochi()
 })
 // The pointer comes over Mochi: it stirs.
 stage.addEventListener('pointerenter', () => move())
