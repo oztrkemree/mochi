@@ -111,6 +111,28 @@ const working = (p: Peer, at: number, activity: Activity): Peer =>
 const asking = (p: Peer, at: number, waitingFor: 'permission' | 'question' | 'plan'): Peer =>
   ({ ...p, state: 'asking', stateAt: p.state === 'asking' ? p.stateAt : at, since: p.state === 'idle' || p.state === 'error' ? at : p.since, waitingFor })
 
+/**
+ * A chat with what Claude Code's status line says of it: how full its context
+ * is, what it cost, and the usage limits. Each is taken only if it is the
+ * number it should be; what the call does not say stays as it was.
+ */
+function withStatus(p: Peer, status: unknown): Peer {
+  if (typeof status !== 'object' || status === null) return p
+  const v = status as { context?: unknown; cost?: unknown; windows?: unknown }
+  const num = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x) && x >= 0
+  const windows = Array.isArray(v.windows)
+    ? v.windows.flatMap(w => (typeof w === 'object' && w !== null && typeof w.kind === 'string' && num(w.p) && num(w.resetsAt) ? [{ kind: w.kind as string, p: Math.min(100, Math.round(w.p)), resetsAt: w.resetsAt }] : [])).slice(0, 4)
+    : p.windows ?? []
+  const full = windows.find(w => w.p >= 100)
+  return {
+    ...p,
+    context: num(v.context) ? Math.min(100, Math.round(v.context)) : p.context,
+    cost: num(v.cost) ? v.cost : p.cost,
+    windows,
+    limit: full ? { kind: full.kind, resetsAt: full.resetsAt } : null,
+  }
+}
+
 /** The agents after one more hook call. */
 export function noted(sessions: Sessions, h: Hooked): Sessions {
   if (h.name === 'SessionEnd') {
@@ -128,6 +150,9 @@ export function noted(sessions: Sessions, h: Hooked): Sessions {
   const end = endOf(h, known)
   if (end !== '') p = rested(p, endedAt(h, p), end)
   switch (h.name) {
+    case 'StatusLine':
+      p = withStatus(p, h.event.status)
+      break
     case 'UserPromptSubmit':
       p = { ...working({ ...p, state: 'idle' }, h.at, 'thinking'), stateAt: h.at }
       break

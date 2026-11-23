@@ -172,6 +172,36 @@ pub fn write_days(dir: &Path, live: &Path, id: &str, text: &str) -> bool {
     is_id(id) && is_days && !is_theirs(live, id) && write_whole(&dir.join(format!("{id}.json")), text)
 }
 
+/// Every chat's days, as the text of their files: what every Mochi adds into the one history. More files than this is years of chats.
+pub fn all_days(dir: &Path) -> Vec<String> {
+    let Ok(entries) = fs::read_dir(dir) else { return Vec::new() };
+    entries
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().is_some_and(|x| x == "json"))
+        .take(20_000)
+        .filter_map(|p| fs::read_to_string(p).ok())
+        .filter(|t| t.len() <= MOST_DAYS_BYTES)
+        .collect()
+}
+
+// ---------- what every Mochi remembers together ----------
+
+/// The files any Mochi may write: what was last celebrated (so it is celebrated once), and the badges won.
+const SHARED: [&str; 2] = ["level.json", "badges.json"];
+
+pub fn read_shared(dir: &Path, name: &str) -> Option<String> {
+    if !SHARED.contains(&name) {
+        return None;
+    }
+    fs::read_to_string(dir.join(name)).ok().filter(|t| t.len() < 64_000)
+}
+
+/// Writes one of the shared files, whole. Only those, and only what reads as JSON: a file caught half-read is never written back shorter.
+pub fn write_shared(dir: &Path, name: &str, text: &str) -> bool {
+    SHARED.contains(&name) && text.len() < 64_000 && serde_json::from_str::<Value>(text).is_ok() && write_whole(&dir.join(name), text)
+}
+
 // ---------- the look, and the app's own beat ----------
 
 /// The person's look as the mod last wrote it, for this Mochi to wear the same; None before there is one.
@@ -296,6 +326,30 @@ pub mod tests {
         assert!(!write_days(&dir, &live, "codex-a", "{\"id\":\"codex-a\"}"));
         assert!(!write_days(&dir, &live, "codex-a", "not json"));
         assert_eq!(read_days(&dir, "codex-a").unwrap(), text);
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn every_chats_days_are_read_and_only_the_shared_files_are_written() {
+        let dir = scratch("shared");
+        let days = dir.join("days");
+        fs::create_dir_all(&days).unwrap();
+        fs::write(days.join("a.json"), "{\"id\":\"a\",\"days\":{}}").unwrap();
+        fs::write(days.join("b.json"), "{\"id\":\"b\",\"days\":{}}").unwrap();
+        fs::write(days.join("b.tmp"), "half").unwrap();
+        assert_eq!(all_days(&days).len(), 2);
+        assert!(all_days(&dir.join("missing")).is_empty());
+
+        assert!(read_shared(&dir, "level.json").is_none());
+        assert!(write_shared(&dir, "level.json", "{\"level\":3,\"items\":[]}"));
+        assert_eq!(read_shared(&dir, "level.json").unwrap(), "{\"level\":3,\"items\":[]}");
+        assert!(write_shared(&dir, "badges.json", "[\"owl\"]"));
+        // No other file, and nothing that is not JSON.
+        assert!(!write_shared(&dir, "look.json", "{}"));
+        assert!(!write_shared(&dir, "../level.json", "{}"));
+        assert!(!write_shared(&dir, "level.json", "{ half"));
+        assert!(read_shared(&dir, "app.json").is_none());
+        assert_eq!(read_shared(&dir, "level.json").unwrap(), "{\"level\":3,\"items\":[]}");
         fs::remove_dir_all(&dir).unwrap();
     }
 

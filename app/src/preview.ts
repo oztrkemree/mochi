@@ -16,6 +16,10 @@ document.body.style.cssText = 'background: linear-gradient(160deg, #20242c, #3b3
 
 const screen = { name: 'preview', scaleFactor: 1, position: { x: 0, y: 0 }, size: { width: innerWidth, height: innerHeight }, workArea: { position: { x: 0, y: 0 }, size: { width: innerWidth, height: innerHeight } } }
 const asked: { cmd: string; args: unknown }[] = []
+/** Some weeks of made-up work, so the level, the badges and the city have something to show. */
+const day = (back: number) => new Date(Date.now() - back * 86_400_000).toISOString().slice(0, 10)
+const allDays = [JSON.stringify({ id: 'demo', label: 'shop', days: Object.fromEntries(Array.from({ length: 26 }, (_, i) => [day(i), { turns: 4 + ((i * 7) % 11), tools: 30, edits: 6 + (i % 5) * 4, errors: 1, commits: i % 3 === 0 ? 0 : 1 + (i % 4), cost: 0, secs: 900, night: i % 6 === 0 ? 1 : 0, add: 120, del: 40, early: 0, langs: 3 }])) })]
+const shared: Record<string, string> = { 'level.json': JSON.stringify({ level: 1, items: [] }), 'badges.json': '[]' }
 
 mockWindows('main')
 mockIPC((cmd, args) => {
@@ -24,6 +28,13 @@ mockIPC((cmd, args) => {
   if (cmd === 'plugin:window|current_monitor') return screen
   if (cmd === 'plugin:window|scale_factor') return 1
   if (cmd === 'own_live') return []
+  if (cmd === 'read_all_days') return allDays
+  if (cmd === 'read_shared') return shared[(args as { name: string }).name] ?? null
+  if (cmd === 'write_shared') {
+    shared[(args as { name: string }).name] = (args as { text: string }).text
+    return true
+  }
+  if (cmd === 'line_state') return 'off'
   if (cmd === 'read_days') return null
   if (cmd === 'write_days' || cmd === 'answer') return true
   if (cmd === 'note') console.error('mochi:', args)

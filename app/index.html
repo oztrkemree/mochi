@@ -10,7 +10,7 @@
       html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
       body { font: 500 12.5px/1.4 ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; color: var(--fg); }
       /* The window keeps one size, with room over Mochi for what it says and shows: everything stands in its bottom right corner, and the empty room lets every press through. */
-      #root { position: absolute; right: 0; bottom: 0; width: 340px; height: calc(var(--size) * 1.2 + 340px); display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
+      #root { position: absolute; right: 0; bottom: 0; width: 340px; height: calc(var(--size) * 1.2 + 540px); display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
       #row { position: relative; display: flex; align-items: flex-end; }
       /* Mochi's own square is --size; the drawing has room around it for what it holds (see ROOM in world.ts). */
       #stage { width: calc(var(--size) * 1.48); height: calc(var(--size) * 1.2); }
@@ -62,7 +62,7 @@
 
       /* The list of agents, over Mochi. */
       /* Close over Mochi's head, into the empty room the drawing keeps above it. */
-      #list { display: none; position: relative; z-index: 2; width: 326px; box-sizing: border-box; overflow-x: hidden; max-height: 330px; overflow-y: auto; margin: 0 0 calc(var(--size) * -0.2) 0; padding: 6px; border-radius: 14px; }
+      #list { display: none; position: relative; z-index: 2; width: 326px; box-sizing: border-box; overflow-x: hidden; max-height: 530px; overflow-y: auto; scrollbar-width: none; margin: 0 0 calc(var(--size) * -0.2) 0; padding: 6px; border-radius: 14px; }
       #list.on { display: block; }
       #list h2 { margin: 4px 8px 6px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
       #list .empty { margin: 6px 8px 8px; color: var(--dim); }
@@ -72,6 +72,25 @@
       .agent .dot { width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); }
       .agent .name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .agent .line, .agent .sub { grid-column: 2; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* The pocket's two sides: what goes on now, and what the work has added up to. */
+      #tabs { display: flex; gap: 4px; margin: 0 0 6px; padding: 3px; border-radius: 10px; background: var(--line); }
+      #tabs button { flex: 1; height: 24px; border: 0; border-radius: 7px; background: none; color: var(--dim); font: inherit; font-weight: 650; cursor: pointer; }
+      #tabs button[aria-selected="true"] { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18); }
+      #tabs button:focus-visible { outline: 2px solid #E08A6A; outline-offset: 1px; }
+      .level { display: flex; align-items: baseline; justify-content: space-between; margin: 6px 6px 6px; }
+      .level b { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+      .level span { color: var(--dim); font-size: 11.5px; }
+      .bar { height: 7px; margin: 0 6px 10px; border-radius: 4px; background: var(--line); overflow: hidden; }
+      .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #E08A6A, #F2B84B); }
+      .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 2px 8px; }
+      .facts div { padding: 7px 8px; border-radius: 10px; background: var(--line); }
+      .facts b { display: block; font-size: 15px; font-weight: 700; }
+      .facts span { display: block; color: var(--dim); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .medals { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 4px 8px; }
+      .medals span { width: 24px; height: 24px; }
+      .city { margin: 0 2px 2px; border-radius: 10px; overflow: hidden; }
+      .city svg { display: block; width: 100%; height: auto; }
+
       /* The limits, at the top of the list: each a ring with its number in it, what it is, and when it comes back. */
       #use { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 2px 2px 8px; }
       #use:empty { display: none; }

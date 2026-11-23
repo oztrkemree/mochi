@@ -3,8 +3,10 @@ import { listen } from '@tauri-apps/api/event'
 import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import type { DayRec, Mood } from '../../types'
-import { dayKey } from '../../hooks/facts'
+import type { Badge, DayRec, History, Mood } from '../../types'
+import { badgeName, badgeSvg } from '../../hooks/badges'
+import { citySvg } from '../../hooks/city'
+import { dayKey, local } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
 import { type Look, addDay, lookFrom } from '../../hooks/level'
 import { PEER_INK, appLink, nameOf } from '../../hooks/live'
@@ -12,6 +14,7 @@ import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
 import { clip } from '../../hooks/sound'
 import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, settles, stalledOf, tallyOf } from './engine'
+import { type Growth, badgesNews, growthOf, historyOf, levelNews } from './growth'
 import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, areaOf, fit } from './place'
@@ -156,7 +159,7 @@ function hot() {
 // ---------- what Mochi says ----------
 
 /** The dot before what Mochi says, in the ink the band gives that news: waiting, done, failed; grey for an answer to a press. */
-const NEWS_INK: Record<News['kind'], string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error, limit: '#F2B84B', back: '#4CC38A' }
+const NEWS_INK: Record<News['kind'], string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error, limit: '#F2B84B', back: '#4CC38A', level: '#B794F6' }
 const QUIET_INK = PEER_INK.idle
 
 /** News waiting its turn, the most pressing first. */
@@ -166,7 +169,7 @@ let saying: News | null = null
 let hushTimer = 0
 
 /** The sound that goes with each kind of news: a bell for a chat that waits or finished, a sigh for one that failed, a ding-dong for a limit, a flourish when it is back. */
-const NEWS_SOUND: Record<News['kind'], SoundName> = { asking: 'ding', done: 'ding', failed: 'oops', limit: 'alarm', back: 'party' }
+const NEWS_SOUND: Record<News['kind'], SoundName> = { asking: 'ding', done: 'ding', failed: 'oops', limit: 'alarm', back: 'party', level: 'party' }
 
 function chime(name: SoundName) {
   if (!settings.sound) return
@@ -245,7 +248,7 @@ function speak(text: string, ms: number, ink: string, news: News | null, extra: 
   if (news) {
     hop()
     chime(NEWS_SOUND[news.kind])
-    if (news.kind === 'back') hold('party', 4000)
+    if (news.kind === 'back' || news.kind === 'level') hold('party', 4000)
   }
   saying = news
   const drawnAt = Date.now()
@@ -351,6 +354,78 @@ say.addEventListener('click', () => {
 
 // ---------- the agents ----------
 
+// ---------- what the work has added up to ----------
+
+/** The one history, counted from every chat's days, and the badges won; null until first counted. */
+let history: History | null = null
+let badges: Badge[] = []
+let countedAt = 0
+
+/**
+ * Counts the history again from every chat's days, and keeps what it shows of the level and the badges.
+ * A level or a badge that is new since it was last kept is said, once, by whichever Mochi saw it first.
+ */
+async function count() {
+  const now = Date.now()
+  countedAt = now
+  history = historyOf(await invoke<string[]>('read_all_days'), dayKey(now, tz()))
+  const level = levelNews(await invoke<string | null>('read_shared', { name: 'level.json' }), history)
+  if (level.keep) await invoke('write_shared', { name: 'level.json', text: level.keep })
+  const won = badgesNews(await invoke<string | null>('read_shared', { name: 'badges.json' }), history)
+  if (won.keep) await invoke('write_shared', { name: 'badges.json', text: won.keep })
+  if (won.badges) badges = won.badges
+  const lines = [level.line, won.line].filter((l): l is string => l !== null)
+  if (lines.length > 0 && view) hear([{ id: 'level', kind: 'level', line: lines.join(' · '), link: '' }], view.peers)
+  if (list.classList.contains('on')) drawAgents()
+}
+
+const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] => {
+  const node = document.createElement(tag)
+  if (className) node.className = className
+  if (text) node.textContent = text
+  return node
+}
+
+/** The pocket's Mochi side: the level and how far to the next, the streak and today, the badges, and the last weeks as a city. */
+function drawGrowth(into: HTMLElement) {
+  if (!history) return
+  const g: Growth = growthOf(history)
+  const d = t().detail
+  const level = el('div', 'level')
+  level.append(el('b', '', d.levelN(g.level)), el('span', '', d.toNext(String(g.toNext))))
+  const bar = el('div', 'bar')
+  const fill = el('i')
+  fill.style.width = `${Math.round((g.into / Math.max(1, g.span)) * 100)}%`
+  bar.append(fill)
+  const facts = el('div', 'facts')
+  for (const [value, label] of [[g.streak, d.streak], [g.today, d.today], [g.activeDays, t().share.activeDays]] as const) {
+    const fact = el('div')
+    fact.append(el('b', '', String(value)), el('span', '', label))
+    facts.append(fact)
+  }
+  into.append(level, bar, facts)
+  if (g.turns === 0) return void into.append(el('p', 'empty', words().noWork))
+  if (badges.length > 0) {
+    const medals = el('div', 'medals')
+    for (const b of badges) {
+      const medal = el('span')
+      // The medal is the mod's own drawing.
+      medal.innerHTML = badgeSvg(b, true)
+      medal.title = badgeName(b)
+      medals.append(medal)
+    }
+    into.append(medals)
+  }
+  const now = Date.now()
+  const city = el('div', 'city')
+  // The city is the mod's own drawing too, held still like Mochi: whatever twinkles in it would redraw the window for as long as the pocket is open.
+  city.innerHTML = stillOf(citySvg(history.days, dayKey(now, tz()), local(now, tz()).hour, 314).svg)
+  into.append(city)
+}
+
+/** Which side of the pocket is open. */
+let side: 'now' | 'mochi' = 'now'
+
 /** Fills the list of agents from what was last read, and the count at Mochi's feet. */
 function drawAgents() {
   const rows = view ? rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000) : []
@@ -367,6 +442,25 @@ function drawAgents() {
   agentsButton.setAttribute('aria-label', `${w.agents} · ${rows.length}`)
   if (!list.classList.contains('on')) return
   list.replaceChildren()
+  const tabs = el('div')
+  tabs.id = 'tabs'
+  tabs.setAttribute('role', 'tablist')
+  for (const name of ['now', 'mochi'] as const) {
+    const tab = el('button', '', t().pane.tabs[name])
+    tab.type = 'button'
+    tab.setAttribute('role', 'tab')
+    tab.setAttribute('aria-selected', String(side === name))
+    tab.addEventListener('click', () => {
+      side = name
+      // Counted again when it is looked at, if that was a while ago: other chats work too.
+      if (name === 'mochi' && Date.now() - countedAt > 5 * 60_000) void count().catch(note)
+      drawAgents()
+      hot()
+    })
+    tabs.append(tab)
+  }
+  list.append(tabs)
+  if (side === 'mochi') return drawGrowth(list)
   const use = document.createElement('div')
   use.id = 'use'
   for (const u of usage) {
@@ -482,6 +576,8 @@ function keepDays(id: string) {
     let text = await invoke<string | null>('read_days', { id })
     for (const [day, rec] of Object.entries(mine.days)) text = dayFile(text, id, mine.label, mine.isLabelFromPrompt, day, rec)
     if (text !== null) await invoke('write_days', { id, text })
+    // What was just earned may be a level or a badge.
+    await count()
   }).catch(note)
 }
 
@@ -699,6 +795,7 @@ async function start() {
       // Not kept: the place holds until the app quits.
     }
   })
+  void count().catch(note)
   // Asked once, the first time Mochi is up: answering for a chat from here is the person's to choose.
   if (localStorage.getItem('asked-approve') === null) {
     const w = words()

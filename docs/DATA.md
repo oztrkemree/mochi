@@ -21,8 +21,9 @@ This page is the contract between the two. Change a file's shape here first.
 |---|---|---|
 | `live/<id>.json` | the chat's Mochi: on a change (the mod at most every 1.5 s) and again every 15 s | Where the chat stands now. See below. |
 | `days/<id>.json` | the chat's Mochi, when a turn ends | `{id, label, isLabelFromPrompt, days: {"YYYY-MM-DD": DayRec}}` |
-| `level.json` | any Mochi, when the level or the wardrobe grew | `{level, items}`: what was last celebrated, so it is celebrated once |
-| `badges.json` | any Mochi, when a badge is won | the badges, oldest first |
+| `level.json` | any Mochi (the mod, or the app), when the level or the wardrobe grew | `{level, items}`: what was last celebrated, so it is celebrated once, by whichever Mochi saw it first |
+| `badges.json` | any Mochi (the mod, or the app), when a badge is won | the badges, oldest first; added to, never taken from |
+| `statusline.json` | the app, when the person makes Mochi Claude Code's status line | the `statusLine` setting they had before, which Mochi's goes on showing and gives back |
 | `look.json` | the mod, when the look changes | `{v: 1, pick, items, tz, birthday, firstDay}`: what Mochi wears |
 | `usage.json` | the mod, every 5 minutes | `[{kind, at, p}]`: readings of the usage windows |
 | `reset-<kind>.json` | the first Mochi to see a usage window reset | `{at, id}`: who says so, so it is said once |
@@ -57,6 +58,8 @@ One chat as its Mochi last saw it. A file not written for 45 seconds is a closed
 One day of work in one chat: `turns`, `tools`, `edits`, `errors`, `commits`, `cost`, `secs`, `night`, `add`, `del`, `early`, `langs`. All are sums except `langs`, a set of bits. Every Mochi adds every chat's days into one history; experience is `turns × 10 + edits × 2 + commits × 25 + active days × 30`.
 
 The app counts a chat it follows from the agent's hook calls, the same way the mod counts its own, so work in Codex earns what work in Claude Code does. From hooks alone it cannot know `cost`, `add`, `del` or `langs`; they stay 0 for now.
+
+With Mochi as Claude Code's status line (`mochi-desktop statusline`, set from the app's Settings), a chat the app follows also says how full its context is, what it cost, and where the usage limits stand: `context`, `cost`, `windows` and `limit` in its `live` file, as the mod writes them for its own. The call is left in the inbox as an event named `StatusLine`, with those numbers and nothing else.
 
 ### `app.json` and the inbox
 

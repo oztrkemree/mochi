@@ -11,7 +11,7 @@ use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 
-pub use agents::hook;
+pub use agents::{hook, statusline};
 use store::{data_dir, now_ms};
 
 /// How often the pointer is looked at, for presses to pass through everything but Mochi.
@@ -233,6 +233,36 @@ fn set_agent(agent: String, on: bool) -> bool {
     }
 }
 
+/// Whether Mochi is Claude Code's status line, which is where the limits come from without the mod.
+#[tauri::command]
+fn line_state() -> String {
+    agents::CLAUDE.config_path().map_or("broken", |path| agents::line_state(&path)).into()
+}
+
+#[tauri::command]
+fn set_line(on: bool) -> bool {
+    match (agents::CLAUDE.config_path(), data_dir(), std::env::current_exe()) {
+        (Some(settings), Some(dir), Ok(exe)) => agents::set_line(&settings, &dir.join("statusline.json"), &exe, on),
+        _ => false,
+    }
+}
+
+/// Every chat's days, for the one history the level is counted from.
+#[tauri::command]
+fn read_all_days() -> Vec<String> {
+    data_dir().map(|d| store::all_days(&d.join("days"))).unwrap_or_default()
+}
+
+#[tauri::command]
+fn read_shared(name: String) -> Option<String> {
+    store::read_shared(&data_dir()?, &name)
+}
+
+#[tauri::command]
+fn write_shared(name: String, text: String) -> bool {
+    data_dir().is_some_and(|d| store::write_shared(&d, &name, &text))
+}
+
 /// The settings window, opened or brought to the front.
 fn open_settings_window(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("settings") {
@@ -298,7 +328,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, answer, gaze, set_hot, own_live, read_days, write_days, agent_state, set_agent, open_settings, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, agent_state, set_agent, line_state, set_line, open_settings, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]

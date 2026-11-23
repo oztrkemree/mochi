@@ -25,6 +25,10 @@ fn kept(event: &Value) -> Value {
             out.insert(key.into(), v);
         }
     }
+    // A status line call: how full the context is, what the chat cost, and the usage limits, as numbers only.
+    if event["hook_event_name"] == "StatusLine" {
+        out.insert("status".into(), status_of(event));
+    }
     // Of what a tool is given, only what tells a test or a commit, and what a person must see to answer for it: the command, or the file.
     let mut input = serde_json::Map::new();
     if let Some(command) = event["tool_input"]["command"].as_str() {
@@ -45,6 +49,30 @@ fn kept(event: &Value) -> Value {
         out.insert("tool_input".into(), Value::Object(input));
     }
     Value::Object(out)
+}
+
+/// What Claude Code tells a status line of the chat, as the mod writes it of its own chats: the context used in percent, the cost in dollars,
+/// and each usage window with percent used and when it resets (epoch ms; Claude Code gives seconds).
+fn status_of(event: &Value) -> Value {
+    let mut status = serde_json::Map::new();
+    if let Some(p) = event["context_window"]["used_percentage"].as_f64() {
+        status.insert("context".into(), json!(p.clamp(0.0, 100.0).round() as u64));
+    }
+    if let Some(cost) = event["cost"]["total_cost_usd"].as_f64() {
+        status.insert("cost".into(), json!((cost.max(0.0) * 100.0).round() / 100.0));
+    }
+    let windows: Vec<Value> = ["five_hour", "seven_day"]
+        .into_iter()
+        .filter_map(|kind| {
+            let w = &event["rate_limits"][kind];
+            let p = w["used_percentage"].as_f64()?;
+            Some(json!({ "kind": kind, "p": p.clamp(0.0, 100.0).round() as u64, "resetsAt": (w["resets_at"].as_f64().unwrap_or(0.0).max(0.0) * 1000.0) as u64 }))
+        })
+        .collect();
+    if !windows.is_empty() {
+        status.insert("windows".into(), json!(windows));
+    }
+    Value::Object(status)
 }
 
 /// As much of a shell command as is kept.
@@ -160,6 +188,119 @@ pub fn taken(dir: &Path) -> Vec<String> {
             text
         })
         .collect()
+}
+
+// ---------- Claude Code's status line, for the limits without the mod ----------
+
+/// How Mochi's own status line is told from the person's: it runs the app's `statusline`.
+const OUR_LINE: &str = " statusline";
+
+fn line_command(exe: &Path) -> String {
+    format!("\"{}\"{OUR_LINE}", exe.display())
+}
+
+fn is_our_line(config: &Value) -> bool {
+    config["statusLine"]["command"].as_str().is_some_and(|c| c.ends_with(OUR_LINE))
+}
+
+/// Claude Code's settings with Mochi as the status line, and the status line the person had, to keep and to go on showing.
+fn line_connected(mut config: Value, command: &str) -> Option<(Value, Option<Value>)> {
+    let root = config.as_object_mut()?;
+    let theirs = root.get("statusLine").filter(|line| !line["command"].as_str().is_some_and(|c| c.ends_with(OUR_LINE))).cloned();
+    let mut ours = json!({ "type": "command", "command": command });
+    // The room the person gave their own line is the room it still gets.
+    if let Some(padding) = theirs.as_ref().and_then(|line| line.get("padding")) {
+        ours["padding"] = padding.clone();
+    }
+    root.insert("statusLine".into(), ours);
+    Some((config, theirs))
+}
+
+/// Claude Code's settings with the person's own status line back, or none if they had none.
+fn line_disconnected(mut config: Value, theirs: Option<Value>) -> Option<Value> {
+    let root = config.as_object_mut()?;
+    if root.get("statusLine").is_some_and(|line| line["command"].as_str().is_some_and(|c| c.ends_with(OUR_LINE))) {
+        match theirs {
+            Some(line) => drop(root.insert("statusLine".into(), line)),
+            None => drop(root.shift_remove("statusLine")),
+        }
+    }
+    Some(config)
+}
+
+/// Whether Mochi is Claude Code's status line: "on", "off", or "broken" for settings this cannot read.
+pub fn line_state(settings: &Path) -> &'static str {
+    match config_at(settings) {
+        None => "broken",
+        Some(config) if is_our_line(&config) => "on",
+        Some(_) => "off",
+    }
+}
+
+/// Makes Mochi Claude Code's status line, or gives the person's own back. Their line is kept beside Mochi's files (`statusline.json`)
+/// and goes on being shown: Mochi's runs it and prints what it prints. The settings as they were are kept once, as for the hooks.
+pub fn set_line(settings: &Path, kept: &Path, exe: &Path, on: bool) -> bool {
+    let Some(config) = config_at(settings) else { return false };
+    let next = if on {
+        if is_our_line(&config) {
+            return true;
+        }
+        let Some((next, theirs)) = line_connected(config, &line_command(exe)) else { return false };
+        match theirs {
+            Some(line) if !write_whole(kept, &line.to_string()) => return false,
+            Some(_) => {}
+            None => drop(fs::remove_file(kept)),
+        }
+        next
+    } else {
+        let theirs = fs::read_to_string(kept).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok()).filter(Value::is_object);
+        let Some(next) = line_disconnected(config, theirs) else { return false };
+        next
+    };
+    let written = write_config(settings, &next);
+    if written && !on {
+        let _ = fs::remove_file(kept);
+    }
+    written
+}
+
+/// The `statusline` command, which Claude Code runs after each turn with what it knows of the chat. It tells the app (the limits,
+/// the context, the cost), then shows the person's own status line if they had one. Without one it prints nothing: the row stays empty.
+pub fn statusline() {
+    let mut input = String::new();
+    if std::io::stdin().take(4_000_000).read_to_string(&mut input).is_err() {
+        return;
+    }
+    let Some(dir) = data_dir() else { return };
+    if is_running(&dir) {
+        if let Ok(mut event) = serde_json::from_str::<Value>(&input) {
+            if event.is_object() {
+                event["hook_event_name"] = json!("StatusLine");
+                // The chat's name, under the name the hooks give it.
+                if let Some(name) = event["session_name"].as_str().map(str::to_owned) {
+                    event["session_title"] = json!(name);
+                }
+                drop_in(&dir.join("inbox"), "claude", &event.to_string(), now_ms(), std::process::id(), 0);
+            }
+        }
+    }
+    let theirs = fs::read_to_string(dir.join("statusline.json")).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok());
+    if let Some(command) = theirs.as_ref().and_then(|line| line["command"].as_str()).filter(|c| !c.ends_with(OUR_LINE)) {
+        show_their_line(command, &input);
+    }
+}
+
+/// Runs the person's own status line as Claude Code would, with the same input, and lets it print for itself.
+fn show_their_line(command: &str, input: &str) {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+    let mut shell = if cfg!(windows) { Command::new("cmd") } else { Command::new("sh") };
+    shell.arg(if cfg!(windows) { "/C" } else { "-c" }).arg(command).stdin(Stdio::piped());
+    let Ok(mut child) = shell.spawn() else { return };
+    if let Some(mut stdin) = child.stdin.take() {
+        let _ = stdin.write_all(input.as_bytes());
+    }
+    let _ = child.wait();
 }
 
 // ---------- an agent's own hooks file ----------
@@ -278,12 +419,17 @@ impl Agent {
     pub fn write(&self, path: &Path, exe: &Path, on: bool) -> bool {
         let Some(config) = config_at(path) else { return false };
         let Some(next) = (if on { self.connected(config, &self.command(exe)) } else { self.disconnected(config) }) else { return false };
-        let backup = PathBuf::from(format!("{}.mochi-backup", path.display()));
-        if path.exists() && !backup.exists() && fs::copy(path, &backup).is_err() {
-            return false;
-        }
-        serde_json::to_string_pretty(&next).is_ok_and(|text| write_theirs(path, &(text + "\n")))
+        write_config(path, &next)
     }
+}
+
+/// Writes an agent's file with Mochi's change in it. The file as it was before Mochi first touched it is kept once beside it.
+fn write_config(path: &Path, next: &Value) -> bool {
+    let backup = PathBuf::from(format!("{}.mochi-backup", path.display()));
+    if path.exists() && !backup.exists() && fs::copy(path, &backup).is_err() {
+        return false;
+    }
+    serde_json::to_string_pretty(next).is_ok_and(|text| write_theirs(path, &(text + "\n")))
 }
 
 /// An agent's file as it stands: an empty config when there is none, None when it cannot be read as one.
@@ -485,6 +631,58 @@ mod tests {
         fs::write(&other, "{\"model\":\"opus\"}").unwrap();
         CLAUDE.refresh(&other, Path::new("/Apps/Mochi"));
         assert_eq!(fs::read_to_string(&other).unwrap(), "{\"model\":\"opus\"}");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_status_line_call_keeps_the_numbers_of_the_chat_and_nothing_else() {
+        let call = json!({
+            "hook_event_name": "StatusLine", "session_id": "s1", "session_name": "Fix the cart", "transcript_path": "/secret",
+            "context_window": { "used_percentage": 41.6 }, "cost": { "total_cost_usd": 1.2345 },
+            "rate_limits": { "five_hour": { "used_percentage": 23.5, "resets_at": 1738425600 }, "seven_day": { "used_percentage": 141.2, "resets_at": 1738857600 } },
+        });
+        let k = kept(&call);
+        assert_eq!(k["status"], json!({ "context": 42, "cost": 1.23, "windows": [
+            { "kind": "five_hour", "p": 24, "resetsAt": 1_738_425_600_000u64 },
+            { "kind": "seven_day", "p": 100, "resetsAt": 1_738_857_600_000u64 },
+        ] }));
+        assert!(k.get("transcript_path").is_none());
+        // Before the first answer Claude Code knows no limits: none are made up.
+        assert_eq!(kept(&json!({ "hook_event_name": "StatusLine", "session_id": "s1" }))["status"], json!({}));
+        assert!(kept(&json!({ "hook_event_name": "Stop", "rate_limits": {} })).get("status").is_none());
+    }
+
+    #[test]
+    fn mochi_takes_the_status_line_and_gives_the_persons_own_back_as_it_was() {
+        let dir = scratch("line");
+        let (settings, kept_line, exe) = (dir.join("settings.json"), dir.join("statusline.json"), Path::new("/Apps/Mochi Buddy"));
+        let theirs = json!({ "model": "opus", "statusLine": { "type": "command", "command": "~/.claude/line.sh", "padding": 2 }, "hooks": {} });
+        fs::write(&settings, serde_json::to_string_pretty(&theirs).unwrap()).unwrap();
+        assert_eq!(line_state(&settings), "off");
+        assert!(set_line(&settings, &kept_line, exe, true));
+        assert_eq!(line_state(&settings), "on");
+        let now = config_at(&settings).unwrap();
+        assert_eq!(now["statusLine"], json!({ "type": "command", "command": "\"/Apps/Mochi Buddy\" statusline", "padding": 2 }));
+        assert_eq!(now["model"], "opus");
+        // Their line is kept to go on being shown, and connecting twice keeps it, not Mochi's own.
+        assert!(set_line(&settings, &kept_line, exe, true));
+        assert_eq!(serde_json::from_str::<Value>(&fs::read_to_string(&kept_line).unwrap()).unwrap(), theirs["statusLine"]);
+        assert!(set_line(&settings, &kept_line, exe, false));
+        assert_eq!(config_at(&settings).unwrap(), theirs);
+        assert!(!kept_line.exists());
+        assert!(dir.join("settings.json.mochi-backup").exists());
+
+        // Someone with no status line of their own has none again afterwards.
+        fs::write(&settings, "{\"model\":\"opus\"}").unwrap();
+        assert!(set_line(&settings, &kept_line, exe, true));
+        assert!(!kept_line.exists());
+        assert!(set_line(&settings, &kept_line, exe, false));
+        assert_eq!(config_at(&settings).unwrap(), json!({ "model": "opus" }));
+        // Settings that cannot be read are left alone.
+        fs::write(&settings, "{ broken").unwrap();
+        assert_eq!(line_state(&settings), "broken");
+        assert!(!set_line(&settings, &kept_line, exe, true));
+        assert_eq!(fs::read_to_string(&settings).unwrap(), "{ broken");
         fs::remove_dir_all(&dir).unwrap();
     }
 

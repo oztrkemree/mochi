@@ -67,6 +67,21 @@ async function drawAgent(agent: (typeof AGENTS)[number]) {
   }
 }
 
+/** Whether Mochi is Claude Code's status line, where the limits come from without the mod. */
+async function drawLine() {
+  const w = words()
+  const state = await invoke<string>('line_state').catch(() => 'broken')
+  $('lineState').textContent = state === 'on' ? w.lineOn : state === 'off' ? w.lineOff : w.agentBroken
+  const button = $<HTMLButtonElement>('line')
+  button.textContent = state === 'on' ? w.disconnect : w.connect
+  button.disabled = state === 'broken'
+  button.onclick = async () => {
+    button.disabled = true
+    await invoke('set_line', { on: state !== 'on' }).catch(() => undefined)
+    await drawLine()
+  }
+}
+
 function draw() {
   setLang(settings.lang === 'auto' ? (pickLang(navigator.language) ?? 'en') : settings.lang)
   const w = words()
@@ -74,7 +89,7 @@ function draw() {
   const text: Record<string, string> = {
     title: w.settings, 'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-idle': w.hideIdle,
     'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint,
-    'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex,
+    'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex, 'l-line': w.line,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
   }
   for (const [id, value] of Object.entries(text)) $(id).textContent = value
@@ -95,6 +110,7 @@ function draw() {
 
   $('resetPlace').onclick = () => void emit('reset-place')
   for (const agent of AGENTS) void drawAgent(agent)
+  void drawLine()
 }
 
 async function start() {

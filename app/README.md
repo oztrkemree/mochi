@@ -8,7 +8,9 @@ One Mochi on your screen, for every agent you run. It stands in a corner above y
 
 News of several chats comes one at a time, the most pressing first. Press the bubble to open its chat in the Claude app; press Mochi for the list of chats, or to hear how things stand. Drag it anywhere: it stays where you leave it. Everything around Mochi lets your presses through to the window behind. With no chat open it sleeps.
 
-It shows your usage limits too: the session and the week as two small rings by its feet, and in full at the top of the list. It says so when one passes four fifths, when one is nearly gone and when it is back, and it is tired near the end of one. For now the limits come from the mod's chats.
+It shows your usage limits too: the session and the week as two small rings by its feet, and in full at the top of the list. It says so when one passes four fifths, when one is nearly gone and when it is back, and it is tired near the end of one. With the mod the limits come from its chats; without it, **Settings → Limits without the mod → Connect** makes Mochi Claude Code's status line, which is where Claude Code says them. Your own status line, if you have one, goes on showing: Mochi's runs it and prints what it prints, and Disconnect gives it back as it was.
+
+Press Mochi for its pocket. **Now** is the limits and the chats. **Mochi** is what the work has added up to: the level and how far to the next, your streak, your badges, and the last weeks as a city. The level is counted from every chat's days, so it is the same level the mod shows, and a new level or badge is said once.
 
 Its eyes follow your pointer when you come near, two quick presses are a pat, and in Settings you can give its news a soft sound.
 

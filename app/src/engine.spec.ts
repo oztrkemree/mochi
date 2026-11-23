@@ -259,3 +259,22 @@ test('a waiting request is let go only by what means it was answered elsewhere, 
   // The call went on or failed, the turn ended, the person said something new: it was answered.
   for (const name of ['PostToolUse', 'PostToolUseFailure', 'Stop', 'StopFailure', 'UserPromptSubmit', 'SessionEnd']) expect(settles(hook(NOW, name, {}, 'claude'))).toBe(true)
 })
+
+// ---------- what Claude Code's status line says of a chat ----------
+
+test('a status line call says how full the chat is, what it cost and where the limits stand, and changes nothing of what the chat does', () => {
+  const status = { context: 42, cost: 1.23, windows: [{ kind: 'five_hour', p: 24, resetsAt: NOW + 3 * 3_600_000 }, { kind: 'seven_day', p: 100, resetsAt: NOW + 50 * 3_600_000 }] }
+  let s = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude'))
+  s = noted(s, hook(NOW + SEC, 'StatusLine', { status, session_title: 'Fix the cart' }, 'claude'))
+  const chat = agentPeers(s, NOW + SEC)[0]
+  expect(chat).toMatchObject({ state: 'busy', activity: 'thinking', since: NOW, title: 'Fix the cart', context: 42, cost: 1.23, windows: status.windows })
+  // A window used up is the limit the chat has hit, as the mod writes it.
+  expect(chat.limit).toEqual({ kind: 'seven_day', resetsAt: NOW + 50 * 3_600_000 })
+  // It is no work: nothing is counted for it.
+  expect(tallyOf(hook(NOW + SEC, 'StatusLine', { status }, 'claude'), s.get('s1'), 0)).toBeNull()
+  // What it writes reads back the way the mod reads a chat's file.
+  expect(peerOf(JSON.parse(JSON.stringify(chat)), NOW + SEC)).toMatchObject({ context: 42, cost: 1.23, windows: status.windows })
+  // Numbers that are not numbers are left out, not passed on.
+  s = noted(s, hook(NOW + 2 * SEC, 'StatusLine', { status: { context: 'full', windows: [{ kind: 'five_hour', p: 'lots' }, 7] } }, 'claude'))
+  expect(agentPeers(s, NOW + 2 * SEC)[0]).toMatchObject({ context: 42, windows: [] })
+})
