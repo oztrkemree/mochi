@@ -41,6 +41,24 @@ fn kept(event: &Value, most_command: usize) -> Value {
     if let Some(path) = short(&event["tool_input"]["file_path"], 300) {
         input.insert("file_path".into(), path);
     }
+    // A plan: the to-do list's counts and the step under way, never the list; a task's new state, and the words of one under way.
+    match event["tool_name"].as_str() {
+        Some("TodoWrite") => {
+            let todos = event["tool_input"]["todos"].as_array().cloned().unwrap_or_default();
+            let under_way = todos.iter().find(|t| t["status"] == "in_progress");
+            let now = under_way.and_then(|t| short(&t["activeForm"], 60).or_else(|| short(&t["content"], 60))).unwrap_or_else(|| json!(""));
+            input.insert("plan".into(), json!({ "total": todos.len(), "done": todos.iter().filter(|t| t["status"] == "completed").count(), "now": now }));
+        }
+        Some("TaskCreate" | "TaskUpdate") => {
+            if let Some(status) = short(&event["tool_input"]["status"], 20) {
+                input.insert("status".into(), status);
+            }
+            if let Some(now) = short(&event["tool_input"]["activeForm"], 60).or_else(|| short(&event["tool_input"]["subject"], 60)) {
+                input.insert("now".into(), now);
+            }
+        }
+        _ => {}
+    }
     // Said when a command came with more than itself (the sandbox off, say): what is not shown cannot be answered for.
     if event["tool_input"].as_object().is_some_and(|given| given.contains_key("command") && given.keys().any(|k| !PLAIN_WITH_A_COMMAND.contains(&k.as_str()))) {
         input.insert("odd".into(), json!(true));
@@ -595,6 +613,18 @@ mod tests {
 
     fn kept_short(event: &Value) -> Value {
         kept(event, MOST_COMMAND)
+    }
+
+    #[test]
+    fn a_plan_is_kept_as_its_counts_and_the_step_under_way() {
+        let todos = json!({ "tool_name": "TodoWrite", "tool_input": { "todos": [
+            { "content": "Read the cart", "status": "completed", "activeForm": "Reading the cart" },
+            { "content": "Fix the total", "status": "in_progress", "activeForm": "Fixing the total" },
+            { "content": "Ship it", "status": "pending", "activeForm": "Shipping" },
+        ] } });
+        assert_eq!(kept_short(&todos)["tool_input"], json!({ "plan": { "total": 3, "done": 1, "now": "Fixing the total" } }));
+        let task = json!({ "tool_name": "TaskUpdate", "tool_input": { "taskId": "7", "status": "in_progress", "activeForm": "Fixing the total", "description": "the long story" } });
+        assert_eq!(kept_short(&task)["tool_input"], json!({ "status": "in_progress", "now": "Fixing the total" }));
     }
 
     #[test]

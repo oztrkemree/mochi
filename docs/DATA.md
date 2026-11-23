@@ -51,6 +51,7 @@ One chat as its Mochi last saw it. A file not written for 45 seconds is a closed
 | `waitingFor` | what an asking chat waits for: `permission`, `question`, `plan` |
 | `lastTurn` | `{at, reason, seconds}` of the last finished turn |
 | `agents` | the chat's subagents running now, at most 8 |
+| `plan` | `{total, done, now}`: how far the chat's plan (its to-do list or tasks) is, and the step under way in 60 characters; absent where the writer does not know it. Written by the app; the version stays 2, so an older mod still reads the rest |
 | `context`, `cost`, `limit`, `windows` | context use, cost, and the usage windows, where the writer knows them |
 | `folder`, `branch`, `isWorktree`, `app` | where the chat works, and its session in the Claude app if a link can open it |
 | `by` | `"app"` in a file the desktop app wrote; absent in the mod's |

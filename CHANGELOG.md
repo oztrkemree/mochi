@@ -6,6 +6,7 @@
 
 - What Mochi wears is chosen in either Mochi: a choice made in the mod goes to `~/.claude/mochi/prefs.json`, and a newer one made in the desktop app is worn in the band too.
 - While the desktop app's Mochi is out, a new level or badge is claimed before it is said (`said-level.json`, `said-badges.json`), so one Mochi says it. With the app hidden or closed nothing changes.
+- `/mochi chats` says how far the plan is of a chat the desktop app follows (`2/4`).
 - `/mochi reset` keeps `statusline.json`, the status line you had before the app's.
 
 ## 0.9.0

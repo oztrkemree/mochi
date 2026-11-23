@@ -630,6 +630,7 @@ function drawAgents() {
     // Where a chat a press cannot open runs, beside how it stands.
     line.textContent = row.where === 'app' ? row.line : `${row.line} · ${w.where[row.where]}`
     item.append(dot, name, line)
+    if (row.plan) item.append(el('span', 'plan', row.plan))
     for (const a of row.agents) {
       const sub = document.createElement('span')
       sub.className = 'sub'

@@ -126,6 +126,9 @@ test('the board puts this chat first, then the waiting ones, the longest wait fi
   const old = peerOf({ id: 'x', label: 'old', state: 'idle', line: 'ready', since: 0, at: NOW }, NOW)
   expect(old).toEqual({ id: 'x', label: 'old', state: 'idle', line: 'ready', since: 0, at: NOW, folder: '', branch: '', isWorktree: false, stateAt: 0, title: '' })
   expect(boardLines(undefined, [old!], NOW)).toEqual(['Chats: 1 open', '  ○ old · idle'])
+  // A chat the desktop app follows says how far its plan is.
+  const planned = peerOf({ id: 'p', label: 'codex', state: 'idle', line: '', since: 0, at: NOW, v: 2, plan: { total: 4, done: 2, now: 'Fixing' } }, NOW)
+  expect(boardLines(undefined, [planned!], NOW)).toEqual(['Chats: 1 open', '  ○ codex · idle · 2/4'])
 })
 
 test('the details pane draws the board as a card, and as lines in the terminal', async () => {

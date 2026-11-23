@@ -1,4 +1,4 @@
-import type { Activity, Crew, Mood, Peer } from '../types'
+import type { Activity, Crew, Mood, Peer, Plan } from '../types'
 import { t } from './i18n'
 import { duration } from './react'
 import { clip, cols } from './text'
@@ -87,6 +87,15 @@ function crewOf(value: unknown): Crew | null {
   return { id: v.id.slice(0, 80), type: oneLine(v.type, 40), task: oneLine(v.task, 40), activity: isActivity(v.activity) ? v.activity : 'thinking', since: typeof v.since === 'number' ? v.since : 0 }
 }
 
+/** A plan as a peer file gives it, if it is one with steps: counts whole, done no more than all. */
+function planOf(value: unknown): Plan | null {
+  if (typeof value !== 'object' || value === null) return null
+  const v = value as { total?: unknown; done?: unknown; now?: unknown }
+  if (typeof v.total !== 'number' || typeof v.done !== 'number' || v.total < 1) return null
+  const total = Math.min(999, Math.round(v.total))
+  return { total, done: Math.min(total, Math.max(0, Math.round(v.done))), now: oneLine(v.now, 60) }
+}
+
 type UsageWindow = NonNullable<Peer['windows']>[number]
 
 /** A usage window as a peer file lists it, if it is one: its percent whole and within 0-100. */
@@ -120,6 +129,7 @@ export function peerOf(value: unknown, now: number): Peer | null {
       ? { at: turn.at, reason: oneLine(turn.reason, 20), seconds: turn.seconds }
       : null,
     agents: Array.isArray(v.agents) ? v.agents.map(crewOf).filter((c): c is Crew => c !== null).slice(0, CREW_MAX) : [],
+    plan: planOf(v.plan),
     context: typeof v.context === 'number' && v.context >= 0 ? Math.min(100, v.context) : -1,
     cost: typeof v.cost === 'number' && v.cost >= 0 ? v.cost : 0,
     limit: typeof limit === 'object' && limit !== null && typeof limit.kind === 'string' && typeof limit.resetsAt === 'number' ? { kind: oneLine(limit.kind, 20), resetsAt: limit.resetsAt } : null,

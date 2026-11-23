@@ -72,6 +72,8 @@ function parts(p: Peer, isMe: boolean, now: number): string[] {
     whereOf(p),
     peerState(p.state),
     p.state === 'idle' ? '' : p.line,
+    // How far its plan is, where its Mochi says (the desktop app does, of the chats it follows).
+    p.plan ? `${p.plan.done}/${p.plan.total}` : '',
     from > 0 ? age(now - from) : '',
   ].filter(s => s !== '')
 }

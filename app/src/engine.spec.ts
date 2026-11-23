@@ -278,3 +278,25 @@ test('a status line call says how full the chat is, what it cost and where the l
   s = noted(s, hook(NOW + 2 * SEC, 'StatusLine', { status: { context: 'full', windows: [{ kind: 'five_hour', p: 'lots' }, 7] } }, 'claude'))
   expect(agentPeers(s, NOW + 2 * SEC)[0]).toMatchObject({ context: 42, windows: [] })
 })
+
+test('a chat’s plan is counted from its to-do list or its tasks: how many steps, how many done, and the one under way', () => {
+  const post = (at: number, tool: string, input: Record<string, unknown>) => hook(at, 'PostToolUse', { tool_name: tool, tool_input: input }, 'claude')
+  let s = run(hook(NOW, 'UserPromptSubmit', { prompt: 'ship it' }, 'claude'))
+  expect(agentPeers(s, NOW)[0]!.plan ?? null).toBeNull()
+  // The to-do list, as the hook keeps it: its counts and the step under way, never the list.
+  s = noted(s, post(NOW + SEC, 'TodoWrite', { plan: { total: 4, done: 1, now: 'Writing the tests' } }))
+  expect(agentPeers(s, NOW + SEC)[0]!.plan).toEqual({ total: 4, done: 1, now: 'Writing the tests' })
+  s = noted(s, post(NOW + 2 * SEC, 'TodoWrite', { plan: { total: 0, done: 0, now: '' } }))
+  expect(agentPeers(s, NOW + 2 * SEC)[0]!.plan).toBeNull()
+  // Tasks come one by one.
+  s = noted(s, post(NOW + 3 * SEC, 'TaskCreate', { now: 'Read the cart' }))
+  s = noted(s, post(NOW + 4 * SEC, 'TaskCreate', { now: 'Fix the total' }))
+  s = noted(s, post(NOW + 5 * SEC, 'TaskUpdate', { status: 'in_progress', now: 'Reading the cart' }))
+  expect(agentPeers(s, NOW + 5 * SEC)[0]!.plan).toEqual({ total: 2, done: 0, now: 'Reading the cart' })
+  s = noted(s, post(NOW + 6 * SEC, 'TaskUpdate', { status: 'completed' }))
+  s = noted(s, post(NOW + 7 * SEC, 'TaskUpdate', { status: 'deleted' }))
+  expect(agentPeers(s, NOW + 7 * SEC)[0]!.plan).toEqual({ total: 1, done: 1, now: '' })
+  // A plan file another Mochi wrote is read field by field.
+  expect(peerOf({ id: 'x', label: 'x', state: 'busy', line: '', since: 0, at: NOW, v: 2, plan: { total: 3, done: 9, now: 'x'.repeat(90) } }, NOW)!.plan).toEqual({ total: 3, done: 3, now: `${'x'.repeat(59)}…` })
+  expect(peerOf({ id: 'x', label: 'x', state: 'busy', line: '', since: 0, at: NOW, v: 2, plan: 'all' }, NOW)!.plan).toBeNull()
+})

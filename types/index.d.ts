@@ -222,6 +222,8 @@ export type Peer = {
   lastTurn?: { at: number; reason: string; seconds: number } | null
   /** The chat's subagents running now, at most 8. */
   agents?: Crew[]
+  /** The chat's plan (its to-do list or tasks): how many steps, how many done, the one under way; null or absent with none. */
+  plan?: Plan | null
   /** Context window use in 5% steps, -1 until measured. */
   context?: number
   /** The session's cost so far in US dollars, to the cent. */
@@ -243,6 +245,9 @@ export type Activity = 'thinking' | 'talking' | 'reading' | 'searching' | 'writi
  * now, and when it started.
  */
 export type Crew = { id: string; type: string; task: string; activity: Activity; since: number }
+
+/** How far a chat's plan is: steps in all, steps done, and the one under way in a few words ('' for none). */
+export type Plan = { total: number; done: number; now: string }
 
 /**
  * One day of work, in one chat or all of them: besides the counts, the lines

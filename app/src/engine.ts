@@ -1,4 +1,4 @@
-import type { Activity, DayRec, Peer } from '../../types'
+import type { Activity, DayRec, Peer, Plan } from '../../types'
 import { isEarly } from '../../hooks/badges'
 import { addDay, season } from '../../hooks/level'
 import { peerLabel } from '../../hooks/live'
@@ -133,6 +133,35 @@ function withStatus(p: Peer, status: unknown): Peer {
   }
 }
 
+/**
+ * A chat's plan after a call that wrote it: the to-do list whole (its counts and the step under way, as the hook keeps them), or
+ * tasks one by one: one more made, one done, one dropped, one under way.
+ * shortcut: a task done twice counts twice, as the hook keeps no task's id; the counts are kept within 0 and all.
+ */
+function withPlan(p: Peer, event: Record<string, unknown>): Peer {
+  const input = (event.tool_input ?? {}) as { plan?: { total?: unknown; done?: unknown; now?: unknown }; status?: unknown; now?: unknown }
+  const was = p.plan ?? { total: 0, done: 0, now: '' }
+  const count = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? Math.max(0, Math.round(x)) : 0)
+  let plan: Plan
+  switch (text(event.tool_name)) {
+    case 'TodoWrite':
+      plan = { total: count(input.plan?.total), done: count(input.plan?.done), now: text(input.plan?.now) }
+      break
+    case 'TaskCreate':
+      plan = { ...was, total: was.total + 1 }
+      break
+    case 'TaskUpdate':
+      plan = input.status === 'completed' ? { ...was, done: was.done + 1, now: '' }
+        : input.status === 'deleted' ? { ...was, total: Math.max(0, was.total - 1) }
+        : input.status === 'in_progress' ? { ...was, now: text(input.now) }
+        : was
+      break
+    default:
+      return p
+  }
+  return { ...p, plan: plan.total > 0 ? { ...plan, done: Math.min(plan.done, plan.total), now: plan.now.slice(0, 60) } : null }
+}
+
 /** The agents after one more hook call. */
 export function noted(sessions: Sessions, h: Hooked): Sessions {
   if (h.name === 'SessionEnd') {
@@ -164,6 +193,8 @@ export function noted(sessions: Sessions, h: Hooked): Sessions {
       break
     }
     case 'PostToolUse':
+      if (!isLeftBehind(h, p)) p = withPlan(working(p, h.at, 'thinking'), h.event)
+      break
     case 'PostToolUseFailure':
       if (!isLeftBehind(h, p)) p = working(p, h.at, 'thinking')
       break

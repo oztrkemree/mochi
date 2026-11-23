@@ -160,3 +160,10 @@ test('at rest Mochi is a drawing with no motion in it at all: the same pose, and
   const turned = viewOf(peersOf([file('api', { state: 'asking' })], NOW), NOW + 2000, null, { was: view })
   expect(turned.rest).toBe(viewOf(peersOf([file('api', { state: 'asking' })], NOW), NOW + 2000).svg)
 })
+
+test('a chat’s row says how far its plan is: steps done of all, and the one under way', () => {
+  const p = { id: 'a', label: 'shop', state: 'busy' as const, line: '', since: 1, at: 1, v: 2 as const, activity: 'writing' as const, app: '' }
+  expect(rowsOf([{ ...p, plan: { total: 4, done: 2, now: 'Writing the tests' } }], 1)[0]!.plan).toBe('2/4 · Writing the tests')
+  expect(rowsOf([{ ...p, plan: { total: 4, done: 4, now: '' } }], 1)[0]!.plan).toBe('4/4')
+  expect(rowsOf([p], 1)[0]!.plan).toBe('')
+})

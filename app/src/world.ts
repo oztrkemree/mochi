@@ -82,7 +82,7 @@ const drawn = (inner: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-${ROOM.left} -${ROOM.top} ${100 + ROOM.left + ROOM.right} ${100 + ROOM.top + ROOM.bottom}" width="100%" height="100%" preserveAspectRatio="xMidYMax meet">${SHADOW}<svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">${inner}</svg></svg>`
 
 /** One agent in the list: the chat, how it stands in words and ink, the link that opens it, and its subagents. */
-export type Row = { id: string; name: string; status: Status; line: string; ink: string; link: string; where: Where; agents: { type: string; task: string }[] }
+export type Row = { id: string; name: string; status: Status; line: string; ink: string; link: string; where: Where; agents: { type: string; task: string }[]; plan: string }
 
 /** Where a chat runs: the Claude app (a press opens it), Codex, or a terminal or editor, which a press cannot reach. */
 export type Where = 'app' | 'codex' | 'terminal'
@@ -105,6 +105,8 @@ export function rowsOf(peers: readonly Peer[], now: number, hideIdleAfterMs = 0)
     link: appLink(m.peer.app),
     where: whereOf(m.peer),
     agents: (m.peer.agents ?? []).map(a => ({ type: a.type, task: a.task })),
+    // How far its plan is: "2/4 · Writing the tests".
+    plan: m.peer.plan ? `${m.peer.plan.done}/${m.peer.plan.total}${m.peer.plan.now ? ` · ${m.peer.plan.now}` : ''}` : '',
   }))
 }
 
