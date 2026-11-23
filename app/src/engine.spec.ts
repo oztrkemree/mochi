@@ -130,6 +130,12 @@ test('a chat’s days are kept in the mod’s own file shape, added to what the 
   expect(JSON.parse(dayFile('half a fi', 'codex-s1', 'shop', false, '2026-11-24', { turns: 1 })).days['2026-11-24'].turns).toBe(1)
 })
 
+test('a chat’s days file says the folder it works in, so its work stays with its repository after repos.json forgets it', () => {
+  const kept = JSON.parse(dayFile(null, 'codex-s1', 'loop-4', false, '2026-11-23', { turns: 1 }, '/w/shop/.claude/worktrees/loop-4'))
+  expect(kept.folder).toBe('/w/shop/.claude/worktrees/loop-4')
+  expect('folder' in JSON.parse(dayFile(null, 'codex-s1', 'shop', false, '2026-11-23', { turns: 1 }))).toBe(false)
+})
+
 test('only what the mod counts is counted: a list of tasks is no edit, and a subagent’s calls are its own, not the chat’s', () => {
   const busy = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude')).get('s1')
   for (const tool of ['TodoWrite', 'TaskCreate', 'TaskUpdate', 'Artifact']) expect(tallyOf(hook(NOW + SEC, 'PostToolUse', { tool_name: tool }, 'claude'), busy, 0)).toEqual({ tools: 1 })

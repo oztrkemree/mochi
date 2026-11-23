@@ -20,7 +20,7 @@ This page is the contract between the two. Change a file's shape here first.
 | File | Written by | What it holds |
 |---|---|---|
 | `live/<id>.json` | the chat's Mochi: on a change (the mod at most every 1.5 s) and again every 15 s | Where the chat stands now. See below. |
-| `days/<id>.json` | the chat's Mochi, when a turn ends | `{id, label, isLabelFromPrompt, days: {"YYYY-MM-DD": DayRec}}` |
+| `days/<id>.json` | the chat's Mochi, when a turn ends | `{id, label, isLabelFromPrompt, folder?, days: {"YYYY-MM-DD": DayRec}}`. `folder`, where the chat works, is written by the app (the mod does not yet); a reader without it goes by `label` |
 | `level.json` | any Mochi (the mod, or the app), when the level or the wardrobe grew | `{level, items}`: what was last celebrated, so it is celebrated once, by whichever Mochi saw it first |
 | `badges.json` | any Mochi (the mod, or the app), when a badge is won | the badges, oldest first; added to, never taken from |
 | `said-level.json`, `said-badges.json` | the first Mochi to see a new level or badge | `{at, id}`: who says it, so it is said once. `at` names the news: `level × 1000 + items open` for the level, the number of badges for the badges. Claimed only while the app's Mochi is out (shown): the app as `app`, the mod's chats with their session id. With the app hidden or closed, the mod says it without a claim |
@@ -62,6 +62,8 @@ One chat as its Mochi last saw it. A file not written for 45 seconds is a closed
 One day of work in one chat: `turns`, `tools`, `edits`, `errors`, `commits`, `cost`, `secs`, `night`, `add`, `del`, `early`, `langs`. All are sums except `langs`, a set of bits. Every Mochi adds every chat's days into one history; experience is `turns × 10 + edits × 2 + commits × 25 + active days × 30`.
 
 The app counts a chat it follows from the agent's hook calls, the same way the mod counts its own, so work in Codex earns what work in Claude Code does. From hooks alone it cannot know `cost`, `add`, `del` or `langs`; they stay 0 for now.
+
+The room's Work tab adds every chat's days up by project: by `folder` where the file has it, else by `label` against the folders in `repos.json`, a worktree under `.claude/worktrees` counting toward the repository that holds it. A chat named by its first words, or in a worktree Claude Code named itself, has no project. `secs` is the agents' time: chats that ran side by side each count theirs.
 
 With Mochi as Claude Code's status line (`mochi-desktop statusline`, set from the app's Settings), a chat the app follows also says how full its context is, what it cost, and where the usage limits stand: `context`, `cost`, `windows` and `limit` in its `live` file, as the mod writes them for its own. The call is left in the inbox as an event named `StatusLine`, with those numbers and nothing else.
 

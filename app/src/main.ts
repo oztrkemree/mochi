@@ -911,7 +911,7 @@ limitsButton.addEventListener('click', () => toggleAgents())
 // ---------- the chats the app follows itself ----------
 
 /** What each chat earned since its days were last written, day by day, with the chat's name. */
-const earned = new Map<string, { label: string; isLabelFromPrompt: boolean; days: Record<string, Partial<DayRec>> }>()
+const earned = new Map<string, { label: string; isLabelFromPrompt: boolean; folder: string; days: Record<string, Partial<DayRec>> }>()
 
 /** Writes one after another, so two turns ending together never both start from the same file. */
 let writing: Promise<unknown> = Promise.resolve()
@@ -923,7 +923,7 @@ function keepDays(id: string) {
   earned.delete(id)
   writing = writing.then(async () => {
     let text = await invoke<string | null>('read_days', { id })
-    for (const [day, rec] of Object.entries(mine.days)) text = dayFile(text, id, mine.label, mine.isLabelFromPrompt, day, rec)
+    for (const [day, rec] of Object.entries(mine.days)) text = dayFile(text, id, mine.label, mine.isLabelFromPrompt, day, rec, mine.folder)
     if (text !== null) await invoke('write_days', { id, text })
     // What was just earned may be a level or a badge.
     await count()
@@ -967,12 +967,13 @@ async function take(calls: string[]) {
     const rec = tallyOf(h, before, tz())
     noted(sessions, h)
     if (rec) {
-      const mine = earned.get(h.id) ?? { label: '', isLabelFromPrompt: false, days: {} }
+      const mine = earned.get(h.id) ?? { label: '', isLabelFromPrompt: false, folder: '', days: {} }
       const day = dayKey(h.at, tz())
       const chat = sessions.get(h.id) ?? before
       if (chat) {
         mine.label = chat.label
         mine.isLabelFromPrompt = isNamedByPrompt(chat)
+        mine.folder = chat.folder ?? ''
       }
       mine.days[day] = addDay(mine.days[day] ?? {}, rec)
       earned.set(h.id, mine)

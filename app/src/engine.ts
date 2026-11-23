@@ -271,9 +271,10 @@ export function tallyOf(h: Hooked, before: Peer | undefined, tz: number): Partia
 /**
  * A chat's days file with one more record added to a day: the file the mod
  * keeps for a chat of its own (days/<id>.json), which every Mochi sums into the
- * one history. `held` is the file as it stands, null before there is one.
+ * one history. `held` is the file as it stands, null before there is one. `folder`, where the chat works, ties its
+ * work to its repository for the room's Work tab.
  */
-export function dayFile(held: string | null, id: string, label: string, isLabelFromPrompt: boolean, day: string, rec: Partial<DayRec>): string {
+export function dayFile(held: string | null, id: string, label: string, isLabelFromPrompt: boolean, day: string, rec: Partial<DayRec>, folder = ''): string {
   let days: Record<string, Partial<DayRec>> = {}
   try {
     const v: unknown = JSON.parse(held ?? 'null')
@@ -282,7 +283,7 @@ export function dayFile(held: string | null, id: string, label: string, isLabelF
   } catch {
     // Not a days file: this day starts it.
   }
-  return `${JSON.stringify({ id, label, isLabelFromPrompt, days: { ...days, [day]: addDay(days[day] ?? {}, rec) } })}\n`
+  return `${JSON.stringify({ id, label, isLabelFromPrompt, ...(folder ? { folder } : {}), days: { ...days, [day]: addDay(days[day] ?? {}, rec) } })}\n`
 }
 
 // ---------- a request for permission, answered from the bubble ----------
