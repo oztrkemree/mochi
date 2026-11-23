@@ -23,7 +23,8 @@ import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } f
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
 import { lookNow, skinNow } from './wardrobe'
-import { LIVE_FPS, frameAt, tracksIn } from './play'
+import { animationOf, tracksIn } from './play'
+import { TRANSITION_MS } from '../../hooks/rig'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { words } from './words'
@@ -307,7 +308,6 @@ async function goAway() {
     if (away !== edge) return
     isGone = true
     clearTimeout(stillTimer)
-    clearInterval(liveTimer)
     stage.replaceChildren()
   }, OUT_MS)
 }
@@ -427,24 +427,21 @@ function show(svg: string) {
   liven()
 }
 
-let liveTimer = 0
 /**
- * Plays the layers of the drawing on screen, if it has them, at a clay figure's
- * frame rate: Mochi never stands frozen between moves, and costs little. Not
- * while the window is out of sight, nor for someone who asked for less motion.
+ * Plays the layers of the drawing on screen, if it has them, on the
+ * compositor: Mochi never stands frozen between moves, and costs little. Each
+ * loop runs on the pose's own clock, the one its SMIL drawing and `paramsAt`
+ * keep, so a change of pose starts from where the arms were and the layers
+ * take over where the SMIL left off. Not for someone who asked for less motion.
  */
 function liven() {
-  clearInterval(liveTimer)
   const tracks = tracksIn(stage)
-  if (tracks.length === 0 || calm.matches) return
-  const start = performance.now()
-  const tick = () => {
-    if (document.hidden) return
-    const s = (performance.now() - start) / 1000
-    for (const t of tracks) t.el.style.transform = frameAt(t, s)
+  if (tracks.length === 0 || calm.matches || !view) return
+  const playedFor = Date.now() - view.at - TRANSITION_MS
+  for (const t of tracks) {
+    const { keyframes, options } = animationOf(t)
+    t.el.animate(keyframes, options).currentTime = playedFor
   }
-  tick()
-  liveTimer = window.setInterval(tick, 1000 / LIVE_FPS)
 }
 
 /** Lets Mochi move for a while: `svg` is what to show while it does (the pose itself when none is given), and then it holds still. */
