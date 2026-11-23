@@ -7,10 +7,11 @@ import type { DayRec, Mood } from '../../types'
 import { dayKey } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
 import { type Look, addDay, lookFrom } from '../../hooks/level'
-import { PEER_INK } from '../../hooks/live'
+import { PEER_INK, nameOf } from '../../hooks/live'
+import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
 import { clip } from '../../hooks/sound'
-import { type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, stalledOf, tallyOf } from './engine'
+import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, stalledOf, tallyOf } from './engine'
 import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, areaOf, fit } from './place'
@@ -36,6 +37,8 @@ const win = getCurrentWindow()
 const EDGE = 12
 /** With a limit used this much Mochi is tired while nothing else is going on. */
 const TIRED_AT = 95
+/** For how long a request for permission waits on the bubble before Claude Code's own dialog is all there is. */
+const APPROVE_S = 30
 /** An answer to a press stays up shorter than news. */
 const ANSWER_MS = 4000
 
@@ -193,7 +196,10 @@ function hold(mood: Mood, ms: number) {
   draw()
 }
 
-function speak(text: string, ms: number, ink: string, news: News | null) {
+/** What a bubble holds besides its words: what a request is for, and the answers to press. */
+type Extra = { what?: string; acts?: { label: string; isMain?: boolean; run: () => void }[] }
+
+function speak(text: string, ms: number, ink: string, news: News | null, extra: Extra = {}) {
   if (news) {
     hop()
     chime(NEWS_SOUND[news.kind])
@@ -201,7 +207,29 @@ function speak(text: string, ms: number, ink: string, news: News | null) {
   }
   saying = news
   say.style.setProperty('--ink', ink)
-  say.textContent = text
+  say.replaceChildren(text)
+  if (extra.what) {
+    const what = document.createElement('code')
+    what.className = 'what'
+    what.textContent = extra.what
+    say.append(what)
+  }
+  if (extra.acts?.length) {
+    const acts = document.createElement('div')
+    acts.className = 'acts'
+    for (const act of extra.acts) {
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.textContent = act.label
+      if (act.isMain) button.className = 'main'
+      button.addEventListener('click', e => {
+        e.stopPropagation()
+        act.run()
+      })
+      acts.append(button)
+    }
+    say.append(acts)
+  }
   say.classList.toggle('link', (news?.link ?? '') !== '')
   say.classList.add('on')
   clearTimeout(hushTimer)
@@ -209,20 +237,57 @@ function speak(text: string, ms: number, ink: string, news: News | null) {
   hot()
 }
 
+// ---------- requests for permission, answered here ----------
+
+/** The requests whose hooks wait on the bubble now, by the chat that asks. */
+const requests = new Map<string, Request>()
+
+/** Gives a request its answer, or lets its hook go with none ("none": the chat went on by itself, or the person looked away). */
+function answer(request: Request, behavior: 'allow' | 'deny' | 'none') {
+  if (requests.get(request.chat)?.id === request.id) requests.delete(request.chat)
+  void invoke('answer', { id: request.id, behavior }).catch(note)
+}
+
+/** A chat's waiting request, if its hook still waits. */
+function requestFor(chat: string, now: number): Request | null {
+  const request = requests.get(chat)
+  if (request && request.until <= now) requests.delete(chat)
+  return request && request.until > now ? request : null
+}
+
+/** Says news; a chat that waits with a request the bubble may answer is said with what it asks for and the answers. */
+function tell(news: News) {
+  const now = Date.now()
+  const request = news.kind === 'asking' ? requestFor(news.id, now) : null
+  if (!request) return speak(news.line, settings.talkSeconds * 1000, NEWS_INK[news.kind], news)
+  const w = words()
+  const done = (behavior: 'allow' | 'deny') => () => {
+    answer(request, behavior)
+    sayNext()
+  }
+  speak(`${news.line}\n${w.wantsTo(request.tool)}`, request.until - now, NEWS_INK.asking, news, {
+    what: request.what,
+    acts: [...(request.canAllow ? [{ label: w.allow, isMain: true, run: done('allow') }] : []), { label: w.deny, run: done('deny') }],
+  })
+}
+
 /** The next news in the bubble, or the bubble away when all is said. */
 function sayNext() {
   clearTimeout(hushTimer)
   const next = queue.shift()
-  if (next) return speak(next.line, settings.talkSeconds * 1000, NEWS_INK[next.kind], next)
+  if (next) return tell(next)
   saying = null
   say.classList.remove('on')
   hot()
 }
 
 /** Takes in what changed among the chats; what no longer holds is dropped, and more pressing news does not wait for lesser news to finish. */
-function hear(fresh: News[], peers: View['peers']) {
-  queue = queued(queue, fresh).filter(n => stillHolds(n, peers))
-  if (saying && !stillHolds(saying, peers)) return sayNext()
+function hear(fresh: News[], peers: View['peers'], isRequest = false) {
+  // A request's own news is said even if the chat's file does not say it waits yet: its hook waits, which is the same.
+  queue = queued(queue, fresh).filter(n => stillHolds(n, peers) || requests.has(n.id))
+  // The request in the bubble now is said again with its answers.
+  if (isRequest && saying && fresh.some(n => n.id === saying!.id)) return sayNext()
+  if (saying && !stillHolds(saying, peers) && !requests.has(saying.id)) return sayNext()
   const first = queue[0]
   if (!first) return
   if (!say.classList.contains('on')) return sayNext()
@@ -236,7 +301,8 @@ function hear(fresh: News[], peers: View['peers']) {
 say.addEventListener('pointerdown', e => e.stopPropagation())
 say.addEventListener('click', () => {
   if (saying?.link) void openUrl(saying.link)
-  sayNext()
+  // A request stays up while the person goes to look: it is answered there or here.
+  if (!(saying && requests.has(saying.id))) sayNext()
 })
 
 // ---------- the agents ----------
@@ -383,9 +449,20 @@ function leave(id: string) {
 
 /** Takes in hook calls: where each chat stands now, and what the call earned. */
 async function take(calls: string[]) {
+  const asked: Request[] = []
   for (const call of calls) {
     const h = hookedOf(call)
-    if (!h || theirs.has(h.id)) continue
+    if (!h) continue
+    // A request waits on the bubble whoever follows its chat, the mod or the app.
+    const request = requestOf(h)
+    if (request && settings.approve) {
+      requests.set(request.chat, request)
+      asked.push(request)
+    } else if (requests.has(h.id) && h.name !== 'PermissionRequest') {
+      // The chat went on: the request was answered in its own window. Its hook is let go.
+      answer(requests.get(h.id)!, 'none')
+    }
+    if (theirs.has(h.id)) continue
     const before = sessions.get(h.id)
     const rec = tallyOf(h, before, tz())
     noted(sessions, h)
@@ -406,6 +483,14 @@ async function take(calls: string[]) {
   // The chats as they stand now, for every other Mochi to read; the app is told which of them the mod writes itself.
   for (const id of await invoke<string[]>('own_live', { peers: agentPeers(sessions, Date.now()) }).catch(() => [])) leave(id)
   draw()
+  // Each request is said now, with its answers: the news of the chat starting to wait may have come before it, without them.
+  if (asked.length > 0 && view) {
+    const peers = view.peers
+    hear(asked.map(r => {
+      const chat = peers.find(p => p.id === r.chat)
+      return { id: r.chat, kind: 'asking' as const, line: t().peer.waiting(chat ? nameOf(chat) : t().word.chat), link: '' }
+    }), peers, true)
+  }
 }
 
 // ---------- the drawing ----------
@@ -441,6 +526,8 @@ async function apply(next: Settings) {
   agentsButton.hidden = !settings.showAgents
   if (!settings.showAgents) list.classList.remove('on')
   await invoke('on_top', { on: settings.onTop }).catch(note)
+  await invoke('set_approve', { seconds: settings.approve ? APPROVE_S : 0 }).catch(note)
+  if (!settings.approve) for (const request of [...requests.values()]) answer(request, 'none')
   // A language or a size changes the drawing and the words: draw them again, and stand where the new size fits.
   view = null
   draw()
@@ -525,6 +612,18 @@ async function start() {
       // Not kept: the place holds until the app quits.
     }
   })
+  // Asked once, the first time Mochi is up: answering for a chat from here is the person's to choose.
+  if (localStorage.getItem('asked-approve') === null) {
+    const w = words()
+    const choose = (approve: boolean) => () => {
+      localStorage.setItem('asked-approve', '1')
+      const next = { ...settings, approve }
+      localStorage.setItem(KEY, JSON.stringify(next))
+      void apply(next)
+      sayNext()
+    }
+    speak(w.approveAsk, 60_000, QUIET_INK, null, { acts: [{ label: w.yes, isMain: true, run: choose(true) }, { label: w.notNow, run: choose(false) }] })
+  }
   // The list closes when the person turns to another window.
   void win.onFocusChanged(({ payload }) => {
     if (!payload && list.classList.contains('on')) toggleAgents(false)

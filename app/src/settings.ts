@@ -15,6 +15,8 @@ export type Settings = {
   onTop: boolean
   /** The button beside Mochi that lists the agents. */
   showAgents: boolean
+  /** A request for permission can be answered from Mochi's bubble. */
+  approve: boolean
   /** A soft sound with what Mochi says. */
   sound: boolean
   /** The language Mochi speaks; 'auto' follows the system. */
@@ -29,7 +31,7 @@ export const SIZES: Record<Size, number> = { small: 96, medium: 128, large: 160,
 export const TALK_SECONDS = [5, 9, 15, 30] as const
 export const IDLE_MINUTES = [15, 30, 60, 0] as const
 
-export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, sound: false, lang: 'auto', idleMinutes: 30 }
+export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, approve: false, sound: false, lang: 'auto', idleMinutes: 30 }
 
 export const KEY = 'settings'
 /** The event the settings window sends Mochi's window with every change. */
@@ -53,6 +55,7 @@ export function settingsFrom(text: string | null): Settings {
     talkSeconds: (TALK_SECONDS as readonly unknown[]).includes(v.talkSeconds) ? (v.talkSeconds as number) : DEFAULTS.talkSeconds,
     onTop: flag(v.onTop, DEFAULTS.onTop),
     showAgents: flag(v.showAgents, DEFAULTS.showAgents),
+    approve: flag(v.approve, DEFAULTS.approve),
     sound: flag(v.sound, DEFAULTS.sound),
     lang: v.lang === 'auto' || (LANGS as unknown[]).includes(v.lang) ? (v.lang as Settings['lang']) : DEFAULTS.lang,
     idleMinutes: (IDLE_MINUTES as readonly unknown[]).includes(v.idleMinutes) ? (v.idleMinutes as number) : DEFAULTS.idleMinutes,

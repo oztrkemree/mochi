@@ -29,6 +29,13 @@
       #say::before { content: ""; position: absolute; left: 11px; top: 13px; width: 7px; height: 7px; border-radius: 50%; background: var(--ink, #6E6D69); }
       #say::after { content: ""; position: absolute; right: 22px; bottom: -6px; width: 12px; height: 12px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
       #say.on { display: block; }
+      /* What a request is for, as it was given: a command, a file. */
+      #say .what { display: block; margin-top: 6px; padding: 5px 8px; border-radius: 7px; background: var(--line); font: 500 11.5px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+      #say .acts { display: flex; gap: 6px; margin: 8px 0 1px; }
+      #say .acts button { flex: 1; height: 26px; padding: 0 10px; border: 0; border-radius: 8px; background: var(--line); color: inherit; font: inherit; font-weight: 650; cursor: pointer; }
+      #say .acts button.main { background: #E08A6A; color: #1F1E1D; }
+      #say .acts button:hover { filter: brightness(1.1); }
+      #say .acts button:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
       /* A bubble that opens its chat says so under the pointer. */
       #say.link { cursor: pointer; }
       #say { overflow-wrap: anywhere; }

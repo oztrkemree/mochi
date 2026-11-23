@@ -3,11 +3,13 @@
 
 use std::fs;
 use std::io::Read;
+use std::thread;
+use std::time::Duration;
 use std::path::{Path, PathBuf};
 
 use serde_json::{json, Value};
 
-use crate::store::{data_dir, home_dir, is_fresh, now_ms, write_theirs, write_whole};
+use crate::store::{data_dir, home_dir, is_fresh, is_id, now_ms, write_theirs, write_whole};
 
 /// The hook calls one read takes from the inbox; the rest wait a second.
 const MOST_CALLS: usize = 500;
@@ -23,20 +25,89 @@ fn kept(event: &Value) -> Value {
             out.insert(key.into(), v);
         }
     }
-    if let Some(command) = short(&event["tool_input"]["command"], 300) {
-        out.insert("tool_input".into(), json!({ "command": command }));
+    // Of what a tool is given, only what tells a test or a commit, and what a person must see to answer for it: the command, or the file.
+    let mut input = serde_json::Map::new();
+    if let Some(command) = event["tool_input"]["command"].as_str() {
+        input.insert("command".into(), short(&event["tool_input"]["command"], MOST_COMMAND).unwrap_or_default());
+        // Said when the command is longer than what is kept: nobody may answer for a command they saw part of.
+        if command.chars().count() > MOST_COMMAND {
+            input.insert("cut".into(), json!(true));
+        }
+    }
+    if let Some(path) = short(&event["tool_input"]["file_path"], 300) {
+        input.insert("file_path".into(), path);
+    }
+    if !input.is_empty() {
+        out.insert("tool_input".into(), Value::Object(input));
     }
     Value::Object(out)
 }
 
+/// As much of a shell command as is kept.
+const MOST_COMMAND: usize = 300;
+
 /// One hook call into the inbox, named so the calls sort by time; nothing for input that is not a call.
-fn drop_in(dir: &Path, source: &str, input: &str, at: u128, pid: u32) -> Option<PathBuf> {
+/// `wait_s` is for how long the call waits for an answer from Mochi's bubble (0: it does not): the call then says so, with the name to answer it by.
+fn drop_in(dir: &Path, source: &str, input: &str, at: u128, pid: u32, wait_s: u64) -> Option<PathBuf> {
     let event: Value = serde_json::from_str(input).ok()?;
     if !event.is_object() {
         return None;
     }
-    let path = dir.join(format!("{at:015}-{pid}.json"));
-    write_whole(&path, &json!({ "source": source, "at": at as u64, "event": kept(&event) }).to_string()).then_some(path)
+    let name = format!("{at:015}-{pid}");
+    let mut call = json!({ "source": source, "at": at as u64, "event": kept(&event) });
+    if wait_s > 0 {
+        call["ask"] = json!({ "id": name, "until": at as u64 + wait_s * 1000 });
+    }
+    let path = dir.join(format!("{name}.json"));
+    write_whole(&path, &call.to_string()).then_some(path)
+}
+
+// ---------- a request for permission, answered from Mochi's bubble ----------
+
+/// For how long a request for permission waits on Mochi's bubble: only Claude Code's (its answer is the one this knows how to give),
+/// only while the person asked for it (the app says so in its beat), and never a question or a plan, which are answered in words.
+fn waits_for(source: &str, event: &Value, beat: &Value) -> u64 {
+    let tool = event["tool_name"].as_str().unwrap_or("");
+    let is_request = source == "claude" && event["hook_event_name"] == "PermissionRequest" && tool != "AskUserQuestion" && tool != "ExitPlanMode";
+    if is_request { beat["approve"].as_u64().unwrap_or(0).min(120) } else { 0 }
+}
+
+/// What Claude Code is told for an answer: its own words for a granted or a refused request. None for no answer, which leaves the request to Claude Code's own dialog.
+fn decision(answer: &str) -> Option<String> {
+    let decision = match answer {
+        "allow" => json!({ "behavior": "allow" }),
+        "deny" => json!({ "behavior": "deny", "message": "Denied from Mochi, on the desktop." }),
+        _ => return None,
+    };
+    Some(json!({ "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": decision } }).to_string())
+}
+
+/// Waits for the bubble's answer to one request, until `until`; the answer's file is taken away once read.
+fn answer_for(answers: &Path, id: &str, until: u128) -> Option<String> {
+    let path = answers.join(format!("{id}.json"));
+    loop {
+        if let Ok(text) = fs::read_to_string(&path) {
+            let _ = fs::remove_file(&path);
+            return serde_json::from_str::<Value>(&text).ok().and_then(|v| v["behavior"].as_str().map(str::to_owned));
+        }
+        if now_ms() >= until {
+            return None;
+        }
+        thread::sleep(Duration::from_millis(80));
+    }
+}
+
+/// The bubble's answer to a request, left for the hook that waits on it. Only a name the hook could have given, and only one of the three answers.
+pub fn answer(answers: &Path, id: &str, behavior: &str) -> bool {
+    is_id(id) && ["allow", "deny", "none"].contains(&behavior) && write_whole(&answers.join(format!("{id}.json")), &json!({ "behavior": behavior }).to_string())
+}
+
+/// Answers nobody waited for (the hook gave up first) are swept away after a while.
+pub fn sweep_answers(answers: &Path) {
+    let Ok(entries) = fs::read_dir(answers) else { return };
+    for path in entries.flatten().map(|e| e.path()).filter(|p| !is_fresh(p)) {
+        let _ = fs::remove_file(path);
+    }
 }
 
 /// Whether the app is running, by its beat: with it gone nobody empties the inbox, so the hook puts nothing in.
@@ -44,7 +115,8 @@ fn is_running(dir: &Path) -> bool {
     is_fresh(&dir.join("app.json"))
 }
 
-/// The `hook` command. It prints nothing and never fails: an agent's hook must not stand in the agent's way.
+/// The `hook` command. It never fails, and prints nothing but the person's own answer to a request for permission,
+/// given in Mochi's bubble: an agent's hook must not stand in the agent's way.
 pub fn hook(source: &str) {
     let Some(dir) = data_dir() else { return };
     if !is_running(&dir) {
@@ -52,8 +124,17 @@ pub fn hook(source: &str) {
     }
     let mut input = String::new();
     // A hook's input is small; the read stops well past any real one.
-    if std::io::stdin().take(4_000_000).read_to_string(&mut input).is_ok() {
-        drop_in(&dir.join("inbox"), source, &input, now_ms(), std::process::id());
+    if std::io::stdin().take(4_000_000).read_to_string(&mut input).is_err() {
+        return;
+    }
+    let event: Value = serde_json::from_str(&input).unwrap_or(Value::Null);
+    let beat: Value = fs::read_to_string(dir.join("app.json")).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or(Value::Null);
+    let (at, pid, wait_s) = (now_ms(), std::process::id(), waits_for(source, &event, &beat));
+    if drop_in(&dir.join("inbox"), source, &input, at, pid, wait_s).is_none() || wait_s == 0 {
+        return;
+    }
+    if let Some(text) = answer_for(&dir.join("answers"), &format!("{at:015}-{pid}"), at + u128::from(wait_s) * 1000).as_deref().and_then(decision) {
+        println!("{text}");
     }
 }
 
@@ -205,7 +286,7 @@ mod tests {
     fn the_hook_counts_the_app_as_running_only_while_its_beat_is_on_disk() {
         let dir = scratch("running");
         assert!(!is_running(&dir));
-        write_whole(&dir.join("app.json"), &beat_text(now_ms(), true));
+        write_whole(&dir.join("app.json"), &beat_text(now_ms(), true, 0));
         assert!(is_running(&dir));
         fs::remove_file(dir.join("app.json")).unwrap();
         assert!(!is_running(&dir));
@@ -215,10 +296,10 @@ mod tests {
     #[test]
     fn hook_calls_wait_in_the_inbox_in_the_order_they_came_and_are_taken_once() {
         let dir = scratch("inbox");
-        drop_in(&dir, "codex", r#"{"hook_event_name":"Stop","session_id":"s1"}"#, 2000, 7).unwrap();
-        drop_in(&dir, "claude", r#"{"hook_event_name":"UserPromptSubmit","session_id":"s1","prompt":"hi"}"#, 1000, 9).unwrap();
-        assert!(drop_in(&dir, "codex", "not a call", 3000, 1).is_none());
-        assert!(drop_in(&dir, "codex", "[1]", 3000, 1).is_none());
+        drop_in(&dir, "codex", r#"{"hook_event_name":"Stop","session_id":"s1"}"#, 2000, 7, 0).unwrap();
+        drop_in(&dir, "claude", r#"{"hook_event_name":"UserPromptSubmit","session_id":"s1","prompt":"hi"}"#, 1000, 9, 0).unwrap();
+        assert!(drop_in(&dir, "codex", "not a call", 3000, 1, 0).is_none());
+        assert!(drop_in(&dir, "codex", "[1]", 3000, 1, 0).is_none());
         let calls: Vec<Value> = taken(&dir).iter().map(|t| serde_json::from_str(t).unwrap()).collect();
         assert_eq!(calls.len(), 2);
         assert_eq!(calls[0]["event"]["hook_event_name"], "UserPromptSubmit");
@@ -241,6 +322,57 @@ mod tests {
         assert!(k.get("last_assistant_message").is_none());
         assert_eq!(k["tool_name"], "Write");
         assert_eq!(k["session_title"], "Fix the cart");
+        // A command kept short says it was cut; one kept whole does not.
+        assert_eq!(k["tool_input"]["cut"], true);
+        let whole = kept(&json!({ "tool_name": "Bash", "tool_input": { "command": "ls -la", "file_path": "/w/src/cart.ts" } }));
+        assert!(whole["tool_input"].get("cut").is_none());
+        assert_eq!(whole["tool_input"]["file_path"], "/w/src/cart.ts");
+    }
+
+    #[test]
+    fn only_claude_codes_requests_for_permission_wait_on_the_bubble_and_only_when_asked_for() {
+        let asked = json!({ "approve": 30 });
+        let request = json!({ "hook_event_name": "PermissionRequest", "tool_name": "Bash" });
+        assert_eq!(waits_for("claude", &request, &asked), 30);
+        assert_eq!(waits_for("claude", &request, &json!({ "approve": 0 })), 0);
+        assert_eq!(waits_for("claude", &request, &json!({})), 0);
+        assert_eq!(waits_for("codex", &request, &asked), 0);
+        assert_eq!(waits_for("claude", &json!({ "hook_event_name": "PreToolUse", "tool_name": "Bash" }), &asked), 0);
+        // A question and a plan are answered in words, not with a yes.
+        assert_eq!(waits_for("claude", &json!({ "hook_event_name": "PermissionRequest", "tool_name": "AskUserQuestion" }), &asked), 0);
+        assert_eq!(waits_for("claude", &json!({ "hook_event_name": "PermissionRequest", "tool_name": "ExitPlanMode" }), &asked), 0);
+        // Never held longer than two minutes, whatever the file says.
+        assert_eq!(waits_for("claude", &request, &json!({ "approve": 99999 })), 120);
+    }
+
+    #[test]
+    fn a_waiting_request_says_so_in_its_call_and_takes_the_answer_left_for_it() {
+        let dir = scratch("ask");
+        let (inbox, answers) = (dir.join("inbox"), dir.join("answers"));
+        drop_in(&inbox, "claude", r#"{"hook_event_name":"PermissionRequest","session_id":"s1","tool_name":"Bash"}"#, 5000, 7, 30).unwrap();
+        let call: Value = serde_json::from_str(&taken(&inbox)[0]).unwrap();
+        assert_eq!(call["ask"], json!({ "id": "000000000005000-7", "until": 35000 }));
+        // The bubble's answer, by that name; anything else is no answer.
+        assert!(answer(&answers, "000000000005000-7", "allow"));
+        assert!(!answer(&answers, "../000000000005000-7", "allow"));
+        assert!(!answer(&answers, "000000000005000-8", "maybe"));
+        assert_eq!(answer_for(&answers, "000000000005000-7", now_ms() + 2000).as_deref(), Some("allow"));
+        assert!(!answers.join("000000000005000-7.json").exists());
+        // Nobody answered: the wait ends at its time with nothing.
+        assert_eq!(answer_for(&answers, "000000000005000-9", now_ms()), None);
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn claude_code_is_told_only_a_yes_or_a_no_in_its_own_words() {
+        let yes: Value = serde_json::from_str(&decision("allow").unwrap()).unwrap();
+        assert_eq!(yes, json!({ "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": { "behavior": "allow" } } }));
+        let no: Value = serde_json::from_str(&decision("deny").unwrap()).unwrap();
+        assert_eq!(no["hookSpecificOutput"]["decision"]["behavior"], "deny");
+        assert!(no["hookSpecificOutput"]["decision"]["message"].as_str().unwrap().contains("Mochi"));
+        // "none" (the chat went on by itself) and anything odd leave the request to Claude Code's own dialog.
+        assert!(decision("none").is_none());
+        assert!(decision("always").is_none());
     }
 
     #[test]

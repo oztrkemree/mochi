@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { setLang } from '../../hooks/i18n'
 import { summarize, xpOf } from '../../hooks/level'
 import { peerOf } from '../../hooks/live'
-import { GONE_AFTER_MS, STALLED_AFTER_MS, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, stalledOf, tallyOf } from './engine'
+import { GONE_AFTER_MS, STALLED_AFTER_MS, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, stalledOf, tallyOf } from './engine'
 import { newsOf, withoutStalled } from './news'
 
 setLang('en')
@@ -215,4 +215,29 @@ test('a chat closed in the middle of a turn has that turn counted, up to when it
   expect(tallyOf(hook(NOW + 900 * SEC, 'SessionEnd', {}, 'claude'), waiting.get('s1'), 0)).toEqual({ turns: 1, secs: 30 })
   const rested = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude'), hook(NOW + 30 * SEC, 'Stop', {}, 'claude'))
   expect(tallyOf(hook(NOW + 900 * SEC, 'SessionEnd', {}, 'claude'), rested.get('s1'), 0)).toBeNull()
+})
+
+// ---------- a request for permission, answered from the bubble ----------
+
+const request = (tool: string, input: Record<string, unknown>, ask: unknown = { id: '000001760000000-7', until: NOW + 30 * SEC }) =>
+  hookedOf(JSON.stringify({ source: 'claude', at: NOW, ask, event: { hook_event_name: 'PermissionRequest', session_id: 's1', cwd: '/Users/me/code/shop', tool_name: tool, tool_input: input } }))!
+
+test('a request that waits on the bubble says what it is for, by which name to answer it, and until when', () => {
+  expect(requestOf(request('Bash', { command: 'rm -rf node_modules' }))).toEqual({ id: '000001760000000-7', until: NOW + 30 * SEC, chat: 's1', tool: 'Bash', what: 'rm -rf node_modules', canAllow: true })
+  // A call that does not wait (the person did not ask for it, or another agent's) is no request to answer.
+  expect(requestOf(request('Bash', { command: 'ls' }, null))).toBeNull()
+  expect(requestOf(hook(NOW, 'PermissionRequest', { tool_name: 'Bash' }))).toBeNull()
+  expect(requestOf(request('Bash', { command: 'ls' }, { id: '../x', until: NOW }))).toBeNull()
+})
+
+test('a yes is offered only for a command the person sees whole; anything else can be refused or opened, never waved through', () => {
+  // Cut short on its way here, too long for the bubble, or over several lines: not all of it is seen.
+  expect(requestOf(request('Bash', { command: 'x'.repeat(300), cut: true }))?.canAllow).toBe(false)
+  expect(requestOf(request('Bash', { command: `echo ${'a'.repeat(200)}` }))?.canAllow).toBe(false)
+  expect(requestOf(request('Bash', { command: 'echo ok\nrm -rf ~' }))?.canAllow).toBe(false)
+  // An edit shows its file but not what changes in it; a tool that says nothing of itself shows nothing.
+  expect(requestOf(request('Edit', { file_path: '/Users/me/code/shop/src/cart.ts' }))).toMatchObject({ what: '/Users/me/code/shop/src/cart.ts', canAllow: false })
+  expect(requestOf(request('mcp__db__query', {}))).toMatchObject({ what: '', canAllow: false })
+  // What is shown is never longer than the bubble holds.
+  expect(requestOf(request('Bash', { command: `echo ${'a'.repeat(200)}` }))!.what.length).toBeLessThanOrEqual(161)
 })

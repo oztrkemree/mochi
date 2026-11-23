@@ -14,7 +14,11 @@ import { isCommit } from '../../hooks/react'
  */
 
 /** One hook call from the inbox: which tool sent it, when, the chat it belongs to, and what the tool said. */
-export type Hooked = { source: string; at: number; name: string; id: string; event: Record<string, unknown> }
+export type Hooked = {
+  source: string; at: number; name: string; id: string; event: Record<string, unknown>
+  /** For a request for permission whose hook waits on Mochi's bubble: the name to answer it by, and until when it waits. */
+  ask: { id: string; until: number } | null
+}
 
 /** The agents known from their hook calls, by chat. */
 export type Sessions = Map<string, Peer>
@@ -35,7 +39,7 @@ const idOf = (source: string, session: string): string => (source === 'claude' ?
 
 /** A file from the inbox, if it is a hook call of a session. */
 export function hookedOf(file: string): Hooked | null {
-  let v: { source?: unknown; at?: unknown; event?: unknown }
+  let v: { source?: unknown; at?: unknown; event?: unknown; ask?: { id?: unknown; until?: unknown } | null }
   try {
     v = JSON.parse(file)
   } catch {
@@ -46,7 +50,8 @@ export function hookedOf(file: string): Hooked | null {
   const source = text(v.source)
   const session = text(event.session_id)
   if (!/^[a-z][a-z0-9]{0,19}$/.test(source) || !/^[A-Za-z0-9_-]{1,110}$/.test(session)) return null
-  return { source, at: v.at, name: text(event.hook_event_name), id: idOf(source, session), event }
+  const ask = typeof v.ask === 'object' && v.ask !== null && typeof v.ask.id === 'string' && /^[0-9]{1,20}-[0-9]{1,10}$/.test(v.ask.id) && typeof v.ask.until === 'number' ? { id: v.ask.id, until: v.ask.until } : null
+  return { source, at: v.at, name: text(event.hook_event_name), id: idOf(source, session), event, ask }
 }
 
 const TESTS = /(^|[\s;&|(])(((p?npm|yarn|bun|cargo|go|dotnet|swift|deno|mvn|gradle\w*)\s+(run\s+)?test)|pytest|jest|vitest|rspec|phpunit|ctest)\b/
@@ -222,4 +227,28 @@ export function dayFile(held: string | null, id: string, label: string, isLabelF
     // Not a days file: this day starts it.
   }
   return `${JSON.stringify({ id, label, isLabelFromPrompt, days: { ...days, [day]: addDay(days[day] ?? {}, rec) } })}\n`
+}
+
+// ---------- a request for permission, answered from the bubble ----------
+
+/** A request for permission that waits on Mochi's bubble: its name, until when it waits, the chat that asks, for which tool, and what the person sees of it. */
+export type Request = { id: string; until: number; chat: string; tool: string; what: string; canAllow: boolean }
+
+/** As much of a command as the bubble shows. A longer one is not all seen, so it cannot be allowed from here. */
+const SHOWN_MAX = 160
+
+/**
+ * The request a hook call makes of the bubble, if its hook waits on it. A yes
+ * is offered only for a shell command shown whole and on one line: the person
+ * answers for what they see. An edit shows its file but not its change, and
+ * another tool nothing, so those can be refused here or opened, never waved
+ * through.
+ */
+export function requestOf(h: Hooked): Request | null {
+  if (h.name !== 'PermissionRequest' || h.ask === null) return null
+  const input = typeof h.event.tool_input === 'object' && h.event.tool_input !== null ? (h.event.tool_input as { command?: unknown; file_path?: unknown; cut?: unknown }) : {}
+  const command = text(input.command)
+  const all = command || text(input.file_path)
+  const isWhole = command !== '' && input.cut !== true && command.length <= SHOWN_MAX && !/[\n\r]/.test(command)
+  return { id: h.ask.id, until: h.ask.until, chat: h.id, tool: text(h.event.tool_name), what: all.length > SHOWN_MAX ? `${all.slice(0, SHOWN_MAX)}…` : all, canAllow: isWhole }
 }

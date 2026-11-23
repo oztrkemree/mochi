@@ -73,7 +73,7 @@ function draw() {
   document.title = w.settings
   const text: Record<string, string> = {
     title: w.settings, 'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-idle': w.hideIdle,
-    'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound,
+    'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint,
     'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
   }
@@ -86,6 +86,7 @@ function draw() {
   for (const kind of ['asking', 'done', 'failed', 'limit'] as const) switchOf(`talk-${kind}`, settings.talk[kind], on => void save({ talk: { ...settings.talk, [kind]: on } }))
   segment('talkSeconds', TALK_SECONDS, w.seconds, settings.talkSeconds, v => void save({ talkSeconds: v }))
   switchOf('sound', settings.sound, on => void save({ sound: on }))
+  switchOf('approve', settings.approve, on => void save({ approve: on }))
 
   const lang = $<HTMLSelectElement>('lang')
   lang.replaceChildren(new Option(w.sameAsSystem, 'auto'), ...LANGS.map(l => new Option(NATIVE[l], l)))

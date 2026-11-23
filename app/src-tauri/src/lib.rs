@@ -2,7 +2,7 @@ mod agents;
 mod stage;
 mod store;
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::thread;
 use std::time::Duration;
 
@@ -29,9 +29,12 @@ fn is_shown(app: &AppHandle) -> bool {
     app.get_webview_window("main").and_then(|w| w.is_visible().ok()).unwrap_or(false)
 }
 
+/// For how many seconds a request for permission may wait on Mochi's bubble; 0 until the person asks for that.
+static APPROVE_S: AtomicU64 = AtomicU64::new(0);
+
 fn beat_now(app: &AppHandle) {
     if let Some(dir) = data_dir() {
-        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), is_shown(app)));
+        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), is_shown(app), APPROVE_S.load(Ordering::Relaxed)));
     }
 }
 
@@ -85,6 +88,7 @@ fn keep_watch(app: AppHandle) {
                 beat_now(&app);
                 if let Some(dir) = data_dir() {
                     store::beat_own(&dir.join("live"), now_ms());
+                    agents::sweep_answers(&dir.join("answers"));
                 }
             }
             if looks % MINUTE_EVERY == MINUTE_EVERY - 1 {
@@ -165,6 +169,19 @@ fn shown(app: AppHandle) {
 fn on_top(app: AppHandle, on: bool) {
     stage::ON_TOP.store(on, Ordering::Relaxed);
     stage::stand(&app);
+}
+
+/// Whether requests for permission wait on Mochi's bubble, and for how long: said in the app's beat at once, where the hooks read it.
+#[tauri::command]
+fn set_approve(app: AppHandle, seconds: u64) {
+    APPROVE_S.store(seconds.min(120), Ordering::Relaxed);
+    beat_now(&app);
+}
+
+/// The person's answer to a request for permission, from the bubble: "allow", "deny", or "none" to let the hook go.
+#[tauri::command]
+fn answer(id: String, behavior: String) -> bool {
+    data_dir().is_some_and(|d| agents::answer(&d.join("answers"), &id, &behavior))
 }
 
 /// Where in the window a press is Mochi's own; everywhere else it goes to what is behind.
@@ -273,7 +290,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_hot, own_live, read_days, write_days, agent_state, set_agent, open_settings, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, answer, set_hot, own_live, read_days, write_days, agent_state, set_agent, open_settings, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
