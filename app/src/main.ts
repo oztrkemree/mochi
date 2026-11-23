@@ -4,7 +4,7 @@ import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Moni
 import { openUrl } from '@tauri-apps/plugin-opener'
 
 import type { Badge, Ci, DayRec, History, Mood } from '../../types'
-import { badgeName, badgeSvg } from '../../hooks/badges'
+import { badgeLook, badgeName } from '../../hooks/badges'
 import { dayKey } from '../../hooks/facts'
 import { lang, pickLang, setLang } from '../../hooks/i18n'
 import { type Choice, type Look, addDay, choiceFrom, levelOf, lookFrom, unlocked, xpOf } from '../../hooks/level'
@@ -19,7 +19,8 @@ import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled }
 import { type Area, type Body, type Point, areaOf, fit, isPushedDown, peekAt } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
-import { featsOf } from './feats'
+import { BADGE_PLACE, featsOf } from './feats'
+import { medalSvg } from './medal'
 import { lookNow } from './wardrobe'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
@@ -510,7 +511,8 @@ function drawGrowth(into: HTMLElement) {
     for (const b of badges) {
       const medal = el('span')
       // The medal is the mod's own drawing.
-      medal.innerHTML = badgeSvg(b, true)
+      const look = badgeLook(b)
+      medal.innerHTML = medalSvg(look.ink, look.sign, BADGE_PLACE[b].tier, true)
       medal.title = badgeName(b)
       medals.append(medal)
     }

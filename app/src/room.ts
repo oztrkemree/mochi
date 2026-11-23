@@ -2,15 +2,16 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
 import type { Badge, History, Item, Outfit } from '../../types'
-import { badgeHint, badgeName, badgeSvg, badgesOf, provenBy } from '../../hooks/badges'
+import { badgeHint, badgeLook, badgeName, badgesOf, provenBy } from '../../hooks/badges'
 import { citySvg } from '../../hooks/city'
 import { dayKey, local } from '../../hooks/facts'
 import { lang, pickLang, setLang, t } from '../../hooks/i18n'
 import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, dressAs, hintFor, itemName, itemShort, lookFrom, slotName } from '../../hooks/level'
 import { itemIcon, svgFor } from '../../hooks/rig'
 import { bestOutfit, cardSvg } from '../../hooks/share'
-import { CATS, type Cat, type Feat, TIERS, type Tier, featsOf, tally } from './feats'
+import { BADGE_PLACE, CATS, type Cat, type Feat, TIERS, featsOf, tally } from './feats'
 import { growthOf, historyOf } from './growth'
+import { SIGN, medalSvg } from './medal'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
 import { chosen, lookNow } from './wardrobe'
@@ -91,7 +92,8 @@ function drawPlate() {
     facts.append(fact)
   }
   $('won').replaceChildren(...badges.map(b => {
-    const medal = svgIn('', badgeSvg(b, true))
+    const look = badgeLook(b)
+    const medal = svgIn('', medalSvg(look.ink, look.sign, BADGE_PLACE[b].tier, true))
     medal.title = badgeName(b)
     return medal
   }))
@@ -169,23 +171,16 @@ function drawWardrobe(into: HTMLElement) {
   into.append(slots, ways, grid)
 }
 
-/** Each theme's colour, and a sign drawn in white on its medal. */
-const CAT_LOOK: Record<Cat, { ink: string; sign: string }> = {
-  talk: { ink: '#7AA2F7', sign: '<path d="M7 8.5h10a2 2 0 0 1 2 2v4.5a2 2 0 0 1-2 2h-5l-3.5 2.8v-2.8H7a2 2 0 0 1-2-2v-4.5a2 2 0 0 1 2-2z"/>' },
-  code: { ink: '#4CC38A', sign: '<path d="M9.5 9 6 12.5 9.5 16M14.5 9l3.5 3.5-3.5 3.5"/>' },
-  ship: { ink: '#FF9E63', sign: '<path d="M12 6.5v8.5M8.5 10 12 6.5l3.5 3.5M7 17.5h10"/>' },
-  time: { ink: '#B794F6', sign: '<circle cx="12" cy="12.5" r="5.5"/><path d="M12 9.5v3.2l2.2 1.5"/>' },
-  steady: { ink: '#F0645A', sign: '<path d="M12 6c2.6 2.6 4.3 4.8 4.3 7.3a4.3 4.3 0 0 1-8.6 0c0-1.4.6-2.6 1.5-3.6.3 1.4 1.1 2.2 2 2.4-.4-2.2.1-4.1.8-6.1z"/>' },
-  mochi: { ink: '#D97757', sign: '<path d="m12 6.3 1.8 3.7 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6z"/>' },
-}
-/** Each tier's rim: bronze, silver, gold, and a colour no metal has. */
-const TIER_RIM: Record<Tier, string> = { easy: '#C9875A', medium: '#C9D1D9', hard: '#F2C14E', impossible: 'url(#rim)' }
+/** Each theme's colour, for the face of its milestones' medals. */
+const CAT_INK: Record<Cat, string> = { talk: '#7AA2F7', code: '#4CC38A', ship: '#FF9E63', time: '#B794F6', steady: '#F0645A', mochi: '#D97757' }
 
-/** A milestone's medal: its theme's colour and sign, rimmed by its tier; faded and grey until it is done. */
-function medalSvg(f: Feat): string {
-  const look = CAT_LOOK[f.cat]
-  const rim = f.tier === 'impossible' ? '<defs><linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F07CB8"/><stop offset=".5" stop-color="#B794F6"/><stop offset="1" stop-color="#5FB3F0"/></linearGradient></defs>' : ''
-  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${rim}<g${f.done ? '' : ' opacity=".38" style="filter:grayscale(1)"'}><circle cx="12" cy="12" r="11" fill="${TIER_RIM[f.tier]}"/><circle cx="12" cy="12" r="9.2" fill="${look.ink}"/><g fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${look.sign}</g></g></svg>`
+/** An achievement's medal: a badge in its own colour and sign, a milestone in its theme's colour with the sign of what it counts. */
+function iconOf(f: Feat): string {
+  if (f.badge) {
+    const look = badgeLook(f.badge)
+    return medalSvg(look.ink, look.sign, f.tier, f.done)
+  }
+  return medalSvg(CAT_INK[f.cat], SIGN[f.metric!] ?? '', f.tier, f.done)
 }
 
 const bar = (done: number, all: number) => {
@@ -233,7 +228,7 @@ function drawFeats(into: HTMLElement) {
         progress.append(bar(f.now, f.target), el('small', '', `${n.format(f.now)} / ${n.format(f.target)}`))
         text.append(progress)
       }
-      card.append(svgIn('pic', f.badge ? badgeSvg(f.badge, f.done) : medalSvg(f)), text, el('em', `tag ${f.tier}`, w.tiers[f.tier]))
+      card.append(svgIn('pic', iconOf(f)), text, el('em', `tag ${f.tier}`, w.tiers[f.tier]))
       grid.append(card)
     }
     section.append(head, grid)
