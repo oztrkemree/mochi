@@ -23,6 +23,7 @@ import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } f
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
 import { lookNow, skinNow } from './wardrobe'
+import { poseOf } from '../../hooks/rig'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { words } from './words'
@@ -263,16 +264,18 @@ function chime(name: SoundName) {
  */
 const MOVES_MS = 2400
 /** While a chat works, Mochi moves again no sooner than this after it last did. */
-const WORK_REST_MS = 20_000
+const WORK_REST_MS = 12_000
 /** While a chat works its Mochi changes what it does every few seconds: each change is eased in and held, not played out. */
 const WORK_MOVES_MS = 900
 let stillTimer = 0
 let movedAt = 0
 let isStill = false
 
-/** Shows a drawing, the eyes where they were turned. */
+/** Shows a drawing, the eyes where they were turned; held still, it breathes all the same (see the stage's style). */
 function show(svg: string) {
   stage.innerHTML = svg
+  stage.classList.toggle('still', isStill)
+  stage.classList.toggle('asleep', view?.mood === 'sleeping' || view?.mood === 'dream')
   gaze()
 }
 
@@ -284,14 +287,61 @@ function move(ms = MOVES_MS, svg: string | null = null) {
   if (!view) return
   if (calm.matches) return show(stillOf(svg ?? view.rest))
   movedAt = Date.now()
-  if (svg !== null || isStill) show(svg ?? view.rest)
+  const wasStill = isStill
   isStill = false
+  if (svg !== null || wasStill) show(svg ?? view.rest)
   clearTimeout(stillTimer)
   stillTimer = window.setTimeout(() => {
     if (!view) return
     isStill = true
     show(stillOf(view.rest))
   }, ms)
+}
+
+// ---------- between moves: a blink, and now and then a stir ----------
+
+/** Eyes that can blink: open ones. Shut, smiling or crossed eyes stay as they are. */
+const canBlink = (mood: Mood | Act) => {
+  const eye = poseOf(mood).eye
+  return eye === 'dot' || eye === 'wide'
+}
+
+/** A blink every few seconds while Mochi is held still, now and then a double one; each only redraws the eyes, for a moment. */
+function blinkSoon() {
+  window.setTimeout(() => {
+    const eyes = stage.querySelector<SVGGElement>('g[transform="translate(0 -52)"]')
+    if (isStill && view && eyes && canBlink(view.mood) && !calm.matches && !document.hidden) {
+      const shut = (then: number) => window.setTimeout(() => {
+        eyes.classList.add('blink')
+        window.setTimeout(() => eyes.classList.remove('blink'), 140)
+      }, then)
+      shut(0)
+      if (Math.random() < 0.2) shut(320)
+    }
+    blinkSoon()
+  }, 2800 + Math.random() * 3700)
+}
+
+/** The moods in which Mochi is at ease, with nothing to do: these stir now and then by themselves. */
+const AT_EASE: readonly (Mood | Act)[] = ['idle', 'proud', 'pleased']
+
+/**
+ * Every twenty to forty seconds, Mochi held still stirs: at ease, sometimes
+ * something it does by itself and else a look about; at work, a moment of the
+ * work. Never while it says something or a moment plays.
+ */
+function stirSoon() {
+  window.setTimeout(() => {
+    const now = Date.now()
+    if (view && isStill && !held && !peek && !isBusy() && !say.classList.contains('on') && !document.hidden) {
+      if (AT_EASE.includes(view.mood)) {
+        const fidget = Math.random() < 0.35 ? fidgetOf(view.mood as Mood, 0, Math.random()) : null
+        if (fidget) hold(fidget)
+        else move(1800)
+      } else if (view.peers.some(p => p.state === 'busy') && now - movedAt >= WORK_REST_MS) move(1300)
+    }
+    stirSoon()
+  }, 20_000 + Math.random() * 20_000)
 }
 
 /** A small hop, to catch the eye when Mochi has something to say. */
@@ -1138,6 +1188,8 @@ async function start() {
     else move(1500)
     void take([]).catch(note)
   })
+  blinkSoon()
+  stirSoon()
   // Everything is told from the start now that someone listens.
   await invoke('ready')
   await win.show()
