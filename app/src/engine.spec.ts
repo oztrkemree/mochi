@@ -219,11 +219,12 @@ test('a chat closed in the middle of a turn has that turn counted, up to when it
 
 // ---------- a request for permission, answered from the bubble ----------
 
-const request = (tool: string, input: Record<string, unknown>, ask: unknown = { id: '000001760000000-7', until: NOW + 30 * SEC }) =>
+const request = (tool: string, input: Record<string, unknown>, ask: unknown = { id: '000001760000000-7-ask', until: NOW + 30 * SEC }) =>
   hookedOf(JSON.stringify({ source: 'claude', at: NOW, ask, event: { hook_event_name: 'PermissionRequest', session_id: 's1', cwd: '/Users/me/code/shop', tool_name: tool, tool_input: input } }))!
 
 test('a request that waits on the bubble says what it is for, by which name to answer it, and until when', () => {
-  expect(requestOf(request('Bash', { command: 'rm -rf node_modules' }))).toEqual({ id: '000001760000000-7', until: NOW + 30 * SEC, chat: 's1', tool: 'Bash', what: 'rm -rf node_modules', canAllow: true })
+  expect(requestOf(request('Bash', { command: 'rm -rf node_modules' }))).toEqual({ id: '000001760000000-7-ask', until: NOW + 30 * SEC, chat: 's1', tool: 'Bash', what: 'rm -rf node_modules', canAllow: true })
+  // The name the app's own hook gives a waiting call (agents.rs, ask_name): the same name, read back.
   // A call that does not wait (the person did not ask for it, or another agent's) is no request to answer.
   expect(requestOf(request('Bash', { command: 'ls' }, null))).toBeNull()
   expect(requestOf(hook(NOW, 'PermissionRequest', { tool_name: 'Bash' }))).toBeNull()

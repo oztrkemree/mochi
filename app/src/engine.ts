@@ -50,7 +50,7 @@ export function hookedOf(file: string): Hooked | null {
   const source = text(v.source)
   const session = text(event.session_id)
   if (!/^[a-z][a-z0-9]{0,19}$/.test(source) || !/^[A-Za-z0-9_-]{1,110}$/.test(session)) return null
-  const ask = typeof v.ask === 'object' && v.ask !== null && typeof v.ask.id === 'string' && /^[0-9]{1,20}-[0-9]{1,10}$/.test(v.ask.id) && typeof v.ask.until === 'number' ? { id: v.ask.id, until: v.ask.until } : null
+  const ask = typeof v.ask === 'object' && v.ask !== null && typeof v.ask.id === 'string' && /^[0-9]{1,20}-[0-9]{1,10}-ask$/.test(v.ask.id) && typeof v.ask.until === 'number' ? { id: v.ask.id, until: v.ask.until } : null
   return { source, at: v.at, name: text(event.hook_event_name), id: idOf(source, session), event, ask }
 }
 
