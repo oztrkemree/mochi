@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What Mochi's window may do: size, move and show itself, open a chat's link in the Claude app, and hear the settings and the app's news of the chats",
+  "description": "What Mochi's window may do: size, move and show itself, open a chat's link in the Claude app or a pull request on GitHub, and hear the settings and the app's news of the chats",
   "windows": [
     "main"
   ],
@@ -16,6 +16,9 @@
       "allow": [
         {
           "url": "claude://code/continue?session=*"
+        },
+        {
+          "url": "https://github.com/*"
         }
       ]
     }

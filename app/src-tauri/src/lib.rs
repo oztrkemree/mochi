@@ -198,6 +198,21 @@ fn set_shield(app: AppHandle, on: bool) {
     beat_now(&app);
 }
 
+/// The card to share, saved beside Mochi's files (share/), and shown in the file manager. Only the card's own name.
+#[tauri::command]
+fn save_share(app: AppHandle, name: String, svg: String) -> Option<String> {
+    use tauri_plugin_opener::OpenerExt;
+    if name != "mochi-card.svg" || svg.len() > 400_000 || !svg.trim_start().starts_with("<svg") {
+        return None;
+    }
+    let path = data_dir()?.join("share").join(&name);
+    if !store::write_whole(&path, &svg) {
+        return None;
+    }
+    let _ = app.opener().reveal_item_in_dir(&path);
+    Some(path.display().to_string())
+}
+
 /// The person's own shield rules, as they wrote them; read only.
 #[tauri::command]
 fn read_shield() -> Option<String> {
@@ -391,7 +406,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, commits, desks, prs, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, commits, desks, prs, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]

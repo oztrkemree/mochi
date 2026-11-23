@@ -8,8 +8,9 @@ import { badgeName, badgeSvg } from '../../hooks/badges'
 import { citySvg } from '../../hooks/city'
 import { dayKey, local, shiftDay } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
-import { type Choice, type Look, type Slot, addDay, choiceFrom, choiceText, itemShort, levelOf, lookFrom, slotName, unlocked, xpOf } from '../../hooks/level'
+import { type Choice, type Look, type Slot, addDay, choiceFrom, choiceText, dressAs, itemShort, levelOf, lookFrom, slotName, unlocked, xpOf } from '../../hooks/level'
 import { PRS_QUERY, PRS_SEARCH } from '../../hooks/prs'
+import { bestOutfit, cardMarkdown, cardSvg } from '../../hooks/share'
 import { LOOK_BACK_DAYS } from '../../hooks/standup'
 import { PEER_INK, appLink, nameOf } from '../../hooks/live'
 import { t } from '../../hooks/i18n'
@@ -456,11 +457,26 @@ function drawGrowth(into: HTMLElement) {
     into.append(medals)
   }
   if (look) into.append(drawWardrobe(look))
+  into.append(drawShare())
   const now = Date.now()
   const city = el('div', 'city')
   // The city is the mod's own drawing too, held still like Mochi: whatever twinkles in it would redraw the window for as long as the pocket is open.
   city.innerHTML = stillOf(citySvg(history.days, dayKey(now, tz()), local(now, tz()).hour, 314).svg)
   into.append(city)
+}
+
+/** The card to share, as the mod makes it with /mochi card: saved, shown in the file manager, and the line for a GitHub profile copied. */
+function drawShare(): HTMLElement {
+  const b = el('button', 'share', words().card)
+  b.type = 'button'
+  b.addEventListener('click', () => void (async () => {
+    const outfit = look ? dressAs(look, 'idle', Date.now()) : bestOutfit([])
+    const path = await invoke<string | null>('save_share', { name: 'mochi-card.svg', svg: cardSvg(history, outfit) })
+    if (path === null) return void speak(t().share.failed('~/.claude/mochi/share'), 6000, NEWS_INK.failed, null)
+    await navigator.clipboard.writeText(cardMarkdown('mochi-card.svg')).catch(() => undefined)
+    speak(`${t().share.cardSaved(path)} ${words().cardCopied}`, 9000, NEWS_INK.level, null)
+  })().catch(note))
+  return b
 }
 
 /** The wardrobe: each slot with something open, Mochi's own pick, nothing, or an item. What is worn now is pressed. */
