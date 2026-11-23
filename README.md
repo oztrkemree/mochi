@@ -72,6 +72,10 @@ Type it in any Claude Code chat, answer `y` to add the marketplace and pick the 
 </tr>
 </table>
 
+## 🖥️ On the desktop too
+
+Mochi Buddy also comes as a small app for macOS and Windows: one Mochi in a corner of your screen for every agent you run, Claude Code (with the mod or without it) and Codex alike. It tells you when a chat finishes, waits for you or fails, lets you answer a request for permission from its bubble, shows your limits, and keeps the same level, badges and wardrobe as the mod, from the same files. Download it from the latest `desktop-v` release; [app/README.md](app/README.md) says what it does and how to install it.
+
 ## 🎭 It feels what Claude is doing
 
 Thinking, reading, searching, typing, running a command, waiting for you, celebrating a green test run, dizzy after three errors in a row, asleep when you are away. **Thirty moods, and no jump cuts**: every pose eases out of the last, so the band never flickers, it breathes.

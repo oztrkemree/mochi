@@ -1,6 +1,6 @@
 [package]
 name = "mochi-desktop"
-version = "0.1.0"
+version = "1.0.0"
 description = "Mochi Buddy on the desktop: one Mochi for every agent you run, with or without the mod"
 edition = "2021"
 license = "MIT"

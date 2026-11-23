@@ -2,8 +2,9 @@
 # on a release named for its version, and its update file copied to the
 # release the installed apps look at (desktop-latest).
 #
-# To release: set the version in app/src-tauri/tauri.conf.json and
-# app/package.json, merge, then push a tag desktop-vX.Y.Z on that commit.
+# To release: set the version in app/src-tauri/tauri.conf.json, app/package.json
+# and app/src-tauri/Cargo.toml, merge, then push a tag desktop-vX.Y.Z on that
+# commit. The release is made as a draft, to be published by hand.
 name: desktop
 
 on:
@@ -69,7 +70,8 @@ jobs:
           tagName: desktop-v__VERSION__
           releaseName: 'Mochi Buddy desktop __VERSION__'
           releaseBody: 'Mochi on the desktop. See app/README.md for what it does and how to install it.'
-          releaseDraft: false
+          # A draft: the person looks at it and publishes it.
+          releaseDraft: true
           prerelease: false
           args: --target ${{ matrix.target }}
 

@@ -499,6 +499,15 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_version_is_the_same_everywhere_it_is_written() {
+        // The app tells its version from Cargo.toml (app.json, a newer release); the installers are named from tauri.conf.json.
+        let conf: Value = serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        let package: Value = serde_json::from_str(include_str!("../../package.json")).unwrap();
+        assert_eq!(conf["version"], env!("CARGO_PKG_VERSION"));
+        assert_eq!(package["version"], env!("CARGO_PKG_VERSION"));
+    }
     use serde_json::json;
 
     #[test]
