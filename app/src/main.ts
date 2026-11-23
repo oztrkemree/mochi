@@ -186,7 +186,9 @@ function chime(name: SoundName) {
  */
 const MOVES_MS = 2400
 /** While a chat works, Mochi moves again no sooner than this after it last did. */
-const WORK_REST_MS = 9000
+const WORK_REST_MS = 20_000
+/** While a chat works its Mochi changes what it does every few seconds: each change is eased in and held, not played out. */
+const WORK_MOVES_MS = 900
 let stillTimer = 0
 let movedAt = 0
 let isStill = false
@@ -547,9 +549,10 @@ function draw() {
   const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT) })
   view = next
   // A new pose comes to the screen eased in from the last; the same pose is left as it is.
+  const isAtWork = peers.some(p => p.state === 'busy')
   if (!before || next.svg !== before.svg) {
-    move(MOVES_MS, next.svg)
-  } else if (peers.some(p => p.state === 'busy') && now - movedAt >= WORK_REST_MS) {
+    move(before && isAtWork && before.peers.some(p => p.state === 'busy') ? WORK_MOVES_MS : MOVES_MS, next.svg)
+  } else if (isAtWork && now - movedAt >= WORK_REST_MS) {
     // A chat at work: Mochi works along for a moment, now and then.
     move(1300)
   }
