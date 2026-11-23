@@ -23,6 +23,7 @@ import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type PullBox, type Ran, ciNow, ciSaid, ciStep, commitsOf, deskOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed, standupOf } from './today'
 import { chosen, lookNow, shelvesOf } from './wardrobe'
+import { useRules, verdictOf } from './shield'
 import { words } from './words'
 import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, stillOf, viewOf } from './world'
 
@@ -712,6 +713,8 @@ async function take(calls: string[]) {
   for (const call of calls) {
     const h = hookedOf(call)
     if (!h) continue
+    // A shell command waiting on the shield: named now, while it waits, or let go at once.
+    if (h.ask && h.name === 'PreToolUse') shield(h.id, h.ask.id, h.event)
     // A request waits on the bubble whoever follows its chat, the mod or the app.
     const request = requestOf(h)
     if (request && settings.approve) {
@@ -760,6 +763,24 @@ async function take(calls: string[]) {
       return { id: r.chat, kind: 'asking' as const, line: t().peer.waiting(chat ? nameOf(chat) : t().word.chat), link: appLink(chat?.app) }
     }), peers, true)
   }
+}
+
+// ---------- the shield ----------
+
+/** Answers a shell command waiting on the shield: Claude Code asks the person first, with what it would do, and Mochi says so too. */
+function shield(chat: string, id: string, event: Record<string, unknown>) {
+  const why = verdictOf(event)
+  void invoke('answer', { id, behavior: why === null ? 'none' : 'ask', why }).catch(note)
+  if (why === null || !view) return
+  const peer = view.peers.find(p => p.id === chat)
+  hear([{ id: `shield-${chat}`, kind: 'failed', line: words().careful(why), link: appLink(peer?.app) }], view.peers)
+}
+
+/** The person's own shield rules (shield.json), read again now and then: they write it by hand. */
+let rulesAt = 0
+function readRules() {
+  rulesAt = Date.now()
+  void invoke<string | null>('read_shield').then(useRules, note)
 }
 
 // ---------- said of a chat's folder: its CI, and changes left uncommitted ----------
@@ -874,6 +895,7 @@ async function apply(next: Settings) {
   if (!settings.showAgents) list.classList.remove('on')
   await invoke('on_top', { on: settings.onTop }).catch(note)
   await invoke('set_approve', { seconds: settings.approve ? APPROVE_S : 0 }).catch(note)
+  await invoke('set_shield', { on: settings.shield }).catch(note)
   if (!settings.approve) for (const request of [...requests.values()]) answer(request, 'none')
   // A language or a size changes the drawing and the words: draw them again, and stand where the new size fits.
   view = null
@@ -951,7 +973,9 @@ async function start() {
     pointer = { x: e.payload[0], y: e.payload[1] }
     gaze()
   })
+  readRules()
   await listen('minute', () => {
+    if (Date.now() - rulesAt > 5 * 60_000) readRules()
     // A breath a minute, so a Mochi with nothing to do is still alive.
     move(1500)
     void take([]).catch(note)

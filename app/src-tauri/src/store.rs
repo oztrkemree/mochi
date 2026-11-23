@@ -261,8 +261,8 @@ pub fn read_look(dir: &Path) -> Option<String> {
 
 /// What the app says of itself in app.json: when, whether its Mochi is on screen, and for how many seconds
 /// it will take a request for permission in its bubble (0 when the person has not asked for that).
-pub fn beat_text(at_ms: u128, is_shown: bool, approve_s: u64) -> String {
-    json!({ "v": 1, "at": at_ms as u64, "isShown": is_shown, "version": env!("CARGO_PKG_VERSION"), "approve": approve_s }).to_string()
+pub fn beat_text(at_ms: u128, is_shown: bool, approve_s: u64, shield: bool) -> String {
+    json!({ "v": 1, "at": at_ms as u64, "isShown": is_shown, "version": env!("CARGO_PKG_VERSION"), "approve": approve_s, "shield": shield }).to_string()
 }
 
 #[cfg(test)]
@@ -300,12 +300,12 @@ pub mod tests {
 
     #[test]
     fn the_beat_says_when_and_whether_mochi_is_on_screen() {
-        let v: Value = serde_json::from_str(&beat_text(1_760_000_000_000, true, 30)).unwrap();
+        let v: Value = serde_json::from_str(&beat_text(1_760_000_000_000, true, 30, true)).unwrap();
         assert_eq!(v["at"], 1_760_000_000_000u64);
         assert_eq!(v["isShown"], true);
         assert_eq!(v["v"], 1);
         assert_eq!(v["approve"], 30);
-        assert!(beat_text(1, false, 0).contains("\"isShown\":false"));
+        assert!(beat_text(1, false, 0, false).contains("\"isShown\":false"));
     }
 
     #[test]

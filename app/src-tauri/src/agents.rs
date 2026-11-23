@@ -17,7 +17,7 @@ const MOST_CALLS: usize = 500;
 // ---------- the hook command and the inbox ----------
 
 /// Only what the window reads of a hook call, cut short: a prompt or a file's text is not left on disk for it.
-fn kept(event: &Value) -> Value {
+fn kept(event: &Value, most_command: usize) -> Value {
     let short = |v: &Value, max: usize| v.as_str().map(|s| Value::from(s.chars().take(max).collect::<String>()));
     let mut out = serde_json::Map::new();
     for (key, max) in [("hook_event_name", 40), ("session_id", 120), ("cwd", 400), ("tool_name", 80), ("prompt", 200), ("notification_type", 40), ("agent_id", 80), ("agent_type", 40), ("session_title", 60)] {
@@ -32,9 +32,9 @@ fn kept(event: &Value) -> Value {
     // Of what a tool is given, only what tells a test or a commit, and what a person must see to answer for it: the command, or the file.
     let mut input = serde_json::Map::new();
     if let Some(command) = event["tool_input"]["command"].as_str() {
-        input.insert("command".into(), short(&event["tool_input"]["command"], MOST_COMMAND).unwrap_or_default());
+        input.insert("command".into(), short(&event["tool_input"]["command"], most_command).unwrap_or_default());
         // Said when the command is longer than what is kept: nobody may answer for a command they saw part of.
-        if command.chars().count() > MOST_COMMAND {
+        if command.chars().count() > most_command {
             input.insert("cut".into(), json!(true));
         }
     }
@@ -81,18 +81,24 @@ const MOST_COMMAND: usize = 300;
 const PLAIN_WITH_A_COMMAND: [&str; 4] = ["command", "description", "timeout", "run_in_background"];
 /// For how long a request for permission may wait on Mochi's bubble at most, in seconds.
 pub const MOST_WAIT_S: u64 = 120;
+/// As much of a shell command as the shield reads: all of nearly any real one. The call is taken out of the inbox as it is read.
+const MOST_SHIELDED: usize = 4000;
+/// For how long a shell command that might destroy something waits for the shield's word, in ms; without one it goes on as always.
+pub const SHIELD_WAIT_MS: u64 = 2500;
 
 /// One hook call into the inbox, named so the calls sort by time; nothing for input that is not a call.
-/// `wait_s` is for how long the call waits for an answer from Mochi's bubble (0: it does not): the call then says so, with the name to answer it by.
-fn drop_in(dir: &Path, source: &str, input: &str, at: u128, pid: u32, wait_s: u64) -> Option<PathBuf> {
+/// `wait_ms` is for how long the call waits for an answer from Mochi (0: it does not): the call then says so, with the name to answer it by,
+/// and its name ends in `-ask`, so the app reads it at once.
+fn drop_in(dir: &Path, source: &str, input: &str, at: u128, pid: u32, wait_ms: u64) -> Option<PathBuf> {
     let event: Value = serde_json::from_str(input).ok()?;
     if !event.is_object() {
         return None;
     }
-    let name = format!("{at:015}-{pid}");
-    let mut call = json!({ "source": source, "at": at as u64, "event": kept(&event) });
-    if wait_s > 0 {
-        call["ask"] = json!({ "id": name, "until": at as u64 + wait_s * 1000 });
+    let name = if wait_ms > 0 { ask_name(at, pid) } else { format!("{at:015}-{pid}") };
+    let shielded = wait_ms > 0 && event["hook_event_name"] == "PreToolUse";
+    let mut call = json!({ "source": source, "at": at as u64, "event": kept(&event, if shielded { MOST_SHIELDED } else { MOST_COMMAND }) });
+    if wait_ms > 0 {
+        call["ask"] = json!({ "id": name, "until": at as u64 + wait_ms });
     }
     let path = dir.join(format!("{name}.json"));
     write_whole(&path, &call.to_string()).then_some(path)
@@ -108,8 +114,56 @@ fn waits_for(source: &str, event: &Value, beat: &Value) -> u64 {
     if is_request { beat["approve"].as_u64().unwrap_or(0).min(MOST_WAIT_S) } else { 0 }
 }
 
-/// What Claude Code is told for an answer: its own words for a granted or a refused request. None for no answer, which leaves the request to Claude Code's own dialog.
-fn decision(answer: &str) -> Option<String> {
+fn ask_name(at: u128, pid: u32) -> String {
+    format!("{at:015}-{pid}-ask")
+}
+
+// ---------- the shield ----------
+
+/// Words one of which is in every command the shield names (the mod's `hooks/guard.ts`), in lower case: `whole` ones as a whole word,
+/// `anywhere` ones anywhere. A command with none of them cannot be one, and goes on without a wait; one with them waits a moment for the
+/// shield to read it whole. `app/src/shield.spec.ts` checks every dangerous command in the mod's tests has one.
+fn words() -> &'static (Vec<String>, Vec<String>) {
+    static WORDS: std::sync::OnceLock<(Vec<String>, Vec<String>)> = std::sync::OnceLock::new();
+    WORDS.get_or_init(|| {
+        let v: Value = serde_json::from_str(include_str!("../shield-words.json")).unwrap_or(Value::Null);
+        let list = |key: &str| v[key].as_array().map(|a| a.iter().filter_map(|w| w.as_str().map(str::to_owned)).collect()).unwrap_or_default();
+        (list("whole"), list("anywhere"))
+    })
+}
+
+pub fn might_destroy(command: &str) -> bool {
+    let command = command.to_lowercase();
+    let (whole, anywhere) = words();
+    command.split(|c: char| !(c.is_alphanumeric() || c == '-' || c == '_')).any(|word| whole.iter().any(|w| w == word))
+        || anywhere.iter().any(|word| command.contains(word.as_str()))
+}
+
+/// Whether the person wrote rules of their own into shield.json: any command may match those, so every one is read.
+fn has_own_rules(dir: &Path) -> bool {
+    fs::read_to_string(dir.join("shield.json")).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok()).is_some_and(|v| v["add"].as_array().is_some_and(|a| !a.is_empty()))
+}
+
+/// For how long, in ms, a shell command in a chat waits for the shield's word: a Claude Code chat the app follows (the mod shields its
+/// own), while the person keeps the shield on (the app says so in its beat), for a command that might destroy something.
+fn shield_wait(source: &str, event: &Value, beat: &Value, dir: &Path) -> u64 {
+    let tool = event["tool_name"].as_str().unwrap_or("");
+    let command = event["tool_input"]["command"].as_str().unwrap_or("");
+    let session = event["session_id"].as_str().unwrap_or("");
+    let is_shell = source == "claude" && event["hook_event_name"] == "PreToolUse" && (tool == "Bash" || tool == "PowerShell") && !command.is_empty();
+    if !is_shell || beat["shield"] != true || crate::store::is_theirs(&dir.join("live"), session) || !(might_destroy(command) || has_own_rules(dir)) {
+        return 0;
+    }
+    SHIELD_WAIT_MS
+}
+
+/// What Claude Code is told for an answer: its own words for a granted or a refused request, or, for a command the shield named,
+/// to ask the person first and why. None for no answer, which leaves the call to Claude Code as always.
+fn decision(answer: &str, why: &str) -> Option<String> {
+    if answer == "ask" {
+        let reason = format!("Mochi: {why}");
+        return Some(json!({ "hookSpecificOutput": { "hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": reason } }).to_string());
+    }
     let decision = match answer {
         "allow" => json!({ "behavior": "allow" }),
         "deny" => json!({ "behavior": "deny", "message": "Denied from Mochi, on the desktop." }),
@@ -118,24 +172,27 @@ fn decision(answer: &str) -> Option<String> {
     Some(json!({ "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": decision } }).to_string())
 }
 
-/// Waits for the bubble's answer to one request, until `until`; the answer's file is taken away once read.
-fn answer_for(answers: &Path, id: &str, until: u128) -> Option<String> {
+/// Waits for Mochi's answer to one call, until `until`: what it is, and why; the answer's file is taken away once read.
+fn answer_for(answers: &Path, id: &str, until: u128) -> Option<(String, String)> {
     let path = answers.join(format!("{id}.json"));
     loop {
         if let Ok(text) = fs::read_to_string(&path) {
             let _ = fs::remove_file(&path);
-            return serde_json::from_str::<Value>(&text).ok().and_then(|v| v["behavior"].as_str().map(str::to_owned));
+            let v = serde_json::from_str::<Value>(&text).ok()?;
+            return Some((v["behavior"].as_str()?.to_owned(), v["why"].as_str().unwrap_or("").to_owned()));
         }
         if now_ms() >= until {
             return None;
         }
-        thread::sleep(Duration::from_millis(80));
+        thread::sleep(Duration::from_millis(40));
     }
 }
 
-/// The bubble's answer to a request, left for the hook that waits on it. Only a name the hook could have given, and only one of the three answers.
-pub fn answer(answers: &Path, id: &str, behavior: &str) -> bool {
-    is_id(id) && ["allow", "deny", "none"].contains(&behavior) && write_whole(&answers.join(format!("{id}.json")), &json!({ "behavior": behavior }).to_string())
+/// Mochi's answer to a call, left for the hook that waits on it. Only a name the hook could have given, and only one of the four answers;
+/// `why` is said with "ask", in a line.
+pub fn answer(answers: &Path, id: &str, behavior: &str, why: &str) -> bool {
+    let why: String = why.chars().filter(|c| !c.is_control()).take(200).collect();
+    is_id(id) && ["allow", "deny", "none", "ask"].contains(&behavior) && write_whole(&answers.join(format!("{id}.json")), &json!({ "behavior": behavior, "why": why }).to_string())
 }
 
 /// Answers nobody waited for (the hook gave up first) are swept away after a while.
@@ -165,13 +222,19 @@ pub fn hook(source: &str) {
     }
     let event: Value = serde_json::from_str(&input).unwrap_or(Value::Null);
     let beat: Value = fs::read_to_string(dir.join("app.json")).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or(Value::Null);
-    let (at, pid, wait_s) = (now_ms(), std::process::id(), waits_for(source, &event, &beat));
-    if drop_in(&dir.join("inbox"), source, &input, at, pid, wait_s).is_none() || wait_s == 0 {
+    let wait_ms = (waits_for(source, &event, &beat) * 1000).max(shield_wait(source, &event, &beat, &dir));
+    let (at, pid) = (now_ms(), std::process::id());
+    if drop_in(&dir.join("inbox"), source, &input, at, pid, wait_ms).is_none() || wait_ms == 0 {
         return;
     }
-    if let Some(text) = answer_for(&dir.join("answers"), &format!("{at:015}-{pid}"), at + u128::from(wait_s) * 1000).as_deref().and_then(decision) {
+    if let Some(text) = answer_for(&dir.join("answers"), &ask_name(at, pid), at + u128::from(wait_ms)).and_then(|(a, why)| decision(&a, &why)) {
         println!("{text}");
     }
+}
+
+/// Whether a call in the inbox waits on Mochi's answer (its name says so): looked at often, so it is cheap, a listing of the folder.
+pub fn has_waiting(dir: &Path) -> bool {
+    fs::read_dir(dir).is_ok_and(|entries| entries.flatten().any(|e| e.file_name().to_str().is_some_and(|n| n.ends_with("-ask.json"))))
 }
 
 /// The calls waiting in the inbox, oldest first, each taken out as it is read.
@@ -482,7 +545,7 @@ mod tests {
     fn the_hook_counts_the_app_as_running_only_while_its_beat_is_on_disk() {
         let dir = scratch("running");
         assert!(!is_running(&dir));
-        write_whole(&dir.join("app.json"), &beat_text(now_ms(), true, 0));
+        write_whole(&dir.join("app.json"), &beat_text(now_ms(), true, 0, false));
         assert!(is_running(&dir));
         fs::remove_file(dir.join("app.json")).unwrap();
         assert!(!is_running(&dir));
@@ -510,7 +573,7 @@ mod tests {
     fn a_call_keeps_only_what_the_window_reads_and_cuts_it_short() {
         let long = "x".repeat(5000);
         let event = json!({ "hook_event_name": "PreToolUse", "session_id": "s1", "cwd": "/w", "tool_name": "Write", "prompt": long, "transcript_path": "/secret", "last_assistant_message": "the answer", "session_title": "Fix the cart", "tool_input": { "command": long, "content": "the whole file" } });
-        let k = kept(&event);
+        let k = kept(&event, MOST_COMMAND);
         assert_eq!(k["prompt"].as_str().unwrap().len(), 200);
         assert_eq!(k["tool_input"]["command"].as_str().unwrap().len(), 300);
         assert!(k["tool_input"].get("content").is_none());
@@ -520,14 +583,18 @@ mod tests {
         assert_eq!(k["session_title"], "Fix the cart");
         // A command kept short says it was cut; one kept whole does not.
         assert_eq!(k["tool_input"]["cut"], true);
-        let whole = kept(&json!({ "tool_name": "Bash", "tool_input": { "command": "ls -la", "file_path": "/w/src/cart.ts" } }));
+        let whole = kept_short(&json!({ "tool_name": "Bash", "tool_input": { "command": "ls -la", "file_path": "/w/src/cart.ts" } }));
         assert!(whole["tool_input"].get("cut").is_none());
         // A command given with more than itself says so; with only why and for how long, it does not.
         assert_eq!(whole["tool_input"]["odd"], true);
-        assert_eq!(kept(&json!({ "tool_input": { "command": "ls", "dangerouslyDisableSandbox": true } }))["tool_input"]["odd"], true);
-        assert!(kept(&json!({ "tool_input": { "command": "ls", "description": "list", "timeout": 5000, "run_in_background": false } }))["tool_input"].get("odd").is_none());
-        assert!(kept(&json!({ "tool_input": { "file_path": "/w/a.ts", "content": "x" } }))["tool_input"].get("odd").is_none());
+        assert_eq!(kept_short(&json!({ "tool_input": { "command": "ls", "dangerouslyDisableSandbox": true } }))["tool_input"]["odd"], true);
+        assert!(kept_short(&json!({ "tool_input": { "command": "ls", "description": "list", "timeout": 5000, "run_in_background": false } }))["tool_input"].get("odd").is_none());
+        assert!(kept_short(&json!({ "tool_input": { "file_path": "/w/a.ts", "content": "x" } }))["tool_input"].get("odd").is_none());
         assert_eq!(whole["tool_input"]["file_path"], "/w/src/cart.ts");
+    }
+
+    fn kept_short(event: &Value) -> Value {
+        kept(event, MOST_COMMAND)
     }
 
     #[test]
@@ -550,30 +617,62 @@ mod tests {
     fn a_waiting_request_says_so_in_its_call_and_takes_the_answer_left_for_it() {
         let dir = scratch("ask");
         let (inbox, answers) = (dir.join("inbox"), dir.join("answers"));
-        drop_in(&inbox, "claude", r#"{"hook_event_name":"PermissionRequest","session_id":"s1","tool_name":"Bash"}"#, 5000, 7, 30).unwrap();
+        drop_in(&inbox, "claude", r#"{"hook_event_name":"PermissionRequest","session_id":"s1","tool_name":"Bash"}"#, 5000, 7, 30_000).unwrap();
         let call: Value = serde_json::from_str(&taken(&inbox)[0]).unwrap();
-        assert_eq!(call["ask"], json!({ "id": "000000000005000-7", "until": 35000 }));
+        assert_eq!(call["ask"], json!({ "id": "000000000005000-7-ask", "until": 35000 }));
         // The bubble's answer, by that name; anything else is no answer.
-        assert!(answer(&answers, "000000000005000-7", "allow"));
-        assert!(!answer(&answers, "../000000000005000-7", "allow"));
-        assert!(!answer(&answers, "000000000005000-8", "maybe"));
-        assert_eq!(answer_for(&answers, "000000000005000-7", now_ms() + 2000).as_deref(), Some("allow"));
-        assert!(!answers.join("000000000005000-7.json").exists());
+        assert!(answer(&answers, "000000000005000-7-ask", "allow", ""));
+        assert!(!answer(&answers, "../000000000005000-7-ask", "allow", ""));
+        assert!(!answer(&answers, "000000000005000-8-ask", "maybe", ""));
+        assert_eq!(answer_for(&answers, "000000000005000-7-ask", now_ms() + 2000), Some(("allow".into(), String::new())));
+        assert!(!answers.join("000000000005000-7-ask.json").exists());
         // Nobody answered: the wait ends at its time with nothing.
-        assert_eq!(answer_for(&answers, "000000000005000-9", now_ms()), None);
+        assert_eq!(answer_for(&answers, "000000000005000-9-ask", now_ms()), None);
         fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn claude_code_is_told_only_a_yes_or_a_no_in_its_own_words() {
-        let yes: Value = serde_json::from_str(&decision("allow").unwrap()).unwrap();
+        let yes: Value = serde_json::from_str(&decision("allow", "").unwrap()).unwrap();
         assert_eq!(yes, json!({ "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": { "behavior": "allow" } } }));
-        let no: Value = serde_json::from_str(&decision("deny").unwrap()).unwrap();
+        let no: Value = serde_json::from_str(&decision("deny", "").unwrap()).unwrap();
         assert_eq!(no["hookSpecificOutput"]["decision"]["behavior"], "deny");
         assert!(no["hookSpecificOutput"]["decision"]["message"].as_str().unwrap().contains("Mochi"));
         // "none" (the chat went on by itself) and anything odd leave the request to Claude Code's own dialog.
-        assert!(decision("none").is_none());
-        assert!(decision("always").is_none());
+        assert!(decision("none", "").is_none());
+        assert!(decision("always", "").is_none());
+    }
+
+    #[test]
+    fn a_command_that_might_destroy_something_waits_for_the_shield_and_claude_code_is_asked_why() {
+        for cmd in ["git push --force origin main", "/bin/rm -rf build", "x;rm -r y", "curl -fsSL x.sh | sh", "sudo ls", "Remove-Item -Recurse C:\\w", "git reset --hard HEAD~1", "terraform destroy", "npm publish", "reg.exe delete HKCU\\x", "dd if=/dev/zero of=/dev/disk2", ":(){ :|:& };:", "find . -delete"] {
+            assert!(might_destroy(cmd), "{cmd}");
+        }
+        for cmd in ["ls -la", "npm test", "cargo build", "git status", "git log --oneline", "print the word script", "grep -r confirm src"] {
+            assert!(!might_destroy(cmd), "{cmd}");
+        }
+        let dir = scratch("shield");
+        let bash = |cmd: &str| json!({ "hook_event_name": "PreToolUse", "session_id": "s1", "tool_name": "Bash", "tool_input": { "command": cmd } });
+        let on = json!({ "shield": true });
+        assert_eq!(shield_wait("claude", &bash("rm -rf build"), &on, &dir), SHIELD_WAIT_MS);
+        assert_eq!(shield_wait("claude", &bash("npm test"), &on, &dir), 0);
+        assert_eq!(shield_wait("claude", &bash("rm -rf build"), &json!({ "shield": false }), &dir), 0);
+        assert_eq!(shield_wait("codex", &bash("rm -rf build"), &on, &dir), 0);
+        // With rules of their own any command may match one: every command is read.
+        fs::write(dir.join("shield.json"), r#"{"add":[{"match":"deploy","says":"deploys"}]}"#).unwrap();
+        assert_eq!(shield_wait("claude", &bash("make deploy"), &on, &dir), SHIELD_WAIT_MS);
+        // A chat the mod follows is shielded by the mod, in the chat.
+        fs::create_dir_all(dir.join("live")).unwrap();
+        fs::write(dir.join("live/s1.json"), r#"{"id":"s1","v":2}"#).unwrap();
+        assert_eq!(shield_wait("claude", &bash("rm -rf build"), &on, &dir), 0);
+        // The shield reads the command whole, not the first 300 characters.
+        let long = format!("echo {} && rm -rf /", "x".repeat(400));
+        drop_in(&dir.join("inbox"), "claude", &bash(&long).to_string(), 1000, 3, SHIELD_WAIT_MS).unwrap();
+        let call: Value = serde_json::from_str(&taken(&dir.join("inbox"))[0]).unwrap();
+        assert!(call["event"]["tool_input"]["command"].as_str().unwrap().ends_with("rm -rf /"));
+        let ask: Value = serde_json::from_str(&decision("ask", "deletes files for good").unwrap()).unwrap();
+        assert_eq!(ask, json!({ "hookSpecificOutput": { "hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": "Mochi: deletes files for good" } }));
+        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
@@ -672,15 +771,15 @@ mod tests {
             "context_window": { "used_percentage": 41.6 }, "cost": { "total_cost_usd": 1.2345 },
             "rate_limits": { "five_hour": { "used_percentage": 23.5, "resets_at": 1738425600 }, "seven_day": { "used_percentage": 141.2, "resets_at": 1738857600 } },
         });
-        let k = kept(&call);
+        let k = kept(&call, MOST_COMMAND);
         assert_eq!(k["status"], json!({ "context": 42, "cost": 1.23, "windows": [
             { "kind": "five_hour", "p": 24, "resetsAt": 1_738_425_600_000u64 },
             { "kind": "seven_day", "p": 100, "resetsAt": 1_738_857_600_000u64 },
         ] }));
         assert!(k.get("transcript_path").is_none());
         // Before the first answer Claude Code knows no limits: none are made up.
-        assert_eq!(kept(&json!({ "hook_event_name": "StatusLine", "session_id": "s1" }))["status"], json!({}));
-        assert!(kept(&json!({ "hook_event_name": "Stop", "rate_limits": {} })).get("status").is_none());
+        assert_eq!(kept_short(&json!({ "hook_event_name": "StatusLine", "session_id": "s1" }))["status"], json!({}));
+        assert!(kept_short(&json!({ "hook_event_name": "Stop", "rate_limits": {} })).get("status").is_none());
     }
 
     #[test]

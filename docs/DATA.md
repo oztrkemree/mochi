@@ -31,9 +31,9 @@ This page is the contract between the two. Change a file's shape here first.
 | `reset-<kind>.json` | the first Mochi to see a usage window reset | `{at, id}`: who says so, so it is said once |
 | `repos.json` | any Mochi, at most once an hour for each repository a chat works in | `{"<repo root>": lastSeenMs}`, without those quiet for 30 days; the stand-up reads those seen in 14 |
 | `coach.json` | the mod | which tips were shown, and rules a person repeats |
-| `app.json` | the app, every 15 s while it runs; removed when it quits | `{v: 1, at, isShown, version, approve}` |
-| `inbox/<ms>-<pid>.json` | the app's `hook` command, one file per hook call; the app takes each out as it reads it | `{source, at, event, ask?}` |
-| `answers/<ms>-<pid>.json` | the app, when the person answers a request for permission in Mochi's bubble; the waiting hook takes it out | `{behavior}`: `allow`, `deny` or `none` |
+| `app.json` | the app, every 15 s while it runs; removed when it quits | `{v: 1, at, isShown, version, approve, shield}` |
+| `inbox/<ms>-<pid>.json` | the app's `hook` command, one file per hook call; the app takes each out as it reads it. A call that waits on Mochi is named `<ms>-<pid>-ask.json`, and read at once | `{source, at, event, ask?}` |
+| `answers/<ms>-<pid>-ask.json` | the app: the person's answer to a request for permission in Mochi's bubble, or the shield's word on a shell command; the waiting hook takes it out | `{behavior, why}`: `allow`, `deny`, `none`, or `ask` with why |
 | `shield.json` | the person, by hand | `{add, off}`: their own shield rules |
 | `share/`, `export-*.json` | the mod, when asked | pictures and exports |
 
@@ -68,5 +68,7 @@ With Mochi as Claude Code's status line (`mochi-desktop statusline`, set from th
 While `app.json` is fresh (60 seconds), the app is running. The mod's band steps its Mochi aside when `isShown` is true, and the `hook` command leaves calls in the inbox only then: with the app closed nobody would empty it.
 
 `approve` in `app.json` is for how many seconds a Claude Code request for permission may wait on Mochi's bubble; 0, the default, means the person has not asked for that and no hook waits. A hook that waits says so in its call (`ask: {id, until}`), and prints Claude Code's own decision only when the bubble's answer (`answers/<id>.json`) is `allow` or `deny`. With `none`, or no answer by `until`, it prints nothing and the request is Claude Code's own dialog's, as always.
+
+`shield` in `app.json` says the person keeps the app's shield on (the default). Then, in a Claude Code chat the app follows (not one the mod writes), a shell command with one of the words in `app/src-tauri/shield-words.json` waits up to 2.5 seconds for the app to read it by the mod's own rules. One that would destroy something gets `ask`, and the hook tells Claude Code to ask the person first, with what the command would do; anything else, or no word in time, goes on as always. Such a call keeps the first 4000 characters of the command, and is taken out of the inbox as it is read.
 
 A call in the inbox keeps only what the app reads, cut short: the event's name, the session, the folder, the tool's name, the first 200 characters of a prompt (for the chat's label), the first 300 of a shell command (to tell a test or a commit, and to show the person what a request is for; `cut` says when there was more), a file's path, a subagent's id and type, and the chat's title.

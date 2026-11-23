@@ -17,6 +17,8 @@ export type Settings = {
   showAgents: boolean
   /** A request for permission can be answered from Mochi's bubble. */
   approve: boolean
+  /** A shell command that cannot be undone is asked about first, in a Claude Code chat the app follows. */
+  shield: boolean
   /** A soft sound with what Mochi says. */
   sound: boolean
   /** The language Mochi speaks; 'auto' follows the system. */
@@ -31,7 +33,7 @@ export const SIZES: Record<Size, number> = { small: 96, medium: 128, large: 160,
 export const TALK_SECONDS = [5, 9, 15, 30] as const
 export const IDLE_MINUTES = [15, 30, 60, 0] as const
 
-export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, approve: false, sound: false, lang: 'auto', idleMinutes: 30 }
+export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, approve: false, shield: true, sound: false, lang: 'auto', idleMinutes: 30 }
 
 export const KEY = 'settings'
 /** The event the settings window sends Mochi's window with every change. */
@@ -56,6 +58,7 @@ export function settingsFrom(text: string | null): Settings {
     onTop: flag(v.onTop, DEFAULTS.onTop),
     showAgents: flag(v.showAgents, DEFAULTS.showAgents),
     approve: flag(v.approve, DEFAULTS.approve),
+    shield: flag(v.shield, DEFAULTS.shield),
     sound: flag(v.sound, DEFAULTS.sound),
     lang: v.lang === 'auto' || (LANGS as unknown[]).includes(v.lang) ? (v.lang as Settings['lang']) : DEFAULTS.lang,
     idleMinutes: (IDLE_MINUTES as readonly unknown[]).includes(v.idleMinutes) ? (v.idleMinutes as number) : DEFAULTS.idleMinutes,

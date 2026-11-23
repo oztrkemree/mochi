@@ -32,12 +32,14 @@ fn is_shown(app: &AppHandle) -> bool {
 
 /// For how many seconds a request for permission may wait on Mochi's bubble; 0 until the person asks for that.
 static APPROVE_S: AtomicU64 = AtomicU64::new(0);
+/// Whether the shield is on: a shell command that might destroy something then waits a moment for its word.
+static SHIELD: AtomicBool = AtomicBool::new(true);
 
 fn beat_now(app: &AppHandle) {
     if let Some(dir) = data_dir() {
         // With Mochi off the screen nobody sees its bubble: no request waits on it.
         let shown = is_shown(app);
-        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), shown, if shown { APPROVE_S.load(Ordering::Relaxed) } else { 0 }));
+        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), shown, if shown { APPROVE_S.load(Ordering::Relaxed) } else { 0 }, SHIELD.load(Ordering::Relaxed)));
     }
 }
 
@@ -92,7 +94,8 @@ fn keep_watch(app: AppHandle) {
         let mut looks: u64 = 0;
         loop {
             stage::follow_pointer(&app, &mut over);
-            if looks % READ_EVERY == 0 {
+            // A call waiting on Mochi (the shield, a request for permission) is read at once; the rest every so often.
+            if looks % READ_EVERY == 0 || data_dir().is_some_and(|d| agents::has_waiting(&d.join("inbox"))) {
                 read_files(&app, &mut told);
             }
             if looks % BEAT_EVERY == 0 {
@@ -189,10 +192,22 @@ fn set_approve(app: AppHandle, seconds: u64) {
     beat_now(&app);
 }
 
+#[tauri::command]
+fn set_shield(app: AppHandle, on: bool) {
+    SHIELD.store(on, Ordering::Relaxed);
+    beat_now(&app);
+}
+
+/// The person's own shield rules, as they wrote them; read only.
+#[tauri::command]
+fn read_shield() -> Option<String> {
+    std::fs::read_to_string(data_dir()?.join("shield.json")).ok().filter(|t| t.len() < 64_000)
+}
+
 /// The person's answer to a request for permission, from the bubble: "allow", "deny", or "none" to let the hook go.
 #[tauri::command]
-fn answer(id: String, behavior: String) -> bool {
-    data_dir().is_some_and(|d| agents::answer(&d.join("answers"), &id, &behavior))
+fn answer(id: String, behavior: String, why: Option<String>) -> bool {
+    data_dir().is_some_and(|d| agents::answer(&d.join("answers"), &id, &behavior, why.as_deref().unwrap_or("")))
 }
 
 /// Whether Mochi looks about now: the window is told where the pointer is only then.
@@ -376,7 +391,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, commits, desks, prs, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, commits, desks, prs, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
