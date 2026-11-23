@@ -1014,6 +1014,11 @@ stage.addEventListener('pointerup', () => {
   pressed = null
   pressMochi()
 })
+// The ring around Mochi shows only for someone moving by the keyboard; a press of the mouse takes it away.
+addEventListener('keydown', e => {
+  if (e.key === 'Tab') document.body.classList.add('keys')
+})
+addEventListener('pointerdown', () => document.body.classList.remove('keys'))
 stage.addEventListener('keydown', e => {
   if ((e.key !== 'Enter' && e.key !== ' ') || e.repeat) return
   e.preventDefault()

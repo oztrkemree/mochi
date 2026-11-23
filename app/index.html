@@ -20,7 +20,8 @@
       #stage.hop { animation: hop 0.5s cubic-bezier(0.3, 0, 0.2, 1); }
       @keyframes hop { 30% { transform: translateY(calc(var(--size) * -0.09)) scaleY(1.03); } 62% { transform: translateY(0) scaleY(0.96); } 100% { transform: none; } }
       @media (prefers-reduced-motion: reduce) { #stage.hop { animation: none; } #stage g { transition: none !important; } }
-      #stage:focus-visible { outline: 2px solid #E08A6A; outline-offset: -6px; border-radius: 50%; }
+      #stage:focus { outline: none; }
+      .keys #stage:focus-visible { outline: 2px solid #E08A6A; outline-offset: -6px; border-radius: 40%; }
       #stage { transform-origin: 50% 100%; }
       /* The eyes follow the pointer smoothly, not in steps. */
       #stage g[transform="translate(0 -52)"] { transition: translate 0.2s ease-out; }

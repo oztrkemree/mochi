@@ -3,8 +3,7 @@ import { listen } from '@tauri-apps/api/event'
 
 import type { Badge, History, Item, Outfit } from '../../types'
 import { badgeHint, badgeLook, badgeName, badgesOf, provenBy } from '../../hooks/badges'
-import { citySvg } from '../../hooks/city'
-import { dayKey, local } from '../../hooks/facts'
+import { dayKey } from '../../hooks/facts'
 import { lang, pickLang, setLang, t } from '../../hooks/i18n'
 import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, dressAs, hintFor, itemName, itemShort, lookFrom, slotName } from '../../hooks/level'
 import { itemIcon, svgFor } from '../../hooks/rig'
@@ -21,7 +20,7 @@ import { stillOf } from './world'
 /**
  * Mochi's room: a window of its own, opened from the pocket. Mochi stands in
  * the light, dressed as it is, and tries on what the pointer rests on; beside
- * it, the wardrobe, the badges and the city. A choice here is written to
+ * it, the wardrobe, the achievements and the settings. A choice here is written to
  * prefs.json, so the Mochi in the corner and the mod's wear it too.
  */
 
@@ -48,7 +47,7 @@ let modLook: Look | null = null
 let prefs: Choice | null = null
 let badges: Badge[] = []
 let look: Look | null = null
-const TABS = ['wardrobe', 'feats', 'city', 'settings'] as const
+const TABS = ['wardrobe', 'feats', 'settings'] as const
 type Tab = (typeof TABS)[number]
 const isTab = (v: unknown): v is Tab => (TABS as readonly unknown[]).includes(v)
 /** The tab asked for (the tray's Settings), else the one last open. */
@@ -104,7 +103,7 @@ function drawTabs() {
   tabs.replaceChildren()
   const open = look?.items.length ?? 0
   const all = Object.values(SLOT_ITEMS).flat().length
-  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['city', t().pane.city, ''], ['settings', t().pane.tabs.settings, '']] as const) {
+  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['settings', t().pane.tabs.settings, '']] as const) {
     const b = el('button', '', label)
     b.type = 'button'
     b.setAttribute('role', 'tab')
@@ -236,14 +235,6 @@ function drawFeats(into: HTMLElement) {
   }
 }
 
-function drawCity(into: HTMLElement) {
-  if (!history) return
-  const now = Date.now()
-  const city = svgIn('city', stillOf(citySvg(history.days, dayKey(now, tz()), local(now, tz()).hour, 560).svg))
-  city.style.display = 'block'
-  into.append(city)
-}
-
 function show(name: Tab) {
   tab = name
   localStorage.setItem('roomTab', name)
@@ -265,8 +256,7 @@ function draw() {
   }
   panel.replaceChildren()
   if (tab === 'wardrobe') drawWardrobe(panel)
-  else if (tab === 'feats') drawFeats(panel)
-  else drawCity(panel)
+  else drawFeats(panel)
 }
 
 /** The language changed in the settings: the room says everything again in it. */

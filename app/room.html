@@ -109,14 +109,11 @@
       .progress small { color: var(--faint); font-size: 10.5px; font-variant-numeric: tabular-nums; }
       .tag { position: absolute; top: 11px; right: 11px; font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: 0.02em; color: var(--faint); }
       .tag.easy { color: #D9A07A; } .tag.medium { color: #C9D1D9; } .tag.hard { color: #F2C14E; } .tag.impossible { color: #D7A6FF; }
-      .city { border-radius: 14px; overflow: hidden; border: 1px solid var(--edge); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35); }
-      .city svg { display: block; width: 100%; height: auto; }
-      .caption { margin: 12px 2px 0; color: var(--dim); font-size: 12.5px; }
 
       /* The settings, in the room's colours. */
-      .settings { max-width: 640px; }
+      .settings:not([hidden]) { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0 22px; align-items: start; }
       .settings h2 { margin: 22px 4px 8px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
-      .settings h2:first-child { margin-top: 2px; }
+      .settings .col > h2:first-child { margin-top: 2px; }
       .group { border: 1px solid var(--edge); border-radius: 14px; background: var(--shelf); }
       .row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 46px; padding: 9px 14px; }
       .row + .row { border-top: 1px solid var(--edge); }
@@ -127,8 +124,8 @@
       .switch:checked { background: var(--clay); }
       .switch:checked::after { transform: translateX(15px); }
       .switch:focus-visible, select:focus-visible { outline: 2px solid var(--clay-hi); outline-offset: 2px; }
-      .seg { display: flex; flex-wrap: wrap; padding: 2px; border-radius: 9px; background: #3A332E; }
-      .seg button { border: 0; padding: 4px 10px; border-radius: 7px; background: none; color: var(--dim); font-size: 12px; cursor: pointer; }
+      .seg { display: flex; flex: none; padding: 2px; border-radius: 9px; background: #3A332E; }
+      .seg button { border: 0; padding: 4px 9px; white-space: nowrap; border-radius: 7px; background: none; color: var(--dim); font-size: 12px; cursor: pointer; }
       .seg button[aria-pressed="true"] { background: var(--raised); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); font-weight: 650; }
       select { font: inherit; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--edge); background: var(--wall); color: var(--fg); }
       .settings .button { flex: none; padding: 6px 13px; border: 1px solid var(--edge); border-radius: 8px; background: var(--raised); color: var(--fg); cursor: pointer; }
@@ -157,6 +154,7 @@
         <nav class="tabs" id="tabs" role="tablist"></nav>
         <div class="panel" id="panel" role="tabpanel"></div>
         <div class="panel settings" id="settings" role="tabpanel" hidden>
+        <div class="col">
         <h2 id="h-look"></h2>
         <div class="group">
           <div class="row"><span id="l-size"></span><div class="seg" id="size" role="group"></div></div>
@@ -175,6 +173,8 @@
           <div class="row"><label for="sound" id="l-sound"></label><input type="checkbox" class="switch" id="sound" /></div>
         </div>
 
+        </div>
+        <div class="col">
         <h2 id="h-language"></h2>
         <div class="group">
           <div class="row"><label for="lang" id="l-lang"></label><select id="lang"></select></div>
@@ -195,6 +195,7 @@
           <div class="row"><span id="l-place"></span><button class="button" id="resetPlace" type="button"></button></div>
         </div>
           <p class="version" id="version"></p>
+        </div>
         </div>
       </section>
     </main>

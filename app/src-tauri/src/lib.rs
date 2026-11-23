@@ -344,10 +344,10 @@ fn write_shared(name: String, text: String) -> bool {
     data_dir().is_some_and(|d| store::write_shared(&d, &name, &text))
 }
 
-/// Mochi's room: the wardrobe, the achievements, the city and the settings, in a window of its own, opened or brought to the
+/// Mochi's room: the wardrobe, the achievements and the settings, in a window of its own, opened or brought to the
 /// front; on a tab when one is asked for (the tray's Settings), else on the one last open.
 fn open_room_window(app: &AppHandle, tab: Option<&str>) {
-    let tab = tab.filter(|t| ["wardrobe", "feats", "city", "settings"].contains(t));
+    let tab = tab.filter(|t| ["wardrobe", "feats", "settings"].contains(t));
     if let Some(window) = app.get_webview_window("room") {
         if let Some(tab) = tab {
             let _ = app.emit_to("room", "tab", tab);
