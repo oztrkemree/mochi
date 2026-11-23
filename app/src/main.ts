@@ -3,12 +3,15 @@ import { listen } from '@tauri-apps/api/event'
 import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import type { DayRec } from '../../types'
+import type { DayRec, Mood } from '../../types'
 import { dayKey } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
 import { type Look, addDay, lookFrom } from '../../hooks/level'
 import { PEER_INK } from '../../hooks/live'
+import type { SoundName } from '../../hooks/react'
+import { clip } from '../../hooks/sound'
 import { type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, stalledOf, tallyOf } from './engine'
+import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
@@ -26,10 +29,13 @@ const stage = document.getElementById('stage')!
 const say = document.getElementById('say')!
 const list = document.getElementById('list')!
 const agentsButton = document.getElementById('agents') as HTMLButtonElement
+const limitsButton = document.getElementById('limits') as HTMLButtonElement
 const win = getCurrentWindow()
 
 /** The gap kept to the screen's edge, in points. */
 const EDGE = 12
+/** With a limit used this much Mochi is tired while nothing else is going on. */
+const TIRED_AT = 95
 /** An answer to a press stays up shorter than news. */
 const ANSWER_MS = 4000
 
@@ -135,7 +141,7 @@ function hot() {
   // Mochi's own square inside the drawing's room, and its body inside that square.
   const unit = s.width / (100 + ROOM.left + ROOM.right)
   rects.push([s.left + (ROOM.left + 10) * unit, s.top + (ROOM.top + 14) * unit, 80 * unit, 84 * unit])
-  for (const el of [say, list, agentsButton]) {
+  for (const el of [say, list, agentsButton, limitsButton]) {
     const r = el.getBoundingClientRect()
     if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
   }
@@ -145,7 +151,7 @@ function hot() {
 // ---------- what Mochi says ----------
 
 /** The dot before what Mochi says, in the ink the band gives that news: waiting, done, failed; grey for an answer to a press. */
-const NEWS_INK: Record<News['kind'], string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error }
+const NEWS_INK: Record<News['kind'], string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error, limit: '#F2B84B', back: '#4CC38A' }
 const QUIET_INK = PEER_INK.idle
 
 /** News waiting its turn, the most pressing first. */
@@ -154,7 +160,45 @@ let queue: News[] = []
 let saying: News | null = null
 let hushTimer = 0
 
+/** The sound that goes with each kind of news: a bell for a chat that waits or finished, a sigh for one that failed, a ding-dong for a limit, a flourish when it is back. */
+const NEWS_SOUND: Record<News['kind'], SoundName> = { asking: 'ding', done: 'ding', failed: 'oops', limit: 'alarm', back: 'party' }
+
+function chime(name: SoundName) {
+  if (!settings.sound) return
+  // A sound the system will not play (no press yet, no output) is one Mochi goes without.
+  void new Audio(`data:audio/wav;base64,${clip(name)}`).play().catch(() => {})
+}
+
+/** A small hop, to catch the eye when Mochi has something to say. */
+function hop() {
+  stage.classList.remove('hop')
+  // Read back so the same hop can start again while the last one is still going.
+  void stage.offsetWidth
+  stage.classList.add('hop')
+}
+
+// ---------- a mood held for a moment ----------
+
+/** A mood Mochi keeps for a moment whatever the chats say: a pat, a limit that is back. */
+let held: { mood: Mood; until: number } | null = null
+let heldTimer = 0
+
+function hold(mood: Mood, ms: number) {
+  held = { mood, until: Date.now() + ms }
+  clearTimeout(heldTimer)
+  heldTimer = window.setTimeout(() => {
+    held = null
+    draw()
+  }, ms)
+  draw()
+}
+
 function speak(text: string, ms: number, ink: string, news: News | null) {
+  if (news) {
+    hop()
+    chime(NEWS_SOUND[news.kind])
+    if (news.kind === 'back') hold('party', 4000)
+  }
   saying = news
   say.style.setProperty('--ink', ink)
   say.textContent = text
@@ -213,6 +257,24 @@ function drawAgents() {
   agentsButton.setAttribute('aria-label', `${w.agents} · ${rows.length}`)
   if (!list.classList.contains('on')) return
   list.replaceChildren()
+  const use = document.createElement('div')
+  use.id = 'use'
+  for (const u of usage) {
+    const card = usageCard(u, Date.now())
+    const item = document.createElement('div')
+    item.className = 'use'
+    // The ring is the mod's own drawing; the words beside it are set as text.
+    item.innerHTML = card.ring
+    const words = document.createElement('div')
+    const name = document.createElement('b')
+    name.textContent = card.name
+    const back = document.createElement('span')
+    back.textContent = card.back
+    words.append(name, back)
+    item.append(words)
+    use.append(item)
+  }
+  list.append(use)
   const title = document.createElement('h2')
   title.textContent = `${w.agents} · ${rows.length}`
   list.append(title)
@@ -275,6 +337,24 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape' && list.classList.contains('on')) toggleAgents(false)
 })
 
+// ---------- the limits ----------
+
+/** The usage limits as last drawn. */
+let usage: Usage[] = []
+
+function drawLimits(next: Usage[], now: number) {
+  usage = next
+  const rings = usageRings(usage, now)
+  if (limitsButton.innerHTML !== rings) limitsButton.innerHTML = rings
+  const label = usage.map(u => usageLine(u, now)).join(' · ')
+  limitsButton.title = label
+  limitsButton.setAttribute('aria-label', label === '' ? words().limits : `${words().limits}: ${label}`)
+}
+
+// A press on the rings opens the list, where each limit stands in full.
+limitsButton.addEventListener('pointerdown', e => e.stopPropagation())
+limitsButton.addEventListener('click', () => toggleAgents())
+
 // ---------- the chats the app follows itself ----------
 
 /** What each chat earned since its days were last written, day by day, with the chat's name. */
@@ -335,16 +415,19 @@ function draw() {
   const others = peersOf(liveTexts, now)
   theirs = new Set(others.map(p => p.id))
   for (const id of theirs) leave(id)
-  const next = viewOf([...others, ...agentPeers(sessions, now)], now, look)
+  const peers = [...others, ...agentPeers(sessions, now)]
   const before = view
+  const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT) })
   view = next
   // The drawing loops by itself: it is put on screen again only when it differs, so its motion never starts over for nothing.
   if (!before || next.svg !== before.svg) stage.innerHTML = next.svg
   stage.setAttribute('aria-label', next.line)
   drawAgents()
+  const usedBefore = usage
+  drawLimits(usageOf(next.peers, now), now)
   if (before) {
     // A chat taken as stopped because it went silent is at rest, which is no news of a turn that finished.
-    hear(withoutStalled(newsOf(before.peers, next.peers, now), stalledOf(sessions, now)).filter(n => talksAbout(settings, n.kind)), next.peers)
+    hear([...withoutStalled(newsOf(before.peers, next.peers, now), stalledOf(sessions, now)), ...usageNews(usedBefore, usage, now)].filter(n => talksAbout(settings, n.kind)), next.peers)
   }
   hot()
 }
@@ -396,8 +479,14 @@ addEventListener('pointermove', e => {
 stage.addEventListener('pointerup', () => {
   if (!pressed || !view) return
   pressed = null
-  if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0) toggleAgents()
+  if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0 || usage.length > 0) toggleAgents()
   else speak(view.line, ANSWER_MS, QUIET_INK, null)
+})
+// A pat: two quick presses, and Mochi is pleased for a moment.
+stage.addEventListener('dblclick', () => {
+  toggleAgents(false)
+  hold('love', 2600)
+  chime('ding')
 })
 addEventListener('contextmenu', e => {
   e.preventDefault()

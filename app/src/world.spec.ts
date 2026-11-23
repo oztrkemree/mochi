@@ -103,3 +103,31 @@ test('the count at Mochi’s feet: how many chats, in the ink of the most pressi
   expect(badgeOf(rowsOf(peersOf([file('work', { state: 'busy' })], NOW), NOW))).toEqual({ count: 1, ink: '#7AA2F7', isAsking: false })
   expect(badgeOf([])).toBeNull()
 })
+
+test('a change of mood is eased into from what was on screen; with no change the drawing stays the very one it was, so its motion never starts over', () => {
+  const writing = peersOf([file('api', { state: 'busy', activity: 'writing' })], NOW)
+  const first = viewOf(writing, NOW)
+  // A second later nothing changed: the same drawing, not one like it.
+  expect(viewOf(writing, NOW + 1000, null, { was: first }).svg).toBe(first.svg)
+  // The chat starts to wait: Mochi turns to it from where it stood, which is not the drawing a cold start gives.
+  const asking = peersOf([file('api', { state: 'asking' })], NOW)
+  const turned = viewOf(asking, NOW + 2000, null, { was: first })
+  expect(turned.mood).toBe('asking')
+  expect(turned.svg).not.toBe(viewOf(asking, NOW + 2000).svg)
+  expect(turned.at).toBe(NOW + 2000)
+  // The words follow the chats even when the drawing stays.
+  expect(viewOf(peersOf([file('api', { state: 'busy', activity: 'writing' }), file('docs', { state: 'busy', activity: 'writing', at: NOW - 5 })], NOW), NOW + 1000, null, { was: first }).line).toBe('2 chats working')
+})
+
+test('a mood held for a moment (a pat, a limit that is back) comes before what the chats say, and goes when it is let go', () => {
+  const writing = peersOf([file('api', { state: 'busy', activity: 'writing' })], NOW)
+  expect(viewOf(writing, NOW, null, { held: 'love' }).mood).toBe('love')
+  expect(viewOf(writing, NOW, null, { held: null }).mood).toBe('writing')
+})
+
+test('with a limit nearly gone Mochi is tired while nothing else is going on, and gets on with it when a chat works or waits', () => {
+  expect(viewOf([], NOW, null, { isTired: true }).mood).toBe('tired')
+  expect(viewOf(peersOf([file('docs')], NOW), NOW, null, { isTired: true }).mood).toBe('tired')
+  expect(viewOf(peersOf([file('api', { state: 'busy', activity: 'writing' })], NOW), NOW, null, { isTired: true }).mood).toBe('writing')
+  expect(viewOf(peersOf([file('api', { state: 'asking' })], NOW), NOW, null, { isTired: true }).mood).toBe('asking')
+})

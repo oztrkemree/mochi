@@ -6,7 +6,7 @@ test('settings read from what was kept fill in what is missing and drop what is 
   expect(settingsFrom(null)).toEqual(DEFAULTS)
   expect(settingsFrom('not json')).toEqual(DEFAULTS)
   const kept = settingsFrom(JSON.stringify({ size: 'large', talk: { done: false }, talkSeconds: 15, onTop: false, lang: 'tr', extra: 1 }))
-  expect(kept).toEqual({ ...DEFAULTS, size: 'large', talk: { asking: true, done: false, failed: true }, talkSeconds: 15, onTop: false, lang: 'tr' })
+  expect(kept).toEqual({ ...DEFAULTS, size: 'large', talk: { asking: true, done: false, failed: true, limit: true }, talkSeconds: 15, onTop: false, lang: 'tr' })
   expect(settingsFrom(JSON.stringify({ idleMinutes: 60 })).idleMinutes).toBe(60)
   expect(settingsFrom(JSON.stringify({ idleMinutes: 0 })).idleMinutes).toBe(0)
   expect(DEFAULTS.idleMinutes).toBe(30)
@@ -20,8 +20,12 @@ test('each size is a side in points, the default the one Mochi had', () => {
 })
 
 test('Mochi speaks of a kind of news only while that kind is on', () => {
-  const quiet = { ...DEFAULTS, talk: { asking: true, done: false, failed: true } }
+  const quiet = { ...DEFAULTS, talk: { asking: true, done: false, failed: true, limit: false } }
   expect(talksAbout(quiet, 'asking')).toBe(true)
   expect(talksAbout(quiet, 'done')).toBe(false)
   expect(talksAbout(DEFAULTS, 'done')).toBe(true)
+  // A limit that is back is news of the limits: one switch for both.
+  expect(talksAbout(quiet, 'limit')).toBe(false)
+  expect(talksAbout(quiet, 'back')).toBe(false)
+  expect(talksAbout(DEFAULTS, 'back')).toBe(true)
 })

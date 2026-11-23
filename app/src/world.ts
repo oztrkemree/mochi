@@ -1,8 +1,8 @@
-import type { Mood, Outfit, Peer } from '../../types'
+import type { Mood, Outfit, Params, Peer, Scene } from '../../types'
 import { type Look, dressAs } from '../../hooks/level'
 import { appLink, nameOf, peerOf, peersLine } from '../../hooks/live'
 import { STATUS_INK, type Status, crowdOf, membersOf, moodOf, statusLine } from '../../hooks/party'
-import { mascotInner } from '../../hooks/rig'
+import { mascotInner, paramsAt } from '../../hooks/rig'
 import { t } from '../../hooks/i18n'
 
 /**
@@ -20,7 +20,14 @@ export type View = {
   /** How things stand in one line, for a press: who needs a look, or else what Mochi is doing. */
   line: string
   peers: readonly Peer[]
+  /** What is drawn besides the mood, when this drawing took the screen, and what it was eased in from: the next change starts from where this one stands. */
+  scene: Scene
+  at: number
+  from: Params | null
 }
+
+/** What changes Mochi beyond the chats: the drawing on screen now, a mood held for a moment, a limit nearly gone. */
+export type Now = { was?: View | null; held?: Mood | null; isTired?: boolean }
 
 /** The chats alive now that another Mochi writes, from the text of their files; the first file of a chat wins. */
 export function peersOf(texts: readonly string[], now: number): Peer[] {
@@ -38,19 +45,24 @@ export function peersOf(texts: readonly string[], now: number): Peer[] {
   return [...peers.values()]
 }
 
-/** Mochi as it stands now: asleep with no chat open, else as the most pressing one (waiting, failed, working, done, at rest). */
-export function viewOf(peers: readonly Peer[], now: number, look: Look | null = null): View {
+/** The moods that are Mochi with nothing to do: a limit nearly gone shows on these, and never over a chat that works or waits. */
+const AT_EASE: readonly Mood[] = ['idle', 'sleeping', 'sleepy', 'proud']
+
+/**
+ * Mochi as it stands now: asleep with no chat open, else as the most pressing
+ * one (waiting, failed, working, done, at rest). A change of mood is eased in
+ * from the drawing on screen; with no change that drawing is kept as it is.
+ */
+export function viewOf(peers: readonly Peer[], now: number, look: Look | null = null, { was = null, held = null, isTired = false }: Now = {}): View {
   const lead = membersOf(crowdOf(peers, now))[0]
-  const mood = lead ? moodOf(lead, now) : 'sleeping'
+  const calm = lead ? moodOf(lead, now) : 'sleeping'
+  const mood = held ?? (isTired && AT_EASE.includes(calm) ? 'tired' : calm)
   const outfit = look ? dressAs(look, mood, now) : undefined
-  return {
-    svg: drawn(mascotInner({ mood, scene: { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0), outfit }, from: null })),
-    mood,
-    outfit,
-    link: appLink(lead?.peer.app),
-    line: peersLine(peers) ?? t().mood[mood],
-    peers,
-  }
+  const scene: Scene = { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0), outfit }
+  const said = { link: appLink(lead?.peer.app), line: peersLine(peers) ?? t().mood[mood], peers }
+  if (was && was.mood === mood && JSON.stringify(was.scene) === JSON.stringify(scene)) return { ...was, ...said }
+  const from = was ? { params: paramsAt(was.from, was.mood, now - was.at), mood: was.mood, scene: was.scene } : null
+  return { svg: drawn(mascotInner({ mood, scene, from })), mood, outfit, scene, at: now, from: from?.params ?? null, ...said }
 }
 
 /**

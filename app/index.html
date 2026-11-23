@@ -16,6 +16,12 @@
       #stage { width: calc(var(--size) * 1.48); height: calc(var(--size) * 1.2); }
       #stage > svg { display: block; width: 100%; height: 100%; }
 
+      /* A small hop when Mochi has something to say. */
+      #stage.hop { animation: hop 0.5s cubic-bezier(0.3, 0, 0.2, 1); }
+      @keyframes hop { 30% { transform: translateY(calc(var(--size) * -0.09)) scaleY(1.03); } 62% { transform: translateY(0) scaleY(0.96); } 100% { transform: none; } }
+      @media (prefers-reduced-motion: reduce) { #stage.hop { animation: none; } }
+      #stage { transform-origin: 50% 100%; }
+
       .card { background: var(--card); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line), 0 4px 14px rgba(0, 0, 0, 0.22); }
 
       /* The band's own bubble: a dark pill, a dot in the news's ink, a tail down to Mochi. */
@@ -40,9 +46,16 @@
       #agents.empty, #agents[hidden] { display: none; }
       @media (prefers-reduced-motion: reduce) { #agents .dot.asking { animation: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 40%, transparent); } }
 
+      /* The usage limits as two small rings, on the ground left of Mochi's shadow, where the count stands on its right. */
+      #limits { position: absolute; right: calc(var(--size) * 1.12); bottom: calc(var(--size) * 0.155 - 15px); display: flex; align-items: center; height: 30px; padding: 0 5px; border: 0; border-radius: 15px; cursor: pointer; z-index: 1; }
+      #limits:hover { filter: brightness(1.12); }
+      #limits:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
+      #limits svg { display: block; }
+      #limits:empty { display: none; }
+
       /* The list of agents, over Mochi. */
       /* Close over Mochi's head, into the empty room the drawing keeps above it. */
-      #list { display: none; position: relative; z-index: 2; width: 290px; max-height: 330px; overflow-y: auto; margin: 0 0 calc(var(--size) * -0.2) 0; padding: 6px; border-radius: 14px; }
+      #list { display: none; position: relative; z-index: 2; width: 326px; box-sizing: border-box; overflow-x: hidden; max-height: 330px; overflow-y: auto; margin: 0 0 calc(var(--size) * -0.2) 0; padding: 6px; border-radius: 14px; }
       #list.on { display: block; }
       #list h2 { margin: 4px 8px 6px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
       #list .empty { margin: 6px 8px 8px; color: var(--dim); }
@@ -52,6 +65,14 @@
       .agent .dot { width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); }
       .agent .name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .agent .line, .agent .sub { grid-column: 2; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* The limits, at the top of the list: each a ring with its number in it, what it is, and when it comes back. */
+      #use { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 2px 2px 8px; }
+      #use:empty { display: none; }
+      .use { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 7px 8px; border-radius: 10px; background: var(--line); }
+      .use > div { min-width: 0; }
+      .use svg { flex: none; display: block; }
+      .use b { display: block; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .use span { display: block; color: var(--dim); font-size: 11.5px; white-space: nowrap; }
       .agent .sub::before { content: "↳ "; }
     </style>
   </head>
@@ -60,6 +81,7 @@
       <div id="list" class="card" role="dialog"></div>
       <div id="say" class="card" role="status"></div>
       <div id="row">
+        <button id="limits" class="card" type="button"></button>
         <button id="agents" class="card" type="button"></button>
         <div id="stage" role="img"></div>
       </div>

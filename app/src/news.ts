@@ -7,10 +7,10 @@ import { type PeerNews, appLink, peerNews } from '../../hooks/live'
  */
 
 /** Something to say about one chat, and the link that opens that chat ('' when a press cannot). */
-export type News = PeerNews & { id: string; link: string }
+export type News = { id: string; kind: PeerNews['kind'] | 'limit' | 'back'; line: string; link: string }
 
-/** What is said first: a chat waiting on the person, then one that failed, then one that finished. */
-const RANK: Record<News['kind'], number> = { asking: 0, failed: 1, done: 2 }
+/** What is said first: a chat waiting on the person, then one that failed, a limit running out, a chat that finished, a limit that is back. */
+const RANK: Record<News['kind'], number> = { asking: 0, failed: 1, limit: 2, done: 3, back: 4 }
 
 /** What changed among the chats that is worth saying, chat by chat: one waits, ended a long turn, or failed. */
 export function newsOf(before: readonly Peer[], after: readonly Peer[], now: number): News[] {

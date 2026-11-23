@@ -8,13 +8,15 @@ import { LANGS, type Lang } from '../../hooks/i18n'
 export type Settings = {
   size: Size
   /** Which news Mochi speaks of. */
-  talk: { asking: boolean; done: boolean; failed: boolean }
+  talk: { asking: boolean; done: boolean; failed: boolean; limit: boolean }
   /** How long a bubble stays up. */
   talkSeconds: number
   /** Over the other windows, and over an app that fills the screen. */
   onTop: boolean
   /** The button beside Mochi that lists the agents. */
   showAgents: boolean
+  /** A soft sound with what Mochi says. */
+  sound: boolean
   /** The language Mochi speaks; 'auto' follows the system. */
   lang: 'auto' | Lang
   /** A chat at rest this many minutes leaves the list of agents; 0 keeps every one. */
@@ -27,7 +29,7 @@ export const SIZES: Record<Size, number> = { small: 96, medium: 128, large: 160,
 export const TALK_SECONDS = [5, 9, 15, 30] as const
 export const IDLE_MINUTES = [15, 30, 60, 0] as const
 
-export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true }, talkSeconds: 9, onTop: true, showAgents: true, lang: 'auto', idleMinutes: 30 }
+export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, sound: false, lang: 'auto', idleMinutes: 30 }
 
 export const KEY = 'settings'
 /** The event the settings window sends Mochi's window with every change. */
@@ -47,16 +49,18 @@ export function settingsFrom(text: string | null): Settings {
   const talk = typeof v.talk === 'object' && v.talk !== null ? (v.talk as Record<string, unknown>) : {}
   return {
     size: typeof v.size === 'string' && Object.hasOwn(SIZES, v.size) ? (v.size as Size) : DEFAULTS.size,
-    talk: { asking: flag(talk.asking, true), done: flag(talk.done, true), failed: flag(talk.failed, true) },
+    talk: { asking: flag(talk.asking, true), done: flag(talk.done, true), failed: flag(talk.failed, true), limit: flag(talk.limit, true) },
     talkSeconds: (TALK_SECONDS as readonly unknown[]).includes(v.talkSeconds) ? (v.talkSeconds as number) : DEFAULTS.talkSeconds,
     onTop: flag(v.onTop, DEFAULTS.onTop),
     showAgents: flag(v.showAgents, DEFAULTS.showAgents),
+    sound: flag(v.sound, DEFAULTS.sound),
     lang: v.lang === 'auto' || (LANGS as unknown[]).includes(v.lang) ? (v.lang as Settings['lang']) : DEFAULTS.lang,
     idleMinutes: (IDLE_MINUTES as readonly unknown[]).includes(v.idleMinutes) ? (v.idleMinutes as number) : DEFAULTS.idleMinutes,
   }
 }
 
-export const talksAbout = (s: Settings, kind: keyof Settings['talk']): boolean => s.talk[kind]
+/** Whether Mochi speaks of this kind of news: a limit that is back goes with the limits. */
+export const talksAbout = (s: Settings, kind: keyof Settings['talk'] | 'back'): boolean => s.talk[kind === 'back' ? 'limit' : kind]
 
 /** The settings kept now; the defaults where storage cannot be read. */
 export function loadSettings(): Settings {
