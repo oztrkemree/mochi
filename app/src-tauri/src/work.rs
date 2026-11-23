@@ -21,16 +21,26 @@ pub struct Out {
 
 /// A program by name, also where an app started from the Dock does not look: a Mac app's PATH has no Homebrew in it.
 fn tool(name: &str) -> PathBuf {
+    // On Windows npm installs a program as a .cmd, which Command runs through cmd.exe with its arguments escaped.
+    let files = if cfg!(windows) { vec![format!("{name}.exe"), format!("{name}.cmd")] } else { vec![name.to_owned()] };
+    let dirs = search_path();
+    files.iter().find_map(|f| dirs.iter().map(|dir| dir.join(f)).find(|p| p.is_file())).unwrap_or_else(|| PathBuf::from(name))
+}
+
+/// The PATH, and Homebrew's folders after it.
+fn search_path() -> Vec<PathBuf> {
     let path = std::env::var_os("PATH").unwrap_or_default();
-    let extra = ["/opt/homebrew/bin", "/usr/local/bin"].map(PathBuf::from);
-    let file = if cfg!(windows) { format!("{name}.exe") } else { name.to_owned() };
-    std::env::split_paths(&path).chain(extra).map(|dir| dir.join(&file)).find(|p| p.is_file()).unwrap_or_else(|| PathBuf::from(name))
+    std::env::split_paths(&path).chain(["/opt/homebrew/bin", "/usr/local/bin"].map(PathBuf::from)).collect()
 }
 
 /// Runs a program with no shell between, and gives up on it after `limit`.
 fn run(name: &str, args: &[&str], dir: Option<&Path>, limit: Duration) -> Option<Out> {
     let mut command = Command::new(tool(name));
     command.args(args).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
+    // A script's `#!/usr/bin/env node` finds node in Homebrew too.
+    if let Ok(path) = std::env::join_paths(search_path()) {
+        command.env("PATH", path);
+    }
     if let Some(dir) = dir {
         command.current_dir(dir);
     }
@@ -163,9 +173,41 @@ pub fn releases() -> Option<String> {
     (out.code == 0).then_some(out.stdout)
 }
 
+// ---------- what the agents used and cost ----------
+
+/// CodeBurn's arguments for a report: a status report of a span, or the providers' limits. Nothing else is run.
+fn usage_args<'a>(kind: &str, span: &'a str) -> Option<Vec<&'a str>> {
+    match kind {
+        "status" if ["today", "week", "30days", "month"].contains(&span) => Some(vec!["status", "--format", "menubar-json", "--period", span]),
+        "quota" => Some(vec!["quota", "--format", "json"]),
+        _ => None,
+    }
+}
+
+/// What CodeBurn (the person's own, if installed) reports, as JSON text. Err("missing") when it is not installed,
+/// Err("failed") when it ran and said no JSON or took too long (a month of logs can take half a minute).
+pub fn usage(kind: &str, span: &str) -> Result<String, String> {
+    let args = usage_args(kind, span).ok_or("failed")?;
+    if !tool("codeburn").is_absolute() {
+        return Err("missing".into());
+    }
+    run("codeburn", &args, None, Duration::from_secs(120))
+        .filter(|o| o.code == 0 && serde_json::from_str::<Value>(&o.stdout).is_ok())
+        .map(|o| o.stdout)
+        .ok_or_else(|| "failed".into())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn codeburn_is_asked_only_for_a_known_report() {
+        assert_eq!(usage_args("status", "week"), Some(vec!["status", "--format", "menubar-json", "--period", "week"]));
+        assert_eq!(usage_args("quota", ""), Some(vec!["quota", "--format", "json"]));
+        assert_eq!(usage_args("status", "--output=/etc/x"), None);
+        assert_eq!(usage_args("export", "week"), None);
+    }
 
     #[test]
     fn a_newer_desktop_release_is_found_and_nothing_else() {

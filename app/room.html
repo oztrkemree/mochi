@@ -234,6 +234,69 @@
       .w-dl.end { text-anchor: end; }
       @media (max-width: 1000px) { .w-pair { grid-template-columns: 1fr; } }
 
+      /* Usage: what the agents cost, as CodeBurn counts it. The total in the light, each agent with its limits, then the ledgers. */
+      .u-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: none; }
+      .u-status { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--faint); font-size: 12px; }
+      .u-busy { color: var(--clay-hi); }
+      .u-again { padding: 3px 10px; border: 0; border-radius: 999px; background: var(--shelf); color: var(--dim); font-size: 12px; font-weight: 650; cursor: pointer; box-shadow: inset 0 0 0 1px var(--edge); }
+      .u-again:hover { color: var(--fg); }
+      .u-install { margin: 10px 0 0; color: var(--dim); }
+      .u-install code { padding: 2px 7px; border-radius: 6px; background: var(--shelf); color: var(--fg); font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; user-select: text; -webkit-user-select: text; }
+      .u-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+      .u-fact { padding: 14px 16px; border-radius: 14px; background: linear-gradient(160deg, rgba(76, 195, 160, 0.10), rgba(255, 236, 222, 0.02)); box-shadow: inset 0 0 0 1px var(--edge); }
+      .u-fact.warm { background: linear-gradient(160deg, rgba(226, 122, 82, 0.13), rgba(255, 236, 222, 0.02)); }
+      .u-fact strong { display: block; font-size: 24px; line-height: 1.1; font-weight: 760; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+      .u-fact span { color: var(--dim); font-size: 12px; }
+      .u-agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+      .u-agent { position: relative; padding: 16px 18px; border-radius: 16px; background: var(--shelf); box-shadow: inset 0 0 0 1px var(--edge); overflow: hidden; }
+      .u-agent::before { content: ""; position: absolute; right: -30%; top: -60%; width: 80%; height: 140%; background: radial-gradient(closest-side, rgba(255, 190, 140, 0.10), transparent); pointer-events: none; }
+      .u-agent.codex::before { background: radial-gradient(closest-side, rgba(95, 179, 240, 0.12), transparent); }
+      .u-agent header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .u-agent header b { font-size: 15px; font-weight: 750; }
+      .u-agent header small { padding: 1px 8px; border-radius: 999px; background: rgba(255, 236, 222, 0.06); color: var(--dim); font-size: 11px; }
+      .u-agent > strong { display: block; margin: 8px 0; font-size: 28px; line-height: 1; font-weight: 780; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+      .u-agent > p { margin: 8px 0 0; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+      .u-rings { display: flex; flex-wrap: wrap; gap: 14px 18px; margin-top: 14px; }
+      .u-ring { display: flex; align-items: center; gap: 9px; }
+      .u-ring-pic { width: 52px; height: 52px; flex: none; }
+      .u-ring-pic svg { display: block; width: 100%; height: 100%; }
+      .u-ring-pic text { fill: var(--fg); font-size: 14px; font-weight: 750; font-variant-numeric: tabular-nums; }
+      .u-ring b { display: block; font-size: 12.5px; }
+      .u-ring small { color: var(--faint); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+      .u-none { color: var(--faint); }
+      .u-chart { margin: 4px -8px 0; }
+      .u-key { cursor: default; }
+      .u-strip { display: flex; gap: 2px; height: 16px; border-radius: 6px; overflow: hidden; }
+      .u-strip i { min-width: 3px; }
+      .u-legend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+      .u-legend div { display: grid; grid-template-columns: 10px 1fr; gap: 1px 8px; align-items: center; }
+      .u-legend i { width: 10px; height: 10px; border-radius: 3px; }
+      .u-legend span { color: var(--dim); font-size: 12px; }
+      .u-legend b { grid-column: 2; font-size: 17px; font-weight: 740; font-variant-numeric: tabular-nums; }
+      .u-legend small { grid-column: 2; color: var(--faint); font-size: 11px; font-variant-numeric: tabular-nums; }
+      .u-ledger { overflow-x: auto; }
+      .u-row { display: grid; grid-template-columns: var(--cols); align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; font-variant-numeric: tabular-nums; }
+      .u-row:not(.w-row-head):hover { background: rgba(255, 236, 222, 0.035); }
+      .u-row > :nth-child(n + 3) { text-align: right; }
+      .u-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px 28px; }
+      .u-counts h4 { margin: 0 0 8px; color: var(--faint); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+      .u-counts h4:empty { display: none; }
+      .u-count { position: relative; display: flex; justify-content: space-between; gap: 10px; padding: 5px 8px; margin-bottom: 3px; border-radius: 7px; overflow: hidden; font-size: 12.5px; }
+      .u-count span { position: relative; z-index: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .u-count b { position: relative; z-index: 1; flex: none; font-variant-numeric: tabular-nums; }
+      .u-count i { position: absolute; inset: 0 auto 0 0; opacity: 0.16; border-radius: 7px; }
+      .u-live { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(100px, 1.2fr) 100px; align-items: center; gap: 12px; padding: 8px 0; }
+      .u-live b { display: block; font-weight: 700; }
+      .u-live small { color: var(--faint); font-size: 11.5px; }
+      .u-live > span { color: var(--dim); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+      .u-save { margin: 6px 0 0; font-size: 14.5px; }
+      .u-finding { display: grid; grid-template-columns: 74px 1fr auto; align-items: center; gap: 12px; padding: 9px 10px; margin-top: 6px; border-radius: 10px; background: var(--shelf); box-shadow: inset 0 0 0 1px var(--edge); }
+      .u-finding b { color: #74D3A0; font-variant-numeric: tabular-nums; }
+      .u-impact { justify-self: start; padding: 1px 8px; border-radius: 999px; font-style: normal; font-size: 11px; font-weight: 700; background: rgba(255, 236, 222, 0.06); color: var(--dim); }
+      .u-impact.high { background: rgba(240, 100, 90, 0.16); color: #F59A90; }
+      .u-impact.medium { background: rgba(242, 184, 75, 0.16); color: var(--gold); }
+      @media (max-width: 1000px) { .u-facts, .u-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
       @media (prefers-reduced-motion: reduce) { * { transition: none !important; } .w-river.reveal .w-pic { animation: none; } }
     </style>
   </head>

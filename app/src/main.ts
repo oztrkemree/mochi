@@ -899,6 +899,9 @@ let usage: Usage[] = []
 
 function drawLimits(next: Usage[], now: number) {
   usage = next
+  // Kept for the room's Usage tab, which has no chats of its own to hear them from.
+  const kept = JSON.stringify(next)
+  if (localStorage.getItem('limits') !== kept) localStorage.setItem('limits', kept)
   const rings = usageRings(usage, now)
   if (limitsButton.innerHTML !== rings) limitsButton.innerHTML = rings
   const label = usage.map(u => usageLine(u, now)).join(' · ')

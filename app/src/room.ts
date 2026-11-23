@@ -18,6 +18,8 @@ import { startSettings } from './settings-page'
 import { chosen, lookNow, skinNow } from './wardrobe'
 import { words } from './words'
 import { PERIODS, type WorkState, drawWork } from './work-tab'
+import { SPANS, quotaOf, usageOf } from './usage'
+import { type Feed, type UsageState, drawUsage } from './usage-tab'
 import { stillOf } from './world'
 
 /**
@@ -50,7 +52,7 @@ let modLook: Look | null = null
 let prefs: Choice | null = null
 let badges: Badge[] = []
 let look: Look | null = null
-const TABS = ['wardrobe', 'feats', 'work', 'settings'] as const
+const TABS = ['wardrobe', 'feats', 'work', 'usage', 'settings'] as const
 type Tab = (typeof TABS)[number]
 const isTab = (v: unknown): v is Tab => (TABS as readonly unknown[]).includes(v)
 /** The tab asked for (the tray's Settings), else the one last open. */
@@ -64,6 +66,11 @@ let shelf: Slot | 'colour' = 'colour'
 /** Where the work went, for the Work tab; the stretch shown is kept between openings. */
 let effort: Effort | null = null
 let work: WorkState = { period: Math.min(PERIODS.length - 1, Math.max(0, Number(localStorage.getItem('workPeriod') ?? PERIODS.length - 1) || 0)), focus: null }
+/** What CodeBurn last counted, for the Usage tab: kept between openings (a month's count takes CodeBurn half a minute), counted again when older than five minutes. */
+let usageSt: UsageState = { span: Math.min(SPANS.length - 1, Math.max(0, Number(localStorage.getItem('usageSpan') ?? 1) || 0)) }
+const feed: Feed = { report: null, quota: [], claude: [], busy: false, error: '' }
+const counting = new Set<string>()
+const USAGE_FRESH_MS = 5 * 60_000
 
 /** What Mochi has on, as it stands at rest; with an item tried on, that item in its slot. */
 function outfit(trying: Item | null = null): Outfit {
@@ -114,7 +121,7 @@ function drawTabs() {
   tabs.replaceChildren()
   const open = look?.items.length ?? 0
   const all = Object.values(SLOT_ITEMS).flat().length
-  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
+  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['usage', words().usage.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
     const b = el('button', '', label)
     b.type = 'button'
     b.setAttribute('role', 'tab')
@@ -301,10 +308,11 @@ function drawFeats(into: HTMLElement) {
 }
 
 function show(name: Tab) {
-  if (tab === 'work' && name !== 'work') $('said').textContent = ''
+  if ((tab === 'work' || tab === 'usage') && name !== tab) $('said').textContent = ''
   tab = name
   localStorage.setItem('roomTab', name)
   draw()
+  if (name === 'usage') void countUsage()
 }
 
 function draw() {
@@ -324,7 +332,16 @@ function draw() {
   panel.replaceChildren()
   if (tab === 'wardrobe') drawWardrobe(panel)
   else if (tab === 'feats') drawFeats(panel)
-  else if (effort) {
+  else if (tab === 'usage') {
+    drawUsage(panel, feed, usageSt, next => {
+      usageSt = next
+      localStorage.setItem('usageSpan', String(next.span))
+      void countUsage()
+    }, () => void countUsage(true))
+    // Mochi says one thing of the money: how much the cache spared, when it spared most of it.
+    const hit = feed.report?.cacheHit ?? 0
+    $('said').textContent = hit >= 90 ? words().usage.thrifty(new Intl.NumberFormat(lang(), { style: 'percent', maximumFractionDigits: 1 }).format(Math.floor(hit * 10) / 1000)) : ''
+  } else if (effort) {
     drawWork(panel, effort, work, next => {
       work = next
       localStorage.setItem('workPeriod', String(next.period))
@@ -371,6 +388,39 @@ const parse = (text: string | null): unknown => {
   }
 }
 
+/** The Usage tab's numbers: what was kept, at once; then CodeBurn asked again if they are old (or `force`), one count of a span at a time. */
+async function countUsage(force = false) {
+  const span = SPANS[usageSt.span] ?? 'week'
+  const kept = (key: string) => localStorage.getItem(`usage:${key}`)
+  feed.report = usageOf(parse(kept(span)))
+  feed.quota = quotaOf(parse(kept('quota')))
+  // Claude's limits as Mochi's own chats last heard them (its corner window keeps them), for when CodeBurn cannot tell them.
+  const heard = parse(localStorage.getItem('limits'))
+  feed.claude = Array.isArray(heard) ? heard.filter((x): x is { kind: string; p: number; resetsAt: number } => typeof x?.kind === 'string' && typeof x?.p === 'number').map(x => ({ label: x.kind, used: x.p, resetsAt: Number(x.resetsAt) || 0 })) : []
+  const isOld = !feed.report || Date.now() - feed.report.at > USAGE_FRESH_MS
+  if ((!force && !isOld) || counting.has(span)) {
+    feed.busy = counting.has(span)
+    if (feed.report) feed.error = ''
+    if (tab === 'usage') draw()
+    return
+  }
+  counting.add(span)
+  feed.busy = true
+  if (tab === 'usage') draw()
+  const ask = (key: string, kind: string) => invoke<string>('usage', { kind, span: key }).then(text => {
+    localStorage.setItem(`usage:${kind === 'quota' ? 'quota' : key}`, text)
+    return ''
+  }).catch((e: unknown) => (e === 'missing' ? 'missing' : 'failed'))
+  const [status] = await Promise.all([ask(span, 'status'), ask('', 'quota')]).finally(() => counting.delete(span))
+  // Drawn only if the span asked for is still the one shown.
+  if ((SPANS[usageSt.span] ?? 'week') !== span) return
+  feed.error = status as Feed['error']
+  feed.busy = false
+  feed.report = usageOf(parse(kept(span)))
+  feed.quota = quotaOf(parse(kept('quota')))
+  if (tab === 'usage') draw()
+}
+
 /** Everything read again: the room is opened often, and other Mochis count and choose too. */
 async function read() {
   const now = Date.now()
@@ -386,6 +436,7 @@ async function read() {
   drawMochi()
   drawPlate()
   draw()
+  if (tab === 'usage') void countUsage()
 }
 
 function start() {

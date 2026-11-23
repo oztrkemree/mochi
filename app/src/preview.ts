@@ -40,6 +40,11 @@ mockIPC((cmd, args) => {
   if (cmd === 'own_live') return []
   if (cmd === 'read_all_days') return allDays
   if (cmd === 'read_shared') return shared[(args as { name: string }).name] ?? null
+  // CodeBurn's reports, from files dropped in node_modules/.codeburn/ (week.json, today.json, quota.json...): none there reads as not installed.
+  if (cmd === 'usage') {
+    const { kind, span } = args as { kind: string; span: string }
+    return fetch(`/node_modules/.codeburn/${kind === 'quota' ? 'quota' : span}.json`).then(r => (r.ok && r.headers.get('content-type')?.includes('json') ? r.text() : Promise.reject('missing')))
+  }
   if (cmd === 'write_shared') {
     shared[(args as { name: string }).name] = (args as { text: string }).text
     return true

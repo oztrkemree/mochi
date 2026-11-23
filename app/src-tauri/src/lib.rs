@@ -339,6 +339,11 @@ fn ci(cwd: String, sha: Option<String>) -> Value {
     work::ci(&cwd, sha.as_deref())
 }
 
+#[tauri::command(async)]
+fn usage(kind: String, span: String) -> Result<String, String> {
+    work::usage(&kind, &span)
+}
+
 #[tauri::command]
 fn write_shared(name: String, text: String) -> bool {
     data_dir().is_some_and(|d| store::write_shared(&d, &name, &text))
@@ -346,7 +351,7 @@ fn write_shared(name: String, text: String) -> bool {
 
 /// The room's tab asked for, if it is one of its tabs.
 fn room_tab(tab: Option<&str>) -> Option<&str> {
-    tab.filter(|t| ["wardrobe", "feats", "work", "settings"].contains(t))
+    tab.filter(|t| ["wardrobe", "feats", "work", "usage", "settings"].contains(t))
 }
 
 /// Mochi's room: the wardrobe, the achievements and the settings, in a window of its own, opened or brought to the
@@ -435,7 +440,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
@@ -506,7 +511,7 @@ mod tests {
 
     #[test]
     fn the_room_opens_on_any_of_its_tabs_and_on_nothing_else() {
-        for tab in ["wardrobe", "feats", "work", "settings"] {
+        for tab in ["wardrobe", "feats", "work", "usage", "settings"] {
             assert_eq!(room_tab(Some(tab)), Some(tab));
         }
         assert_eq!(room_tab(Some("../index")), None);
