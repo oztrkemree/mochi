@@ -1,5 +1,13 @@
 import type { Words } from '../words'
 
+/** Number plus its noun: 1, 2–4 (not 12–14) and the rest; a formatted number ("1 234") is read by its digits. */
+const pn = (n: string, one: string, few: string, many: string) => {
+  const v = Number(n.replace(/\D/g, '')) || 0
+  const a = v % 100
+  const b = a % 10
+  return `${n} ${v === 1 ? one : b >= 2 && b <= 4 && (a < 12 || a > 14) ? few : many}`
+}
+
 const PL: Words = {
   agents: 'Agenci',
   noAgents: 'Żaden agent nie działa',
@@ -67,6 +75,28 @@ const PL: Words = {
     line: 'Zrób mnie paskiem stanu Claude Code w moich ustawieniach, a pokażę twoje limity użycia bez moda.',
   },
   room: 'Pokój Mochi',
+  feats: {
+    title: 'Osiągnięcia',
+    done: (a: number, b: number) => `Zdobyte: ${a} z ${b}`,
+    cats: { talk: 'Rozmowy', code: 'Kod', ship: 'Wydania', time: 'Godziny', steady: 'Wytrwałość', mochi: 'Mochi' },
+    tiers: { easy: 'Łatwe', medium: 'Średnie', hard: 'Trudne', impossible: 'Niemożliwe' },
+    metric: {
+      turns: (n: string) => pn(n, 'tura', 'tury', 'tur'), dayTurns: (n: string) => `${pn(n, 'tura', 'tury', 'tur')} jednego dnia`, edits: (n: string) => pn(n, 'edycja', 'edycje', 'edycji'), tools: (n: string) => pn(n, 'wywołanie narzędzia', 'wywołania narzędzi', 'wywołań narzędzi'),
+      added: (n: string) => pn(n, 'dodana linia', 'dodane linie', 'dodanych linii'), removed: (n: string) => pn(n, 'usunięta linia', 'usunięte linie', 'usuniętych linii'), langs: (n: string) => `edycje w ${pn(n, 'języku', 'językach', 'językach')}`, commits: (n: string) => pn(n, 'commit', 'commity', 'commitów'),
+      dayCommits: (n: string) => `${pn(n, 'commit', 'commity', 'commitów')} jednego dnia`, hours: (n: string) => pn(n, 'godzina pracy', 'godziny pracy', 'godzin pracy'), night: (n: string) => `${pn(n, 'tura', 'tury', 'tur')} po północy`, early: (n: string) => `${pn(n, 'tura', 'tury', 'tur')} przed 7:00`,
+      days: (n: string) => pn(n, 'dzień pracy', 'dni pracy', 'dni pracy'), streak: (n: string) => `${pn(n, 'dzień', 'dni', 'dni')} z rzędu`, level: (n: string) => `poziom ${n}`, items: (n: string) => pn(n, 'rzecz do ubrania', 'rzeczy do ubrania', 'rzeczy do ubrania'),
+      badges: (n: string) => `wszystkie ${pn(n, 'odznaka', 'odznaki', 'odznak')}`,
+    },
+    name: {
+      hello: 'No cześć', firstEdit: 'Pierwszy szlif', firstCommit: 'Podpisane', handy: 'Złota rączka', again: 'Znowu tu', chatty: 'Pogadajmy', firstHour: 'Na zmianie', lateOne: 'Nocna przekąska', earlyOne: 'Skoro świt', levelTwo: 'Rośniemy',
+      talker: 'Gaduła', storyteller: 'Bajarz', editor: 'Redaktor', shipper: 'Kurier', toolbox: 'Skrzynka narzędzi', tenHours: 'Klub dziesięciu godzin', dayAndNight: 'Dzień i noc', tenDays: 'Dziesięć dni', monthOfDays: 'Miesiąc dni', threeInRow: 'Trzy z rzędu',
+      fortnight: 'Dwa tygodnie', tenThousand: 'Dziesięć tysięcy linii', pruner: 'Ogrodnik', nightShift: 'Nocna zmiana', dawnPatrol: 'Patrol o świcie', levelTen: 'Dwie cyfry', dresser: 'Elegancja', bigDay: 'Wielki dzień', shippingDay: 'Dzień wydania', trilingual: 'Trzy języki',
+      orator: 'Mówca', tenThousandTurns: 'Dziesięć tysięcy tur', sculptor: 'Rzeźbiarz', architect: 'Architekt', fleet: 'Flotylla', workshop: 'Warsztat', hundredHours: 'Sto godzin', marathoner: 'Długi dystans', seasons: 'Stary wyga', twoHundred: 'Dwieście dni',
+      unbroken: 'Bez przerwy', twoMonths: 'Dwa miesiące w szyku', novelist: 'Powieściopisarz', minimalist: 'Minimalista', nocturne: 'Nokturn', levelQuarter: 'Ćwierć wieku', levelForty: 'Czterdziestka', collector: 'Kolekcjoner', wildDay: 'Szalony dzień', polymath: 'Człowiek renesansu',
+      legend: 'Legenda', million: 'Przenosi góry', armada: 'Armada', thousandHours: 'Tysiąc godzin', yearRound: 'Cały rok', hundredInRow: 'Sto z rzędu', library: 'Biblioteka kodu', levelSeventyFive: 'Siedemdziesiąt pięć', everything: 'Pełna gala', allBadges: 'Komplet',
+    },
+    won: (name: string) => `Osiągnięcie: ${name}`,
+  },
   card: 'Karta do udostępnienia',
   cardCopied: 'Linia do twojego profilu GitHub jest skopiowana.',
   shield: 'Tarcza: pytaj przed nieodwracalnym poleceniem',

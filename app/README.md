@@ -15,7 +15,7 @@ Press Mochi for its pocket.
 - **Now**: the limits, and the chats, each with how far its plan is (`2/4 · Writing the tests`) and its subagents.
 - **Mochi**: the level and how far to the next, your streak, your badges, and a button to Mochi's room.
 
-**Mochi's room** is a window of its own (from the pocket, or the tray menu). Mochi stands in the light, dressed as it is; beside it, the wardrobe as cards with each thing's own drawing (rest the pointer on one and Mochi tries it on, press it and Mochi wears it), every badge with how it is earned, and the city of your last four weeks; and the card to share for your GitHub profile. The level is counted from every chat's days, so it is the same level the mod shows, and a new level or badge is said once, by one Mochi. What you pick in the room the mod's Mochi wears too.
+**Mochi's room** is a window of its own (from the pocket, or the tray menu). Mochi stands in the light, dressed as it is; beside it, the wardrobe as cards with each thing's own drawing (rest the pointer on one and Mochi tries it on, press it and Mochi wears it), its achievements (the mod's badges and sixty milestones more, ten easy, twenty medium, twenty hard and ten all but impossible, in six themes, each with how far along you are), and the city of your last four weeks; and the card to share for your GitHub profile. The level is counted from every chat's days, so it is the same level the mod shows, and a new level or badge is said once, by one Mochi. What you pick in the room the mod's Mochi wears too.
 
 After a `git push` in a chat it follows, Mochi watches that commit's CI and says how it ended. When a turn ends with changes left uncommitted and no commit for an hour and a half, it says so once.
 

@@ -1,5 +1,12 @@
 import type { Words } from '../words'
 
+/** Number plus its noun: 1, 2–4 and 5+ forms (11–14 take the last); a formatted number ("1 234") is read by its digits. */
+const pn = (n: string, one: string, few: string, many: string) => {
+  const a = (Number(n.replace(/\D/g, '')) || 0) % 100
+  const b = a % 10
+  return `${n} ${a >= 11 && a <= 14 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many}`
+}
+
 const RU: Words = {
   agents: 'Агенты',
   noAgents: 'Ни один агент не запущен',
@@ -67,6 +74,28 @@ const RU: Words = {
     line: 'Сделай меня строкой состояния Claude Code в моих настройках, и я покажу твои лимиты использования без мода.',
   },
   room: 'Комната Mochi',
+  feats: {
+    title: 'Достижения',
+    done: (a: number, b: number) => `Выполнено: ${a} из ${b}`,
+    cats: { talk: 'Общение', code: 'Код', ship: 'Релизы', time: 'Часы', steady: 'Постоянство', mochi: 'Mochi' },
+    tiers: { easy: 'Легко', medium: 'Средне', hard: 'Сложно', impossible: 'Невозможно' },
+    metric: {
+      turns: (n: string) => pn(n, 'запрос', 'запроса', 'запросов'), dayTurns: (n: string) => `${pn(n, 'запрос', 'запроса', 'запросов')} за один день`, edits: (n: string) => pn(n, 'правка', 'правки', 'правок'), tools: (n: string) => pn(n, 'вызов инструмента', 'вызова инструментов', 'вызовов инструментов'),
+      added: (n: string) => pn(n, 'добавленная строка', 'добавленные строки', 'добавленных строк'), removed: (n: string) => pn(n, 'удалённая строка', 'удалённые строки', 'удалённых строк'), langs: (n: string) => `правки на ${pn(n, 'языке', 'языках', 'языках')}`, commits: (n: string) => pn(n, 'коммит', 'коммита', 'коммитов'),
+      dayCommits: (n: string) => `${pn(n, 'коммит', 'коммита', 'коммитов')} за один день`, hours: (n: string) => pn(n, 'час работы', 'часа работы', 'часов работы'), night: (n: string) => `${pn(n, 'запрос', 'запроса', 'запросов')} после полуночи`, early: (n: string) => `${pn(n, 'запрос', 'запроса', 'запросов')} до 7:00`,
+      days: (n: string) => pn(n, 'рабочий день', 'рабочих дня', 'рабочих дней'), streak: (n: string) => `${pn(n, 'день', 'дня', 'дней')} подряд`, level: (n: string) => `уровень ${n}`, items: (n: string) => pn(n, 'вещь для гардероба', 'вещи для гардероба', 'вещей для гардероба'),
+      badges: (n: string) => `все ${pn(n, 'значок', 'значка', 'значков')}`,
+    },
+    name: {
+      hello: 'Привет-привет', firstEdit: 'Первый штрих', firstCommit: 'Подписано', handy: 'Умелые руки', again: 'Снова здесь', chatty: 'Поболтаем', firstHour: 'Смена пошла', lateOne: 'Ночной перекус', earlyOne: 'Ранняя пташка', levelTwo: 'Растём',
+      talker: 'Язык без костей', storyteller: 'Сказочник', editor: 'Редактор', shipper: 'Курьер', toolbox: 'Ящик инструментов', tenHours: 'Клуб десяти часов', dayAndNight: 'День и ночь', tenDays: 'Десять дней', monthOfDays: 'Месяц дней', threeInRow: 'Три подряд',
+      fortnight: 'Две недели', tenThousand: 'Десять тысяч строк', pruner: 'Садовник', nightShift: 'Ночная смена', dawnPatrol: 'Рассветный дозор', levelTen: 'Две цифры', dresser: 'Стиляга', bigDay: 'Большой день', shippingDay: 'День релиза', trilingual: 'Три языка',
+      orator: 'Оратор', tenThousandTurns: 'Десять тысяч запросов', sculptor: 'Скульптор', architect: 'Архитектор', fleet: 'Флотилия', workshop: 'Мастерская', hundredHours: 'Сто часов', marathoner: 'Длинная дистанция', seasons: 'Стреляный воробей', twoHundred: 'Двести дней',
+      unbroken: 'Без перерыва', twoMonths: 'Два месяца в строю', novelist: 'Романист', minimalist: 'Минималист', nocturne: 'Ноктюрн', levelQuarter: 'Четверть века', levelForty: 'Сорок', collector: 'Коллекционер', wildDay: 'Безумный день', polymath: 'Многостаночник',
+      legend: 'Легенда', million: 'Сворачивает горы', armada: 'Армада', thousandHours: 'Тысяча часов', yearRound: 'Круглый год', hundredInRow: 'Сто подряд', library: 'Библиотека кода', levelSeventyFive: 'Семьдесят пять', everything: 'При полном параде', allBadges: 'Полный комплект',
+    },
+    won: (name: string) => `Достижение: ${name}`,
+  },
   card: 'Карточка, чтобы поделиться',
   cardCopied: 'Строка для твоего профиля GitHub скопирована.',
   shield: 'Щит: спрашивать перед необратимой командой',

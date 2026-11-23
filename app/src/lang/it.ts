@@ -1,5 +1,8 @@
 import type { Words } from '../words'
 
+/** Number plus its noun: one for 1, the plural otherwise (the number comes formatted). */
+const pl = (n: string, one: string, many: string) => `${n} ${n === '1' ? one : many}`
+
 const IT: Words = {
   agents: 'Agenti',
   noAgents: 'Nessun agente in esecuzione',
@@ -67,6 +70,28 @@ const IT: Words = {
     line: 'Rendimi la riga di stato di Claude Code nelle mie impostazioni e ti mostro i limiti di utilizzo senza la mod.',
   },
   room: 'La stanza di Mochi',
+  feats: {
+    title: 'Traguardi',
+    done: (a: number, b: number) => `${a} su ${b} raggiunti`,
+    cats: { talk: 'Chiacchiere', code: 'Codice', ship: 'Consegne', time: 'Ore', steady: 'Costanza', mochi: 'Mochi' },
+    tiers: { easy: 'Facile', medium: 'Medio', hard: 'Difficile', impossible: 'Impossibile' },
+    metric: {
+      turns: (n: string) => pl(n, 'turno', 'turni'), dayTurns: (n: string) => `${pl(n, 'turno', 'turni')} in un giorno`, edits: (n: string) => pl(n, 'modifica', 'modifiche'), tools: (n: string) => `${pl(n, 'chiamata', 'chiamate')} a strumenti`,
+      added: (n: string) => pl(n, 'riga aggiunta', 'righe aggiunte'), removed: (n: string) => pl(n, 'riga rimossa', 'righe rimosse'), langs: (n: string) => pl(n, 'linguaggio modificato', 'linguaggi modificati'), commits: (n: string) => `${n} commit`,
+      dayCommits: (n: string) => `${n} commit in un giorno`, hours: (n: string) => `${pl(n, 'ora', 'ore')} di lavoro`, night: (n: string) => `${pl(n, 'turno', 'turni')} dopo mezzanotte`, early: (n: string) => `${pl(n, 'turno', 'turni')} prima delle 7:00`,
+      days: (n: string) => `${pl(n, 'giorno', 'giorni')} di lavoro`, streak: (n: string) => `${pl(n, 'giorno', 'giorni')} di fila`, level: (n: string) => `livello ${n}`, items: (n: string) => pl(n, 'accessorio', 'accessori'),
+      badges: (n: string) => `tutti i ${n} badge`,
+    },
+    name: {
+      hello: 'Ciao ciao', firstEdit: 'Primo tocco', firstCommit: 'Firmato e sigillato', handy: 'Mani d’oro', again: 'Di nuovo qui', chatty: 'Chiacchierone', firstHour: 'Timbrato', lateOne: 'Spuntino di mezzanotte', earlyOne: 'Di buon’ora', levelTwo: 'Si cresce',
+      talker: 'Parlantina', storyteller: 'Cantastorie', editor: 'Redazione', shipper: 'Corriere', toolbox: 'Cassetta degli attrezzi', tenHours: 'Dieci ore', dayAndNight: 'Giorno e notte', tenDays: 'Già dieci giorni', monthOfDays: 'Un mese di giorni', threeInRow: 'Tre di fila',
+      fortnight: 'Quindicina', tenThousand: 'Diecimila righe', pruner: 'Potatura', nightShift: 'Turno di notte', dawnPatrol: 'Pattuglia dell’alba', levelTen: 'Doppia cifra', dresser: 'Fashionista', bigDay: 'Gran giorno', shippingDay: 'Giorno di consegne', trilingual: 'Trilingue',
+      orator: 'Oratoria', tenThousandTurns: 'Diecimila turni', sculptor: 'Scultura', architect: 'Architettura', fleet: 'Flotta', workshop: 'Officina', hundredHours: 'Cento ore', marathoner: 'Lunga lena', seasons: 'Vecchia volpe', twoHundred: 'Duecento giorni',
+      unbroken: 'Indistruttibile', twoMonths: 'Due mesi saldi', novelist: 'Romanzo fiume', minimalist: 'Minimalista', nocturne: 'Notturno', levelQuarter: 'Nozze d’argento', levelForty: 'Quaranta', collector: 'Collezionista', wildDay: 'Giornata folle', polymath: 'Tuttologo',
+      legend: 'Leggenda', million: 'Sposta montagne', armada: 'Armata', thousandHours: 'Mille ore', yearRound: 'Tutto l’anno', hundredInRow: 'Cento di fila', library: 'Biblioteca di codice', levelSeventyFive: 'Settantacinque', everything: 'Tutto addosso', allBadges: 'Cappotto',
+    },
+    won: (name: string) => `Traguardo: ${name}`,
+  },
   card: 'Scheda da condividere',
   cardCopied: 'La riga per il tuo profilo GitHub è copiata.',
   shield: 'Scudo: chiedi prima di un comando irreversibile',

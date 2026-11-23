@@ -1,5 +1,8 @@
 import type { Words } from '../words'
 
+/** Number plus its noun: one for 1, the plural otherwise (the number comes formatted). */
+const pl = (n: string, one: string, many: string) => `${n} ${n === '1' ? one : many}`
+
 const HI: Words = {
   agents: 'एजेंट',
   noAgents: 'कोई एजेंट नहीं चल रहा',
@@ -67,6 +70,28 @@ const HI: Words = {
     line: 'मेरी सेटिंग्स में मुझे Claude Code की स्टेटस लाइन बनाएँ, तो मैं mod के बिना आपकी इस्तेमाल की लिमिट दिखाऊँगा।',
   },
   room: 'Mochi का कमरा',
+  feats: {
+    title: 'उपलब्धियाँ',
+    done: (a: number, b: number) => `${b} में से ${a} पूरी`,
+    cats: { talk: 'बातचीत', code: 'कोड', ship: 'रिलीज़', time: 'घंटे', steady: 'निरंतरता', mochi: 'Mochi' },
+    tiers: { easy: 'आसान', medium: 'मध्यम', hard: 'कठिन', impossible: 'असंभव' },
+    metric: {
+      turns: (n: string) => `${n} टर्न`, dayTurns: (n: string) => `एक दिन में ${n} टर्न`, edits: (n: string) => `${n} एडिट`, tools: (n: string) => `${n} टूल कॉल`,
+      added: (n: string) => pl(n, 'लाइन जोड़ी', 'लाइनें जोड़ीं'), removed: (n: string) => pl(n, 'लाइन हटाई', 'लाइनें हटाईं'), langs: (n: string) => `${pl(n, 'भाषा', 'भाषाओं')} में एडिट`, commits: (n: string) => `${n} commit`,
+      dayCommits: (n: string) => `एक दिन में ${n} commit`, hours: (n: string) => `${pl(n, 'घंटा', 'घंटे')} काम`, night: (n: string) => `आधी रात के बाद ${n} टर्न`, early: (n: string) => `सुबह 7:00 से पहले ${n} टर्न`,
+      days: (n: string) => `${n} दिन काम`, streak: (n: string) => `लगातार ${n} दिन`, level: (n: string) => `लेवल ${n}`, items: (n: string) => `पहनने की ${pl(n, 'चीज़', 'चीज़ें')}`,
+      badges: (n: string) => `सभी ${n} बैज`,
+    },
+    name: {
+      hello: 'नमस्ते जी', firstEdit: 'पहली छुअन', firstCommit: 'मुहर लग गई', handy: 'हुनरमंद', again: 'फिर हाज़िर', chatty: 'बातूनी', firstHour: 'हाज़िरी लगी', lateOne: 'रात का नाश्ता', earlyOne: 'सुबह-सवेरे', levelTwo: 'बढ़त शुरू',
+      talker: 'बातों का धनी', storyteller: 'किस्सागो', editor: 'संपादक', shipper: 'डाकिया', toolbox: 'औज़ारों का डिब्बा', tenHours: 'दस घंटे क्लब', dayAndNight: 'दिन-रात', tenDays: 'दस दिन पूरे', monthOfDays: 'महीने भर', threeInRow: 'लगातार तीन',
+      fortnight: 'पखवाड़ा', tenThousand: 'दस हज़ार लाइनें', pruner: 'माली', nightShift: 'रात की पाली', dawnPatrol: 'भोर की गश्त', levelTen: 'दो अंक', dresser: 'बन-ठन', bigDay: 'बड़ा दिन', shippingDay: 'रिलीज़ का दिन', trilingual: 'त्रिभाषी',
+      orator: 'वक्ता', tenThousandTurns: 'दस हज़ार टर्न', sculptor: 'मूर्तिकार', architect: 'वास्तुकार', fleet: 'बेड़ा', workshop: 'कार्यशाला', hundredHours: 'सौ घंटे', marathoner: 'लंबी दौड़', seasons: 'तजुर्बेकार', twoHundred: 'दो सौ दिन',
+      unbroken: 'अटूट', twoMonths: 'दो महीने अडिग', novelist: 'उपन्यासकार', minimalist: 'कम में ज़्यादा', nocturne: 'रात्रि राग', levelQuarter: 'पच्चीसी', levelForty: 'चालीस पार', collector: 'संग्राहक', wildDay: 'धमाकेदार दिन', polymath: 'हरफ़नमौला',
+      legend: 'महानायक', million: 'पहाड़ सरकाए', armada: 'जंगी बेड़ा', thousandHours: 'हज़ार घंटे', yearRound: 'बारहों महीने', hundredInRow: 'लगातार सौ', library: 'कोड का पुस्तकालय', levelSeventyFive: 'पचहत्तर', everything: 'सोलह श्रृंगार', allBadges: 'हाउसफ़ुल',
+    },
+    won: (name: string) => `उपलब्धि: ${name}`,
+  },
   card: 'शेयर करने के लिए कार्ड',
   cardCopied: 'आपकी GitHub प्रोफ़ाइल के लिए लाइन कॉपी हो गई।',
   shield: 'कवच: न पलटी जा सकने वाली कमांड से पहले पूछें',

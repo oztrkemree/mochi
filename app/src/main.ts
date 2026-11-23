@@ -19,6 +19,7 @@ import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled }
 import { type Area, type Body, type Point, areaOf, fit, isPushedDown, peekAt } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
+import { featsOf } from './feats'
 import { lookNow } from './wardrobe'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
@@ -459,6 +460,21 @@ async function count() {
     said(level.line, 'said-level', levelOf(xpOf(h)).level * 1000 + unlocked(h).length),
     said(won.line, 'said-badges', badges.length),
   ])).filter((l): l is string => l !== null)
+  // A milestone reached (the badges are said above): said once by this app, the first count only noting what is done already.
+  const reached = featsOf(h, badges).filter(f => f.done && !f.badge).map(f => f.id)
+  let known: string[] | null = null
+  try {
+    known = JSON.parse(localStorage.getItem('feats') ?? 'null') as string[] | null
+  } catch {
+    known = null
+  }
+  // Hidden, nothing is noted: what is reached meanwhile is said when Mochi is back.
+  if (known === null || canSay) localStorage.setItem('feats', JSON.stringify(reached))
+  if (known !== null && canSay) {
+    const before = new Set(known)
+    const fresh = reached.filter(id => !before.has(id))
+    if (fresh.length > 0) lines.push(words().feats.won(fresh.slice(0, 3).map(id => words().feats.name[id] ?? id).join(', ')))
+  }
   if (lines.length > 0 && view) hear([{ id: 'level', kind: 'level', line: lines.join(' · '), link: '' }], view.peers)
   if (list.classList.contains('on')) drawAgents()
 }

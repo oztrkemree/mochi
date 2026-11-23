@@ -1,5 +1,20 @@
 import type { Words } from '../words'
 
+/** A noun's forms after a number: one, two, 3–10, 11–99, and 100, 101… */
+type Noun = readonly [one: string, two: string, few: string, many: string, other: string]
+
+/** Number plus its noun, the Arabic way (1 and 2 by the noun alone); a formatted number ("1,234") is read by its digits. */
+const count = (v: string, [one, two, few, many, other]: Noun) => {
+  const n = Number(v.replace(/\D/g, '')) || 0
+  if (n === 1) return one
+  if (n === 2) return two
+  const r = n % 100
+  return `${v} ${n === 0 || (r >= 3 && r <= 10) ? few : r >= 11 ? many : other}`
+}
+
+const TURN: Noun = ['طلب واحد', 'طلبان', 'طلبات', 'طلبًا', 'طلب']
+const DAY: Noun = ['يوم واحد', 'يومان', 'أيام', 'يومًا', 'يوم']
+
 const AR: Words = {
   agents: 'الوكلاء',
   noAgents: 'لا يعمل أي وكيل',
@@ -67,6 +82,28 @@ const AR: Words = {
     line: 'اجعلني سطر الحالة في Claude Code من إعداداتي، فأعرض حدود استخدامك بدون الإضافة.',
   },
   room: 'غرفة Mochi',
+  feats: {
+    title: 'الإنجازات',
+    done: (a: number, b: number) => `أُنجز ${a} من ${b}`,
+    cats: { talk: 'الحديث', code: 'الكود', ship: 'الإطلاق', time: 'الساعات', steady: 'المواظبة', mochi: 'Mochi' },
+    tiers: { easy: 'سهل', medium: 'متوسط', hard: 'صعب', impossible: 'مستحيل' },
+    metric: {
+      turns: (n: string) => count(n, TURN), dayTurns: (n: string) => `${count(n, TURN)} في يوم واحد`, edits: (n: string) => count(n, ['تعديل واحد', 'تعديلان', 'تعديلات', 'تعديلًا', 'تعديل']), tools: (n: string) => `استخدام الأدوات ${count(n, ['مرة واحدة', 'مرتين', 'مرات', 'مرة', 'مرة'])}`,
+      added: (n: string) => `إضافة ${count(n, ['سطر واحد', 'سطرين', 'أسطر', 'سطرًا', 'سطر'])}`, removed: (n: string) => `حذف ${count(n, ['سطر واحد', 'سطرين', 'أسطر', 'سطرًا', 'سطر'])}`, langs: (n: string) => `تعديل ${count(n, ['لغة واحدة', 'لغتين', 'لغات', 'لغةً', 'لغة'])}`, commits: (n: string) => count(n, ['إيداع واحد', 'إيداعان', 'إيداعات', 'إيداعًا', 'إيداع']),
+      dayCommits: (n: string) => `${count(n, ['إيداع واحد', 'إيداعان', 'إيداعات', 'إيداعًا', 'إيداع'])} في يوم واحد`, hours: (n: string) => `${count(n, ['ساعة واحدة', 'ساعتان', 'ساعات', 'ساعةً', 'ساعة'])} من العمل`, night: (n: string) => `${count(n, TURN)} بعد منتصف الليل`, early: (n: string) => `${count(n, TURN)} قبل 7:00`,
+      days: (n: string) => `${count(n, DAY)} من العمل`, streak: (n: string) => `${count(n, DAY)} على التوالي`, level: (n: string) => `المستوى ${n}`, items: (n: string) => `${count(n, ['قطعة واحدة', 'قطعتان', 'قطع', 'قطعةً', 'قطعة'])} للارتداء`,
+      badges: (n: string) => `جميع الشارات الـ${n}`,
+    },
+    name: {
+      hello: 'أهلًا وسهلًا', firstEdit: 'اللمسة الأولى', firstCommit: 'ختم وتوقيع', handy: 'يد ماهرة', again: 'عودة حميدة', chatty: 'ثرثرة', firstHour: 'بداية الدوام', lateOne: 'وجبة منتصف الليل', earlyOne: 'بركة البكور', levelTwo: 'نموّ',
+      talker: 'حديث شيّق', storyteller: 'حكواتي', editor: 'تحرير', shipper: 'ساعي البريد', toolbox: 'صندوق العدّة', tenHours: 'نادي العشر ساعات', dayAndNight: 'ليل نهار', tenDays: 'عشرة أيام', monthOfDays: 'شهر من الأيام', threeInRow: 'ثلاثة متتالية',
+      fortnight: 'أسبوعان', tenThousand: 'عشرة آلاف سطر', pruner: 'المقصّ', nightShift: 'المناوبة الليلية', dawnPatrol: 'دورية الفجر', levelTen: 'خانتان', dresser: 'أناقة', bigDay: 'يوم حافل', shippingDay: 'يوم الإطلاق', trilingual: 'ثلاثي اللغات',
+      orator: 'فن الخطابة', tenThousandTurns: 'عشرة آلاف طلب', sculptor: 'نحت', architect: 'هندسة معمارية', fleet: 'أسطول', workshop: 'ورشة', hundredHours: 'مئة ساعة', marathoner: 'نفَس طويل', seasons: 'خبرة عريقة', twoHundred: 'مئتا يوم',
+      unbroken: 'بلا انقطاع', twoMonths: 'شهران بثبات', novelist: 'رواية كاملة', minimalist: 'بساطة', nocturne: 'لحن الليل', levelQuarter: 'ربع قرن', levelForty: 'الأربعون', collector: 'هواية الجمع', wildDay: 'يوم جنوني', polymath: 'موسوعية',
+      legend: 'أسطورة', million: 'زحزحة الجبال', armada: 'أرمادا', thousandHours: 'ألف ساعة', yearRound: 'طوال العام', hundredInRow: 'مئة متتالية', library: 'مكتبة أكواد', levelSeventyFive: 'خمسة وسبعون', everything: 'بكامل الزينة', allBadges: 'العلامة الكاملة',
+    },
+    won: (name: string) => `إنجاز: ${name}`,
+  },
   card: 'بطاقة للمشاركة',
   cardCopied: 'تم نسخ السطر الخاص بملفك على GitHub.',
   shield: 'الدرع: السؤال قبل أمر لا يمكن التراجع عنه',

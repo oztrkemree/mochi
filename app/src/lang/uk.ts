@@ -1,5 +1,12 @@
 import type { Words } from '../words'
 
+/** Number plus its noun: 1, 2–4 and 5+ forms (11–14 take the last); a formatted number ("1 234") is read by its digits. */
+const pn = (n: string, one: string, few: string, many: string) => {
+  const a = (Number(n.replace(/\D/g, '')) || 0) % 100
+  const b = a % 10
+  return `${n} ${a >= 11 && a <= 14 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many}`
+}
+
 const UK: Words = {
   agents: 'Агенти',
   noAgents: 'Жоден агент не запущений',
@@ -67,6 +74,28 @@ const UK: Words = {
     line: 'Зроби мене рядком стану Claude Code у моїх налаштуваннях, і я покажу твої ліміти використання без мода.',
   },
   room: 'Кімната Mochi',
+  feats: {
+    title: 'Досягнення',
+    done: (a: number, b: number) => `Виконано: ${a} з ${b}`,
+    cats: { talk: 'Розмови', code: 'Код', ship: 'Релізи', time: 'Години', steady: 'Сталість', mochi: 'Mochi' },
+    tiers: { easy: 'Легко', medium: 'Середньо', hard: 'Складно', impossible: 'Неможливо' },
+    metric: {
+      turns: (n: string) => pn(n, 'запит', 'запити', 'запитів'), dayTurns: (n: string) => `${pn(n, 'запит', 'запити', 'запитів')} за один день`, edits: (n: string) => pn(n, 'правка', 'правки', 'правок'), tools: (n: string) => pn(n, 'виклик інструмента', 'виклики інструментів', 'викликів інструментів'),
+      added: (n: string) => pn(n, 'доданий рядок', 'додані рядки', 'доданих рядків'), removed: (n: string) => pn(n, 'видалений рядок', 'видалені рядки', 'видалених рядків'), langs: (n: string) => `правки ${pn(n, 'мовою', 'мовами', 'мовами')}`, commits: (n: string) => pn(n, 'коміт', 'коміти', 'комітів'),
+      dayCommits: (n: string) => `${pn(n, 'коміт', 'коміти', 'комітів')} за один день`, hours: (n: string) => pn(n, 'година роботи', 'години роботи', 'годин роботи'), night: (n: string) => `${pn(n, 'запит', 'запити', 'запитів')} після півночі`, early: (n: string) => `${pn(n, 'запит', 'запити', 'запитів')} до 7:00`,
+      days: (n: string) => pn(n, 'робочий день', 'робочі дні', 'робочих днів'), streak: (n: string) => `${pn(n, 'день', 'дні', 'днів')} поспіль`, level: (n: string) => `рівень ${n}`, items: (n: string) => pn(n, 'річ для гардероба', 'речі для гардероба', 'речей для гардероба'),
+      badges: (n: string) => `усі ${pn(n, 'значок', 'значки', 'значків')}`,
+    },
+    name: {
+      hello: 'Привіт-привіт', firstEdit: 'Перший штрих', firstCommit: 'Підписано', handy: 'Вмілі руки', again: 'Знову тут', chatty: 'Побалакаємо', firstHour: 'Зміна пішла', lateOne: 'Нічний перекус', earlyOne: 'Рання пташка', levelTwo: 'Ростемо',
+      talker: 'Язик без кісток', storyteller: 'Казкар', editor: 'Редактор', shipper: 'Кур’єр', toolbox: 'Скриня інструментів', tenHours: 'Клуб десяти годин', dayAndNight: 'День і ніч', tenDays: 'Десять днів', monthOfDays: 'Місяць днів', threeInRow: 'Три поспіль',
+      fortnight: 'Два тижні', tenThousand: 'Десять тисяч рядків', pruner: 'Садівник', nightShift: 'Нічна зміна', dawnPatrol: 'Світанковий дозор', levelTen: 'Дві цифри', dresser: 'Стиляга', bigDay: 'Великий день', shippingDay: 'День релізу', trilingual: 'Три мови',
+      orator: 'Оратор', tenThousandTurns: 'Десять тисяч запитів', sculptor: 'Скульптор', architect: 'Архітектор', fleet: 'Флотилія', workshop: 'Майстерня', hundredHours: 'Сто годин', marathoner: 'Довга дистанція', seasons: 'Стріляний горобець', twoHundred: 'Двісті днів',
+      unbroken: 'Без перерви', twoMonths: 'Два місяці в строю', novelist: 'Романіст', minimalist: 'Мінімаліст', nocturne: 'Ноктюрн', levelQuarter: 'Чверть століття', levelForty: 'Сорок', collector: 'Колекціонер', wildDay: 'Шалений день', polymath: 'Універсал',
+      legend: 'Легенда', million: 'Зрушує гори', armada: 'Армада', thousandHours: 'Тисяча годин', yearRound: 'Цілий рік', hundredInRow: 'Сто поспіль', library: 'Бібліотека коду', levelSeventyFive: 'Сімдесят п’ять', everything: 'При повному параді', allBadges: 'Повний комплект',
+    },
+    won: (name: string) => `Досягнення: ${name}`,
+  },
   card: 'Картка, щоб поділитися',
   cardCopied: 'Рядок для твого профілю GitHub скопійовано.',
   shield: 'Щит: питати перед незворотною командою',
