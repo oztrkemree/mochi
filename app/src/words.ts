@@ -1,7 +1,8 @@
-import { lang } from '../../hooks/i18n'
+import { type Lang, lang } from '../../hooks/i18n'
+import { MORE } from './lang'
 
-/** The app's own few words, beyond what Mochi says from the mod's dictionaries: English, and Turkish; English for the rest. */
-const EN = {
+/** The app's own few words, beyond what Mochi says from the mod's dictionaries, in the mod's sixteen languages (the rest in ./lang). */
+export const EN = {
   agents: 'Agents',
   noAgents: 'No agent is running',
   openHint: 'Press to open in Claude',
@@ -81,7 +82,9 @@ const EN = {
   version: (v: string) => `Mochi Buddy ${v}`,
 }
 
-const TR: typeof EN = {
+export type Words = typeof EN
+
+const TR: Words = {
   agents: 'Ajanlar',
   noAgents: 'Çalışan ajan yok',
   openHint: 'Claude’da açmak için bas',
@@ -161,4 +164,6 @@ const TR: typeof EN = {
   version: (v: string) => `Mochi Buddy ${v}`,
 }
 
-export const words = (): typeof EN => (lang() === 'tr' ? TR : EN)
+const ALL: Partial<Record<Lang, Words>> = { en: EN, tr: TR, ...MORE }
+
+export const words = (): Words => ALL[lang()] ?? EN
