@@ -71,6 +71,21 @@
       /* With the list open the bubble steps back: the list already says how each chat stands, and both would stand in the same room over Mochi's head. */
       #list.on ~ #say { display: none; }
 
+      /* A bubble for each chat at work, stacked over Mochi's head in the room the band keeps there: a dot in the chat's ink, its name and
+         what it does; in full, its plan's step and subagents under that. The one nearest Mochi has the tail. They step back for news and the list. */
+      #jobs { display: none; position: relative; z-index: 2; flex-direction: column; align-items: flex-end; gap: 5px; margin: 0 calc(var(--size) * 0.3) calc(var(--size) * -0.12) 0; }
+      #jobs.on { display: flex; }
+      #say.on ~ #jobs, #list.on ~ #jobs, .peek #jobs, .away #jobs, #jobs.on ~ #row #think { display: none; }
+      .job { position: relative; display: grid; grid-template-columns: 7px minmax(0, auto); column-gap: 7px; align-items: baseline; max-width: 260px; padding: 5px 11px 5px 9px; border: 0; border-radius: 12px; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+      .job:hover { filter: brightness(1.12); }
+      .job:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
+      .job .dot { width: 7px; height: 7px; border-radius: 50%; transform: translateY(-1px); }
+      .job .what { color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .job .what b { color: var(--fg); font-weight: 650; }
+      .job .more { grid-column: 2; color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .job .more + .more::before { content: "↳ "; }
+      .job:last-child::after { content: ""; position: absolute; right: 22px; bottom: -5px; width: 10px; height: 10px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
+      #jobs .left { padding: 0 10px; color: var(--dim); font-size: 11px; font-weight: 650; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
       /* How many chats, on the ground just right of Mochi's shadow (the ground things stand on its left): the shadow lies at 90.5 of Mochi's square and ends at 75, see SHADOW and ROOM in world.ts. */
       #agents { position: absolute; left: calc(var(--size) * 1.02); bottom: calc(var(--size) * 0.155 - 11px); display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px 0 7px; border: 0; border-radius: 11px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; z-index: 1; }
       #agents:hover { filter: brightness(1.12); }
@@ -154,6 +169,7 @@
     <div id="root">
       <div id="list" class="card" role="dialog"></div>
       <div id="say" class="card" role="status"></div>
+      <div id="jobs"></div>
       <div id="row">
         <button id="limits" class="card" type="button"></button>
         <button id="agents" class="card" type="button"></button>

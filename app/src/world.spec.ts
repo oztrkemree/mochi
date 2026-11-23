@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { setLang } from '../../hooks/i18n'
 import { ALIVE_MS } from '../../hooks/live'
 import { lookFrom } from '../../hooks/level'
-import { badgeOf, gazeOf, peersOf, rowsOf, stillOf, viewOf } from './world'
+import { badgeOf, gazeOf, jobsOf, peersOf, rowsOf, stillOf, viewOf } from './world'
 
 setLang('en')
 
@@ -102,6 +102,26 @@ test('the count at Mochi’s feet: how many chats, in the ink of the most pressi
   expect(badgeOf(rows)).toEqual({ count: 3, ink: '#F2C14E', isAsking: true })
   expect(badgeOf(rowsOf(peersOf([file('work', { state: 'busy' })], NOW), NOW))).toEqual({ count: 1, ink: '#7AA2F7', isAsking: false })
   expect(badgeOf([])).toBeNull()
+})
+
+test('a bubble over Mochi for each chat at work: how it stands, its plan and subagents in full, none at rest, none when off', () => {
+  const rows = rowsOf(peersOf([
+    file('rest'),
+    file('shop', { state: 'busy', activity: 'writing', plan: { total: 4, done: 2, now: 'Writing the tests' }, agents: [{ id: 'x', type: 'Explore', task: 'Find the bubble', since: 0 }] }),
+    file('wait', { state: 'asking', waitingFor: 'permission' }),
+  ], NOW), NOW)
+  expect(jobsOf(rows, 'brief')).toEqual({
+    jobs: [
+      { id: 'wait', name: 'wait', line: 'awaiting approval', ink: '#F2C14E', link: '', more: [] },
+      { id: 'shop', name: 'shop', line: 'editing', ink: '#7AA2F7', link: '', more: [] },
+    ],
+    left: 0,
+  })
+  expect(jobsOf(rows, 'full').jobs[1]!.more).toEqual(['2/4 · Writing the tests', 'Explore · Find the bubble'])
+  expect(jobsOf(rows, 'off')).toEqual({ jobs: [], left: 0 })
+  const many = rowsOf(peersOf(['a', 'b', 'c', 'd', 'e', 'f'].map(id => file(id, { state: 'busy' })), NOW), NOW)
+  expect(jobsOf(many, 'brief').jobs).toHaveLength(4)
+  expect(jobsOf(many, 'brief').left).toBe(2)
 })
 
 test('a change of mood is eased into from what was on screen; with no change the drawing stays the very one it was, so its motion never starts over', () => {

@@ -128,6 +128,29 @@ export function badgeOf(rows: readonly Row[]): { count: number; ink: string; isA
   return lead ? { count: rows.length, ink: lead.ink, isAsking: lead.status === 'asking' } : null
 }
 
+/** How much the bubbles over Mochi say of each chat: nothing, how it stands, or that with its plan's step and its subagents too. */
+export type JobsDetail = 'off' | 'brief' | 'full'
+/** One chat's bubble over Mochi; `more` holds the lines only the full bubble shows. */
+export type Job = { id: string; name: string; line: string; ink: string; link: string; more: string[] }
+
+/** The chats a bubble each stands over Mochi for: at most this many; the rest are counted. */
+const MAX_JOBS = 4
+
+/** A bubble over Mochi for each chat at work, waiting or just done, the most pressing first; a chat at rest has none. */
+export function jobsOf(rows: readonly Row[], detail: JobsDetail): { jobs: Job[]; left: number } {
+  if (detail === 'off') return { jobs: [], left: 0 }
+  const shown = rows.filter(r => r.status !== 'idle' && r.status !== 'quiet')
+  const jobs = shown.slice(0, MAX_JOBS).map(r => ({
+    id: r.id,
+    name: r.name,
+    line: r.line,
+    ink: r.ink,
+    link: r.link,
+    more: detail === 'full' ? [r.plan, ...r.agents.slice(0, 2).map(a => (a.task ? `${a.type} · ${a.task}` : a.type))].filter(Boolean) : [],
+  }))
+  return { jobs, left: shown.length - jobs.length }
+}
+
 /** How far Mochi's eyes turn, in the units of its drawing: all the way for a pointer this many points off or more. */
 const GAZE_REACH = 1.7
 const GAZE_FULL_AT = 160

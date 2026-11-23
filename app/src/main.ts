@@ -28,7 +28,7 @@ import { TRANSITION_MS } from '../../hooks/rig'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { words } from './words'
-import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, stillOf, viewOf } from './world'
+import { ROOM, type Row, type View, badgeOf, gazeOf, jobsOf, peersOf, rowsOf, stillOf, viewOf } from './world'
 
 /**
  * Mochi's window. It runs nothing on a clock: the app tells it when a hook
@@ -41,6 +41,7 @@ const stage = document.getElementById('stage')!
 const say = document.getElementById('say')!
 const list = document.getElementById('list')!
 const agentsButton = document.getElementById('agents') as HTMLButtonElement
+const jobsBox = document.getElementById('jobs')!
 const limitsButton = document.getElementById('limits') as HTMLButtonElement
 const win = getCurrentWindow()
 
@@ -365,7 +366,7 @@ function hot() {
   // Mochi's body, on its side turned a quarter about its middle; none while it is out of the screen.
   const b = bodyBox()
   if (!away) hotBody(rects, b)
-  for (const el of [say, list, agentsButton, limitsButton]) {
+  for (const el of [say, list, jobsBox, agentsButton, limitsButton]) {
     const r = el.getBoundingClientRect()
     if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
   }
@@ -753,6 +754,7 @@ function drawAgents() {
   agentsButton.classList.toggle('empty', rows.length === 0)
   agentsButton.title = `${w.agents} · ${rows.length}`
   agentsButton.setAttribute('aria-label', `${w.agents} · ${rows.length}`)
+  drawJobs(rows)
   if (!list.classList.contains('on')) return
   list.replaceChildren()
   const tabs = el('div')
@@ -833,6 +835,38 @@ function drawAgents() {
     list.append(item)
   }
 }
+
+/** A bubble over Mochi for each chat at work, saying as much as the person chose; the chats past the last bubble are counted over them. */
+function drawJobs(rows: readonly Row[]) {
+  const w = words()
+  const { jobs, left } = jobsOf(rows, settings.jobs)
+  const items: HTMLElement[] = left > 0 ? [el('span', 'left', w.jobsLeft(left))] : []
+  for (const job of jobs) {
+    const item = el('button', 'job card')
+    item.type = 'button'
+    // A press opens the chat where a link reaches it, else the list of agents.
+    if (job.link) {
+      item.dataset.link = job.link
+      item.title = w.openHint
+    }
+    const dot = el('span', 'dot')
+    dot.style.background = job.ink
+    const what = el('span', 'what')
+    what.append(el('b', '', job.name), ` ${job.line}`)
+    item.append(dot, what, ...job.more.map(m => el('span', 'more', m)))
+    items.push(item)
+  }
+  jobsBox.replaceChildren(...items)
+  jobsBox.classList.toggle('on', jobs.length > 0)
+}
+
+jobsBox.addEventListener('pointerdown', e => e.stopPropagation())
+jobsBox.addEventListener('click', e => {
+  const job = (e.target as HTMLElement).closest<HTMLElement>('.job')
+  if (!job) return
+  if (job.dataset.link) void openUrl(job.dataset.link)
+  else if (settings.showAgents) toggleAgents(true)
+})
 
 function toggleAgents(on = !list.classList.contains('on')) {
   list.classList.toggle('on', on)

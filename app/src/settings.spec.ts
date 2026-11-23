@@ -39,3 +39,10 @@ test('how long Mochi waits before it leaves the screen: 30 seconds unless set, o
   expect(settingsFrom(JSON.stringify({ leaveSeconds: 300 })).leaveSeconds).toBe(300)
   expect(settingsFrom(JSON.stringify({ leaveSeconds: 7 })).leaveSeconds).toBe(30)
 })
+
+test('how much the bubbles over Mochi say of each chat: brief unless set, off or full when chosen, brief for anything else', () => {
+  expect(settingsFrom(null).jobs).toBe('brief')
+  expect(settingsFrom(JSON.stringify({ jobs: 'off' })).jobs).toBe('off')
+  expect(settingsFrom(JSON.stringify({ jobs: 'full' })).jobs).toBe('full')
+  expect(settingsFrom(JSON.stringify({ jobs: 'loud' })).jobs).toBe('brief')
+})
