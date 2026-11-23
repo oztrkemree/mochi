@@ -223,7 +223,8 @@ pub fn claim(dir: &Path, name: &str, at: u64, id: &str, settle: Duration) -> boo
 /// One of the shared files: Ok(None) when there is none yet, Err when it is there but cannot be read now (locked, too big),
 /// so that nothing is written over it as if it were new.
 pub fn read_shared(dir: &Path, name: &str) -> Result<Option<String>, String> {
-    if !SHARED.contains(&name) {
+    // repos.json is read too (the Work tab ties worktrees to their repository), never written here: it has its own writer.
+    if !SHARED.contains(&name) && name != "repos.json" {
         return Err(format!("{name} is not shared"));
     }
     match fs::read_to_string(dir.join(name)) {
@@ -417,6 +418,10 @@ pub mod tests {
         assert!(!write_shared(&dir, "level.json", "{ half"));
         assert!(read_shared(&dir, "app.json").is_err());
         assert_eq!(read_shared(&dir, "level.json"), Ok(Some("{\"level\":3,\"items\":[]}".into())));
+        // The repositories Mochi saw are read for the Work tab, never written from here: they have their own writer.
+        fs::write(dir.join("repos.json"), "{\"/w/shop\":1}").unwrap();
+        assert_eq!(read_shared(&dir, "repos.json"), Ok(Some("{\"/w/shop\":1}".into())));
+        assert!(!write_shared(&dir, "repos.json", "{}"));
         // A badge won elsewhere since the list was read is kept: the list is only added to.
         fs::write(dir.join("badges.json"), "[\"owl\",\"rocket\"]").unwrap();
         assert!(write_shared(&dir, "badges.json", "[\"owl\",\"green\"]"));
