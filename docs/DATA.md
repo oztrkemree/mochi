@@ -23,7 +23,7 @@ This page is the contract between the two. Change a file's shape here first.
 | `days/<id>.json` | the chat's Mochi, when a turn ends | `{id, label, isLabelFromPrompt, days: {"YYYY-MM-DD": DayRec}}` |
 | `level.json` | any Mochi (the mod, or the app), when the level or the wardrobe grew | `{level, items}`: what was last celebrated, so it is celebrated once, by whichever Mochi saw it first |
 | `badges.json` | any Mochi (the mod, or the app), when a badge is won | the badges, oldest first; added to, never taken from |
-| `statusline.json` | the app, when the person makes Mochi Claude Code's status line | the `statusLine` setting they had before, which Mochi's goes on showing and gives back |
+| `statusline.json` | the app, when the person makes Mochi Claude Code's status line | the `statusLine` setting they had before, which Mochi's goes on showing and gives back. Its only copy: no reset takes it, and while it cannot be read the app does not give their line up |
 | `look.json` | the mod, when the look changes | `{v: 1, pick, items, tz, birthday, firstDay}`: what Mochi wears |
 | `usage.json` | the mod, every 5 minutes | `[{kind, at, p}]`: readings of the usage windows |
 | `reset-<kind>.json` | the first Mochi to see a usage window reset | `{at, id}`: who says so, so it is said once |

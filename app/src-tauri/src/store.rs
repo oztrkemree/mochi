@@ -190,16 +190,36 @@ pub fn all_days(dir: &Path) -> Vec<String> {
 /// The files any Mochi may write: what was last celebrated (so it is celebrated once), and the badges won.
 const SHARED: [&str; 2] = ["level.json", "badges.json"];
 
-pub fn read_shared(dir: &Path, name: &str) -> Option<String> {
+/// One of the shared files: Ok(None) when there is none yet, Err when it is there but cannot be read now (locked, too big),
+/// so that nothing is written over it as if it were new.
+pub fn read_shared(dir: &Path, name: &str) -> Result<Option<String>, String> {
     if !SHARED.contains(&name) {
-        return None;
+        return Err(format!("{name} is not shared"));
     }
-    fs::read_to_string(dir.join(name)).ok().filter(|t| t.len() < 64_000)
+    match fs::read_to_string(dir.join(name)) {
+        Ok(text) if text.len() < 64_000 => Ok(Some(text)),
+        Ok(_) => Err(format!("{name} is too big")),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 /// Writes one of the shared files, whole. Only those, and only what reads as JSON: a file caught half-read is never written back shorter.
+/// The badges are only added to: one won by the mod since the app read the list stays, ahead of the app's new ones.
 pub fn write_shared(dir: &Path, name: &str, text: &str) -> bool {
-    SHARED.contains(&name) && text.len() < 64_000 && serde_json::from_str::<Value>(text).is_ok() && write_whole(&dir.join(name), text)
+    let Some(mut next) = (SHARED.contains(&name) && text.len() < 64_000).then(|| serde_json::from_str::<Value>(text).ok()).flatten() else { return false };
+    if name == "badges.json" {
+        let on_disk = fs::read_to_string(dir.join(name)).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok());
+        if let (Some(Value::Array(mut had)), Value::Array(won)) = (on_disk, &next) {
+            for badge in won {
+                if !had.contains(badge) {
+                    had.push(badge.clone());
+                }
+            }
+            next = Value::Array(had);
+        }
+    }
+    write_whole(&dir.join(name), &next.to_string())
 }
 
 // ---------- the look, and the app's own beat ----------
@@ -340,16 +360,23 @@ pub mod tests {
         assert_eq!(all_days(&days).len(), 2);
         assert!(all_days(&dir.join("missing")).is_empty());
 
-        assert!(read_shared(&dir, "level.json").is_none());
+        assert_eq!(read_shared(&dir, "level.json"), Ok(None));
         assert!(write_shared(&dir, "level.json", "{\"level\":3,\"items\":[]}"));
-        assert_eq!(read_shared(&dir, "level.json").unwrap(), "{\"level\":3,\"items\":[]}");
+        assert_eq!(read_shared(&dir, "level.json"), Ok(Some("{\"level\":3,\"items\":[]}".into())));
         assert!(write_shared(&dir, "badges.json", "[\"owl\"]"));
         // No other file, and nothing that is not JSON.
         assert!(!write_shared(&dir, "look.json", "{}"));
         assert!(!write_shared(&dir, "../level.json", "{}"));
         assert!(!write_shared(&dir, "level.json", "{ half"));
-        assert!(read_shared(&dir, "app.json").is_none());
-        assert_eq!(read_shared(&dir, "level.json").unwrap(), "{\"level\":3,\"items\":[]}");
+        assert!(read_shared(&dir, "app.json").is_err());
+        assert_eq!(read_shared(&dir, "level.json"), Ok(Some("{\"level\":3,\"items\":[]}".into())));
+        // A badge won elsewhere since the list was read is kept: the list is only added to.
+        fs::write(dir.join("badges.json"), "[\"owl\",\"rocket\"]").unwrap();
+        assert!(write_shared(&dir, "badges.json", "[\"owl\",\"green\"]"));
+        assert_eq!(fs::read_to_string(dir.join("badges.json")).unwrap(), "[\"owl\",\"rocket\",\"green\"]");
+        // A file that is there but cannot be read is not the same as none: the caller must not write over it.
+        fs::write(dir.join("level.json"), "x".repeat(70_000)).unwrap();
+        assert!(read_shared(&dir, "level.json").is_err());
         fs::remove_dir_all(&dir).unwrap();
     }
 

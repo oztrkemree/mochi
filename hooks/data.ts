@@ -9,7 +9,7 @@ export type Scope = 'level' | 'history' | 'all'
 
 const isExport = (dir: string, name: string) => dir === '' && name.startsWith('export-')
 /** The desktop app's own file, and the look written for it from the rest: neither is the person's to take out. */
-const isForApp = (dir: string, name: string) => dir === '' && (name === 'app.json' || name === 'look.json')
+const isForApp = (dir: string, name: string) => dir === '' && (name === 'app.json' || name === 'look.json' || name === 'statusline.json')
 
 /** Whether an export takes this file: every JSON file Mochi keeps but the other chats' presence, what is kept for the desktop app, and earlier exports. */
 export const isExported = (dir: string, name: string): boolean => name.endsWith('.json') && dir !== 'live' && !isExport(dir, name) && !isForApp(dir, name)
@@ -18,10 +18,11 @@ export const isExported = (dir: string, name: string): boolean => name.endsWith(
  * Whether a reset of `scope` removes this file. The level's memory goes with
  * the history it was counted from, so the levels earned again are celebrated
  * again. Exports stay: they are the person's own copies; so does shield.json,
- * the rules they wrote, which Mochi could not write again.
+ * the rules they wrote, which Mochi could not write again, and statusline.json,
+ * the only copy of the status line they had before the app's.
  */
 export function isCleared(scope: Scope, dir: string, name: string): boolean {
-  if (!name.endsWith('.json') || isExport(dir, name) || (dir === '' && (name === 'shield.json' || name === 'app.json'))) return false
+  if (!name.endsWith('.json') || isExport(dir, name) || (dir === '' && (name === 'shield.json' || name === 'app.json' || name === 'statusline.json'))) return false
   if (dir === '' && name === 'level.json') return true
   if (scope === 'history') return dir === 'days'
   return scope === 'all'

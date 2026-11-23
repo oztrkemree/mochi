@@ -369,11 +369,15 @@ async function count() {
   const now = Date.now()
   countedAt = now
   history = historyOf(await invoke<string[]>('read_all_days'), dayKey(now, tz()))
-  const level = levelNews(await invoke<string | null>('read_shared', { name: 'level.json' }), history)
+  // undefined: the file is there but cannot be read now. Left for next time; read as none, it would be written over with less.
+  const kept = (name: string) => invoke<string | null>('read_shared', { name }).catch(() => undefined)
+  const keptLevel = await kept('level.json')
+  const level = keptLevel === undefined ? { line: null, keep: null } : levelNews(keptLevel, history)
   if (level.keep) await invoke('write_shared', { name: 'level.json', text: level.keep })
-  const won = badgesNews(await invoke<string | null>('read_shared', { name: 'badges.json' }), history)
+  const keptBadges = await kept('badges.json')
+  const won = keptBadges === undefined ? { line: null, keep: null } : badgesNews(keptBadges, history)
   if (won.keep) await invoke('write_shared', { name: 'badges.json', text: won.keep })
-  if (won.badges) badges = won.badges
+  if ('badges' in won && won.badges) badges = won.badges
   const lines = [level.line, won.line].filter((l): l is string => l !== null)
   if (lines.length > 0 && view) hear([{ id: 'level', kind: 'level', line: lines.join(' · '), link: '' }], view.peers)
   if (list.classList.contains('on')) drawAgents()

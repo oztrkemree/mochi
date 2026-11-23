@@ -248,14 +248,15 @@ fn set_line(on: bool) -> bool {
 }
 
 /// Every chat's days, for the one history the level is counted from.
-#[tauri::command]
+// async: hundreds of small files are read off the window's thread.
+#[tauri::command(async)]
 fn read_all_days() -> Vec<String> {
     data_dir().map(|d| store::all_days(&d.join("days"))).unwrap_or_default()
 }
 
 #[tauri::command]
-fn read_shared(name: String) -> Option<String> {
-    store::read_shared(&data_dir()?, &name)
+fn read_shared(name: String) -> Result<Option<String>, String> {
+    store::read_shared(&data_dir().ok_or("no home")?, &name)
 }
 
 #[tauri::command]

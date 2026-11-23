@@ -199,14 +199,24 @@ fn line_command(exe: &Path) -> String {
     format!("\"{}\"{OUR_LINE}", exe.display())
 }
 
+/// Whether a status line command is Mochi's: the app's own path in quotes, then `statusline`. A person's line that only ends
+/// in the word (`bun x ccusage statusline`) is theirs. The app may have moved since, so any Mochi binary counts.
+fn is_ours(command: &str) -> bool {
+    command
+        .strip_suffix(OUR_LINE)
+        .and_then(|c| c.strip_prefix('"')?.strip_suffix('"'))
+        .and_then(|path| Path::new(path).file_stem()?.to_str().map(str::to_lowercase))
+        .is_some_and(|name| name.contains("mochi"))
+}
+
 fn is_our_line(config: &Value) -> bool {
-    config["statusLine"]["command"].as_str().is_some_and(|c| c.ends_with(OUR_LINE))
+    config["statusLine"]["command"].as_str().is_some_and(is_ours)
 }
 
 /// Claude Code's settings with Mochi as the status line, and the status line the person had, to keep and to go on showing.
 fn line_connected(mut config: Value, command: &str) -> Option<(Value, Option<Value>)> {
     let root = config.as_object_mut()?;
-    let theirs = root.get("statusLine").filter(|line| !line["command"].as_str().is_some_and(|c| c.ends_with(OUR_LINE))).cloned();
+    let theirs = root.get("statusLine").filter(|line| !line["command"].as_str().is_some_and(is_ours)).cloned();
     let mut ours = json!({ "type": "command", "command": command });
     // The room the person gave their own line is the room it still gets.
     if let Some(padding) = theirs.as_ref().and_then(|line| line.get("padding")) {
@@ -219,7 +229,7 @@ fn line_connected(mut config: Value, command: &str) -> Option<(Value, Option<Val
 /// Claude Code's settings with the person's own status line back, or none if they had none.
 fn line_disconnected(mut config: Value, theirs: Option<Value>) -> Option<Value> {
     let root = config.as_object_mut()?;
-    if root.get("statusLine").is_some_and(|line| line["command"].as_str().is_some_and(|c| c.ends_with(OUR_LINE))) {
+    if root.get("statusLine").is_some_and(|line| line["command"].as_str().is_some_and(is_ours)) {
         match theirs {
             Some(line) => drop(root.insert("statusLine".into(), line)),
             None => drop(root.shift_remove("statusLine")),
@@ -253,7 +263,15 @@ pub fn set_line(settings: &Path, kept: &Path, exe: &Path, on: bool) -> bool {
         }
         next
     } else {
-        let theirs = fs::read_to_string(kept).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok()).filter(Value::is_object);
+        // No file: they had no line of their own. A file that cannot be read is their line all the same, never thrown away.
+        let theirs = match fs::read_to_string(kept) {
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+            Err(_) => return false,
+            Ok(text) => match serde_json::from_str::<Value>(&text) {
+                Ok(line) if line.is_object() => Some(line),
+                _ => return false,
+            },
+        };
         let Some(next) = line_disconnected(config, theirs) else { return false };
         next
     };
@@ -285,7 +303,7 @@ pub fn statusline() {
         }
     }
     let theirs = fs::read_to_string(dir.join("statusline.json")).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok());
-    if let Some(command) = theirs.as_ref().and_then(|line| line["command"].as_str()).filter(|c| !c.ends_with(OUR_LINE)) {
+    if let Some(command) = theirs.as_ref().and_then(|line| line["command"].as_str()).filter(|c| !is_ours(c)) {
         show_their_line(command, &input);
     }
 }
@@ -294,8 +312,21 @@ pub fn statusline() {
 fn show_their_line(command: &str, input: &str) {
     use std::io::Write;
     use std::process::{Command, Stdio};
-    let mut shell = if cfg!(windows) { Command::new("cmd") } else { Command::new("sh") };
-    shell.arg(if cfg!(windows) { "/C" } else { "-c" }).arg(command).stdin(Stdio::piped());
+    #[cfg(windows)]
+    let mut shell = {
+        use std::os::windows::process::CommandExt;
+        // cmd reads its line as it is: Rust's quoting of an argument would break a quoted path in it.
+        let mut shell = Command::new("cmd");
+        shell.arg("/C").raw_arg(command);
+        shell
+    };
+    #[cfg(not(windows))]
+    let mut shell = {
+        let mut shell = Command::new("sh");
+        shell.arg("-c").arg(command);
+        shell
+    };
+    shell.stdin(Stdio::piped());
     let Ok(mut child) = shell.spawn() else { return };
     if let Some(mut stdin) = child.stdin.take() {
         let _ = stdin.write_all(input.as_bytes());
@@ -683,6 +714,37 @@ mod tests {
         assert_eq!(line_state(&settings), "broken");
         assert!(!set_line(&settings, &kept_line, exe, true));
         assert_eq!(fs::read_to_string(&settings).unwrap(), "{ broken");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_line_of_their_own_that_ends_in_statusline_is_still_theirs() {
+        let dir = scratch("theirline");
+        let (settings, kept_line, exe) = (dir.join("settings.json"), dir.join("statusline.json"), Path::new("/Apps/Mochi Buddy"));
+        let theirs = json!({ "statusLine": { "type": "command", "command": "bun x ccusage statusline" } });
+        fs::write(&settings, theirs.to_string()).unwrap();
+        assert_eq!(line_state(&settings), "off");
+        assert!(set_line(&settings, &kept_line, exe, true));
+        assert_eq!(serde_json::from_str::<Value>(&fs::read_to_string(&kept_line).unwrap()).unwrap(), theirs["statusLine"]);
+        assert!(set_line(&settings, &kept_line, exe, false));
+        assert_eq!(config_at(&settings).unwrap(), theirs);
+        // Mochi's own line from where the app was before is still Mochi's.
+        assert!(is_ours("\"/Old/mochi-desktop\" statusline"));
+        assert!(!is_ours("\"/usr/local/bin/ccusage\" statusline"));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn their_line_kept_but_unreadable_is_never_taken_away() {
+        let dir = scratch("keptbroken");
+        let (settings, kept_line, exe) = (dir.join("settings.json"), dir.join("statusline.json"), Path::new("/Apps/Mochi Buddy"));
+        fs::write(&settings, json!({ "statusLine": { "type": "command", "command": "~/line.sh" } }).to_string()).unwrap();
+        assert!(set_line(&settings, &kept_line, exe, true));
+        fs::write(&kept_line, "{ half").unwrap();
+        let before = fs::read_to_string(&settings).unwrap();
+        assert!(!set_line(&settings, &kept_line, exe, false));
+        assert_eq!(fs::read_to_string(&settings).unwrap(), before);
+        assert!(kept_line.exists());
         fs::remove_dir_all(&dir).unwrap();
     }
 
