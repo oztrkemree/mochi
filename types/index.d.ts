@@ -90,7 +90,7 @@ export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' |
 /** What is on Mochi right now, slot by slot. On the face: glasses (`eyes`), the rest (`face`), a mustache (`lip`) and a beard (`chin`), each worn with the others. */
 export type Outfit = { head: Item | null; eyes: Item | null; face: Item | null; lip: Item | null; chin: Item | null; neck: Item | null; held: Item | null; ground: Item | null }
 
-export type Scene = { context: number; agents: number; outfit?: Outfit }
+export type Scene = { context: number; agents: number; outfit?: Outfit; /** Mochi's colour (hooks/skins.ts); its own clay when absent. */ skin?: string }
 
 /** A pull request as the list shows it. */
 export type Pull = {

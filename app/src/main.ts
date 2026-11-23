@@ -21,7 +21,7 @@ import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAb
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
-import { lookNow } from './wardrobe'
+import { lookNow, skinNow } from './wardrobe'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { words } from './words'
@@ -89,6 +89,8 @@ function remembered(): { x: number; y: number } | null {
 let modLook: Look | null = null
 let prefs: Choice | null = null
 let look: Look | null = null
+/** Mochi's colour, chosen in the room while its level opens it. */
+let skin: string | undefined
 function wear(text: string | null) {
   let value: unknown = null
   try {
@@ -102,9 +104,10 @@ function wear(text: string | null) {
 
 /** Dresses Mochi again by what it knows now; drawn afresh only if that changed what it wears. */
 function dress() {
-  const was = JSON.stringify(look)
+  const was = JSON.stringify([look, skin])
   look = lookNow(history, modLook, prefs, tz())
-  if (JSON.stringify(look) === was || !view) return
+  skin = skinNow(prefs, history)
+  if (JSON.stringify([look, skin]) === was || !view) return
   view = null
   draw()
 }
@@ -905,7 +908,7 @@ function draw() {
   for (const id of theirs) leave(id)
   const peers = [...others, ...agentPeers(sessions, now)]
   const before = view
-  const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT) })
+  const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT), skin })
   view = next
   // A new pose comes to the screen eased in from the last; the same pose is left as it is.
   const isAtWork = peers.some(p => p.state === 'busy')

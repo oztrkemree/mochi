@@ -74,6 +74,9 @@ const RU: Words = {
     line: 'Сделай меня строкой состояния Claude Code в моих настройках, и я покажу твои лимиты использования без мода.',
   },
   room: 'Комната Mochi',
+  colour: 'Цвет',
+  levelN: (n: number) => `уровень ${n}`,
+  skins: { clay: 'Глина', peach: 'Персик', cream: 'Крем', rose: 'Роза', coral: 'Коралл', lemon: 'Лимон', mint: 'Мята', sky: 'Небо', lavender: 'Лаванда', sage: 'Шалфей', teal: 'Бирюза', plum: 'Слива', cocoa: 'Какао', charcoal: 'Уголь', snow: 'Снег', cherry: 'Вишня', ocean: 'Океан', forest: 'Лес', sunset: 'Закат', bubblegum: 'Жвачка', gold: 'Золото', chrome: 'Хром', zombie: 'Зомби', ghost: 'Призрак', lava: 'Лава', ice: 'Лёд', galaxy: 'Галактика', neon: 'Неон', rainbow: 'Радуга', hologram: 'Голограмма' },
   feats: {
     title: 'Достижения',
     done: (a: number, b: number) => `Выполнено: ${a} из ${b}`,

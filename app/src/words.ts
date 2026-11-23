@@ -67,6 +67,9 @@ export const EN = {
   } as Record<'rightClick' | 'drag' | 'edge' | 'room' | 'wardrobe' | 'pat' | 'shield' | 'line', string>,
   card: 'Card to share',
   room: 'Mochi’s room',
+  colour: 'Colour',
+  levelN: (n: number) => `level ${n}`,
+  skins: { clay: 'Clay', peach: 'Peach', cream: 'Cream', rose: 'Rose', coral: 'Coral', lemon: 'Lemon', mint: 'Mint', sky: 'Sky', lavender: 'Lavender', sage: 'Sage', teal: 'Teal', plum: 'Plum', cocoa: 'Cocoa', charcoal: 'Charcoal', snow: 'Snow', cherry: 'Cherry', ocean: 'Ocean', forest: 'Forest', sunset: 'Sunset', bubblegum: 'Bubblegum', gold: 'Gold', chrome: 'Chrome', zombie: 'Zombie', ghost: 'Ghost', lava: 'Lava', ice: 'Ice', galaxy: 'Galaxy', neon: 'Neon', rainbow: 'Rainbow', holo: 'Hologram' } as Record<string, string>,
   feats: {
     title: 'Achievements',
     done: (a: number, b: number) => `${a} of ${b} done`,
@@ -168,6 +171,9 @@ const TR: Words = {
   },
   card: 'Paylaşım kartı',
   room: 'Mochi’nin odası',
+  colour: 'Renk',
+  levelN: (n: number) => `seviye ${n}`,
+  skins: { clay: 'Kil', peach: 'Şeftali', cream: 'Krem', rose: 'Gül', coral: 'Mercan', lemon: 'Limon', mint: 'Nane', sky: 'Gökyüzü', lavender: 'Lavanta', sage: 'Adaçayı', teal: 'Camgöbeği', plum: 'Erik', cocoa: 'Kakao', charcoal: 'Kömür', snow: 'Kar', cherry: 'Kiraz', ocean: 'Okyanus', forest: 'Orman', sunset: 'Gün batımı', bubblegum: 'Sakız', gold: 'Altın', chrome: 'Krom', zombie: 'Zombi', ghost: 'Hayalet', lava: 'Lav', ice: 'Buz', galaxy: 'Galaksi', neon: 'Neon', rainbow: 'Gökkuşağı', holo: 'Hologram' },
   feats: {
     title: 'Başarımlar',
     done: (a: number, b: number) => `${b} başarımın ${a} tanesi tamam`,

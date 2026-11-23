@@ -374,19 +374,20 @@ export function pickOf(value: unknown): Partial<Outfit> {
 }
 
 /** The wardrobe choice last made in either Mochi, the mod or the desktop app, and when (prefs.json). */
-export type Choice = { at: number; pick: Partial<Outfit> }
+export type Choice = { at: number; pick: Partial<Outfit>; /** Mochi's colour (hooks/skins.ts), chosen in the desktop app; absent for its own clay. */ skin?: string }
 
 /** prefs.json's content; null when there is none, or not one this version reads. */
 export function choiceFrom(text: string | null): Choice | null {
   try {
-    const v = JSON.parse(text ?? '') as { v?: unknown; at?: unknown; pick?: unknown }
-    return v.v === 1 && typeof v.at === 'number' ? { at: v.at, pick: pickOf(v.pick) } : null
+    const v = JSON.parse(text ?? '') as { v?: unknown; at?: unknown; pick?: unknown; skin?: unknown }
+    if (v.v !== 1 || typeof v.at !== 'number') return null
+    return { at: v.at, pick: pickOf(v.pick), ...(typeof v.skin === 'string' && /^[a-z]{2,16}$/.test(v.skin) ? { skin: v.skin } : {}) }
   } catch {
     return null
   }
 }
 
-export const choiceText = (c: Choice): string => JSON.stringify({ v: 1, at: c.at, pick: c.pick })
+export const choiceText = (c: Choice): string => JSON.stringify({ v: 1, at: c.at, pick: c.pick, ...(c.skin ? { skin: c.skin } : {}) })
 
 /** A look file's content, checked field by field: a version this does not know, or no picks or items, is no look. */
 export function lookFrom(value: unknown): Look | null {

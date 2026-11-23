@@ -30,7 +30,7 @@ export type View = {
 }
 
 /** What changes Mochi beyond the chats: the drawing on screen now, a mood held for a moment, a limit nearly gone. */
-export type Now = { was?: View | null; held?: Mood | null; isTired?: boolean }
+export type Now = { was?: View | null; held?: Mood | null; isTired?: boolean; skin?: string }
 
 /** The chats alive now that another Mochi writes, from the text of their files; the first file of a chat wins. */
 export function peersOf(texts: readonly string[], now: number): Peer[] {
@@ -56,12 +56,12 @@ const AT_EASE: readonly Mood[] = ['idle', 'sleeping', 'sleepy', 'proud']
  * one (waiting, failed, working, done, at rest). A change of mood is eased in
  * from the drawing on screen; with no change that drawing is kept as it is.
  */
-export function viewOf(peers: readonly Peer[], now: number, look: Look | null = null, { was = null, held = null, isTired = false }: Now = {}): View {
+export function viewOf(peers: readonly Peer[], now: number, look: Look | null = null, { was = null, held = null, isTired = false, skin }: Now = {}): View {
   const lead = membersOf(crowdOf(peers, now))[0]
   const calm = lead ? moodOf(lead, now) : 'sleeping'
   const mood = held ?? (isTired && AT_EASE.includes(calm) ? 'tired' : calm)
   const outfit = look ? dressAs(look, mood, now) : undefined
-  const scene: Scene = { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0), outfit }
+  const scene: Scene = { context: -1, agents: Math.min(3, lead?.peer.agents?.length ?? 0), outfit, ...(skin ? { skin } : {}) }
   const said = { link: appLink(lead?.peer.app), line: peersLine(peers) ?? t().mood[mood], peers }
   if (was && was.mood === mood && JSON.stringify(was.scene) === JSON.stringify(scene)) return { ...was, ...said }
   const from = was ? { params: paramsAt(was.from, was.mood, now - was.at), mood: was.mood, scene: was.scene } : null

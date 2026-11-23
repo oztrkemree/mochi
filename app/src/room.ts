@@ -5,15 +5,16 @@ import type { Badge, History, Item, Outfit } from '../../types'
 import { badgeHint, badgeLook, badgeName, badgesOf, provenBy } from '../../hooks/badges'
 import { dayKey } from '../../hooks/facts'
 import { lang, pickLang, setLang, t } from '../../hooks/i18n'
-import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, dressAs, hintFor, itemName, itemShort, lookFrom, slotName } from '../../hooks/level'
+import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, dressAs, hintFor, itemName, itemShort, levelOf, lookFrom, slotName, xpOf } from '../../hooks/level'
 import { itemIcon, svgFor } from '../../hooks/rig'
+import { SKINS, type Skin, skinOf, skinsAt } from '../../hooks/skins'
 import { bestOutfit, cardSvg } from '../../hooks/share'
 import { BADGE_PLACE, CATS, type Cat, type Feat, TIERS, featsOf, tally } from './feats'
 import { growthOf, historyOf } from './growth'
 import { SIGN, medalSvg } from './medal'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
-import { chosen, lookNow } from './wardrobe'
+import { chosen, lookNow, skinNow } from './wardrobe'
 import { words } from './words'
 import { stillOf } from './world'
 
@@ -57,7 +58,7 @@ let tab: Tab = (() => {
   return isTab(asked) ? asked : isTab(last) ? last : 'wardrobe'
 })()
 let isSettingsUp = false
-let shelf: Slot = 'head'
+let shelf: Slot | 'colour' = 'colour'
 
 /** What Mochi has on, as it stands at rest; with an item tried on, that item in its slot. */
 function outfit(trying: Item | null = null): Outfit {
@@ -68,12 +69,17 @@ function outfit(trying: Item | null = null): Outfit {
   return dressAs({ ...look, pick: { ...look.pick, [slot]: trying } }, 'idle', now)
 }
 
-function drawMochi(trying: Item | null = null) {
-  const svg = svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit: outfit(trying) }, from: null })
+/** The colour Mochi wears now: the chosen one, while the level opens it. */
+const wornSkin = () => skinNow(prefs, history)
+
+function drawMochi(trying: Item | null = null, tryingSkin: string | null = null) {
+  const skin = tryingSkin ?? wornSkin()
+  const svg = svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit: outfit(trying), ...(skin ? { skin } : {}) }, from: null })
   // Held still: the room never redraws on a clock.
   $('mochi').innerHTML = stillOf(svg)
-  $('mochi').setAttribute('aria-label', trying ? itemName(trying) : t().ui.wardrobe)
-  $('trying').textContent = trying ? itemName(trying) : ''
+  const name = trying ? itemName(trying) : tryingSkin ? words().skins[tryingSkin] ?? tryingSkin : ''
+  $('mochi').setAttribute('aria-label', name || t().ui.wardrobe)
+  $('trying').textContent = name
 }
 
 function drawPlate() {
@@ -114,60 +120,114 @@ function drawTabs() {
   }
 }
 
-/** The wardrobe: the slots, each with what it has on; Mochi's own pick or nothing; then the slot's things, what is open first. */
+const LOCK = '<svg viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.6" fill="currentColor"/><path d="M5.5 7V5.4a2.5 2.5 0 0 1 5 0V7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
+
+/** A skin's paint, as a swatch shows it: its colour, or the run of its colours. */
+const paintOf = (k: Skin) => (k.swatch.length === 1 ? k.swatch[0]! : `linear-gradient(135deg, ${k.swatch.join(', ')})`)
+
+/**
+ * The wardrobe: a rail of shelves (Mochi's colour, then each slot with what it
+ * has on there), and the shelf open beside it: its colours or its things, those
+ * that can be worn first. Resting on one, Mochi tries it on; pressing it wears it.
+ */
 function drawWardrobe(into: HTMLElement) {
-  if (!look) return
+  if (!look || !history) return
   const l = look
   const worn = outfit()
   const open = new Set(l.items)
-  const slots = el('div', 'slots')
-  slots.setAttribute('role', 'group')
-  for (const slot of (Object.keys(SLOT_ITEMS) as Slot[])) {
-    const has = SLOT_ITEMS[slot].filter(i => open.has(i)).length
+  const level = levelOf(xpOf(history)).level
+  const skinWorn = wornSkin() ?? 'clay'
+  const box = el('div', 'wardrobe')
+  const rail = el('nav', 'rail')
+  const shelfButton = (key: Slot | 'colour', icon: HTMLElement, name: string, count: string) => {
     const b = el('button')
     b.type = 'button'
-    b.setAttribute('aria-pressed', String(slot === shelf))
-    const on = worn[slot]
-    b.append(on ? svgIn('on', itemIcon(on, true)) : el('span', 'none'), el('span', '', slotName(slot)), el('small', '', `${has}/${SLOT_ITEMS[slot].length}`))
+    b.setAttribute('aria-pressed', String(key === shelf))
+    b.append(icon, el('span', 'name', name), el('small', '', count))
     b.addEventListener('click', () => {
-      shelf = slot
+      shelf = key
       draw()
     })
-    slots.append(b)
+    rail.append(b)
   }
-  const ways = el('div', 'ways')
-  const choice = l.pick[shelf]
-  for (const [label, item] of [[t().ui.auto, undefined], [t().ui.nothing, null]] as const) {
-    const b = el('button', '', label)
-    b.type = 'button'
-    b.setAttribute('aria-pressed', String(choice === item))
-    b.addEventListener('click', () => choose(shelf, item))
-    ways.append(b)
+  const dot = el('span', 'paint')
+  dot.style.background = paintOf(skinOf(skinWorn)!)
+  shelfButton('colour', dot, words().colour, `${skinsAt(level).length}/${SKINS.length}`)
+  for (const slot of (Object.keys(SLOT_ITEMS) as Slot[])) {
+    const on = worn[slot]
+    shelfButton(slot, on ? svgIn('on', itemIcon(on, true)) : el('span', 'none'), slotName(slot), `${SLOT_ITEMS[slot].filter(i => open.has(i)).length}/${SLOT_ITEMS[slot].length}`)
   }
-  ways.append(el('span', '', t().ui.unlockedOf(SLOT_ITEMS[shelf].filter(i => open.has(i)).length, SLOT_ITEMS[shelf].length)))
-  const grid = el('div', 'grid')
-  const things = [...SLOT_ITEMS[shelf].filter(i => open.has(i)), ...SLOT_ITEMS[shelf].filter(i => !open.has(i))]
-  for (const item of things) {
-    const isOpen = open.has(item)
-    const b = el('button', 'item')
-    b.type = 'button'
-    b.disabled = !isOpen
-    b.setAttribute('aria-pressed', String(worn[shelf] === item))
-    b.title = isOpen ? itemName(item) : hintFor(item)
-    b.append(svgIn('pic', itemIcon(item, isOpen)), el('b', '', itemShort(item)))
-    if (!isOpen) b.append(el('small', '', hintFor(item)))
-    b.append(svgIn('tick', TICK))
-    if (isOpen) {
-      // Rested on, Mochi tries it on; pressed, it wears it (or takes it off).
-      b.addEventListener('pointerenter', () => drawMochi(item))
-      b.addEventListener('focus', () => drawMochi(item))
-      b.addEventListener('pointerleave', () => drawMochi())
-      b.addEventListener('blur', () => drawMochi())
-      b.addEventListener('click', () => choose(shelf, worn[shelf] === item ? null : item))
+  const side = el('section', 'shelf')
+  const head = el('header')
+  const title = el('div')
+  if (shelf === 'colour') {
+    title.append(el('h2', '', words().colour), el('p', '', t().ui.unlockedOf(skinsAt(level).length, SKINS.length)))
+    head.append(title)
+    const grid = el('div', 'swatches')
+    for (const k of SKINS) {
+      const isOpen = level >= k.level
+      const b = el('button', 'swatch')
+      b.type = 'button'
+      b.disabled = !isOpen
+      b.setAttribute('aria-pressed', String(skinWorn === k.id))
+      const paint = el('span', 'paint')
+      paint.style.background = paintOf(k)
+      if (!isOpen) paint.append(svgIn('lock', LOCK))
+      b.append(paint, el('b', '', words().skins[k.id] ?? k.id), el('small', '', isOpen ? ' ' : words().levelN(k.level)))
+      if (isOpen) {
+        b.addEventListener('pointerenter', () => drawMochi(null, k.id))
+        b.addEventListener('focus', () => drawMochi(null, k.id))
+        b.addEventListener('pointerleave', () => drawMochi())
+        b.addEventListener('blur', () => drawMochi())
+        b.addEventListener('click', () => wearSkin(k.id))
+      }
+      grid.append(b)
     }
-    grid.append(b)
+    side.append(head, grid)
+  } else {
+    const slot = shelf
+    title.append(el('h2', '', slotName(slot)), el('p', '', t().ui.unlockedOf(SLOT_ITEMS[slot].filter(i => open.has(i)).length, SLOT_ITEMS[slot].length)))
+    const ways = el('div', 'ways')
+    for (const [label, item] of [[t().ui.auto, undefined], [t().ui.nothing, null]] as const) {
+      const b = el('button', '', label)
+      b.type = 'button'
+      b.setAttribute('aria-pressed', String(l.pick[slot] === item))
+      b.addEventListener('click', () => choose(slot, item))
+      ways.append(b)
+    }
+    head.append(title, ways)
+    const grid = el('div', 'grid')
+    for (const item of [...SLOT_ITEMS[slot].filter(i => open.has(i)), ...SLOT_ITEMS[slot].filter(i => !open.has(i))]) {
+      const isOpen = open.has(item)
+      const b = el('button', 'item')
+      b.type = 'button'
+      b.disabled = !isOpen
+      b.setAttribute('aria-pressed', String(worn[slot] === item))
+      b.title = isOpen ? itemName(item) : hintFor(item)
+      b.append(svgIn('pic', itemIcon(item, isOpen)), el('b', '', itemShort(item)))
+      if (!isOpen) b.append(el('small', '', hintFor(item)), svgIn('lock', LOCK))
+      b.append(svgIn('tick', TICK))
+      if (isOpen) {
+        b.addEventListener('pointerenter', () => drawMochi(item))
+        b.addEventListener('focus', () => drawMochi(item))
+        b.addEventListener('pointerleave', () => drawMochi())
+        b.addEventListener('blur', () => drawMochi())
+        b.addEventListener('click', () => choose(slot, worn[slot] === item ? null : item))
+      }
+      grid.append(b)
+    }
+    side.append(head, grid)
   }
-  into.append(slots, ways, grid)
+  box.append(rail, side)
+  into.append(box)
+}
+
+/** A colour chosen: worn at once, and written beside the wardrobe's choice. */
+function wearSkin(id: string) {
+  prefs = { at: Date.now(), pick: prefs?.pick ?? modLook?.pick ?? {}, ...(id === 'clay' ? {} : { skin: id }) }
+  drawMochi()
+  draw()
+  void invoke('write_shared', { name: 'prefs.json', text: choiceText(prefs) })
 }
 
 /** Each theme's colour, for the face of its milestones' medals. */
@@ -276,7 +336,7 @@ function drawCard() {
 
 /** A choice made here: worn at once, and written for the Mochi in the corner and the mod's to wear too. */
 function choose(slot: Slot, item: Item | null | undefined) {
-  prefs = { at: Date.now(), pick: chosen(prefs?.pick ?? modLook?.pick ?? {}, slot, item) }
+  prefs = { at: Date.now(), pick: chosen(prefs?.pick ?? modLook?.pick ?? {}, slot, item), ...(prefs?.skin ? { skin: prefs.skin } : {}) }
   look = lookNow(history, modLook, prefs, tz())
   drawMochi()
   draw()

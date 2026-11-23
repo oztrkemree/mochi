@@ -70,6 +70,9 @@ const IT: Words = {
     line: 'Rendimi la riga di stato di Claude Code nelle mie impostazioni e ti mostro i limiti di utilizzo senza la mod.',
   },
   room: 'La stanza di Mochi',
+  colour: 'Colore',
+  levelN: (n: number) => `livello ${n}`,
+  skins: { clay: 'Argilla', peach: 'Pesca', cream: 'Crema', rose: 'Rosa', coral: 'Corallo', lemon: 'Limone', mint: 'Menta', sky: 'Cielo', lavender: 'Lavanda', sage: 'Salvia', teal: 'Ottanio', plum: 'Prugna', cocoa: 'Cacao', charcoal: 'Carbone', snow: 'Neve', cherry: 'Ciliegia', ocean: 'Oceano', forest: 'Foresta', sunset: 'Tramonto', bubblegum: 'Confetto', gold: 'Oro', chrome: 'Cromo', zombie: 'Zombie', ghost: 'Fantasma', lava: 'Lava', ice: 'Ghiaccio', galaxy: 'Galassia', neon: 'Neon', rainbow: 'Arcobaleno', hologram: 'Ologramma' },
   feats: {
     title: 'Traguardi',
     done: (a: number, b: number) => `${a} su ${b} raggiunti`,

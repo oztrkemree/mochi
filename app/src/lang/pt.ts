@@ -70,6 +70,9 @@ const PT: Words = {
     line: 'Me transforme na linha de status do Claude Code nos meus ajustes, e eu mostro seus limites de uso sem o mod.',
   },
   room: 'O quarto do Mochi',
+  colour: 'Cor',
+  levelN: (n: number) => `nível ${n}`,
+  skins: { clay: 'Argila', peach: 'Pêssego', cream: 'Creme', rose: 'Rosa', coral: 'Coral', lemon: 'Limão', mint: 'Menta', sky: 'Céu', lavender: 'Lavanda', sage: 'Sálvia', teal: 'Turquesa', plum: 'Ameixa', cocoa: 'Cacau', charcoal: 'Carvão', snow: 'Neve', cherry: 'Cereja', ocean: 'Oceano', forest: 'Floresta', sunset: 'Poente', bubblegum: 'Chiclete', gold: 'Ouro', chrome: 'Cromo', zombie: 'Zumbi', ghost: 'Fantasma', lava: 'Lava', ice: 'Gelo', galaxy: 'Galáxia', neon: 'Neon', rainbow: 'Arco-íris', hologram: 'Holograma' },
   feats: {
     title: 'Conquistas',
     done: (a: number, b: number) => `${a} de ${b} feitas`,

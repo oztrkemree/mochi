@@ -1,5 +1,6 @@
 import type { History, Item, Outfit } from '../../types'
-import { type Choice, type Look, type Slot, SLOTS, unlocked } from '../../hooks/level'
+import { type Choice, type Look, type Slot, SLOTS, levelOf, unlocked, xpOf } from '../../hooks/level'
+import { skinOf } from '../../hooks/skins'
 
 /**
  * What Mochi wears, chosen in either Mochi. The mod keeps the person's choice
@@ -26,6 +27,13 @@ export function lookNow(history: History | null, modLook: Look | null, prefs: Ch
     if (chosen === null || (chosen !== undefined && items.includes(chosen))) pick[slot] = chosen
   }
   return { pick, items, tz: modLook?.tz ?? tz, birthday: modLook?.birthday ?? '', firstDay: modLook?.firstDay ?? '' }
+}
+
+/** The colour Mochi wears: the one chosen while its level still opens it, else its own clay (none). */
+export function skinNow(choice: Choice | null, history: History | null): string | undefined {
+  const skin = skinOf(choice?.skin)
+  if (!skin || skin.id === 'clay' || !history) return undefined
+  return levelOf(xpOf(history)).level >= skin.level ? skin.id : undefined
 }
 
 /** A choice with one slot changed: an item, null for nothing, undefined to leave it to Mochi. */

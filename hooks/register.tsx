@@ -1009,7 +1009,9 @@ async function setPrefs($: Dollar, change: (p: Prefs) => Prefs, isOwnChoice = tr
   // A choice made here is written for the other Mochi to wear too.
   if (isOwnChoice && chat.dataDir !== '' && JSON.stringify(after.pick) !== JSON.stringify(before.pick)) {
     chat.choiceAt = await $.clock.now()
-    await $.fs.write(`${chat.dataDir}/prefs.json`, choiceText({ at: chat.choiceAt, pick: after.pick })).catch(() => undefined)
+    // The colour chosen in the desktop app stays as it was.
+    const was = choiceFrom(await $.fs.read(`${chat.dataDir}/prefs.json`).catch(() => null))
+    await $.fs.write(`${chat.dataDir}/prefs.json`, choiceText({ at: chat.choiceAt, pick: after.pick, ...(was?.skin ? { skin: was.skin } : {}) })).catch(() => undefined)
   }
   // The store is every chat's: only what this change altered goes in, over what the other chats saved since this one started.
   const changed = Object.fromEntries(Object.entries(after).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(before[k as keyof Prefs])))

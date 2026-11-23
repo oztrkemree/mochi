@@ -2,7 +2,8 @@ import { expect, test } from 'vitest'
 
 import { historyOf } from './growth'
 import { choiceFrom, choiceText } from '../../hooks/level'
-import { chosen, lookNow } from './wardrobe'
+import { SKINS, skinFilter, skinOf, skinsAt } from '../../hooks/skins'
+import { chosen, lookNow, skinNow } from './wardrobe'
 
 const days = (record: Record<string, Record<string, number>>) => JSON.stringify({ id: 'c', label: 'c', days: record })
 // Enough work for the first hats: 2 days, 60 turns, 4 commits.
@@ -33,4 +34,21 @@ test('Mochi wears what the history opened, by the last choice made in either Moc
 test('a choice can be given back to Mochi, or made nothing', () => {
   expect(chosen({ head: 'beanie' }, 'neck', null)).toEqual({ head: 'beanie', neck: null })
   expect(chosen({ head: 'beanie' }, 'head', undefined)).toEqual({})
+})
+
+test('thirty colours open by level; the one chosen is worn while the level opens it, and prefs.json carries it', () => {
+  expect(SKINS).toHaveLength(30)
+  expect(new Set(SKINS.map(k => k.id)).size).toBe(30)
+  expect(skinsAt(1).map(k => k.id)).toEqual(['clay'])
+  expect(skinsAt(10).length).toBe(5)
+  // Mochi's own clay needs no filter; any other colour has one of its own name, so several Mochis on a page keep theirs.
+  expect(skinFilter(skinOf('clay'))).toBe('')
+  expect(skinFilter(skinOf('mint'))).toContain('id="skin-map-mint"')
+  // Level 3 (worked: 2 days, 60 turns, 4 commits) opens peach but not mint.
+  expect(skinNow({ at: 1, pick: {}, skin: 'peach' }, worked)).toBe('peach')
+  expect(skinNow({ at: 1, pick: {}, skin: 'mint' }, worked)).toBeUndefined()
+  expect(skinNow({ at: 1, pick: {}, skin: 'nonsense' }, worked)).toBeUndefined()
+  expect(skinNow(null, worked)).toBeUndefined()
+  expect(choiceFrom(choiceText({ at: 2, pick: { head: 'beanie' }, skin: 'peach' }))).toEqual({ at: 2, pick: { head: 'beanie' }, skin: 'peach' })
+  expect(choiceFrom('{"v":1,"at":2,"pick":{},"skin":"<script>"}')).toEqual({ at: 2, pick: {} })
 })

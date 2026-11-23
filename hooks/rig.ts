@@ -1,6 +1,7 @@
 import type { Item, Mood, Outfit, Params, Scene, Shot } from '../types'
 import { ART } from './assets'
 import { WEAR } from './wear'
+import { skinFilter, skinOf } from './skins'
 
 // The desktop drawing: one rig whose every pose is a set of numbers. A new
 // pose's SVG starts from the numbers that were on screen (mid-transition or
@@ -319,11 +320,11 @@ const SHOULDER_R: Pt = [76.5, 55]
 const BODY = { x: 21, y: 31, w: 58 }
 const BODY_H = (BODY.w * ART.body.h) / ART.body.w
 
-function arm(side: 'L' | 'R', from: number, to: number, loop: ArmLoop | undefined): string {
+function arm(side: 'L' | 'R', from: number, to: number, loop: ArmLoop | undefined, fx = ''): string {
   const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
   const at = (deg: number) => `${n(deg)} ${px} ${py}`
   const swing = loop ? loopT('rotate', loop.values.map(v => `${n(v)} ${px} ${py}`), loop.dur) : ''
-  return `<g transform="rotate(${at(to)})">${tweenT('rotate', at(from), at(to))}<g>${swing}<rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g></g>`
+  return `<g transform="rotate(${at(to)})">${tweenT('rotate', at(from), at(to))}<g${fx}>${swing}<rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g></g>`
 }
 
 function heldSvg(kind: Held): string {
@@ -1158,14 +1159,18 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
   const liquidFill = (c: number) => (c >= 80 ? '#B3261E' : '#7A2E16')
   const liquidOp = (c: number) => (c <= 0 ? 0 : c >= 80 ? 0.3 : 0.16)
 
+  // Mochi's colour: its clay through the skin's filter, what the skin lays over it, and the face's ink where the clay is dark.
+  const skin = skinOf(scene.skin)
+  const fx = skin?.map ? ` filter="url(#skin-map-${skin.id})"` : ''
+  const ink = (svg: string) => (skin?.ink ? svg.replaceAll('#2B1B17', skin.ink) : svg)
   const eyes = [[-1, 40, from.eyeL, to.eyeL], [1, 60, from.eyeR, to.eyeR]] as const
-  const eyesSvg = eyes.map(([side, cx, a, b]) =>
+  const eyesSvg = ink(eyes.map(([side, cx, a, b]) =>
     `<path d="${pathOf(b, cx, 52)}" fill="#2B1B17">${tween('d', pathOf(a, cx, 52), pathOf(b, cx, 52))}</path>` +
     `<circle cx="${cx + 1.3}" cy="50.2" r="1.15" fill="#fff" opacity="${n(to.catchlight * 0.9)}">${tween('opacity', n(from.catchlight * 0.9), n(to.catchlight * 0.9))}</circle>` +
     `<g opacity="${n(to.x)}">${tween('opacity', n(from.x), n(to.x))}<path d="M${cx - 3.6} ${48.4}L${cx + 3.6} ${55.6}M${cx + 3.6} ${48.4}L${cx - 3.6} ${55.6}" stroke="#2B1B17" stroke-width="2.4" stroke-linecap="round"/></g>` +
     `<g opacity="${n(to.star)}">${tween('opacity', n(from.star), n(to.star))}${img(ART.sparkle, cx - 5, 47, 10)}</g>` +
     `<g opacity="${n(to.spiral)}">${tween('opacity', n(from.spiral), n(to.spiral))}<g>${loopT('rotate', [`0 ${cx} 52`, `${side * 360} ${cx} 52`], 1.1)}<path d="M${cx} 52m-0.9 0a0.9 0.9 0 1 1 1.8 0a2.3 2.3 0 1 1 -4.6 0a3.8 3.8 0 1 1 7.6 0" stroke="#2B1B17" stroke-width="1.6" fill="none" stroke-linecap="round"/></g></g>`,
-  ).join('')
+  ).join(''))
 
   const held = (['laptop', 'book', 'glass', 'flag'] as const).map(k => {
     const isNow = pose.held === k
@@ -1215,6 +1220,7 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     `<linearGradient id="liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${liquidFill(scene.context)}" stop-opacity="0"/><stop offset="0.35" stop-color="${liquidFill(scene.context)}" stop-opacity="0.8"/><stop offset="1" stop-color="${liquidFill(scene.context)}"/></linearGradient>`,
     '<radialGradient id="glow"><stop offset="0" stop-color="#FFE7CF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFE7CF" stop-opacity="0"/></radialGradient>',
     '<radialGradient id="blush"><stop offset="0" stop-color="#FF7A95" stop-opacity="0.8"/><stop offset="1" stop-color="#FF7A95" stop-opacity="0"/></radialGradient>',
+    skinFilter(skin),
     '</defs>',
     helpers(wasScene.agents, scene.agents),
     '<ellipse cx="50" cy="88.5" rx="21" ry="3" fill="#2B1B17" opacity="0.13"/>',
@@ -1223,20 +1229,19 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     `<g>${loops.move}`,
     `<g transform="rotate(${n(to.tilt)} 50 88)">${tweenT('rotate', `${n(from.tilt)} 50 88`, `${n(to.tilt)} 50 88`)}`,
     `<g>${loops.turn}`,
-    '<rect x="33.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>',
-    img(ART.foot, 33, 79, 15),
-    `<g>${tap}<rect x="52.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 52, 79, 15)}</g>`,
+    `<g${fx}><rect x="33.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 33, 79, 15)}</g>`,
+    `<g${fx}>${tap}<rect x="52.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 52, 79, 15)}</g>`,
     '<g transform="translate(50 82)">',
     `<g transform="scale(${n(to.sx)} ${n(to.sy)})">${tweenT('scale', `${n(from.sx)} ${n(from.sy)}`, `${n(to.sx)} ${n(to.sy)}`)}`,
     `<g>${loops.squash}`,
     '<g transform="translate(-50 -82)">',
     // A hat has no room for the antenna: it comes off while something is on the head.
-    outfit.head ? '' : '<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+    outfit.head ? '' : `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/>`,
     outfit.head ? '' : '<circle cx="50" cy="17.5" r="8" fill="url(#glow)"><animate attributeName="opacity" values="0.45;1;0.45" dur="2.2s" repeatCount="indefinite"/></circle>',
     outfit.head ? '' : '<circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>',
     outfit.head ? '' : img(ART.bulb, 45.6, 13.1, 8.8),
-    '<rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>',
-    img(ART.body, BODY.x, BODY.y, BODY.w),
+    `<g${fx}><rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>${img(ART.body, BODY.x, BODY.y, BODY.w)}</g>`,
+    skin?.over ? `<g mask="url(#bm)">${skin.over}</g>` : '',
     `<rect x="18" y="${n(liquidY(scene.context))}" width="64" height="${n(BODY_H * level(scene.context) + 2)}" fill="url(#liq)" opacity="${n(liquidOp(scene.context))}" mask="url(#bm)">` +
       tween('y', n(liquidY(wasScene.context)), n(liquidY(scene.context))) +
       tween('height', n(BODY_H * level(wasScene.context) + 2), n(BODY_H * level(scene.context) + 2)) +
@@ -1246,7 +1251,7 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     `<g opacity="${n(to.blush)}">${tween('opacity', n(from.blush), n(to.blush))}<ellipse cx="31" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/><ellipse cx="69" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/></g>`,
     `<g transform="translate(${n(to.eyeDx)} ${n(to.eyeDy)})">${tweenT('translate', `${n(from.eyeDx)} ${n(from.eyeDy)}`, `${n(to.eyeDx)} ${n(to.eyeDy)}`)}`,
     `<g>${eyeMove}<g transform="translate(0 52)"><g>${eyeBlink}<g transform="translate(0 -52)">${eyesSvg}</g></g></g></g></g>`,
-    `<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17">${tween('d', pathOf(from.mouth, 50, 64), pathOf(to.mouth, 50, 64))}${mouthLoop(pose.mouthLoop, pose.mouth)}</path>`,
+    ink(`<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17">${tween('d', pathOf(from.mouth, 50, 64), pathOf(to.mouth, 50, 64))}${mouthLoop(pose.mouthLoop, pose.mouth)}</path>`),
     // The face from the skin out: a beard, a mustache over it, the rest, then glasses on top.
     wearSlot('chin', outfit, wasOutfit),
     wearSlot('lip', outfit, wasOutfit),
@@ -1254,8 +1259,8 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     wearSlot('eyes', outfit, wasOutfit),
     wearSlot('neck', outfit, wasOutfit),
     wearSlot('head', outfit, wasOutfit),
-    arm('L', from.armL, to.armL, pose.armLoopL),
-    arm('R', from.armR, to.armR, pose.armLoopR),
+    arm('L', from.armL, to.armL, pose.armLoopL, fx),
+    arm('R', from.armR, to.armR, pose.armLoopR, fx),
     // A held thing is drawn over the hand, as if gripped by it.
     wearSlot('held', outfit, wasOutfit),
     held,
