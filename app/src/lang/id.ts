@@ -53,11 +53,11 @@ const ID: Words = {
     hello: 'Hai, aku Mochi. Aku duduk di sini dan memberitahumu saat chat di Claude Code atau Codex selesai, menunggumu, atau mengalami error.',
     claude: 'Boleh aku mendengarkan Claude Code? Aku menambahkan hook-ku ke pengaturannya, dan menyimpan salinannya seperti semula.',
     codex: 'Codex juga ada di sini. Boleh aku mendengarkannya? Setelah itu, jalankan /hooks sekali di Codex untuk menyetujui.',
-    pocket: 'Tekan aku untuk membuka kantongku: chat-mu, harimu, levelmu. Klik kanan membuka pengaturanku.',
+    pocket: 'Tekan aku untuk membuka kantongku: obrolanmu, harimu, levelmu. Klik kanan membuka kamarku, berisi lemari, pencapaian, dan pengaturan.',
     next: 'Mengerti',
   },
   tips: {
-    rightClick: 'Klik kanan padaku membuka pengaturanku.',
+    rightClick: 'Klik kanan padaku membuka kamarku: lemari, pencapaian, dan pengaturan.',
     drag: 'Seret aku ke mana saja; aku tetap di tempat kamu meninggalkanku.',
     edge: 'Dorong aku keluar dari tepi bawah layar, dan hanya kepalaku yang mengintip.',
     room: 'Kamarku berisi lemari, lencana, dan kota minggu-minggumu. Buka dari kantongku.',

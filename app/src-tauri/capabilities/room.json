@@ -1,11 +1,14 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "room",
-  "description": "What Mochi's room may do: read and write Mochi's shared files through the app's own commands, and nothing else",
+  "description": "What Mochi's room may do: read and write Mochi's shared files through the app's own commands, tell Mochi's window of a change in the settings, and open Mochi at login or not",
   "windows": [
     "room"
   ],
   "permissions": [
-    "core:default"
+    "core:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

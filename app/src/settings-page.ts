@@ -15,6 +15,8 @@ const NATIVE: Record<Lang, string> = {
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T
 let settings = loadSettings()
+/** Told when the language changes, for the room around the settings to speak it too. */
+let onLang = () => {}
 
 /** Keeps the settings and tells Mochi's window at once. */
 async function save(change: Partial<Settings>) {
@@ -25,7 +27,10 @@ async function save(change: Partial<Settings>) {
     // Not kept for the next start; Mochi still hears it now.
   }
   await emit(CHANGED, settings)
-  if (change.lang !== undefined) draw()
+  if (change.lang !== undefined) {
+    draw()
+    onLang()
+  }
 }
 
 /** A segmented choice: one button per value, the chosen one pressed. */
@@ -87,9 +92,8 @@ function draw() {
   document.documentElement.lang = langNow()
   document.documentElement.dir = langNow() === 'ar' ? 'rtl' : 'ltr'
   const w = words()
-  document.title = w.settings
   const text: Record<string, string> = {
-    title: w.settings, 'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-idle': w.hideIdle,
+    'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-idle': w.hideIdle,
     'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
     'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex, 'l-line': w.line,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
@@ -116,7 +120,9 @@ function draw() {
   void drawLine()
 }
 
-async function start() {
+/** The settings, in Mochi's room: drawn into its Settings tab, whose markup is room.html's. */
+export async function startSettings(languageChanged: () => void) {
+  onLang = languageChanged
   draw()
   const version = await getVersion().catch(() => '')
   $('version').textContent = version ? words().version(version) : ''
@@ -126,4 +132,3 @@ async function start() {
     $<HTMLInputElement>('atLogin').checked = await isEnabled().catch(() => on)
   })
 }
-void start()

@@ -56,11 +56,11 @@ const PT: Words = {
     hello: 'Oi, eu sou o Mochi. Fico aqui e aviso quando um chat no Claude Code ou no Codex termina, espera por você ou dá erro.',
     claude: 'Posso ouvir o Claude Code? Eu adiciono meus hooks às configurações dele e guardo uma cópia de como estavam.',
     codex: 'O Codex também está aqui. Posso ouvi-lo? Depois, no Codex, rode /hooks uma vez para aprovar.',
-    pocket: 'Clique em mim para abrir meu bolso: seus chats, seu dia, seu nível. Um clique direito abre meus ajustes.',
+    pocket: 'Toque em mim para abrir meu bolso: suas conversas, seu dia, seu nível. Um clique direito abre meu quarto, com meu guarda-roupa, conquistas e ajustes.',
     next: 'Entendi',
   },
   tips: {
-    rightClick: 'Um clique direito em mim abre meus ajustes.',
+    rightClick: 'Um clique direito em mim abre meu quarto: guarda-roupa, conquistas e ajustes.',
     drag: 'Me arraste para qualquer lugar; eu fico onde você me deixar.',
     edge: 'Me empurre para fora da parte de baixo da tela e só a minha cabeça fica aparecendo.',
     room: 'No meu quarto estão meu guarda-roupa, minhas medalhas e a cidade das suas semanas. Abra pelo meu bolso.',

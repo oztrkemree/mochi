@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 
 import type { Badge, History, Item, Outfit } from '../../types'
 import { badgeHint, badgeName, badgeSvg, badgesOf, provenBy } from '../../hooks/badges'
@@ -11,6 +12,7 @@ import { bestOutfit, cardSvg } from '../../hooks/share'
 import { CATS, type Cat, type Feat, TIERS, type Tier, featsOf, tally } from './feats'
 import { growthOf, historyOf } from './growth'
 import { loadSettings } from './settings'
+import { startSettings } from './settings-page'
 import { chosen, lookNow } from './wardrobe'
 import { words } from './words'
 import { stillOf } from './world'
@@ -45,7 +47,16 @@ let modLook: Look | null = null
 let prefs: Choice | null = null
 let badges: Badge[] = []
 let look: Look | null = null
-let tab: 'wardrobe' | 'feats' | 'city' = 'wardrobe'
+const TABS = ['wardrobe', 'feats', 'city', 'settings'] as const
+type Tab = (typeof TABS)[number]
+const isTab = (v: unknown): v is Tab => (TABS as readonly unknown[]).includes(v)
+/** The tab asked for (the tray's Settings), else the one last open. */
+let tab: Tab = (() => {
+  const asked = new URLSearchParams(location.search).get('tab')
+  const last = localStorage.getItem('roomTab')
+  return isTab(asked) ? asked : isTab(last) ? last : 'wardrobe'
+})()
+let isSettingsUp = false
 let shelf: Slot = 'head'
 
 /** What Mochi has on, as it stands at rest; with an item tried on, that item in its slot. */
@@ -91,16 +102,13 @@ function drawTabs() {
   tabs.replaceChildren()
   const open = look?.items.length ?? 0
   const all = Object.values(SLOT_ITEMS).flat().length
-  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['city', t().pane.city, '']] as const) {
+  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['city', t().pane.city, ''], ['settings', t().pane.tabs.settings, '']] as const) {
     const b = el('button', '', label)
     b.type = 'button'
     b.setAttribute('role', 'tab')
     b.setAttribute('aria-selected', String(tab === name))
     if (count) b.append(el('small', '', count))
-    b.addEventListener('click', () => {
-      tab = name
-      draw()
-    })
+    b.addEventListener('click', () => show(name))
     tabs.append(b)
   }
 }
@@ -241,13 +249,44 @@ function drawCity(into: HTMLElement) {
   into.append(city)
 }
 
+function show(name: Tab) {
+  tab = name
+  localStorage.setItem('roomTab', name)
+  draw()
+}
+
 function draw() {
   drawTabs()
   const panel = $('panel')
+  // The settings' markup stays in the page; the rest is drawn afresh.
+  panel.hidden = tab === 'settings'
+  $('settings').hidden = tab !== 'settings'
+  if (tab === 'settings') {
+    if (!isSettingsUp) {
+      isSettingsUp = true
+      void startSettings(speakAgain)
+    }
+    return
+  }
   panel.replaceChildren()
   if (tab === 'wardrobe') drawWardrobe(panel)
   else if (tab === 'feats') drawFeats(panel)
   else drawCity(panel)
+}
+
+/** The language changed in the settings: the room says everything again in it. */
+function speakAgain() {
+  document.title = words().room
+  drawCard()
+  drawMochi()
+  drawPlate()
+  draw()
+}
+
+function drawCard() {
+  const card = $('card')
+  card.innerHTML = CARD
+  card.append(words().card)
 }
 
 /** A choice made here: worn at once, and written for the Mochi in the corner and the mod's to wear too. */
@@ -287,14 +326,16 @@ function start() {
   document.documentElement.lang = lang()
   document.documentElement.dir = lang() === 'ar' ? 'rtl' : 'ltr'
   document.title = words().room
-  const card = $('card')
-  card.innerHTML = CARD
-  card.append(words().card)
-  card.addEventListener('click', () => void (async () => {
+  drawCard()
+  $('card').addEventListener('click', () => void (async () => {
     const path = await invoke<string | null>('save_share', { name: 'mochi-card.svg', svg: cardSvg(history, outfit()) })
     $('said').textContent = path === null ? t().share.failed('~/.claude/mochi/share') : t().share.cardSaved(path)
   })())
   void read()
   addEventListener('focus', () => void read())
+  // Asked for a tab while open (the tray's Settings).
+  void listen<string>('tab', e => {
+    if (isTab(e.payload)) show(e.payload)
+  })
 }
 start()

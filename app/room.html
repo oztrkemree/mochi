@@ -113,6 +113,28 @@
       .city svg { display: block; width: 100%; height: auto; }
       .caption { margin: 12px 2px 0; color: var(--dim); font-size: 12.5px; }
 
+      /* The settings, in the room's colours. */
+      .settings { max-width: 640px; }
+      .settings h2 { margin: 22px 4px 8px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+      .settings h2:first-child { margin-top: 2px; }
+      .group { border: 1px solid var(--edge); border-radius: 14px; background: var(--shelf); }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 46px; padding: 9px 14px; }
+      .row + .row { border-top: 1px solid var(--edge); }
+      .row label { flex: 1; }
+      .row small { display: block; margin-top: 2px; color: var(--faint); font-size: 12px; }
+      .switch { appearance: none; -webkit-appearance: none; position: relative; flex: none; width: 36px; height: 21px; margin: 0; border-radius: 11px; background: #3A332E; cursor: pointer; transition: background 160ms ease-out; }
+      .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); transition: transform 160ms cubic-bezier(0.2, 0.9, 0.3, 1); }
+      .switch:checked { background: var(--clay); }
+      .switch:checked::after { transform: translateX(15px); }
+      .switch:focus-visible, select:focus-visible { outline: 2px solid var(--clay-hi); outline-offset: 2px; }
+      .seg { display: flex; flex-wrap: wrap; padding: 2px; border-radius: 9px; background: #3A332E; }
+      .seg button { border: 0; padding: 4px 10px; border-radius: 7px; background: none; color: var(--dim); font-size: 12px; cursor: pointer; }
+      .seg button[aria-pressed="true"] { background: var(--raised); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); font-weight: 650; }
+      select { font: inherit; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--edge); background: var(--wall); color: var(--fg); }
+      .settings .button { flex: none; padding: 6px 13px; border: 1px solid var(--edge); border-radius: 8px; background: var(--raised); color: var(--fg); cursor: pointer; }
+      .settings .button:hover { border-color: rgba(217, 119, 87, 0.5); }
+      .version { margin: 22px 4px 0; color: var(--faint); font-size: 12px; }
+
       @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     </style>
   </head>
@@ -134,6 +156,46 @@
       <section class="things">
         <nav class="tabs" id="tabs" role="tablist"></nav>
         <div class="panel" id="panel" role="tabpanel"></div>
+        <div class="panel settings" id="settings" role="tabpanel" hidden>
+        <h2 id="h-look"></h2>
+        <div class="group">
+          <div class="row"><span id="l-size"></span><div class="seg" id="size" role="group"></div></div>
+          <div class="row"><label for="onTop" id="l-onTop"></label><input type="checkbox" class="switch" id="onTop" /></div>
+          <div class="row"><label for="showAgents" id="l-showAgents"></label><input type="checkbox" class="switch" id="showAgents" /></div>
+          <div class="row"><span id="l-idle"></span><div class="seg" id="idleMinutes" role="group"></div></div>
+        </div>
+
+        <h2 id="h-talk"></h2>
+        <div class="group">
+          <div class="row"><label for="talk-asking" id="l-talk-asking"></label><input type="checkbox" class="switch" id="talk-asking" /></div>
+          <div class="row"><label for="talk-done" id="l-talk-done"></label><input type="checkbox" class="switch" id="talk-done" /></div>
+          <div class="row"><label for="talk-failed" id="l-talk-failed"></label><input type="checkbox" class="switch" id="talk-failed" /></div>
+          <div class="row"><label for="talk-limit" id="l-talk-limit"></label><input type="checkbox" class="switch" id="talk-limit" /></div>
+          <div class="row"><span id="l-talkSeconds"></span><div class="seg" id="talkSeconds" role="group"></div></div>
+          <div class="row"><label for="sound" id="l-sound"></label><input type="checkbox" class="switch" id="sound" /></div>
+        </div>
+
+        <h2 id="h-language"></h2>
+        <div class="group">
+          <div class="row"><label for="lang" id="l-lang"></label><select id="lang"></select></div>
+        </div>
+
+        <h2 id="h-agents"></h2>
+        <div class="group">
+          <div class="row"><div><label for="approve" id="l-approve"></label><small id="approveHint"></small></div><input type="checkbox" class="switch" id="approve" /></div>
+          <div class="row"><div><label for="shield" id="l-shield"></label><small id="shieldHint"></small></div><input type="checkbox" class="switch" id="shield" /></div>
+          <div class="row"><div><span id="l-claude"></span><small id="claudeState"></small></div><button class="button" id="claude" type="button"></button></div>
+          <div class="row"><div><span id="l-codex"></span><small id="codexState"></small></div><button class="button" id="codex" type="button"></button></div>
+          <div class="row"><div><span id="l-line"></span><small id="lineState"></small></div><button class="button" id="line" type="button"></button></div>
+        </div>
+
+        <h2 id="h-startup"></h2>
+        <div class="group">
+          <div class="row"><label for="atLogin" id="l-atLogin"></label><input type="checkbox" class="switch" id="atLogin" /></div>
+          <div class="row"><span id="l-place"></span><button class="button" id="resetPlace" type="button"></button></div>
+        </div>
+          <p class="version" id="version"></p>
+        </div>
       </section>
     </main>
     <script type="module" src="/src/room.ts"></script>

@@ -1027,7 +1027,8 @@ stage.addEventListener('dblclick', () => {
 })
 addEventListener('contextmenu', e => {
   e.preventDefault()
-  void invoke('open_settings')
+  // A right click opens Mochi's room, where its settings are too.
+  void invoke('open_room')
 })
 
 async function start() {
