@@ -35,6 +35,8 @@ mockIPC((cmd, args) => {
     return true
   }
   if (cmd === 'claim') return true
+  if (cmd === 'agent_state') return (args as { agent: string }).agent === 'claude' ? 'off' : 'missing'
+  if (cmd === 'set_agent') return true
   if (cmd === 'save_share') return '/Users/you/.claude/mochi/share/mochi-card.svg'
   if (cmd === 'read_shield') return null
   if (cmd === 'commits') return [`shop\t${Math.floor(Date.now() / 1000) - 3600}\tFix the cart total`, `shop\t${Math.floor(Date.now() / 1000) - 90_000}\tAdd the coupon field`]

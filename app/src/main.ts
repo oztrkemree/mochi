@@ -25,6 +25,7 @@ import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAb
 import { COMMIT_STALE_MS, type FolderState, type PullBox, type Ran, ciNow, ciSaid, ciStep, commitsOf, deskOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed, standupOf } from './today'
 import { chosen, lookNow, shelvesOf } from './wardrobe'
 import { useRules, verdictOf } from './shield'
+import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { words } from './words'
 import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, stillOf, viewOf } from './world'
 
@@ -319,6 +320,7 @@ function hold(mood: Mood, ms: number) {
 type Extra = { what?: string; acts?: { label: string; isMain?: boolean; run: () => void }[] }
 
 function speak(text: string, ms: number, ink: string, news: News | null, extra: Extra = {}) {
+  saidAt = Date.now()
   if (news) {
     hop()
     chime(NEWS_SOUND[news.kind])
@@ -831,6 +833,72 @@ async function take(calls: string[]) {
   }
 }
 
+// ---------- the first meeting, and a tip now and then ----------
+
+/** When Mochi last said anything: a tip waits for it to have been quiet a while. */
+let saidAt = Date.now()
+
+const seenSteps = (): Set<string> => {
+  try {
+    const seen = new Set<string>(JSON.parse(localStorage.getItem('tour') ?? '[]') as string[])
+    // Asked before there was a tour.
+    if (localStorage.getItem('asked-approve') !== null) seen.add('approve')
+    return seen
+  } catch {
+    return new Set()
+  }
+}
+
+/** The next step of the first meeting, said with its answers; each answer takes the person to the step after. */
+async function meet() {
+  const seen = seenSteps()
+  const state = (agent: string) => invoke<AgentState>('agent_state', { agent }).catch((): AgentState => 'broken')
+  const step = nextStep(seen, { claude: await state('claude'), codex: await state('codex') })
+  if (step === null) return
+  const w = words()
+  const then = (run?: () => unknown) => () => {
+    seen.add(step)
+    localStorage.setItem('tour', JSON.stringify([...seen]))
+    void Promise.resolve(run?.()).catch(note).finally(() => {
+      sayNext()
+      void meet().catch(note)
+    })
+  }
+  const choose = (approve: boolean) => () => {
+    localStorage.setItem('asked-approve', '1')
+    const next = { ...settings, approve }
+    localStorage.setItem(KEY, JSON.stringify(next))
+    return apply(next)
+  }
+  const connect = (agent: 'claude' | 'codex') => () => invoke('set_agent', { agent, on: true })
+  const later = { label: w.notNow, run: then() }
+  const asks: Record<Step, [string, Extra['acts']]> = {
+    hello: [w.tour.hello, [{ label: w.tour.next, isMain: true, run: then() }]],
+    claude: [w.tour.claude, [{ label: w.connect, isMain: true, run: then(connect('claude')) }, later]],
+    codex: [w.tour.codex, [{ label: w.connect, isMain: true, run: then(connect('codex')) }, later]],
+    approve: [w.approveAsk, [{ label: w.yes, isMain: true, run: then(choose(true)) }, { label: w.notNow, run: then(choose(false)) }]],
+    pocket: [w.tour.pocket, [{ label: w.tour.next, isMain: true, run: then() }]],
+  }
+  const [line, acts] = asks[step]
+  speak(line, 120_000, QUIET_INK, null, { acts })
+}
+
+/** One thing more Mochi can do, said when it has been quiet a while, a day after the last. */
+function tip() {
+  let told: string[] = []
+  try {
+    told = JSON.parse(localStorage.getItem('tips') ?? '[]') as string[]
+  } catch {
+    told = []
+  }
+  const now = Date.now()
+  const next = tipNow(told, Number(localStorage.getItem('tipAt') ?? 0), saidAt, now, nextStep(seenSteps(), { claude: 'on', codex: 'on' }) === null)
+  if (next === null || saying || queue.length > 0 || peek) return
+  localStorage.setItem('tips', JSON.stringify([...told, next]))
+  localStorage.setItem('tipAt', String(now))
+  speak(words().tips[next], settings.talkSeconds * 1000 + 4000, QUIET_INK, null)
+}
+
 // ---------- the shield ----------
 
 /** Answers a shell command waiting on the shield: Claude Code asks the person first, with what it would do, and Mochi says so too. */
@@ -1043,6 +1111,7 @@ async function start() {
   readRules()
   await listen('minute', () => {
     if (Date.now() - rulesAt > 5 * 60_000) readRules()
+    tip()
     // A breath a minute, so a Mochi with nothing to do is still alive.
     move(1500)
     void take([]).catch(note)
@@ -1070,18 +1139,8 @@ async function start() {
     }
   })
   void count().catch(note)
-  // Asked once, the first time Mochi is up: answering for a chat from here is the person's to choose.
-  if (localStorage.getItem('asked-approve') === null) {
-    const w = words()
-    const choose = (approve: boolean) => () => {
-      localStorage.setItem('asked-approve', '1')
-      const next = { ...settings, approve }
-      localStorage.setItem(KEY, JSON.stringify(next))
-      void apply(next)
-      sayNext()
-    }
-    speak(w.approveAsk, 60_000, QUIET_INK, null, { acts: [{ label: w.yes, isMain: true, run: choose(true) }, { label: w.notNow, run: choose(false) }] })
-  }
+  // The first meeting, once: what Mochi does, the agents to listen to, the bubble's answers, the pocket.
+  void meet().catch(note)
   // The list closes when the person turns to another window.
   void win.onFocusChanged(({ payload }) => {
     if (!payload && list.classList.contains('on')) toggleAgents(false)

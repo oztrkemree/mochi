@@ -253,10 +253,14 @@ fn write_days(id: String, text: String) -> bool {
     data_dir().is_some_and(|d| store::write_days(&d.join("days"), &d.join("live"), &id, &text))
 }
 
-/// Whether an agent is connected: "on", "off", or "broken" for a file of its own this cannot read.
+/// Whether an agent is connected: "on", "off", "broken" for a file of its own this cannot read, or "missing" when the agent's
+/// own folder is not there (it was never run here).
 #[tauri::command]
 fn agent_state(agent: String) -> String {
     let Some(agent) = agents::agent_named(&agent) else { return "broken".into() };
+    if agent.config_path().as_deref().and_then(std::path::Path::parent).is_some_and(|dir| !dir.is_dir()) {
+        return "missing".into();
+    }
     match agent.config_path().as_deref().and_then(agents::config_at) {
         None => "broken".into(),
         Some(config) if agent.is_connected(&config) => "on".into(),
