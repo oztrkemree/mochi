@@ -1,6 +1,7 @@
 mod agents;
 mod stage;
 mod store;
+mod work;
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::thread;
@@ -50,6 +51,7 @@ static TELL_ALL: AtomicBool = AtomicBool::new(true);
 struct Told {
     live: Option<Vec<String>>,
     look: Option<Option<String>>,
+    prefs: Option<Option<String>>,
 }
 
 /// One read of Mochi's files: hook calls waiting, the chats the mod writes, the look. The window hears only what changed.
@@ -72,6 +74,13 @@ fn read_files(app: &AppHandle, told: &mut Told) {
     if told.look.as_ref() != Some(&look) {
         let _ = app.emit_to("main", "look", &look);
         told.look = Some(look);
+    }
+    // What the person last chose to wear, in either Mochi. A file that cannot be read now is read again next time.
+    if let Ok(prefs) = store::read_shared(&dir, "prefs.json") {
+        if told.prefs.as_ref() != Some(&prefs) {
+            let _ = app.emit_to("main", "prefs", &prefs);
+            told.prefs = Some(prefs);
+        }
     }
 }
 
@@ -259,6 +268,44 @@ fn read_shared(name: String) -> Result<Option<String>, String> {
     store::read_shared(&data_dir().ok_or("no home")?, &name)
 }
 
+/// Whether this Mochi says the news `at` of `name`; the mod claims the same names. async: it waits a moment for a claim to settle.
+#[tauri::command(async)]
+fn claim(name: String, at: u64) -> bool {
+    data_dir().is_some_and(|d| store::claim(&d, &name, at, "app", Duration::from_millis(1500)))
+}
+
+/// A chat's folder, noted for the stand-up; the window asks once an hour for each folder it sees.
+#[tauri::command(async)]
+fn see_repo(cwd: String) -> bool {
+    data_dir().is_some_and(|d| work::see_repo(&d, &cwd, now_ms()))
+}
+
+/// The person's commits since `since` (seconds) in every repository any Mochi saw lately: `repo\tat\tsubject`.
+#[tauri::command(async)]
+fn commits(since: i64) -> Vec<String> {
+    data_dir().map(|d| work::commits(&work::roots(&d, now_ms()), since)).unwrap_or_default()
+}
+
+#[tauri::command(async)]
+fn desks() -> Vec<Value> {
+    data_dir().map(|d| work::desks(&work::roots(&d, now_ms()))).unwrap_or_default()
+}
+
+#[tauri::command(async)]
+fn prs(query: String, vars: Vec<(String, String)>) -> Value {
+    work::prs(&query, &vars)
+}
+
+#[tauri::command(async)]
+fn git_state(cwd: String) -> Option<Value> {
+    work::git_state(&cwd)
+}
+
+#[tauri::command(async)]
+fn ci(cwd: String) -> Value {
+    work::ci(&cwd)
+}
+
 #[tauri::command]
 fn write_shared(name: String, text: String) -> bool {
     data_dir().is_some_and(|d| store::write_shared(&d, &name, &text))
@@ -329,7 +376,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, agent_state, set_agent, line_state, set_line, open_settings, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, claim, see_repo, commits, desks, prs, git_state, ci, agent_state, set_agent, line_state, set_line, open_settings, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]

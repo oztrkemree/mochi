@@ -28,4 +28,7 @@ test('Mochi speaks of a kind of news only while that kind is on', () => {
   expect(talksAbout(quiet, 'limit')).toBe(false)
   expect(talksAbout(quiet, 'back')).toBe(false)
   expect(talksAbout(DEFAULTS, 'back')).toBe(true)
+  // Changes left uncommitted are said at a turn's end: with the turns that finish.
+  expect(talksAbout(quiet, 'nudge')).toBe(false)
+  expect(talksAbout(DEFAULTS, 'nudge')).toBe(true)
 })

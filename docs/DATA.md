@@ -23,11 +23,13 @@ This page is the contract between the two. Change a file's shape here first.
 | `days/<id>.json` | the chat's Mochi, when a turn ends | `{id, label, isLabelFromPrompt, days: {"YYYY-MM-DD": DayRec}}` |
 | `level.json` | any Mochi (the mod, or the app), when the level or the wardrobe grew | `{level, items}`: what was last celebrated, so it is celebrated once, by whichever Mochi saw it first |
 | `badges.json` | any Mochi (the mod, or the app), when a badge is won | the badges, oldest first; added to, never taken from |
+| `said-level.json`, `said-badges.json` | the first Mochi to see a new level or badge | `{at, id}`: who says it, so it is said once. `at` names the news: `level × 1000 + items open` for the level, the number of badges for the badges. The mod's chats claim with their session id, the app as `app` |
+| `prefs.json` | any Mochi, when the person chooses what Mochi wears | `{v: 1, at, pick}`: the last choice, slot by slot (an item, `null` for nothing, no key for Mochi's own pick). The other Mochi wears it too |
 | `statusline.json` | the app, when the person makes Mochi Claude Code's status line | the `statusLine` setting they had before, which Mochi's goes on showing and gives back. Its only copy: no reset takes it, and while it cannot be read the app does not give their line up |
 | `look.json` | the mod, when the look changes | `{v: 1, pick, items, tz, birthday, firstDay}`: what Mochi wears |
 | `usage.json` | the mod, every 5 minutes | `[{kind, at, p}]`: readings of the usage windows |
 | `reset-<kind>.json` | the first Mochi to see a usage window reset | `{at, id}`: who says so, so it is said once |
-| `repos.json` | the mod | `{"<repo root>": lastSeenMs}` |
+| `repos.json` | any Mochi, at most once an hour for each repository a chat works in | `{"<repo root>": lastSeenMs}`, without those quiet for 30 days; the stand-up reads those seen in 14 |
 | `coach.json` | the mod | which tips were shown, and rules a person repeats |
 | `app.json` | the app, every 15 s while it runs; removed when it quits | `{v: 1, at, isShown, version, approve}` |
 | `inbox/<ms>-<pid>.json` | the app's `hook` command, one file per hook call; the app takes each out as it reads it | `{source, at, event, ask?}` |

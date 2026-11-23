@@ -3,12 +3,14 @@ import { listen } from '@tauri-apps/api/event'
 import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import type { Badge, DayRec, History, Mood } from '../../types'
+import type { Badge, Ci, DayRec, History, Item, Mood } from '../../types'
 import { badgeName, badgeSvg } from '../../hooks/badges'
 import { citySvg } from '../../hooks/city'
-import { dayKey, local } from '../../hooks/facts'
+import { dayKey, local, shiftDay } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
-import { type Look, addDay, lookFrom } from '../../hooks/level'
+import { type Look, type Slot, addDay, itemShort, levelOf, lookFrom, slotName, unlocked, xpOf } from '../../hooks/level'
+import { PRS_QUERY, PRS_SEARCH } from '../../hooks/prs'
+import { LOOK_BACK_DAYS } from '../../hooks/standup'
 import { PEER_INK, appLink, nameOf } from '../../hooks/live'
 import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
@@ -19,6 +21,8 @@ import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
+import { COMMIT_STALE_MS, type FolderState, type PullBox, type Ran, ciNow, ciSaid, commitsOf, deskOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed, standupOf } from './today'
+import { type Prefs, chosen, lookNow, prefsFrom, prefsText, shelvesOf } from './wardrobe'
 import { words } from './words'
 import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, stillOf, viewOf } from './world'
 
@@ -80,6 +84,9 @@ function remembered(): { x: number; y: number } | null {
 
 // ---------- the look ----------
 
+/** The look the mod writes (look.json), the person's last choice in either Mochi (prefs.json), and what this Mochi wears by them. */
+let modLook: Look | null = null
+let prefs: Prefs | null = null
 let look: Look | null = null
 function wear(text: string | null) {
   let value: unknown = null
@@ -88,7 +95,25 @@ function wear(text: string | null) {
   } catch {
     value = null
   }
-  look = lookFrom(value)
+  modLook = lookFrom(value)
+  dress()
+}
+
+/** Dresses Mochi again by what it knows now; drawn afresh only if that changed what it wears. */
+function dress() {
+  const was = JSON.stringify(look)
+  look = lookNow(history, modLook, prefs, tz())
+  if (JSON.stringify(look) === was || !view) return
+  view = null
+  draw()
+}
+
+/** The person chose in the wardrobe: worn at once, and written for the mod's Mochi to wear too. */
+function choose(slot: Slot, item: Item | null | undefined) {
+  prefs = { at: Date.now(), pick: chosen(prefs?.pick ?? modLook?.pick ?? {}, slot, item) }
+  dress()
+  drawAgents()
+  void invoke('write_shared', { name: 'prefs.json', text: prefsText(prefs.at, prefs.pick) }).catch(note)
 }
 
 // ---------- where the window stands ----------
@@ -159,7 +184,7 @@ function hot() {
 // ---------- what Mochi says ----------
 
 /** The dot before what Mochi says, in the ink the band gives that news: waiting, done, failed; grey for an answer to a press. */
-const NEWS_INK: Record<News['kind'], string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error, limit: '#F2B84B', back: '#4CC38A', level: '#B794F6' }
+const NEWS_INK: Record<News['kind'], string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error, limit: '#F2B84B', back: '#4CC38A', level: '#B794F6', nudge: '#F2B84B' }
 const QUIET_INK = PEER_INK.idle
 
 /** News waiting its turn, the most pressing first. */
@@ -169,7 +194,7 @@ let saying: News | null = null
 let hushTimer = 0
 
 /** The sound that goes with each kind of news: a bell for a chat that waits or finished, a sigh for one that failed, a ding-dong for a limit, a flourish when it is back. */
-const NEWS_SOUND: Record<News['kind'], SoundName> = { asking: 'ding', done: 'ding', failed: 'oops', limit: 'alarm', back: 'party', level: 'party' }
+const NEWS_SOUND: Record<News['kind'], SoundName> = { asking: 'ding', done: 'ding', failed: 'oops', limit: 'alarm', back: 'party', level: 'party', nudge: 'ding' }
 
 function chime(name: SoundName) {
   if (!settings.sound) return
@@ -378,7 +403,14 @@ async function count() {
   const won = keptBadges === undefined ? { line: null, keep: null } : badgesNews(keptBadges, history)
   if (won.keep) await invoke('write_shared', { name: 'badges.json', text: won.keep })
   if ('badges' in won && won.badges) badges = won.badges
-  const lines = [level.line, won.line].filter((l): l is string => l !== null)
+  dress()
+  // Said by one Mochi: the mod claims the same news under the same names and numbers.
+  const h = history
+  const said = (line: string | null, name: string, at: number) => (line === null ? Promise.resolve(null) : invoke<boolean>('claim', { name, at }).then(ok => (ok ? line : null), () => null))
+  const lines = (await Promise.all([
+    said(level.line, 'said-level', levelOf(xpOf(h)).level * 1000 + unlocked(h).length),
+    said(won.line, 'said-badges', badges.length),
+  ])).filter((l): l is string => l !== null)
   if (lines.length > 0 && view) hear([{ id: 'level', kind: 'level', line: lines.join(' · '), link: '' }], view.peers)
   if (list.classList.contains('on')) drawAgents()
 }
@@ -420,6 +452,7 @@ function drawGrowth(into: HTMLElement) {
     }
     into.append(medals)
   }
+  if (look) into.append(drawWardrobe(look))
   const now = Date.now()
   const city = el('div', 'city')
   // The city is the mod's own drawing too, held still like Mochi: whatever twinkles in it would redraw the window for as long as the pocket is open.
@@ -427,8 +460,86 @@ function drawGrowth(into: HTMLElement) {
   into.append(city)
 }
 
+/** The wardrobe: each slot with something open, Mochi's own pick, nothing, or an item. What is worn now is pressed. */
+function drawWardrobe(l: Look): HTMLElement {
+  const box = el('div', 'wardrobe')
+  box.append(el('h3', '', t().ui.wardrobe))
+  for (const shelf of shelvesOf(l.items)) {
+    const row = el('div', 'shelf')
+    row.setAttribute('role', 'group')
+    row.setAttribute('aria-label', slotName(shelf.slot))
+    row.append(el('span', '', slotName(shelf.slot)))
+    const choices: [string, Item | null | undefined][] = [[t().ui.auto, undefined], [t().ui.nothing, null], ...shelf.items.map((i): [string, Item] => [itemShort(i), i])]
+    for (const [label, item] of choices) {
+      const b = el('button', '', label)
+      b.type = 'button'
+      b.setAttribute('aria-pressed', String(l.pick[shelf.slot] === item))
+      b.addEventListener('click', () => choose(shelf.slot, item))
+      row.append(b)
+    }
+    box.append(row)
+  }
+  return box
+}
+
+// ---------- the day: the stand-up, the desk, the pull requests ----------
+
+/** What the Today side shows, read from the person's git and gh when it is opened; again when it is two minutes old. */
+let today: { at: number; standup: string; desk: string; box: PullBox } | null = null
+let isReadingToday = false
+const TODAY_FRESH_MS = 2 * 60_000
+
+async function readToday() {
+  if (isReadingToday) return
+  isReadingToday = true
+  try {
+    const now = Date.now()
+    const z = tz()
+    const day = dayKey(now, z)
+    const [y = 1970, m = 1, d = 1] = shiftDay(day, -LOOK_BACK_DAYS).split('-').map(Number)
+    const since = Math.floor((Date.UTC(y, m - 1, d) - z * 60_000) / 1000)
+    const [lines, raw, ran] = await Promise.all([
+      invoke<string[]>('commits', { since }).catch(() => []),
+      invoke<unknown[]>('desks').catch(() => []),
+      invoke<Ran>('prs', { query: PRS_QUERY, vars: Object.entries(PRS_SEARCH) }).catch(() => null),
+    ])
+    today = { at: now, standup: standupOf(day, history?.days ?? {}, commitsOf(lines, z)), desk: deskOf(desksOf(raw)), box: pullBoxOf(ran, now) }
+  } finally {
+    isReadingToday = false
+  }
+  if (side === 'today') drawAgents()
+}
+
+function drawToday(into: HTMLElement) {
+  if (!today) return void into.append(el('p', 'empty', words().reading))
+  const day = today
+  const part = (title: string, ...body: HTMLElement[]) => {
+    const section = el('section', 'day')
+    section.append(el('h3', '', title), ...body)
+    into.append(section)
+  }
+  const copy = el('button', 'copy', words().copy)
+  copy.type = 'button'
+  copy.addEventListener('click', () => void navigator.clipboard.writeText(day.standup).then(() => { copy.textContent = words().copied }, note))
+  part(t().pane.standup, el('pre', '', day.standup), copy)
+  part(t().pane.desk, el('pre', '', day.desk))
+  const pulls: HTMLElement[] = []
+  for (const s of day.box.sections) {
+    pulls.push(el('h4', '', s.title))
+    for (const r of s.rows) {
+      const b = el('button', 'pull')
+      b.type = 'button'
+      b.append(el('b', '', r.text), el('span', '', r.state))
+      b.addEventListener('click', () => void openUrl(r.url))
+      pulls.push(b)
+    }
+  }
+  if (day.box.note) pulls.push(el('p', 'empty', day.box.note))
+  part(t().pane.prs, ...pulls)
+}
+
 /** Which side of the pocket is open. */
-let side: 'now' | 'mochi' = 'now'
+let side: 'now' | 'today' | 'mochi' = 'now'
 
 /** Fills the list of agents from what was last read, and the count at Mochi's feet. */
 function drawAgents() {
@@ -449,8 +560,8 @@ function drawAgents() {
   const tabs = el('div')
   tabs.id = 'tabs'
   tabs.setAttribute('role', 'tablist')
-  for (const name of ['now', 'mochi'] as const) {
-    const tab = el('button', '', t().pane.tabs[name])
+  for (const name of ['now', 'today', 'mochi'] as const) {
+    const tab = el('button', '', name === 'today' ? words().today : t().pane.tabs[name])
     tab.type = 'button'
     tab.setAttribute('role', 'tab')
     tab.setAttribute('aria-selected', String(side === name))
@@ -458,6 +569,7 @@ function drawAgents() {
       side = name
       // Counted again when it is looked at, if that was a while ago: other chats work too.
       if (name === 'mochi' && Date.now() - countedAt > 5 * 60_000) void count().catch(note)
+      if (name === 'today' && (!today || Date.now() - today.at > TODAY_FRESH_MS)) void readToday().catch(note)
       drawAgents()
       hot()
     })
@@ -465,6 +577,7 @@ function drawAgents() {
   }
   list.append(tabs)
   if (side === 'mochi') return drawGrowth(list)
+  if (side === 'today') return drawToday(list)
   const use = document.createElement('div')
   use.id = 'use'
   for (const u of usage) {
@@ -607,6 +720,15 @@ async function take(calls: string[]) {
       answer(requests.get(h.id)!, 'none')
     }
     if (theirs.has(h.id)) continue
+    const cwd = typeof h.event.cwd === 'string' ? h.event.cwd : ''
+    if (cwd !== '') {
+      // The folder's repository, for the stand-up: noted once an hour, as the mod does.
+      if ((repoSeen.get(cwd) ?? 0) < h.at - 3_600_000) {
+        repoSeen.set(cwd, h.at)
+        void invoke('see_repo', { cwd }).catch(note)
+      }
+      if (pushed(h.event)) watchCi(h.id, cwd, h.at)
+    }
     const before = sessions.get(h.id)
     const rec = tallyOf(h, before, tz())
     noted(sessions, h)
@@ -623,6 +745,7 @@ async function take(calls: string[]) {
     }
     // What a turn earned is written when it ends, as the mod does; and when the chat closes, whatever is left.
     if (rec?.turns || h.name === 'SessionEnd') keepDays(h.id)
+    if (rec?.turns && cwd !== '') void nudge(h.id, cwd).catch(note)
   }
   // The chats as they stand now, for every other Mochi to read; the app is told which of them the mod writes itself.
   for (const id of await invoke<string[]>('own_live', { peers: agentPeers(sessions, Date.now()) }).catch(() => [])) leave(id)
@@ -635,6 +758,51 @@ async function take(calls: string[]) {
       return { id: r.chat, kind: 'asking' as const, line: t().peer.waiting(chat ? nameOf(chat) : t().word.chat), link: appLink(chat?.app) }
     }), peers, true)
   }
+}
+
+// ---------- said of a chat's folder: its CI, and changes left uncommitted ----------
+
+const repoSeen = new Map<string, number>()
+/** The pushes whose CI is watched, by folder: looked at every 20 seconds while it runs, for half an hour at most. */
+const watching = new Map<string, number>()
+const CI_EVERY_MS = 20_000
+const CI_MOST_MS = 30 * 60_000
+/** gh that cannot say anything of a push (none there, not signed in) is let be after this. */
+const CI_SILENT_MS = 2 * 60_000
+
+function watchCi(chat: string, cwd: string, pushedAt: number) {
+  clearTimeout(watching.get(cwd))
+  const look = async () => {
+    const ci = ciNow(await invoke<{ sha?: unknown; out?: Ran } | null>('ci', { cwd }).catch(() => null), pushedAt)
+    const waited = Date.now() - pushedAt
+    if (ci && isOver(ci)) {
+      watching.delete(cwd)
+      return sayCi(chat, ci)
+    }
+    if (waited > CI_MOST_MS || (ci === null && waited > CI_SILENT_MS)) return void watching.delete(cwd)
+    watching.set(cwd, window.setTimeout(() => void look().catch(note), CI_EVERY_MS))
+  }
+  watching.set(cwd, window.setTimeout(() => void look().catch(note), CI_EVERY_MS))
+}
+
+function sayCi(chat: string, ci: Ci) {
+  const kind = ci.state === 'failed' ? 'failed' : 'done'
+  if (!view || !talksAbout(settings, kind)) return
+  const peer = view.peers.find(p => p.id === chat)
+  hear([{ id: `ci-${chat}`, kind, line: `${peer ? nameOf(peer) : t().word.chat}: ${ciSaid(ci).line}`, link: appLink(peer?.app) }], view.peers)
+}
+
+/** The repositories last nudged to commit, so a nudge is said once in the time it waits for. */
+const nudgedAt = new Map<string, number>()
+
+async function nudge(chat: string, cwd: string) {
+  const state = await invoke<FolderState | null>('git_state', { cwd }).catch(() => null)
+  const now = Date.now()
+  const line = nudgeOf(state, now)
+  if (line === null || state === null || now - (nudgedAt.get(state.root) ?? 0) < COMMIT_STALE_MS || !view || !talksAbout(settings, 'nudge')) return
+  nudgedAt.set(state.root, now)
+  const peer = view.peers.find(p => p.id === chat)
+  hear([{ id: `nudge-${state.root}`, kind: 'nudge', line, link: appLink(peer?.app) }], view.peers)
 }
 
 // ---------- the drawing ----------
@@ -770,6 +938,11 @@ async function start() {
     wear(e.payload)
     view = null
     draw()
+  })
+  await listen<string | null>('prefs', e => {
+    prefs = prefsFrom(e.payload)
+    dress()
+    if (side === 'mochi') drawAgents()
   })
   // What only time changes: a chat silent too long is at rest or gone, and the file the app keeps of it must say so too.
   await listen<[number, number]>('pointer', e => {

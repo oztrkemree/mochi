@@ -34,6 +34,13 @@ mockIPC((cmd, args) => {
     shared[(args as { name: string }).name] = (args as { text: string }).text
     return true
   }
+  if (cmd === 'claim') return true
+  if (cmd === 'commits') return [`shop\t${Math.floor(Date.now() / 1000) - 3600}\tFix the cart total`, `shop\t${Math.floor(Date.now() / 1000) - 90_000}\tAdd the coupon field`]
+  if (cmd === 'desks') return [{ repo: 'shop', status: '## feat/coupon\n M cart.ts\n?? coupon.ts\n', branches: [{ name: 'feat/coupon', ahead: 2, hasUpstream: false }] }]
+  if (cmd === 'prs') {
+    const pull = (n: number, title: string, author: string) => ({ number: n, title, url: `https://github.com/o/shop/pull/${n}`, author: { login: author }, repository: { name: 'shop' }, updatedAt: new Date(Date.now() - n * 3_600_000).toISOString(), commits: { nodes: [] }, latestReviews: { nodes: [] } })
+    return { code: 0, stderr: '', stdout: JSON.stringify({ data: { viewer: { login: 'me' }, review: { nodes: [pull(41, 'Cache the price list', 'ayse')] }, mine: { nodes: [pull(38, 'Coupon field on the cart', 'me')] }, seen: { nodes: [] } } }) }
+  }
   if (cmd === 'line_state') return 'off'
   if (cmd === 'read_days') return null
   if (cmd === 'write_days' || cmd === 'answer') return true
@@ -54,6 +61,8 @@ Object.assign(window, {
     /** Hook calls, as the app's `hook` command leaves them. */
     calls: (calls: Record<string, unknown>[]) => emit('calls', calls.map(c => JSON.stringify(c))),
     look: (look: unknown) => emit('look', look === null ? null : JSON.stringify(look)),
+    /** What the person last chose to wear, as prefs.json says it. */
+    prefs: (pick: unknown) => emit('prefs', JSON.stringify({ v: 1, at: Date.now(), pick })),
     minute: () => emit('minute'),
     pointer: (x: number, y: number) => emit('pointer', [x, y]),
   },

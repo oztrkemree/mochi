@@ -187,8 +187,38 @@ pub fn all_days(dir: &Path) -> Vec<String> {
 
 // ---------- what every Mochi remembers together ----------
 
-/// The files any Mochi may write: what was last celebrated (so it is celebrated once), and the badges won.
-const SHARED: [&str; 2] = ["level.json", "badges.json"];
+/// The files any Mochi may write: what was last celebrated (so it is celebrated once), the badges won, and what the person
+/// last chose to wear, in whichever Mochi they chose it.
+const SHARED: [&str; 3] = ["level.json", "badges.json", "prefs.json"];
+
+/// The news every Mochi may see at once, said by one: a level or a wardrobe that grew, badges won.
+const CLAIMS: [&str; 2] = ["said-level", "said-badges"];
+
+/// Who holds a claim for `at`, as the mod reads it: the same `at` with this id is mine, with another is theirs, anything else is free.
+fn claim_of(text: Option<&str>, at: u64, id: &str) -> &'static str {
+    let Some(v) = text.and_then(|t| serde_json::from_str::<Value>(t).ok()) else { return "free" };
+    match (v["at"].as_u64(), v["id"].as_str()) {
+        (Some(held), Some(holder)) if held == at => if holder == id { "mine" } else { "theirs" },
+        _ => "free",
+    }
+}
+
+/// Whether this Mochi says the news `at` (a number naming it): a claim already there stands; Mochis that find none all write
+/// theirs, and the one read back a moment later wins. The mod claims the same way, under the same names.
+pub fn claim(dir: &Path, name: &str, at: u64, id: &str, settle: Duration) -> bool {
+    if !CLAIMS.contains(&name) {
+        return false;
+    }
+    let path = dir.join(format!("{name}.json"));
+    let holder = || claim_of(fs::read_to_string(&path).ok().as_deref(), at, id);
+    match holder() {
+        "free" => {}
+        found => return found == "mine",
+    }
+    let _ = write_whole(&path, &json!({ "at": at, "id": id }).to_string());
+    std::thread::sleep(settle);
+    holder() == "mine"
+}
 
 /// One of the shared files: Ok(None) when there is none yet, Err when it is there but cannot be read now (locked, too big),
 /// so that nothing is written over it as if it were new.
@@ -377,6 +407,22 @@ pub mod tests {
         // A file that is there but cannot be read is not the same as none: the caller must not write over it.
         fs::write(dir.join("level.json"), "x".repeat(70_000)).unwrap();
         assert!(read_shared(&dir, "level.json").is_err());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn news_every_mochi_sees_is_said_by_one() {
+        let dir = scratch("claims");
+        let zero = Duration::ZERO;
+        assert!(claim(&dir, "said-level", 5003, "app", zero));
+        // The mod's chat that comes later finds the app's claim for the same news, and lets it be.
+        assert!(!claim(&dir, "said-level", 5003, "s1", zero));
+        assert!(claim(&dir, "said-level", 5003, "app", zero));
+        // Newer news is free again.
+        assert!(claim(&dir, "said-level", 6003, "s1", zero));
+        assert_eq!(fs::read_to_string(dir.join("said-level.json")).unwrap(), "{\"at\":6003,\"id\":\"s1\"}");
+        assert!(!claim(&dir, "level", 1, "app", zero));
+        assert!(!claim(&dir, "../said-level", 1, "app", zero));
         fs::remove_dir_all(&dir).unwrap();
     }
 

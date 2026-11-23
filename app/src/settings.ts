@@ -62,8 +62,8 @@ export function settingsFrom(text: string | null): Settings {
   }
 }
 
-/** Whether Mochi speaks of this kind of news: a limit that is back goes with the limits, and a new level is always said. */
-export const talksAbout = (s: Settings, kind: keyof Settings['talk'] | 'back' | 'level'): boolean => kind === 'level' || s.talk[kind === 'back' ? 'limit' : kind]
+/** Whether Mochi speaks of this kind of news: a limit that is back goes with the limits, the nudge to commit with the turns that finish, and a new level is always said. */
+export const talksAbout = (s: Settings, kind: keyof Settings['talk'] | 'back' | 'level' | 'nudge'): boolean => kind === 'level' || s.talk[kind === 'back' ? 'limit' : kind === 'nudge' ? 'done' : kind]
 
 /** The settings kept now; the defaults where storage cannot be read. */
 export function loadSettings(): Settings {
