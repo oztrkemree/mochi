@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- A2 · Squish: a soft rice cake, wider where it sits, eyes set low as a baby's are, its antenna bent as Mochi's is. -->
+  <path d="M126 70c-6-16-2-30 8-40" fill="none" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="138" cy="26" r="15"/>
+  <path fill-rule="evenodd" d="M128 64c58 0 90 28 94 76c4 46-16 84-94 84s-98-38-94-84c4-48 36-76 94-76z
+    M100 136a14 14 0 1 0 0 28a14 14 0 1 0 0-28z M156 136a14 14 0 1 0 0 28a14 14 0 1 0 0-28z
+    M110 178a5.5 5.5 0 0 1 7.6-1.6c6.6 4.4 14.2 4.4 20.8 0a5.5 5.5 0 1 1 6 9.2c-10.4 6.8-22.4 6.8-32.8 0a5.5 5.5 0 0 1-1.6-7.6z"/>
+</svg>

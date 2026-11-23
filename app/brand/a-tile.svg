@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- A · The tile is Mochi: its body is the icon's own rounded square, its antenna pokes out over the top. -->
+  <path fill-rule="evenodd" d="M128 18a15 15 0 1 1 0 30a15 15 0 1 1 0-30z"/>
+  <rect x="122" y="40" width="12" height="26" rx="6"/>
+  <path fill-rule="evenodd" d="M104 60h48c38 0 64 26 64 64v34c0 38-26 64-64 64h-48c-38 0-64-26-64-64v-34c0-38 26-64 64-64z
+    M98 113a14 14 0 1 0 0 28a14 14 0 1 0 0-28z M158 113a14 14 0 1 0 0 28a14 14 0 1 0 0-28z
+    M104 162a6 6 0 0 1 8.5-1.4c9.4 6.9 21.6 6.9 31 0a6 6 0 1 1 7.1 9.7c-13.6 10-31.6 10-45.2 0a6 6 0 0 1-1.4-8.3z"/>
+</svg>

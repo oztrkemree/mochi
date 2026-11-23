@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Mochi · hepsi yan yana</title>
+<style>
+  body { margin: 0; padding: 20px; font: 13px/1.35 -apple-system, system-ui, sans-serif; color: #222; background: linear-gradient(160deg, #cfd8e6, #e9e2f0 55%, #f3e6dc); min-height: 100vh; box-sizing: border-box; }
+  h2 { font-size: 14px; margin: 4px 0 10px; color: #444; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+  .grid.bw { grid-template-columns: repeat(5, 1fr); }
+  .card { background: rgba(255,255,255,.6); border-radius: 14px; padding: 12px; display: grid; justify-items: center; gap: 8px; text-align: center; }
+  .card.pick { outline: 2px solid #D97757; }
+  .card b { font-size: 13px; } .card small { color: #666; min-height: 2.6em; }
+  .card img.big { width: 150px; height: 150px; }
+  .bw .card img.big { width: 96px; height: 96px; }
+  .sizes { display: flex; gap: 10px; align-items: flex-end; }
+  .x { color: #b3261e; font-weight: 600; }
+</style></head><body>
+<h2>Renkli ikonlar (macOS karesi)</h2>
+<div class="grid">
+  <div class="card"><b>Şimdiki</b><img class="big" src="current.png"><div class="sizes"><img src="current.png" width="64"><img src="current.png" width="32"><img src="current.png" width="16"></div><small>3B resim, krem kare; ikon şekli yok</small></div>
+  <div class="card pick"><b>A · Pofuduk ← önerim</b><img class="big" src="icon-a.svg"><div class="sizes"><img src="icon-a.svg" width="64"><img src="icon-a.svg" width="32"><img src="icon-a.svg" width="16"></div><small>Kil Mochi, koyu sıcak kare, yanan ampul</small></div>
+  <div class="card"><b>C · m-yüz</b><img class="big" src="icon-c.svg"><div class="sizes"><img src="icon-c.svg" width="64"><img src="icon-c.svg" width="32"><img src="icon-c.svg" width="16"></div><small>Kil kare, krem yüz, ω ağız (ters m)</small></div>
+</div>
+<h2>Siyah-beyaz çalışmalar (bütün yönler)</h2>
+<div class="grid bw">
+  <div class="card"><b>A1 · Kare Mochi</b><img class="big" src="a-tile.svg"><div class="sizes"><img src="a-tile.svg" width="32"><img src="a-tile.svg" width="16"></div><small class="x">Elendi: robot kafası gibi</small></div>
+  <div class="card"><b>A2 · Pofuduk</b><img class="big" src="a2-squish.svg"><div class="sizes"><img src="a2-squish.svg" width="32"><img src="a2-squish.svg" width="16"></div><small>Önerdiğim yön</small></div>
+  <div class="card"><b>B1 · Dikizleme</b><img class="big" src="b-peek.svg"><div class="sizes"><img src="b-peek.svg" width="32"><img src="b-peek.svg" width="16"></div><small class="x">Elendi: köşeli, robot gibi</small></div>
+  <div class="card"><b>B2 · Dikizleme</b><img class="big" src="b2-peek.svg"><div class="sizes"><img src="b2-peek.svg" width="32"><img src="b2-peek.svg" width="16"></div><small class="x">Elendi: Android kafasına benziyor</small></div>
+  <div class="card"><b>C · m-yüz</b><img class="big" src="c-omega.svg"><div class="sizes"><img src="c-omega.svg" width="32"><img src="c-omega.svg" width="16"></div><small>İkinci yön</small></div>
+</div>
+</body></html>

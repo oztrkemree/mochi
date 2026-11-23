@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- A · Pofuduk as the app icon: clay Mochi on a warm dark tile, its antenna bulb lit. macOS grid: the tile is 824 wide at 100. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A2C26"/><stop offset="1" stop-color="#1E1B19"/></linearGradient>
+    <radialGradient id="clay" cx="0.38" cy="0.3" r="0.8"><stop offset="0" stop-color="#F0956F"/><stop offset="0.55" stop-color="#D97757"/><stop offset="1" stop-color="#B65A3C"/></radialGradient>
+    <radialGradient id="glow"><stop offset="0" stop-color="#FFD9A8" stop-opacity="0.9"/><stop offset="1" stop-color="#FFB38A" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/>
+  <ellipse cx="512" cy="812" rx="236" ry="26" fill="#000" opacity="0.35"/>
+  <g transform="translate(128 132) scale(3)">
+    <path d="M126 70c-6-16-2-30 8-40" fill="none" stroke="#B65A3C" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="138" cy="26" r="34" fill="url(#glow)"/>
+    <circle cx="138" cy="26" r="14" fill="#FFB38A"/>
+    <circle cx="134" cy="22" r="4.5" fill="#fff" opacity="0.8"/>
+    <rect x="24" y="166" width="24" height="44" rx="12" fill="#C9694A" transform="rotate(22 36 172)"/>
+    <rect x="208" y="166" width="24" height="44" rx="12" fill="#C9694A" transform="rotate(-22 220 172)"/>
+    <path d="M128 64c58 0 90 28 94 76c4 46-16 84-94 84s-98-38-94-84c4-48 36-76 94-76z" fill="url(#clay)"/>
+    <path d="M78 92c18-14 40-20 62-19" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="100" cy="150" r="14" fill="#2B1B17"/><circle cx="156" cy="150" r="14" fill="#2B1B17"/>
+    <circle cx="105" cy="145" r="4.2" fill="#fff"/><circle cx="161" cy="145" r="4.2" fill="#fff"/>
+    <ellipse cx="80" cy="172" rx="13" ry="7" fill="#FF7A95" opacity="0.35"/><ellipse cx="176" cy="172" rx="13" ry="7" fill="#FF7A95" opacity="0.35"/>
+    <path d="M114 180c8 6 20 6 28 0" fill="none" stroke="#2B1B17" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>

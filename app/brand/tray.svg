@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- The menu bar's Mochi, a template image: one colour, the face cut out. Larger eyes and a bolder antenna for 22 points. -->
+  <path d="M124 74c-7-18-3-34 9-46" fill="none" stroke="#000" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="140" cy="26" r="22"/>
+  <path fill-rule="evenodd" d="M128 68c62 0 96 30 100 80c4 48-18 88-100 88s-104-40-100-88c4-50 38-80 100-80z
+    M96 132a20 20 0 1 0 0 40a20 20 0 1 0 0-40z M160 132a20 20 0 1 0 0 40a20 20 0 1 0 0-40z
+    M104 190a8 8 0 0 1 11-2.6c8 5 18 5 26 0a8 8 0 1 1 8.4 13.6c-13.2 8.2-29.6 8.2-42.8 0a8 8 0 0 1-2.6-11z"/>
+</svg>

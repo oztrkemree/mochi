@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Mochi Buddy · ikon seti</title>
+<style>
+  body { margin: 0; padding: 26px; font: 13px/1.4 -apple-system, system-ui, sans-serif; color: #222; background: linear-gradient(160deg, #cfd8e6, #e9e2f0 55%, #f3e6dc); min-height: 100vh; box-sizing: border-box; }
+  .wrap { display: grid; grid-template-columns: 300px 1fr; gap: 28px; align-items: start; }
+  .card { background: rgba(255,255,255,.6); border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; }
+  h3 { margin: 0 0 10px; font-size: 13px; color: #555; font-weight: 600; }
+  .sizes { display: flex; gap: 16px; align-items: flex-end; } .sizes div { display: grid; justify-items: center; gap: 4px; font-size: 11px; color: #777; }
+  .dock { display: inline-flex; gap: 10px; padding: 8px 12px; border-radius: 18px; background: rgba(255,255,255,.35); border: 1px solid rgba(255,255,255,.6); align-items: flex-end; }
+  .dock span { width: 56px; height: 56px; border-radius: 13px; display: block; background: linear-gradient(#9bb0d0, #7b90b0); opacity: .7; }
+  .bars { display: grid; gap: 8px; }
+  .bar { display: inline-flex; gap: 14px; align-items: center; padding: 4px 12px; border-radius: 6px; font-size: 12px; }
+  .bar.light { background: rgba(255,255,255,.8); } .bar.dark { background: rgba(30,27,25,.9); color: #fff; } .bar.dark img { filter: invert(1); }
+</style></head><body>
+<div class="wrap">
+  <div><img src="out/icon.png" width="300" height="300"></div>
+  <div>
+    <div class="card"><h3>Boyutlar (64 px ve altı küçük boyut çizimiyle)</h3><div class="sizes">
+      <div><img src="out/icon.png" width="128">128</div><div><img src="out/icon.png" width="64">64</div><div><img src="out/32x32.png" width="32">32</div><div><img src="out/32x32.png" width="16">16</div></div></div>
+    <div class="card"><h3>Dock</h3><div class="dock"><span></span><span></span><img src="out/icon.png" width="64" height="64"><span></span><span></span></div></div>
+    <div class="card"><h3>Menü çubuğu (şablon ikon, sistem rengini alır)</h3><div class="bars">
+      <div class="bar light">🔋 Wi-Fi <img src="out/tray.png" width="22" height="22"> 23:50</div>
+      <div class="bar dark">🔋 Wi-Fi <img src="out/tray.png" width="22" height="22"> 23:50</div></div></div>
+  </div>
+</div>
+</body></html>

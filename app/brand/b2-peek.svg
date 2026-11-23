@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- B2 · Peek: Mochi's soft dome rising over the bottom edge, eyes just over it; the tip of its antenna is the notification dot. -->
+  <path d="M152 108c4-28 18-44 40-50" fill="none" stroke="#000" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="198" cy="56" r="22"/>
+  <path fill-rule="evenodd" d="M34 230c0-80 36-122 94-122s94 42 94 122z
+    M92 166a15 15 0 1 0 0 30a15 15 0 1 0 0-30z M164 166a15 15 0 1 0 0 30a15 15 0 1 0 0-30z"/>
+</svg>

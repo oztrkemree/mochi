@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- C · m-yüz as the app icon: Mochi's face in cream on its own clay, the antenna's lit bulb over the tile's top. -->
+  <defs>
+    <linearGradient id="tilec" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E5835F"/><stop offset="1" stop-color="#C4613F"/></linearGradient>
+    <radialGradient id="glowc"><stop offset="0" stop-color="#FFE7CF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFE7CF" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tilec)"/>
+  <circle cx="512" cy="258" r="70" fill="url(#glowc)"/>
+  <circle cx="512" cy="258" r="30" fill="#FFF4EA"/>
+  <g transform="translate(128 150) scale(3)">
+    <circle cx="86" cy="98" r="20" fill="#FFF4EA"/><circle cx="170" cy="98" r="20" fill="#FFF4EA"/>
+    <path d="M70 150c4 34 54 34 58 0c4 34 54 34 58 0" fill="none" stroke="#FFF4EA" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
