@@ -44,3 +44,35 @@ jobs:
       - run: claude plugin validate .
 
       - run: claude plugin test .
+
+  # The desktop app: its window's logic, and what it does with Mochi's files and the agents' hooks.
+  app:
+    name: app · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: app/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+      - run: pnpm install --frozen-lockfile
+        working-directory: app
+      - run: pnpm exec tsc --noEmit
+        working-directory: app
+      - run: pnpm test
+        working-directory: app
+      - run: cargo test
+        working-directory: app/src-tauri
