@@ -9,8 +9,8 @@
       @media (prefers-color-scheme: light) { :root { --card: #FAF9F5; --fg: #1F1E1D; --dim: #73726C; --line: rgba(0, 0, 0, 0.1); } }
       html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
       body { font: 500 12.5px/1.4 ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; color: var(--fg); }
-      /* Everything stands in the window's bottom right corner; the window is sized to it. */
-      #root { position: absolute; right: 0; bottom: 0; width: max-content; display: flex; flex-direction: column; align-items: flex-end; }
+      /* The window keeps one size, with room over Mochi for what it says and shows: everything stands in its bottom right corner, and the empty room lets every press through. */
+      #root { position: absolute; right: 0; bottom: 0; width: 340px; height: calc(var(--size) * 1.2 + 340px); display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
       #row { position: relative; display: flex; align-items: flex-end; }
       /* Mochi's own square is --size; the drawing has room around it for what it holds (see ROOM in world.ts). */
       #stage { width: calc(var(--size) * 1.48); height: calc(var(--size) * 1.2); }
@@ -23,6 +23,9 @@
       #say::before { content: ""; position: absolute; left: 11px; top: 13px; width: 7px; height: 7px; border-radius: 50%; background: var(--ink, #6E6D69); }
       #say::after { content: ""; position: absolute; right: 22px; bottom: -6px; width: 12px; height: 12px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
       #say.on { display: block; }
+      /* A bubble that opens its chat says so under the pointer. */
+      #say.link { cursor: pointer; }
+      #say { overflow-wrap: anywhere; }
       /* With the list open the bubble steps back: the list already says how each chat stands, and both would stand in the same room over Mochi's head. */
       #list.on ~ #say { display: none; }
 

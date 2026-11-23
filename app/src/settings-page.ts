@@ -50,17 +50,20 @@ function switchOf(id: string, on: boolean, change: (on: boolean) => void) {
   input.onchange = () => change(input.checked)
 }
 
-async function drawCodex() {
+const AGENTS = ['claude', 'codex'] as const
+
+/** One agent's row: whether its hooks tell Mochi, and the button that connects or disconnects them. */
+async function drawAgent(agent: (typeof AGENTS)[number]) {
   const w = words()
-  const state = await invoke<string>('codex_state').catch(() => 'broken')
-  $('codexState').textContent = state === 'on' ? w.codexOn : state === 'off' ? w.codexOff : w.codexBroken
-  const button = $<HTMLButtonElement>('codex')
+  const state = await invoke<string>('agent_state', { agent }).catch(() => 'broken')
+  $(`${agent}State`).textContent = state === 'on' ? w.agentOn[agent] : state === 'off' ? w.agentOff : w.agentBroken
+  const button = $<HTMLButtonElement>(agent)
   button.textContent = state === 'on' ? w.disconnect : w.connect
   button.disabled = state === 'broken'
   button.onclick = async () => {
     button.disabled = true
-    await invoke('set_codex', { on: state !== 'on' }).catch(() => undefined)
-    await drawCodex()
+    await invoke('set_agent', { agent, on: state !== 'on' }).catch(() => undefined)
+    await drawAgent(agent)
   }
 }
 
@@ -71,7 +74,7 @@ function draw() {
   const text: Record<string, string> = {
     title: w.settings, 'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-idle': w.hideIdle,
     'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talkSeconds': w.talkSeconds,
-    'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-codex': w.codex,
+    'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
   }
   for (const [id, value] of Object.entries(text)) $(id).textContent = value
@@ -89,7 +92,7 @@ function draw() {
   lang.onchange = () => void save({ lang: lang.value as Settings['lang'] })
 
   $('resetPlace').onclick = () => void emit('reset-place')
-  void drawCodex()
+  for (const agent of AGENTS) void drawAgent(agent)
 }
 
 async function start() {

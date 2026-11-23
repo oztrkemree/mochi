@@ -3,14 +3,23 @@ import { listen } from '@tauri-apps/api/event'
 import { LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, type Monitor, availableMonitors, currentMonitor, getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 
+import type { DayRec } from '../../types'
+import { dayKey } from '../../hooks/facts'
 import { pickLang, setLang } from '../../hooks/i18n'
-import { type Look, lookFrom } from '../../hooks/level'
+import { type Look, addDay, lookFrom } from '../../hooks/level'
 import { PEER_INK } from '../../hooks/live'
-import { type Sessions, agentPeers, hookedOf, noted } from './agents'
+import { type Sessions, agentPeers, dayFile, endsTurn, hookedOf, noted, tallyOf } from './engine'
+import { type News, isMorePressing, newsOf, queued, stillHolds } from './news'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { words } from './words'
-import { type View, badgeOf, newsOf, peersOf, rowsOf, viewOf } from './world'
+import { ROOM, type View, badgeOf, peersOf, rowsOf, viewOf } from './world'
+
+/**
+ * Mochi's window. It runs nothing on a clock: the app tells it when a hook
+ * call came, when a chat's file changed, when a minute passed, and it draws
+ * again then. Between two of those it costs nothing.
+ */
 
 const root = document.getElementById('root')!
 const stage = document.getElementById('stage')!
@@ -21,8 +30,6 @@ const win = getCurrentWindow()
 
 /** The gap kept to the screen's edge, in points. */
 const EDGE = 12
-// shortcut: the chats' files are read once a second, upgrade to a file watch if that ever shows as load.
-const READ_MS = 1000
 /** An answer to a press stays up shorter than news. */
 const ANSWER_MS = 4000
 
@@ -33,14 +40,19 @@ addEventListener('unhandledrejection', e => note(e.reason))
 
 let settings: Settings = loadSettings()
 let view: View | null = null
-/** Codex and the like, known from their hook calls. */
-const agents: Sessions = new Map()
-/** When what Mochi says now comes down; 0 with nothing said. */
-let saidUntil = 0
-/** Where the window's bottom right corner sits (in the unit of `isMac` below): the window grows up and to the left of it. */
+/** The chats another Mochi (the mod) writes, as the text of their files. */
+let liveTexts: string[] = []
+/** Codex and the like, and Claude Code without the mod: known from their hook calls, and written by the app. */
+const sessions: Sessions = new Map()
+/** The chats the mod writes itself: their hook calls are not the app's to count. */
+let theirs = new Set<string>()
+/** Where the window's bottom right corner sits (in the unit of `isMac` below): the window stands up and to the left of it. */
 let corner: { x: number; y: number } | null = remembered()
 /** Where this last put the window, and how large: a move to anywhere else is the person's own. */
 let put = { x: 0, y: 0, w: 0, h: 0 }
+
+/** The person's clock, in minutes from UTC, as the mod's records take it. */
+const tz = () => -new Date().getTimezoneOffset()
 
 /** The corner the person left the window at, from the last time the app ran; null the first time or when what was kept is not a place. */
 function remembered(): { x: number; y: number } | null {
@@ -54,19 +66,15 @@ function remembered(): { x: number; y: number } | null {
 
 // ---------- the look ----------
 
-/** The look the mod last wrote, kept by its text so it is read again only when it changes. */
-let look: { text: string | null; value: Look | null } = { text: null, value: null }
-function lookOf(text: string | null): Look | null {
-  if (text !== look.text) {
-    let value: unknown = null
-    try {
-      value = text === null ? null : JSON.parse(text)
-    } catch {
-      value = null
-    }
-    look = { text, value: lookFrom(value) }
+let look: Look | null = null
+function wear(text: string | null) {
+  let value: unknown = null
+  try {
+    value = text === null ? null : JSON.parse(text)
+  } catch {
+    value = null
   }
-  return look.value
+  look = lookFrom(value)
 }
 
 // ---------- where the window stands ----------
@@ -84,7 +92,11 @@ function areaIn(m: Monitor): Area {
   return { x: m.workArea.position.x / k, y: m.workArea.position.y / k, w: m.workArea.size.width / k, h: m.workArea.size.height / k }
 }
 
-/** Sizes the window to what it shows, and keeps its bottom right corner where the person left it, whole on that screen. */
+/**
+ * Puts the window's bottom right corner where the person left it, whole on that
+ * screen. The window keeps one size whatever Mochi says or shows, so it never
+ * jumps; the room around Mochi lets every press through (see `hot`).
+ */
 async function place() {
   const monitors = await availableMonitors()
   const areas = monitors.map(areaIn)
@@ -98,7 +110,7 @@ async function place() {
     const edge = isMac ? EDGE : EDGE * monitor.scaleFactor
     corner = { x: area.x + area.w - edge, y: area.y + area.h - edge }
   }
-  // What is shown, in points; in pixels on Windows, at the scale of the screen it goes to.
+  // The window's size in points; in pixels on Windows, at the scale of the screen it goes to.
   const w = Math.ceil(root.offsetWidth)
   const h = Math.ceil(root.offsetHeight)
   const k = isMac ? 1 : monitor.scaleFactor
@@ -113,29 +125,79 @@ async function place() {
   }
 }
 
+/**
+ * Tells the app where a press is Mochi's own: Mochi's body, and what it says
+ * or shows. Everywhere else in the window a press goes to what is behind.
+ */
+function hot() {
+  const rects: number[][] = []
+  const s = stage.getBoundingClientRect()
+  // Mochi's own square inside the drawing's room, and its body inside that square.
+  const unit = s.width / (100 + ROOM.left + ROOM.right)
+  rects.push([s.left + (ROOM.left + 10) * unit, s.top + (ROOM.top + 14) * unit, 80 * unit, 84 * unit])
+  for (const el of [say, list, agentsButton]) {
+    const r = el.getBoundingClientRect()
+    if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
+  }
+  void invoke('set_hot', { rects }).catch(note)
+}
+
 // ---------- what Mochi says ----------
 
 /** The dot before what Mochi says, in the ink the band gives that news: waiting, done, failed; grey for an answer to a press. */
-const NEWS_INK: Record<'asking' | 'done' | 'failed', string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error }
+const NEWS_INK: Record<News['kind'], string> = { asking: PEER_INK.asking, done: '#4CC38A', failed: PEER_INK.error }
 const QUIET_INK = PEER_INK.idle
 
-async function speak(text: string, ms: number, ink = QUIET_INK) {
+/** News waiting its turn, the most pressing first. */
+let queue: News[] = []
+/** The news in the bubble now; null with an answer to a press, or nothing, in it. */
+let saying: News | null = null
+let hushTimer = 0
+
+function speak(text: string, ms: number, ink: string, news: News | null) {
+  saying = news
   say.style.setProperty('--ink', ink)
   say.textContent = text
+  say.classList.toggle('link', (news?.link ?? '') !== '')
   say.classList.add('on')
-  saidUntil = Date.now() + ms
-  await place()
+  clearTimeout(hushTimer)
+  hushTimer = window.setTimeout(sayNext, ms)
+  hot()
 }
 
-async function hush() {
+/** The next news in the bubble, or the bubble away when all is said. */
+function sayNext() {
+  clearTimeout(hushTimer)
+  const next = queue.shift()
+  if (next) return speak(next.line, settings.talkSeconds * 1000, NEWS_INK[next.kind], next)
+  saying = null
   say.classList.remove('on')
-  saidUntil = 0
-  await place()
+  hot()
 }
+
+/** Takes in what changed among the chats; what no longer holds is dropped, and more pressing news does not wait for lesser news to finish. */
+function hear(fresh: News[], peers: View['peers']) {
+  queue = queued(queue, fresh).filter(n => stillHolds(n, peers))
+  if (saying && !stillHolds(saying, peers)) return sayNext()
+  const first = queue[0]
+  if (!first) return
+  if (!say.classList.contains('on')) return sayNext()
+  if (saying && isMorePressing(first, saying)) {
+    queue = queued(queue, [saying])
+    sayNext()
+  }
+}
+
+// A press on what Mochi says opens the chat it is about, and brings the next news.
+say.addEventListener('pointerdown', e => e.stopPropagation())
+say.addEventListener('click', () => {
+  if (saying?.link) void openUrl(saying.link)
+  sayNext()
+})
 
 // ---------- the agents ----------
 
-/** Fills the list of agents from what was last read, and the dots at Mochi's feet. */
+/** Fills the list of agents from what was last read, and the count at Mochi's feet. */
 function drawAgents() {
   const rows = view ? rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000) : []
   const w = words()
@@ -192,26 +254,92 @@ function drawAgents() {
   }
 }
 
-async function toggleAgents(on = !list.classList.contains('on')) {
+function toggleAgents(on = !list.classList.contains('on')) {
   list.classList.toggle('on', on)
   agentsButton.setAttribute('aria-expanded', String(on))
   drawAgents()
-  await place()
+  hot()
 }
 
 agentsButton.addEventListener('pointerdown', e => e.stopPropagation())
-agentsButton.addEventListener('click', () => void toggleAgents())
+agentsButton.addEventListener('click', () => toggleAgents())
 list.addEventListener('pointerdown', e => e.stopPropagation())
 list.addEventListener('click', e => {
   const link = (e.target as HTMLElement).closest<HTMLElement>('.agent')?.dataset.link
   if (link) {
     void openUrl(link)
-    void toggleAgents(false)
+    toggleAgents(false)
   }
 })
 addEventListener('keydown', e => {
-  if (e.key === 'Escape' && list.classList.contains('on')) void toggleAgents(false)
+  if (e.key === 'Escape' && list.classList.contains('on')) toggleAgents(false)
 })
+
+// ---------- the chats the app follows itself ----------
+
+/** What each chat earned since its days were last written, day by day, with the chat's name. */
+const earned = new Map<string, { label: string; days: Record<string, Partial<DayRec>> }>()
+
+/** Writes one after another, so two turns ending together never both start from the same file. */
+let writing: Promise<unknown> = Promise.resolve()
+
+/** Adds what a chat earned to its days file, the file the mod keeps for a chat of its own. */
+function keepDays(id: string) {
+  const mine = earned.get(id)
+  if (!mine) return
+  earned.delete(id)
+  writing = writing.then(async () => {
+    let text = await invoke<string | null>('read_days', { id })
+    for (const [day, rec] of Object.entries(mine.days)) text = dayFile(text, id, mine.label, day, rec)
+    if (text !== null) await invoke('write_days', { id, text })
+  }).catch(note)
+}
+
+/** A chat the mod writes is the mod's to follow and to count: the app lets go of it. */
+function leave(id: string) {
+  sessions.delete(id)
+  earned.delete(id)
+}
+
+/** Takes in hook calls: where each chat stands now, and what the call earned. */
+async function take(calls: string[]) {
+  for (const call of calls) {
+    const h = hookedOf(call)
+    if (!h || theirs.has(h.id)) continue
+    const before = sessions.get(h.id)
+    const rec = tallyOf(h, before, tz())
+    noted(sessions, h)
+    if (rec) {
+      const mine = earned.get(h.id) ?? { label: '', days: {} }
+      const day = dayKey(h.at, tz())
+      mine.label = sessions.get(h.id)?.label ?? before?.label ?? mine.label
+      mine.days[day] = addDay(mine.days[day] ?? {}, rec)
+      earned.set(h.id, mine)
+    }
+    if (endsTurn(h)) keepDays(h.id)
+  }
+  // The chats as they stand now, for every other Mochi to read; the app is told which of them the mod writes itself.
+  for (const id of await invoke<string[]>('own_live', { peers: agentPeers(sessions, Date.now()) }).catch(() => [])) leave(id)
+  draw()
+}
+
+// ---------- the drawing ----------
+
+function draw() {
+  const now = Date.now()
+  const others = peersOf(liveTexts, now)
+  theirs = new Set(others.map(p => p.id))
+  for (const id of theirs) leave(id)
+  const next = viewOf([...others, ...agentPeers(sessions, now)], now, look)
+  const before = view
+  view = next
+  // The drawing loops by itself: it is put on screen again only when it differs, so its motion never starts over for nothing.
+  if (!before || next.svg !== before.svg) stage.innerHTML = next.svg
+  stage.setAttribute('aria-label', next.line)
+  drawAgents()
+  if (before) hear(newsOf(before.peers, next.peers, now).filter(n => talksAbout(settings, n.kind)), next.peers)
+  hot()
+}
 
 // ---------- settings ----------
 
@@ -222,11 +350,11 @@ async function apply(next: Settings) {
   agentsButton.hidden = !settings.showAgents
   if (!settings.showAgents) list.classList.remove('on')
   await invoke('on_top', { on: settings.onTop }).catch(note)
-  if (view) {
-    // A language or a size changes the drawing and the words: draw them again.
-    view = null
-    await read()
-  }
+  // A language or a size changes the drawing and the words: draw them again, and stand where the new size fits.
+  view = null
+  draw()
+  await place()
+  hot()
 }
 
 void listen(CHANGED, e => void apply(settingsFrom(JSON.stringify(e.payload))))
@@ -244,30 +372,7 @@ addEventListener('storage', e => {
   if (e.key === KEY) void apply(loadSettings())
 })
 
-// ---------- the beat ----------
-
-async function read() {
-  const now = Date.now()
-  const texts = await invoke<string[]>('read_live').catch(() => [])
-  for (const call of await invoke<string[]>('take_inbox').catch(() => [])) {
-    const hooked = hookedOf(call)
-    if (hooked) noted(agents, hooked)
-  }
-  const lookText = await invoke<string | null>('read_look').catch(() => null)
-  const next = viewOf([...peersOf(texts, now), ...agentPeers(agents, now)], now, lookOf(lookText))
-  const before = view
-  view = next
-  // The drawing loops by itself: it is put on screen again only when it differs, so its motion never starts over for nothing.
-  if (!before || next.svg !== before.svg) stage.innerHTML = next.svg
-  drawAgents()
-  if (!before) {
-    await place()
-    return
-  }
-  const news = newsOf(before.peers, next.peers, now).filter(n => talksAbout(settings, n.kind))
-  if (news.length > 0) await speak(news.slice(0, 3).map(n => n.line).join('\n'), settings.talkSeconds * 1000, NEWS_INK[news[0].kind])
-  else if (saidUntil > 0 && now >= saidUntil) await hush()
-}
+// ---------- presses ----------
 
 // A pull moves the window; a right press opens the settings.
 let pressed: { x: number; y: number } | null = null
@@ -283,31 +388,30 @@ addEventListener('pointermove', e => {
 stage.addEventListener('pointerup', () => {
   if (!pressed || !view) return
   pressed = null
-  if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0) void toggleAgents()
-  else void speak(view.line, ANSWER_MS)
+  if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0) toggleAgents()
+  else speak(view.line, ANSWER_MS, QUIET_INK, null)
 })
 addEventListener('contextmenu', e => {
   e.preventDefault()
   void invoke('open_settings')
 })
 
-// One read at a time: a slow one is not overtaken by the next.
-let isReading = false
-async function beat() {
-  if (isReading) return
-  isReading = true
-  try {
-    await read()
-  } catch (e) {
-    note(e)
-  } finally {
-    isReading = false
-  }
-}
-
 async function start() {
   await apply(settings)
-  await beat()
+  await listen<string[]>('calls', e => void take(e.payload).catch(note))
+  await listen<string[]>('live', e => {
+    liveTexts = e.payload
+    draw()
+  })
+  await listen<string | null>('look', e => {
+    wear(e.payload)
+    view = null
+    draw()
+  })
+  // What only time changes: a chat silent too long is at rest or gone, and the file the app keeps of it must say so too.
+  await listen('minute', () => void take([]).catch(note))
+  // Everything is told from the start now that someone listens.
+  await invoke('ready')
   await win.show()
   await invoke('shown')
   // From here on a move is the person's: where they leave the window is where its corner stays. Before it, the system's own first placing is not.
@@ -326,8 +430,7 @@ async function start() {
   })
   // The list closes when the person turns to another window.
   void win.onFocusChanged(({ payload }) => {
-    if (!payload && list.classList.contains('on')) void toggleAgents(false)
+    if (!payload && list.classList.contains('on')) toggleAgents(false)
   })
-  setInterval(() => void beat(), READ_MS)
 }
 void start()

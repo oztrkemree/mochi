@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { setLang } from '../../hooks/i18n'
 import { ALIVE_MS } from '../../hooks/live'
 import { lookFrom } from '../../hooks/level'
-import { badgeOf, newsOf, peersOf, rowsOf, viewOf } from './world'
+import { badgeOf, peersOf, rowsOf, viewOf } from './world'
 
 setLang('en')
 
@@ -42,16 +42,6 @@ test('a press opens the chat that most needs the person when the Claude app can 
   const desk = viewOf(peersOf([file('term', { state: 'busy' }), file('desk', { state: 'asking', app: 'local_abc-123' })], NOW), NOW)
   expect(desk.link).toBe('claude://code/continue?session=local_abc-123')
   expect(viewOf(peersOf([file('term', { state: 'asking' })], NOW), NOW).link).toBe('')
-})
-
-test('Mochi speaks up when a chat starts to wait, ends a long turn or fails, and says nothing when nothing changed', () => {
-  const before = peersOf([file('fix-login', { state: 'busy', since: NOW - 5 * MIN }), file('api', { state: 'busy', since: NOW - 5 * MIN }), file('docs', { state: 'busy', since: NOW - 1000 })], NOW)
-  const after = peersOf([file('fix-login', { state: 'asking' }), file('api', { state: 'idle' }), file('docs', { state: 'idle' })], NOW)
-  // A turn of a second is not news; one of five minutes is.
-  expect(newsOf(before, after, NOW)).toEqual([{ kind: 'asking', line: '‘fix-login’ is waiting for you' }, { kind: 'done', line: '‘api’ finished · 5m' }])
-  expect(newsOf(after, after, NOW)).toEqual([])
-  // A chat seen for the first time has no before: nothing is said of it.
-  expect(newsOf([], after, NOW)).toEqual([])
 })
 
 test('Mochi wears what the band’s Mochi wears, by the look the mod writes; with no look yet it wears what the season gives', () => {
@@ -94,7 +84,7 @@ test('a chat at rest longer than the setting leaves the list; one that works, wa
 })
 
 test('each row says where its chat runs, so one that cannot be opened from here is not mistaken for a broken press', () => {
-  const rows = rowsOf([...peersOf([file('desk', { app: 'local_abc-1' }), file('term')], NOW), { ...peersOf([file('codex:s1', { label: 'shop' })], NOW)[0] }], NOW)
+  const rows = rowsOf([...peersOf([file('desk', { app: 'local_abc-1' }), file('term')], NOW), { ...peersOf([file('codex-s1', { label: 'shop' })], NOW)[0] }], NOW)
   expect(Object.fromEntries(rows.map(r => [r.name, r.where]))).toEqual({ desk: 'app', term: 'terminal', shop: 'codex' })
 })
 

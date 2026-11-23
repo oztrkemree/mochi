@@ -1,6 +1,6 @@
 import type { Mood, Outfit, Peer } from '../../types'
 import { type Look, dressAs } from '../../hooks/level'
-import { type PeerNews, appLink, nameOf, peerNews, peerOf, peersLine } from '../../hooks/live'
+import { appLink, nameOf, peerOf, peersLine } from '../../hooks/live'
 import { STATUS_INK, type Status, crowdOf, membersOf, moodOf, statusLine } from '../../hooks/party'
 import { mascotInner } from '../../hooks/rig'
 import { t } from '../../hooks/i18n'
@@ -22,7 +22,7 @@ export type View = {
   peers: readonly Peer[]
 }
 
-/** The chats alive now, from the text of their files as the mod wrote them; the first file of a chat wins. */
+/** The chats alive now that another Mochi writes, from the text of their files; the first file of a chat wins. */
 export function peersOf(texts: readonly string[], now: number): Peer[] {
   const peers = new Map<string, Peer>()
   for (const text of texts) {
@@ -53,9 +53,6 @@ export function viewOf(peers: readonly Peer[], now: number, look: Look | null = 
   }
 }
 
-/** What Mochi has to say about the change from one read to the next: a chat waits, ended a long turn, or failed. */
-export const newsOf = (before: readonly Peer[], after: readonly Peer[], now: number): PeerNews[] => peerNews(before, after, now)
-
 /**
  * Mochi's drawing with room around its own square: what it holds, wears on
  * the ground beside it or has floating over it reaches past that square, and
@@ -74,7 +71,7 @@ export type Row = { id: string; name: string; status: Status; line: string; ink:
 /** Where a chat runs: the Claude app (a press opens it), Codex, or a terminal or editor, which a press cannot reach. */
 export type Where = 'app' | 'codex' | 'terminal'
 
-const whereOf = (p: Peer): Where => (appLink(p.app) ? 'app' : p.id.startsWith('codex:') ? 'codex' : 'terminal')
+const whereOf = (p: Peer): Where => (appLink(p.app) ? 'app' : p.id.startsWith('codex-') ? 'codex' : 'terminal')
 
 /** Since when a chat has been at rest: when it came to rest, else when its last turn ended; 0 when it does not say. */
 const restingSince = (p: Peer): number => p.stateAt || p.lastTurn?.at || 0

@@ -1,23 +1,30 @@
 # Mochi Buddy on the desktop
 
-One Mochi on your screen, outside Claude Code. It stands in a corner above your other windows, wears the face of the chat that most needs you, and speaks up in a short bubble when something happens:
+One Mochi on your screen, for every agent you run. It stands in a corner above your other windows, wears the face of the chat that most needs you, and speaks up in a short bubble when something happens:
 
 - a chat is waiting for you (a permission, a question, a plan),
 - a chat finished a turn of a minute or more,
 - a chat hit an error.
 
-Press Mochi to open that chat in the Claude app; when there is nothing to open, it tells you how things stand. Drag it anywhere: it stays where you leave it. With no chat open it sleeps.
+News of several chats comes one at a time, the most pressing first. Press the bubble to open its chat in the Claude app; press Mochi for the list of chats, or to hear how things stand. Drag it anywhere: it stays where you leave it. Everything around Mochi lets your presses through to the window behind. With no chat open it sleeps.
 
-It works for macOS and Windows.
+It works for macOS and Windows, with the Mochi Buddy mod or without it.
 
 ## Where it gets what it knows
 
-- **Claude Code with the Mochi Buddy mod:** every chat's Mochi already writes a small file under `~/.claude/mochi/live/`. The app reads those once a second. Nothing to set up.
-- **Codex:** in the tray menu, **Connect Codex**. It adds Mochi's entries to `~/.codex/hooks.json` (or `$CODEX_HOME/hooks.json`), after any you have, and keeps the file as it was once, beside it, as `hooks.json.mochi-backup`. Codex asks you to approve new hooks: run `/hooks` once in Codex. **Disconnect Codex** takes Mochi's entries out again and leaves yours.
+- **Claude Code with the Mochi Buddy mod:** every chat's Mochi already writes a small file under `~/.claude/mochi/live/`. The app reads them. Nothing to set up.
+- **Claude Code without the mod:** in Settings, **Claude Code → Connect**. It adds Mochi's entries to the `hooks` of `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json`), after any you have, touches nothing else in the file, and keeps the file as it was once, beside it, as `settings.json.mochi-backup`. Chats you open from then on tell Mochi what they do. **Disconnect** takes Mochi's entries out again and leaves yours.
+- **Codex:** in Settings, **Codex → Connect**. The same, in `~/.codex/hooks.json` (or `$CODEX_HOME/hooks.json`). Codex asks you to approve new hooks: run `/hooks` once in Codex.
 
-On Windows the Codex connection is not tried yet: if Codex runs hooks through PowerShell, the quoted path may need `&` before it.
+On Windows the hook connection is not tried yet: if the agent runs hooks through PowerShell, the quoted path may need `&` before it.
 
-Each Codex hook runs `mochi-desktop hook codex`, which takes the call and is gone: it prints nothing, never stops Codex, and writes nothing while the app is not running. While the app runs, it leaves each call in `~/.claude/mochi/inbox/` for the app to take, keeping only what the app reads: which event, the session and folder, the tool's name, the first 300 characters of a command and the first 200 of a prompt.
+Each hook runs `mochi-desktop hook <agent>`, which takes the call and is gone: it prints nothing, never stops the agent, and writes nothing while the app is not running. While the app runs, it leaves each call in `~/.claude/mochi/inbox/` for the app to take, keeping only what the app reads: which event, the session and folder, the tool's name, the chat's title, the first 300 characters of a command and the first 200 of a prompt.
+
+## One Mochi, whichever you use
+
+The app keeps its files where the mod keeps its own, in the same shapes ([docs/DATA.md](../docs/DATA.md)). A chat the app follows is written to `live/` for every other Mochi to see, and what you do in it is counted into `days/` the way the mod counts its own chats: turns, tool calls, edits, commits. So work in Codex earns the same experience as work in Claude Code, and if you install the mod weeks later it opens on the level you already have.
+
+Each chat has one writer. With the mod on, a Claude Code chat is the mod's and the app only reads it; the app never counts a chat twice.
 
 ## The mod and the app together
 
@@ -47,7 +54,7 @@ cd app
 pnpm install
 pnpm tauri dev      # runs it, and reloads as you edit
 pnpm test           # the window's logic
-cd src-tauri && cargo test   # files, the inbox, Codex's hooks file
+cd src-tauri && cargo test   # files, the inbox, the agents' hooks files, where a press is Mochi's
 ```
 
 The drawing and the rules are the mod's own files in `../hooks`; the app imports them as they are.
