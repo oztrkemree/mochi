@@ -4,7 +4,7 @@ import { setLang } from '../../hooks/i18n'
 import { summarize, xpOf } from '../../hooks/level'
 import { peerOf } from '../../hooks/live'
 import { GONE_AFTER_MS, STALLED_AFTER_MS, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, stalledOf, tallyOf } from './engine'
-import { newsOf } from './news'
+import { newsOf, withoutStalled } from './news'
 
 setLang('en')
 
@@ -142,12 +142,13 @@ test('only what the mod counts is counted: a list of tasks is no edit, and a sub
 test('a turn the person cut short ends when Claude Code says it waits for input, and is a turn all the same', () => {
   let s = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude'), hook(NOW + 5 * SEC, 'PreToolUse', { tool_name: 'Read' }, 'claude'))
   const idle = hook(NOW + 70 * SEC, 'Notification', { notification_type: 'idle_prompt' }, 'claude')
-  expect(tallyOf(idle, s.get('s1'), 0)).toEqual({ turns: 1, secs: 70 })
+  // The turn ran until the chat was last heard, five seconds in: the minute Claude Code then waited is not work.
+  expect(tallyOf(idle, s.get('s1'), 0)).toEqual({ turns: 1, secs: 5 })
   s = noted(s, idle)
-  expect(agentPeers(s, NOW + 70 * SEC)[0]).toMatchObject({ state: 'idle', lastTurn: { reason: 'aborted', seconds: 70 } })
+  expect(agentPeers(s, NOW + 70 * SEC)[0]).toMatchObject({ state: 'idle', lastTurn: { at: NOW + 5 * SEC, reason: 'aborted', seconds: 5 } })
   // Said again while the chat rests, it ends nothing.
   expect(tallyOf(hook(NOW + 130 * SEC, 'Notification', { notification_type: 'idle_prompt' }, 'claude'), s.get('s1'), 0)).toBeNull()
-  expect(agentPeers(noted(s, hook(NOW + 130 * SEC, 'Notification', { notification_type: 'idle_prompt' }, 'claude')), NOW + 130 * SEC)[0].lastTurn).toMatchObject({ at: NOW + 70 * SEC })
+  expect(agentPeers(noted(s, hook(NOW + 130 * SEC, 'Notification', { notification_type: 'idle_prompt' }, 'claude')), NOW + 130 * SEC)[0].lastTurn).toMatchObject({ at: NOW + 5 * SEC })
 })
 
 test('a turn whose end was never said is counted when the next one begins, up to when the chat was last heard', () => {
@@ -169,7 +170,8 @@ test('a chat that waits on the person keeps waiting however long; one that went 
   expect(after[0].state).toBe('idle')
   expect([...stalledOf(silent, NOW + STALLED_AFTER_MS)]).toEqual(['codex-s1'])
   // Left to itself the change reads as a turn of half an hour that finished: the window leaves out what `stalledOf` names.
-  expect(newsOf(before, after, NOW + STALLED_AFTER_MS).filter(n => !stalledOf(silent, NOW + STALLED_AFTER_MS).has(n.id))).toEqual([])
+  expect(newsOf(before, after, NOW + STALLED_AFTER_MS).map(n => n.kind)).toEqual(['done'])
+  expect(withoutStalled(newsOf(before, after, NOW + STALLED_AFTER_MS), stalledOf(silent, NOW + STALLED_AFTER_MS))).toEqual([])
 })
 
 test('a chat named by its first words says so in its days file, so those words are never put on a picture to share', () => {
@@ -178,4 +180,39 @@ test('a chat named by its first words says so in its days file, so those words a
   expect(isNamedByPrompt(home)).toBe(true)
   expect(isNamedByPrompt(run(hook(NOW, 'UserPromptSubmit', { prompt: 'rename the billing table' })).get('codex-s1')!)).toBe(false)
   expect(JSON.parse(dayFile(null, 'codex-s1', home.label, true, '2026-11-23', { turns: 1 })).isLabelFromPrompt).toBe(true)
+})
+
+test('a subagent still at work after the turn ended does not put the chat back to work, so no turn is counted that never was', () => {
+  const calls = [
+    hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude'),
+    hook(NOW + 10 * SEC, 'Stop', {}, 'claude'),
+    hook(NOW + 20 * SEC, 'PostToolUse', { tool_name: 'Read', agent_id: 'a1' }, 'claude'),
+    hook(NOW + 80 * SEC, 'Notification', { notification_type: 'idle_prompt' }, 'claude'),
+    hook(NOW + 90 * SEC, 'PreToolUse', { tool_name: 'Grep', agent_id: 'a1' }, 'claude'),
+    hook(NOW + 100 * SEC, 'UserPromptSubmit', { prompt: 'y' }, 'claude'),
+    hook(NOW + 110 * SEC, 'Stop', {}, 'claude'),
+  ]
+  const s = new Map()
+  const turns: number[] = []
+  for (const h of calls) {
+    turns.push(tallyOf(h, s.get('s1'), 0)?.turns ?? 0)
+    noted(s, h)
+    if (h.event.agent_id) expect(s.get('s1')).toMatchObject({ state: 'idle' })
+  }
+  // Two prompts, two turns.
+  expect(turns).toEqual([0, 1, 0, 0, 0, 0, 1])
+})
+
+test('a subagent’s call during the turn keeps the chat at work, and takes it on from waiting for permission', () => {
+  let s = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude'), hook(NOW + SEC, 'PermissionRequest', { tool_name: 'Bash', agent_id: 'a1' }, 'claude'))
+  expect(s.get('s1')).toMatchObject({ state: 'asking', waitingFor: 'permission' })
+  s = noted(s, hook(NOW + 5 * SEC, 'PostToolUse', { tool_name: 'Bash', agent_id: 'a1' }, 'claude'))
+  expect(s.get('s1')).toMatchObject({ state: 'busy', waitingFor: '' })
+})
+
+test('a chat closed in the middle of a turn has that turn counted, up to when it was last heard', () => {
+  const waiting = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude'), hook(NOW + 30 * SEC, 'PermissionRequest', { tool_name: 'Bash' }, 'claude'))
+  expect(tallyOf(hook(NOW + 900 * SEC, 'SessionEnd', {}, 'claude'), waiting.get('s1'), 0)).toEqual({ turns: 1, secs: 30 })
+  const rested = run(hook(NOW, 'UserPromptSubmit', { prompt: 'x' }, 'claude'), hook(NOW + 30 * SEC, 'Stop', {}, 'claude'))
+  expect(tallyOf(hook(NOW + 900 * SEC, 'SessionEnd', {}, 'claude'), rested.get('s1'), 0)).toBeNull()
 })

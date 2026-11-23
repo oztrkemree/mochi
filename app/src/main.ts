@@ -9,7 +9,7 @@ import { pickLang, setLang } from '../../hooks/i18n'
 import { type Look, addDay, lookFrom } from '../../hooks/level'
 import { PEER_INK } from '../../hooks/live'
 import { type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, stalledOf, tallyOf } from './engine'
-import { type News, isMorePressing, newsOf, queued, stillHolds } from './news'
+import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { words } from './words'
@@ -344,8 +344,7 @@ function draw() {
   drawAgents()
   if (before) {
     // A chat taken as stopped because it went silent is at rest, which is no news of a turn that finished.
-    const stalled = stalledOf(sessions, now)
-    hear(newsOf(before.peers, next.peers, now).filter(n => talksAbout(settings, n.kind) && !(n.kind === 'done' && stalled.has(n.id))), next.peers)
+    hear(withoutStalled(newsOf(before.peers, next.peers, now), stalledOf(sessions, now)).filter(n => talksAbout(settings, n.kind)), next.peers)
   }
   hot()
 }

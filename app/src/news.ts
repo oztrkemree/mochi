@@ -31,3 +31,6 @@ export function queued(queue: readonly News[], fresh: readonly News[]): News[] {
 
 /** Whether news still holds: a chat that waited and was answered in its own window, or is gone, has nothing left to ask. */
 export const stillHolds = (news: News, peers: readonly Peer[]): boolean => news.kind !== 'asking' || peers.some(p => p.id === news.id && p.state === 'asking')
+
+/** News without what only looks like it: a chat taken as stopped because it went silent rests now, which is no turn that finished. */
+export const withoutStalled = (news: readonly News[], stalled: ReadonlySet<string>): News[] => news.filter(n => !(n.kind === 'done' && stalled.has(n.id)))

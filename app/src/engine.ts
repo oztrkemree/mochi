@@ -88,6 +88,15 @@ function endOf(h: Hooked, before: Peer | undefined): '' | 'answer' | 'aborted' |
   return ''
 }
 
+/** A call of a subagent still running after its chat's turn ended: the chat itself rests, and stays at rest. */
+const isLeftBehind = (h: Hooked, p: Peer): boolean => text(h.event.agent_id) !== '' && !isInTurn(p)
+
+/**
+ * When the turn a call ends was over. A stop says so as it happens; that Claude Code waits for input
+ * is said a minute or more after, and that minute is not work: the turn was over when the chat was last heard.
+ */
+const endedAt = (h: Hooked, before: Peer): number => (h.name === 'Notification' ? before.at : h.at)
+
 const rested = (p: Peer, at: number, reason: string): Peer =>
   ({ ...p, state: reason === 'error' ? 'error' : 'idle', stateAt: at, activity: '', waitingFor: '', agents: [], lastTurn: { at, reason, seconds: p.since > 0 ? Math.max(0, Math.round((at - p.since) / 1000)) : 0 } })
 
@@ -112,12 +121,13 @@ export function noted(sessions: Sessions, h: Hooked): Sessions {
   const title = text(h.event.session_title)
   if (title !== '') p = { ...p, title }
   const end = endOf(h, known)
-  if (end !== '') p = rested(p, h.at, end)
+  if (end !== '') p = rested(p, endedAt(h, p), end)
   switch (h.name) {
     case 'UserPromptSubmit':
       p = { ...working({ ...p, state: 'idle' }, h.at, 'thinking'), stateAt: h.at }
       break
     case 'PreToolUse': {
+      if (isLeftBehind(h, p)) break
       const tool = text(h.event.tool_name)
       // A question or a plan stops the turn for the person, the same as a request for permission.
       p = toolKind(tool) === 'ask' ? asking(p, h.at, tool === 'ExitPlanMode' ? 'plan' : 'question') : working(p, h.at, activityFor(tool, h.event.tool_input))
@@ -125,7 +135,7 @@ export function noted(sessions: Sessions, h: Hooked): Sessions {
     }
     case 'PostToolUse':
     case 'PostToolUseFailure':
-      p = working(p, h.at, 'thinking')
+      if (!isLeftBehind(h, p)) p = working(p, h.at, 'thinking')
       break
     case 'PermissionRequest':
       p = asking(p, h.at, 'permission')
@@ -191,9 +201,9 @@ export function tallyOf(h: Hooked, before: Peer | undefined, tz: number): Partia
   }
   // A turn is one that was running: a second stop, or one for a chat first heard of now, ends nothing.
   if (!isInTurn(before)) return null
-  if (endOf(h, before) !== '') return turnAt(before.since, h.at, tz)
-  // A new prompt while a turn still reads as running: that turn ended without a word, when the chat was last heard.
-  if (h.name === 'UserPromptSubmit') return turnAt(before.since, before.at, tz)
+  if (endOf(h, before) !== '') return turnAt(before.since, endedAt(h, before), tz)
+  // A new prompt, or the chat closing, while a turn still reads as running: that turn ended without a word, when the chat was last heard.
+  if (h.name === 'UserPromptSubmit' || h.name === 'SessionEnd') return turnAt(before.since, before.at, tz)
   return null
 }
 
