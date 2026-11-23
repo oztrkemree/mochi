@@ -104,7 +104,12 @@ pub fn see_repo(dir: &Path, cwd: &str, now: u128) -> bool {
         return false;
     }
     let path = dir.join("repos.json");
-    let text = std::fs::read_to_string(&path).unwrap_or_default();
+    // A file there that cannot be read now (locked, caught mid-write) is left as it is: the root is noted next hour.
+    let text = match std::fs::read_to_string(&path) {
+        Ok(text) if serde_json::from_str::<Value>(&text).is_ok_and(|v| v.is_object()) => text,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
+        _ => return false,
+    };
     write_whole(&path, &with_root(&text, root, now))
 }
 
@@ -208,10 +213,20 @@ pub fn prs(query: &str, vars: &[(String, String)]) -> Value {
     told(run("gh", &args, None, Duration::from_secs(15)))
 }
 
-/// The runs of the commit a chat's folder stands on, for the CI after a push: its sha, and what gh lists for it.
-pub fn ci(cwd: &str) -> Value {
-    let Some(head) = git(Path::new(cwd), &["rev-parse", "HEAD"]) else { return Value::Null };
-    let sha = head.stdout.trim().to_owned();
+fn is_sha(text: &str) -> bool {
+    (40..=64).contains(&text.len()) && text.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+/// The runs of a pushed commit, for the CI after a push: `sha` once known, else the commit the chat's folder stands on now.
+pub fn ci(cwd: &str, sha: Option<&str>) -> Value {
+    let sha = match sha {
+        Some(sha) if is_sha(sha) => sha.to_owned(),
+        Some(_) => return Value::Null,
+        None => match git(Path::new(cwd), &["rev-parse", "HEAD"]) {
+            Some(head) if is_sha(head.stdout.trim()) => head.stdout.trim().to_owned(),
+            _ => return Value::Null,
+        },
+    };
     let out = run("gh", &["run", "list", "--commit", &sha, "--json", "status,conclusion,name,workflowName,event,createdAt,updatedAt"], Some(Path::new(cwd)), Duration::from_secs(15));
     json!({ "sha": sha, "out": told(out) })
 }
@@ -240,6 +255,27 @@ mod tests {
         assert!(!only_reads("query { a } mutation { b }"));
         assert!(prs("mutation { x }", &[]).is_null());
         assert!(prs("query { x }", &[("a b".into(), "c".into())]).is_null());
+    }
+
+    #[test]
+    fn the_ci_is_read_for_the_commit_that_was_pushed() {
+        assert!(is_sha("0123456789abcdef0123456789abcdef01234567"));
+        assert!(!is_sha("HEAD"));
+        assert!(!is_sha("--output=x"));
+        assert!(ci("/nowhere", Some("--output=x")).is_null());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn repos_json_that_cannot_be_read_is_not_written_over() {
+        let dir = std::env::temp_dir().join(format!("mochi-repos-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("repos.json"), "{\"/w/a\": 1, \"/w/b").unwrap();
+        let cwd = std::env::current_dir().unwrap();
+        assert!(!see_repo(&dir, cwd.to_str().unwrap(), 2));
+        assert_eq!(std::fs::read_to_string(dir.join("repos.json")).unwrap(), "{\"/w/a\": 1, \"/w/b");
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

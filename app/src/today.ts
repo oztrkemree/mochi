@@ -96,5 +96,16 @@ export function ciNow(ran: { sha?: unknown; out?: Ran } | null, pushedAt: number
   return ciOf(ran.out.stdout, ran.sha, pushedAt)
 }
 
+/** How long a CI is watched at most, and how long with no run to show (no workflow, or the folder on another commit by now). */
+export const CI_MOST_MS = 30 * 60_000
+export const CI_SILENT_MS = 2 * 60_000
+
+/** What to do after a look at a pushed commit's CI: say how it ended, stop watching, or look again. */
+export function ciStep(ci: Ci | null, waited: number): 'say' | 'stop' | 'again' {
+  if (ci && isOver(ci)) return 'say'
+  if (waited > CI_MOST_MS || ((ci === null || ci.state === 'waiting') && waited > CI_SILENT_MS)) return 'stop'
+  return 'again'
+}
+
 export const isOver = (ci: Ci): boolean => ci.state === 'passed' || ci.state === 'failed' || ci.state === 'cancelled'
 export const ciSaid = (ci: Ci): { line: string; ink: string } => ({ line: ciLine(ci), ink: CI_INK[ci.state] })

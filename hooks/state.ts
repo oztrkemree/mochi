@@ -165,7 +165,7 @@ export const chat = {
   lookKey: '',
   /** When the wardrobe choice this chat last wore or made was made (prefs.json). */
   choiceAt: 0,
-  /** Whether the desktop app runs, as app.json last said. */
+  /** Whether the desktop app's Mochi is out, as app.json last said: then it may say a level too. */
   appRuns: false,
   peersAt: 0,
   peerMtimes: {} as Record<string, number>,

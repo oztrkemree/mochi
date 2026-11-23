@@ -21,7 +21,7 @@ import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
 import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, choiceFrom, choiceText, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
-import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appRunsOf, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
+import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
 import { floorOf, partyOf, spotAt } from './party'
 import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
@@ -731,7 +731,7 @@ async function readPeers($: Dollar) {
   // The desktop app's own file, there while it runs: while its Mochi is out, the band's steps aside. Gone, or caught mid-write, it reads as not out.
   const app = await $.fs.read(`${chat.dataDir}/app.json`).then(text => JSON.parse(text) as unknown).catch(() => null)
   const isOut = deskOf(app, now)
-  chat.appRuns = appRunsOf(app, now)
+  chat.appRuns = isOut
   if (isOut !== (await read($, away))) await update($, away, () => isOut)
   await wearChoice($)
   const seen: Record<string, number> = {}
@@ -1533,8 +1533,9 @@ async function claim($: Dollar, name: string, at: number): Promise<boolean> {
 
 /**
  * Whether this chat says a level or badges every Mochi may see at once. While
- * the desktop app runs it counts the same work, so the news is claimed first,
- * under the names and numbers the app claims it by; without it, as always.
+ * the desktop app's Mochi is out it counts the same work and may say it, so the
+ * news is claimed first, under the names and numbers the app claims it by.
+ * Hidden or closed, it says nothing: the band says it, as always.
  */
 async function mayTell($: Dollar, name: string, at: number): Promise<boolean> {
   return !chat.appRuns || claim($, name, at)

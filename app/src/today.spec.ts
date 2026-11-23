@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 
 import { setLang } from '../../hooks/i18n'
-import { ciNow, commitsOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed } from './today'
+import { ciNow, ciStep, commitsOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed } from './today'
 
 setLang('en')
 
@@ -53,4 +53,16 @@ test('a push that ran is watched until its CI passes, fails or is cancelled', ()
   expect(ciNow(ran([run('completed', 'failure')]), NOW)!.state).toBe('failed')
   expect(ciNow({ sha: 'abc', out: { code: 1, stdout: '', stderr: 'no' } }, NOW)).toBeNull()
   expect(ciNow(null, NOW)).toBeNull()
+})
+
+test('a CI is watched until it ends, for half an hour at most, and let be after two minutes with no run to show', () => {
+  const ci = (state: 'waiting' | 'running' | 'passed') => ({ sha: 'abc', pushedAt: NOW, state, total: 0, done: 0, failed: [], startedAt: 0, endedAt: 0 })
+  expect(ciStep(ci('passed'), 60_000)).toBe('say')
+  expect(ciStep(ci('running'), 29 * 60_000)).toBe('again')
+  expect(ciStep(ci('running'), 31 * 60_000)).toBe('stop')
+  expect(ciStep(ci('waiting'), 60_000)).toBe('again')
+  // No workflow, or the folder moved to another commit: no run ever shows for it.
+  expect(ciStep(ci('waiting'), 3 * 60_000)).toBe('stop')
+  expect(ciStep(null, 60_000)).toBe('again')
+  expect(ciStep(null, 3 * 60_000)).toBe('stop')
 })

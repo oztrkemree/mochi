@@ -302,8 +302,8 @@ fn git_state(cwd: String) -> Option<Value> {
 }
 
 #[tauri::command(async)]
-fn ci(cwd: String) -> Value {
-    work::ci(&cwd)
+fn ci(cwd: String, sha: Option<String>) -> Value {
+    work::ci(&cwd, sha.as_deref())
 }
 
 #[tauri::command]

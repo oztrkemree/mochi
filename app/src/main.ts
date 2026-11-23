@@ -21,7 +21,7 @@ import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, areaOf, fit } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
-import { COMMIT_STALE_MS, type FolderState, type PullBox, type Ran, ciNow, ciSaid, commitsOf, deskOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed, standupOf } from './today'
+import { COMMIT_STALE_MS, type FolderState, type PullBox, type Ran, ciNow, ciSaid, ciStep, commitsOf, deskOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed, standupOf } from './today'
 import { chosen, lookNow, shelvesOf } from './wardrobe'
 import { words } from './words'
 import { ROOM, type View, badgeOf, gazeOf, peersOf, rowsOf, stillOf, viewOf } from './world'
@@ -404,9 +404,11 @@ async function count() {
   if (won.keep) await invoke('write_shared', { name: 'badges.json', text: won.keep })
   if ('badges' in won && won.badges) badges = won.badges
   dress()
-  // Said by one Mochi: the mod claims the same news under the same names and numbers.
+  // Said by one Mochi: the mod claims the same news under the same names and numbers. Claimed only by a Mochi on screen, which
+  // says it: hidden, it leaves the news to the band.
   const h = history
-  const said = (line: string | null, name: string, at: number) => (line === null ? Promise.resolve(null) : invoke<boolean>('claim', { name, at }).then(ok => (ok ? line : null), () => null))
+  const canSay = view !== null && (await win.isVisible().catch(() => false))
+  const said = (line: string | null, name: string, at: number) => (line === null || !canSay ? Promise.resolve(null) : invoke<boolean>('claim', { name, at }).then(ok => (ok ? line : null), () => null))
   const lines = (await Promise.all([
     said(level.line, 'said-level', levelOf(xpOf(h)).level * 1000 + unlocked(h).length),
     said(won.line, 'said-badges', badges.length),
@@ -766,20 +768,20 @@ const repoSeen = new Map<string, number>()
 /** The pushes whose CI is watched, by folder: looked at every 20 seconds while it runs, for half an hour at most. */
 const watching = new Map<string, number>()
 const CI_EVERY_MS = 20_000
-const CI_MOST_MS = 30 * 60_000
-/** gh that cannot say anything of a push (none there, not signed in) is let be after this. */
-const CI_SILENT_MS = 2 * 60_000
 
 function watchCi(chat: string, cwd: string, pushedAt: number) {
   clearTimeout(watching.get(cwd))
+  // The commit pushed, taken at the first look: a commit made after it is not the one to say of.
+  let sha: string | null = null
   const look = async () => {
-    const ci = ciNow(await invoke<{ sha?: unknown; out?: Ran } | null>('ci', { cwd }).catch(() => null), pushedAt)
-    const waited = Date.now() - pushedAt
-    if (ci && isOver(ci)) {
+    const ran = await invoke<{ sha?: unknown; out?: Ran } | null>('ci', { cwd, sha }).catch(() => null)
+    if (sha === null && typeof ran?.sha === 'string') sha = ran.sha
+    const ci = ciNow(ran, pushedAt)
+    const step = ciStep(ci, Date.now() - pushedAt)
+    if (step !== 'again') {
       watching.delete(cwd)
-      return sayCi(chat, ci)
+      return step === 'say' && ci ? sayCi(chat, ci) : undefined
     }
-    if (waited > CI_MOST_MS || (ci === null && waited > CI_SILENT_MS)) return void watching.delete(cwd)
     watching.set(cwd, window.setTimeout(() => void look().catch(note), CI_EVERY_MS))
   }
   watching.set(cwd, window.setTimeout(() => void look().catch(note), CI_EVERY_MS))
