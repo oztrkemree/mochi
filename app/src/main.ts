@@ -332,8 +332,8 @@ function comeBack() {
   }, IN_MS)
 }
 
-/** With nothing going on this long, Mochi leaves the screen by its nearest edge, and waits there. */
-const TUCK_AFTER_MS = 45_000
+/** With nothing going on this long, Mochi leaves the screen by its nearest edge, and waits there: the person's to set; 0, never. */
+const tuckAfterMs = () => settings.leaveSeconds * 1000
 let restSince = Date.now()
 let tuckTimer = 0
 
@@ -347,11 +347,13 @@ function rest(peers: readonly { state: string }[]) {
   if (isWork && (away || (peek && home))) return standUp()
   if (isWork || held || isBusy() || say.classList.contains('on') || list.classList.contains('on')) restSince = Date.now()
   clearTimeout(tuckTimer)
-  if (peek || away) return
+  // Set to stay: out of the screen, it comes back.
+  if (tuckAfterMs() === 0 && away) return standUp()
+  if (peek || away || tuckAfterMs() === 0) return
   tuckTimer = window.setTimeout(() => {
-    if (peek || away || held || isBusy() || say.classList.contains('on') || list.classList.contains('on') || Date.now() - restSince < TUCK_AFTER_MS - 100) return
+    if (peek || away || held || isBusy() || say.classList.contains('on') || list.classList.contains('on') || Date.now() - restSince < tuckAfterMs() - 100) return
     void goAway().catch(note)
-  }, Math.max(1000, TUCK_AFTER_MS - (Date.now() - restSince)))
+  }, Math.max(1000, tuckAfterMs() - (Date.now() - restSince)))
 }
 
 /**

@@ -7,6 +7,7 @@ const KO: Words = {
   where: { codex: 'Codex', terminal: '터미널' },
   notHere: (where: string) => `${where}에서 실행 중이에요. 거기서 열어 주세요`,
   hideIdle: '쉬는 채팅 숨기기',
+  leaveIdle: '쉴 때 화면에서 나가기',
   minutes: (n: number) => (n === 0 ? '안 함' : n >= 60 ? `${n / 60}시간` : `${n}분`),
   settings: 'Mochi 설정',
   look: '모양',

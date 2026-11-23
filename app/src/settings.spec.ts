@@ -32,3 +32,10 @@ test('Mochi speaks of a kind of news only while that kind is on', () => {
   expect(talksAbout(quiet, 'nudge')).toBe(false)
   expect(talksAbout(DEFAULTS, 'nudge')).toBe(true)
 })
+
+test('how long Mochi waits before it leaves the screen: 30 seconds unless set, one of the offered times, 0 to stay', () => {
+  expect(settingsFrom(null).leaveSeconds).toBe(30)
+  expect(settingsFrom(JSON.stringify({ leaveSeconds: 0 })).leaveSeconds).toBe(0)
+  expect(settingsFrom(JSON.stringify({ leaveSeconds: 300 })).leaveSeconds).toBe(300)
+  expect(settingsFrom(JSON.stringify({ leaveSeconds: 7 })).leaveSeconds).toBe(30)
+})

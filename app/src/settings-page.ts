@@ -4,7 +4,7 @@ import { emit } from '@tauri-apps/api/event'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 
 import { LANGS, type Lang, lang as langNow, pickLang, setLang } from '../../hooks/i18n'
-import { CHANGED, IDLE_MINUTES, KEY, SIZES, type Settings, type Size, TALK_SECONDS, loadSettings } from './settings'
+import { CHANGED, IDLE_MINUTES, KEY, LEAVE_SECONDS, SIZES, type Settings, type Size, TALK_SECONDS, loadSettings } from './settings'
 import { words } from './words'
 
 /** Each language by its own name, as a person looks for it. */
@@ -93,7 +93,7 @@ function draw() {
   document.documentElement.dir = langNow() === 'ar' ? 'rtl' : 'ltr'
   const w = words()
   const text: Record<string, string> = {
-    'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-idle': w.hideIdle,
+    'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-idle': w.hideIdle, 'l-leave': w.leaveIdle,
     'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
     'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex, 'l-line': w.line,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
@@ -104,6 +104,7 @@ function draw() {
   switchOf('onTop', settings.onTop, on => void save({ onTop: on }))
   switchOf('showAgents', settings.showAgents, on => void save({ showAgents: on }))
   segment('idleMinutes', IDLE_MINUTES, w.minutes, settings.idleMinutes, v => void save({ idleMinutes: v }))
+  segment('leaveSeconds', LEAVE_SECONDS, n => (n === 0 ? w.minutes(0) : n < 60 ? w.seconds(n) : w.minutes(n / 60)), settings.leaveSeconds, v => void save({ leaveSeconds: v }))
   for (const kind of ['asking', 'done', 'failed', 'limit'] as const) switchOf(`talk-${kind}`, settings.talk[kind], on => void save({ talk: { ...settings.talk, [kind]: on } }))
   segment('talkSeconds', TALK_SECONDS, w.seconds, settings.talkSeconds, v => void save({ talkSeconds: v }))
   switchOf('sound', settings.sound, on => void save({ sound: on }))

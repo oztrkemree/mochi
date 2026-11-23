@@ -10,6 +10,7 @@ const PT: Words = {
   where: { codex: 'Codex', terminal: 'terminal' },
   notHere: (where: string) => `Roda no ${where}: abra lá`,
   hideIdle: 'Esconder chats parados após',
+  leaveIdle: 'Sair da tela em repouso após',
   minutes: (n: number) => (n === 0 ? 'Nunca' : n >= 60 ? `${n / 60} h` : `${n} min`),
   settings: 'Ajustes do Mochi',
   look: 'Aparência',

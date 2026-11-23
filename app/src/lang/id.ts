@@ -7,6 +7,7 @@ const ID: Words = {
   where: { codex: 'Codex', terminal: 'terminal' },
   notHere: (where: string) => `Berjalan di ${where}: buka di sana`,
   hideIdle: 'Sembunyikan chat yang diam setelah',
+  leaveIdle: 'Keluar dari layar saat diam setelah',
   minutes: (n: number) => (n === 0 ? 'Tidak pernah' : n >= 60 ? `${n / 60} jam` : `${n} mnt`),
   settings: 'Pengaturan Mochi',
   look: 'Tampilan',

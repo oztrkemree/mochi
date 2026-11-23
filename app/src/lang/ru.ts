@@ -14,6 +14,7 @@ const RU: Words = {
   where: { codex: 'Codex', terminal: 'терминал' },
   notHere: (where: string) => `Открой там, где он запущен: ${where}`,
   hideIdle: 'Скрывать чаты в покое через',
+  leaveIdle: 'Уходить с экрана в простое через',
   minutes: (n: number) => (n === 0 ? 'Никогда' : n >= 60 ? `${n / 60} ч` : `${n} мин`),
   settings: 'Настройки Mochi',
   look: 'Вид',

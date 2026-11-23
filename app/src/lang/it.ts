@@ -10,6 +10,7 @@ const IT: Words = {
   where: { codex: 'Codex', terminal: 'terminale' },
   notHere: (where: string) => `Gira in ${where}: aprilo lì`,
   hideIdle: 'Nascondi le chat a riposo dopo',
+  leaveIdle: 'Uscire dallo schermo a riposo dopo',
   minutes: (n: number) => (n === 0 ? 'Mai' : n >= 60 ? `${n / 60} h` : `${n} min`),
   settings: 'Impostazioni di Mochi',
   look: 'Aspetto',

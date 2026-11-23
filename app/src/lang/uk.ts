@@ -14,6 +14,7 @@ const UK: Words = {
   where: { codex: 'Codex', terminal: 'термінал' },
   notHere: (where: string) => `Відкрий там, де він запущений: ${where}`,
   hideIdle: 'Ховати чати в спокої через',
+  leaveIdle: 'Іти з екрана в простої через',
   minutes: (n: number) => (n === 0 ? 'Ніколи' : n >= 60 ? `${n / 60} год` : `${n} хв`),
   settings: 'Налаштування Mochi',
   look: 'Вигляд',

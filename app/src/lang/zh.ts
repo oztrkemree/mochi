@@ -7,6 +7,7 @@ const ZH: Words = {
   where: { codex: 'Codex', terminal: '终端' },
   notHere: (where: string) => `在 ${where} 中运行：请在那里打开`,
   hideIdle: '空闲对话隐藏时间',
+  leaveIdle: '空闲时离开屏幕',
   minutes: (n: number) => (n === 0 ? '从不' : n >= 60 ? `${n / 60}小时` : `${n}分`),
   settings: 'Mochi 设置',
   look: '外观',

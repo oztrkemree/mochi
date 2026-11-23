@@ -22,6 +22,7 @@ const AR: Words = {
   where: { codex: 'Codex', terminal: 'الطرفية' },
   notHere: (where: string) => `يعمل في ${where}: افتحه هناك`,
   hideIdle: 'إخفاء المحادثات الساكنة بعد',
+  leaveIdle: 'مغادرة الشاشة عند الخمول بعد',
   minutes: (n: number) => (n === 0 ? 'أبدًا' : n >= 60 ? `${n / 60} س` : `${n} د`),
   settings: 'إعدادات Mochi',
   look: 'المظهر',

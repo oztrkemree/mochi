@@ -7,6 +7,7 @@ const JA: Words = {
   where: { codex: 'Codex', terminal: 'ターミナル' },
   notHere: (where: string) => `${where} で動いています。そちらで開いてください`,
   hideIdle: '休んでいるチャットを隠すまで',
+  leaveIdle: '何もない時に画面から出るまで',
   minutes: (n: number) => (n === 0 ? 'なし' : n >= 60 ? `${n / 60}時間` : `${n}分`),
   settings: 'Mochi の設定',
   look: '見た目',

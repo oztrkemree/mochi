@@ -10,6 +10,7 @@ const FR: Words = {
   where: { codex: 'Codex', terminal: 'terminal' },
   notHere: (where: string) => `Tourne dans ${where} : ouvrez-le là-bas`,
   hideIdle: 'Masquer les conversations au repos après',
+  leaveIdle: 'Quitter l’écran au repos après',
   minutes: (n: number) => (n === 0 ? 'Jamais' : n >= 60 ? `${n / 60} h` : `${n} min`),
   settings: 'Réglages de Mochi',
   look: 'Apparence',

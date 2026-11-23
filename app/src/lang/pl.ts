@@ -15,6 +15,7 @@ const PL: Words = {
   where: { codex: 'Codex', terminal: 'terminal' },
   notHere: (where: string) => `Otwórz tam, gdzie działa: ${where}`,
   hideIdle: 'Ukrywaj bezczynne czaty po',
+  leaveIdle: 'Znikaj z ekranu w bezczynności po',
   minutes: (n: number) => (n === 0 ? 'Nigdy' : n >= 60 ? `${n / 60} godz.` : `${n} min`),
   settings: 'Ustawienia Mochi',
   look: 'Wygląd',

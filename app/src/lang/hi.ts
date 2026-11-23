@@ -10,6 +10,7 @@ const HI: Words = {
   where: { codex: 'Codex', terminal: 'टर्मिनल' },
   notHere: (where: string) => `${where} में चल रहा है: वहीं खोलें`,
   hideIdle: 'रुकी हुई चैट इतनी देर बाद छिपाएँ',
+  leaveIdle: 'खाली होने पर स्क्रीन से हटें, इतने बाद',
   minutes: (n: number) => (n === 0 ? 'कभी नहीं' : n >= 60 ? `${n / 60} घं॰` : `${n} मि॰`),
   settings: 'Mochi की सेटिंग्स',
   look: 'रूप',
