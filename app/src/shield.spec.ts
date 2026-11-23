@@ -12,14 +12,15 @@ setLang('en')
 /** The hook's word filter, as agents.rs runs it. */
 const mightDestroy = (command: string) => {
   const c = command.toLowerCase()
-  return c.split(/[^\p{L}\p{N}_-]/u).some(w => list.whole.includes(w)) || list.anywhere.some(w => c.includes(w))
+  return c.split(/[^\p{L}\p{N}_]/u).some(w => list.whole.includes(w)) || list.anywhere.some(w => c.includes(w))
 }
 
 test('every command the mod’s shield names in its own tests has a word the hook waits on', () => {
   const corpus = [shieldTests, mochiTests].flatMap(text => {
     return [...text.matchAll(/'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"/g)].map(m => (m[1] ?? m[2] ?? '').replace(/\\(.)/g, '$1'))
   })
-  const named = corpus.filter(cmd => cmd.length > 1 && dangers(cmd).length > 0)
+  // And forms the mod's tests do not spell out: a flag glued to a word the shield names.
+  const named = [...corpus, 'terraform apply -auto-approve -destroy', 'pulumi destroy --yes'].filter(cmd => cmd.length > 1 && dangers(cmd).length > 0)
   expect(named.length).toBeGreaterThan(60)
   expect(named.filter(cmd => !mightDestroy(cmd))).toEqual([])
 })

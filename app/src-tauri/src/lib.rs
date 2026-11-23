@@ -39,7 +39,7 @@ fn beat_now(app: &AppHandle) {
     if let Some(dir) = data_dir() {
         // With Mochi off the screen nobody sees its bubble: no request waits on it.
         let shown = is_shown(app);
-        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), shown, if shown { APPROVE_S.load(Ordering::Relaxed) } else { 0 }, SHIELD.load(Ordering::Relaxed)));
+        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), shown, if shown { APPROVE_S.load(Ordering::Relaxed) } else { 0 }, shown && SHIELD.load(Ordering::Relaxed)));
     }
 }
 

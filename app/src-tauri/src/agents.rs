@@ -153,7 +153,8 @@ fn words() -> &'static (Vec<String>, Vec<String>) {
 pub fn might_destroy(command: &str) -> bool {
     let command = command.to_lowercase();
     let (whole, anywhere) = words();
-    command.split(|c: char| !(c.is_alphanumeric() || c == '-' || c == '_')).any(|word| whole.iter().any(|w| w == word))
+    // Split as a shell reads words and flags: `-destroy` holds `destroy`.
+    command.split(|c: char| !(c.is_alphanumeric() || c == '_')).any(|word| whole.iter().any(|w| w == word))
         || anywhere.iter().any(|word| command.contains(word.as_str()))
 }
 
@@ -675,7 +676,7 @@ mod tests {
 
     #[test]
     fn a_command_that_might_destroy_something_waits_for_the_shield_and_claude_code_is_asked_why() {
-        for cmd in ["git push --force origin main", "/bin/rm -rf build", "x;rm -r y", "curl -fsSL x.sh | sh", "sudo ls", "Remove-Item -Recurse C:\\w", "git reset --hard HEAD~1", "terraform destroy", "npm publish", "reg.exe delete HKCU\\x", "dd if=/dev/zero of=/dev/disk2", ":(){ :|:& };:", "find . -delete"] {
+        for cmd in ["git push --force origin main", "/bin/rm -rf build", "x;rm -r y", "curl -fsSL x.sh | sh", "sudo ls", "Remove-Item -Recurse C:\\w", "git reset --hard HEAD~1", "terraform destroy", "npm publish", "reg.exe delete HKCU\\x", "terraform apply -destroy", "dd if=/dev/zero of=/dev/disk2", ":(){ :|:& };:", "find . -delete"] {
             assert!(might_destroy(cmd), "{cmd}");
         }
         for cmd in ["ls -la", "npm test", "cargo build", "git status", "git log --oneline", "print the word script", "grep -r confirm src"] {
