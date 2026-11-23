@@ -173,7 +173,7 @@ export function drawWork(into: HTMLElement, e: Effort, st: WorkState, set: (st: 
   const cols = dayTot.map((_, j) => `<rect data-j="${j}" x="${r1(X0 + j * step - step / 2)}" y="${TOP - 10}" width="${r1(step)}" height="${H - TOP - BOT + 14}" fill="transparent"/>`).join('')
   const river = el('div', drawnPeriod === st.period ? 'w-river' : 'w-river reveal')
   drawnPeriod = st.period
-  const pic = svg('w-pic', `<svg viewBox="0 0 ${W} ${H}"><defs><filter id="w-glow" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="12"/></filter><linearGradient id="w-fade" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".6" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff"/></linearGradient><mask id="w-mask"><rect width="${W}" height="${H}" fill="url(#w-fade)"/></mask></defs>${ticks}<g mask="url(#w-mask)"><g filter="url(#w-glow)" opacity=".5">${glow}</g>${paths}</g>${peakText}<line class="w-hov" x1="0" x2="0" y1="${TOP - 10}" y2="${H - BOT + 4}" visibility="hidden"/><text class="w-ax w-now" x="${X1}" y="${H - 8}">${esc(w.today)}</text>${cols}</svg>`, w.peak)
+  const pic = svg('w-pic', `<svg viewBox="0 0 ${W} ${H}"><defs><filter id="w-glow" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="12"/></filter><linearGradient id="w-fade" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".6" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff"/></linearGradient><mask id="w-mask"><rect width="${W}" height="${H}" fill="url(#w-fade)"/></mask></defs>${ticks}<g mask="url(#w-mask)"><g filter="url(#w-glow)" opacity=".5">${glow}</g>${paths}</g>${peakText}<line class="w-hov" x1="0" x2="0" y1="${TOP - 10}" y2="${H - BOT + 4}" visibility="hidden"/><text class="w-ax w-now" x="${X1}" y="${H - 8}">${esc(w.today)}</text>${cols}</svg>`, `${w.cols.time} · ${w.projects}`)
   const tip = el('div', 'w-tip')
   tip.hidden = true
   river.append(pic, tip)
@@ -206,8 +206,9 @@ export function drawWork(into: HTMLElement, e: Effort, st: WorkState, set: (st: 
     tip.hidden = true
     hov.setAttribute('visibility', 'hidden')
   })
+  // The day columns lie over the streams for the hover: a press finds the stream beneath them.
   pic.addEventListener('click', ev => {
-    const key = (ev.target as Element).closest?.('.w-band')?.getAttribute('data-key')
+    const key = document.elementsFromPoint(ev.clientX, ev.clientY).find(n => n.classList.contains('w-band'))?.getAttribute('data-key')
     if (key !== null && key !== undefined) focusOn(key)()
   })
   into.append(river)

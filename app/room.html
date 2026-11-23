@@ -165,7 +165,8 @@
       .w-river { position: relative; margin: 14px -8px 0; }
       .w-river::before { content: ""; position: absolute; right: -10%; top: -20%; width: 46%; height: 140%; background: radial-gradient(closest-side, rgba(255, 190, 140, 0.12), transparent); pointer-events: none; }
       .w-pic svg { display: block; width: 100%; height: auto; overflow: visible; }
-      .w-river.reveal .w-pic { animation: w-reveal 1.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+      /* backwards, not both: a clip kept after the reveal stops presses and the hover from reaching the river. */
+      .w-river.reveal .w-pic { animation: w-reveal 1.6s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
       @keyframes w-reveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
       .w-band { cursor: pointer; transition: opacity 0.3s; }
       .w-bl { fill: #1A1311; font-size: 11.5px; font-weight: 750; text-anchor: middle; pointer-events: none; }

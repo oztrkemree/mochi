@@ -344,10 +344,15 @@ fn write_shared(name: String, text: String) -> bool {
     data_dir().is_some_and(|d| store::write_shared(&d, &name, &text))
 }
 
+/// The room's tab asked for, if it is one of its tabs.
+fn room_tab(tab: Option<&str>) -> Option<&str> {
+    tab.filter(|t| ["wardrobe", "feats", "work", "settings"].contains(t))
+}
+
 /// Mochi's room: the wardrobe, the achievements and the settings, in a window of its own, opened or brought to the
 /// front; on a tab when one is asked for (the tray's Settings), else on the one last open.
 fn open_room_window(app: &AppHandle, tab: Option<&str>) {
-    let tab = tab.filter(|t| ["wardrobe", "feats", "settings"].contains(t));
+    let tab = room_tab(tab);
     if let Some(window) = app.get_webview_window("room") {
         if let Some(tab) = tab {
             let _ = app.emit_to("room", "tab", tab);
@@ -498,6 +503,15 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_room_opens_on_any_of_its_tabs_and_on_nothing_else() {
+        for tab in ["wardrobe", "feats", "work", "settings"] {
+            assert_eq!(room_tab(Some(tab)), Some(tab));
+        }
+        assert_eq!(room_tab(Some("../index")), None);
+        assert_eq!(room_tab(None), None);
+    }
 
     #[test]
     fn the_version_is_the_same_everywhere_it_is_written() {

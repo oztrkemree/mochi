@@ -63,7 +63,7 @@ One day of work in one chat: `turns`, `tools`, `edits`, `errors`, `commits`, `co
 
 The app counts a chat it follows from the agent's hook calls, the same way the mod counts its own, so work in Codex earns what work in Claude Code does. From hooks alone it cannot know `cost`, `add`, `del` or `langs`; they stay 0 for now.
 
-The room's Work tab adds every chat's days up by project: by `folder` where the file has it, else by `label` against the folders in `repos.json`, a worktree under `.claude/worktrees` counting toward the repository that holds it. A chat named by its first words, or in a worktree Claude Code named itself, has no project. `secs` is the agents' time: chats that ran side by side each count theirs.
+The room's Work tab adds every chat's days up by project: by `folder` where the file has it, else by `label` against the folders in `repos.json`, a worktree under `.claude/worktrees` counting toward the repository that holds it. A chat named by its first words has no project, nor one in a worktree Claude Code named itself unless `repos.json` still holds its folder. `secs` is the agents' time: chats that ran side by side each count theirs.
 
 With Mochi as Claude Code's status line (`mochi-desktop statusline`, set from the app's Settings), a chat the app follows also says how full its context is, what it cost, and where the usage limits stand: `context`, `cost`, `windows` and `limit` in its `live` file, as the mod writes them for its own. The call is left in the inbox as an event named `StatusLine`, with those numbers and nothing else.
 
