@@ -1,4 +1,4 @@
-import type { Act, Mood, Scene } from '../../types'
+import type { Act, Mood, Outfit, Scene } from '../../types'
 import { paramsAt, svgFor } from '../../hooks/rig'
 import { ACT_MS } from './acts'
 
@@ -35,7 +35,9 @@ const STEPS: Step[] = [
   { mood: 'dream', name: 'Rüya', when: 'Uyurken, arada bir' },
 ]
 
-const scene: Scene = { context: -1, agents: 0 }
+/** Dressed as a Mochi is day to day (a beret, a monocle, a mustache, fangs, a diya beside it, cocoa clay), or plain: /moments.html?plain. */
+const DRESSED: Outfit = { head: 'beret', eyes: 'monocle', face: 'fangs', lip: 'handlebar', chin: null, neck: null, held: null, ground: 'diya' }
+const scene: Scene = location.search.includes('plain') ? { context: -1, agents: 0 } : { context: -1, agents: 0, outfit: DRESSED, skin: 'cocoa' }
 const REST = paramsAt(null, 'idle', 5000)
 /** The pause at rest between two moments. */
 const BETWEEN_MS = 900
