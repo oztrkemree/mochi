@@ -366,7 +366,8 @@ function hot() {
   // Mochi's body, on its side turned a quarter about its middle; none while it is out of the screen.
   const b = bodyBox()
   if (!away) hotBody(rects, b)
-  for (const el of [say, list, jobsBox, agentsButton, limitsButton]) {
+  // Each chat's bubble on its own: the room between and beside them lets a press through.
+  for (const el of [say, list, ...jobsBox.querySelectorAll<HTMLElement>('.job'), agentsButton, limitsButton]) {
     const r = el.getBoundingClientRect()
     if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
   }
