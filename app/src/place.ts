@@ -13,3 +13,18 @@ export function fit(corner: Point, w: number, h: number, area: Area): Point {
   const within = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), Math.max(lo, hi))
   return { x: within(corner.x - w, area.x, area.x + area.w - w), y: within(corner.y - h, area.y, area.y + area.h - h) }
 }
+
+/** Mochi's body as the window holds it: its box from the window's top left, in the window's units. */
+export type Body = { x: number; y: number; w: number; h: number }
+
+/** How much of Mochi's body is left showing when it peeks over the bottom of the screen: its head, and its eyes. */
+export const PEEK_SHOWS = 0.45
+
+/** Whether a window left at `at` has more than half Mochi's body below the bottom of the screen: pushed to the edge, to peek. */
+export const isPushedDown = (at: Point, body: Body, area: Area): boolean => at.y + body.y + body.h / 2 > area.y + area.h
+
+/** Where the window stands for Mochi to peek: where it was left across (its body whole on the screen), and down so only the top shows. */
+export function peekAt(at: Point, body: Body, area: Area): Point {
+  const x = Math.min(Math.max(at.x, area.x - body.x), area.x + area.w - body.x - body.w)
+  return { x, y: area.y + area.h - body.y - body.h * PEEK_SHOWS }
+}

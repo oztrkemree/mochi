@@ -20,7 +20,7 @@ import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPr
 import { type Growth, badgesNews, growthOf, historyOf, levelNews } from './growth'
 import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
-import { type Area, areaOf, fit } from './place'
+import { type Area, type Body, type Point, areaOf, fit, isPushedDown, peekAt } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type PullBox, type Ran, ciNow, ciSaid, ciStep, commitsOf, deskOf, desksOf, isOver, nudgeOf, pullBoxOf, pushed, standupOf } from './today'
 import { chosen, lookNow, shelvesOf } from './wardrobe'
@@ -156,7 +156,7 @@ async function place() {
   const h = Math.ceil(root.offsetHeight)
   const k = isMac ? 1 : monitor.scaleFactor
   const size = { w: Math.round(w * k), h: Math.round(h * k) }
-  put = { ...fit(corner!, size.w, size.h, area), ...size }
+  put = { ...(peek ?? fit(corner!, size.w, size.h, area)), ...size }
   if (isMac) {
     await win.setSize(new LogicalSize(w, h))
     await win.setPosition(new LogicalPosition(put.x, put.y))
@@ -164,6 +164,51 @@ async function place() {
     await win.setSize(new PhysicalSize(size.w, size.h))
     await win.setPosition(new PhysicalPosition(Math.round(put.x), Math.round(put.y)))
   }
+}
+
+// ---------- the edge: pushed off the bottom of the screen, Mochi peeks ----------
+
+/** Where the window stands while Mochi peeks, in the window's units; null while it stands whole on the screen. */
+let peek: Point | null = null
+/** Where the bottom of the screen is in the window while Mochi peeks (CSS pixels from its top): a press below it goes to what is there. */
+let peekCut = Infinity
+let dropTimer = 0
+
+/** Mochi's body in the window, in the window's units (points on macOS, pixels at the screen's scale elsewhere). */
+function bodyIn(k: number): Body {
+  const s = stage.getBoundingClientRect()
+  const unit = s.width / (100 + ROOM.left + ROOM.right)
+  return { x: (s.left + (ROOM.left + 10) * unit) * k, y: (s.top + (ROOM.top + 14) * unit) * k, w: 80 * unit * k, h: 84 * unit * k }
+}
+
+/** After the person lets go of the window: pushed more than halfway off the bottom, Mochi peeks; pulled back up, it stands again. */
+async function dropped() {
+  const monitors = await availableMonitors()
+  const areas = monitors.map(areaIn)
+  const k = isMac ? 1 : (await currentMonitor())?.scaleFactor ?? 1
+  const body = bodyIn(k)
+  const at = { x: put.x, y: put.y }
+  const area = areaOf({ x: at.x + body.x + body.w / 2, y: at.y + body.y }, areas)
+  if (!area || !isPushedDown(at, body, area)) {
+    if (peek) standUp(false)
+    return
+  }
+  toggleAgents(false)
+  peek = peekAt(at, body, area)
+  peekCut = (area.y + area.h - peek.y) / k
+  root.classList.add('peek')
+  await place()
+  hot()
+}
+
+/** Mochi comes back up from the edge, just above it, to be pressed or to speak. */
+function standUp(isPlaced = true) {
+  if (!peek) return
+  corner = { x: peek.x + put.w, y: peek.y + peekCut * (isMac ? 1 : put.h / root.offsetHeight) - EDGE }
+  peek = null
+  peekCut = Infinity
+  root.classList.remove('peek')
+  if (isPlaced) void place().then(hot).catch(note)
 }
 
 /**
@@ -175,7 +220,9 @@ function hot() {
   const s = stage.getBoundingClientRect()
   // Mochi's own square inside the drawing's room, and its body inside that square.
   const unit = s.width / (100 + ROOM.left + ROOM.right)
-  rects.push([s.left + (ROOM.left + 10) * unit, s.top + (ROOM.top + 14) * unit, 80 * unit, 84 * unit])
+  // Peeking, only what shows above the bottom of the screen: below it is the Dock or the taskbar, and a press there is theirs.
+  const top = s.top + (ROOM.top + 14) * unit
+  rects.push([s.left + (ROOM.left + 10) * unit, top, 80 * unit, Math.max(0, Math.min(84 * unit, peekCut - top))])
   for (const el of [say, list, agentsButton, limitsButton]) {
     const r = el.getBoundingClientRect()
     if (r.width > 0 && r.height > 0) rects.push([r.left, r.top, r.width, r.height])
@@ -331,6 +378,8 @@ function requestFor(chat: string, now: number): Request | null {
 
 /** Says news; a chat that waits with a request the bubble may answer is said with what it asks for and the answers. */
 function tell(news: News) {
+  // News brings Mochi up from the edge to say it.
+  standUp()
   const now = Date.now()
   const request = news.kind === 'asking' ? requestFor(news.id, now) : null
   if (!request) return speak(news.line, settings.talkSeconds * 1000, NEWS_INK[news.kind], news)
@@ -952,6 +1001,7 @@ addEventListener('pointermove', e => {
 stage.addEventListener('pointerup', () => {
   if (!pressed || !view) return
   pressed = null
+  if (peek) return standUp()
   if (rowsOf(view.peers, Date.now(), settings.idleMinutes * 60_000).length > 0 || usage.length > 0) toggleAgents()
   else speak(view.line, ANSWER_MS, QUIET_INK, null)
 })
@@ -1009,6 +1059,10 @@ async function start() {
     const y = payload.y / k
     if (Math.abs(x - put.x) <= 1 && Math.abs(y - put.y) <= 1) return
     corner = { x: x + put.w, y: y + put.h }
+    put = { ...put, x, y }
+    // Looked at once the person lets go: a move a moment ago is still the drag.
+    clearTimeout(dropTimer)
+    dropTimer = window.setTimeout(() => void dropped().catch(note), 400)
     try {
       localStorage.setItem('corner', JSON.stringify(corner))
     } catch {
