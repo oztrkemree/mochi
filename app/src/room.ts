@@ -161,6 +161,10 @@ function drawTabs() {
 }
 
 const LOCK = '<svg viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.6" fill="currentColor"/><path d="M5.5 7V5.4a2.5 2.5 0 0 1 5 0V7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
+/** The sign of a secret not yet won: a question mark, in white on the medal's face. */
+const SECRET_SIGN = '<path d="M9.2 9.3a2.9 2.9 0 1 1 4.4 2.5c-.9.6-1.6 1.2-1.6 2.4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.2" fill="#fff"/>'
+/** The sign of a secret won: a star, in white on the medal's face. */
+const STAR_SIGN = '<path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.9 6.7 19.6l1-5.8L3.5 9.7l5.9-.9z" fill="#fff"/>'
 
 /** A skin's paint, as a swatch shows it: its colour, or the run of its colours. */
 const paintOf = (k: Skin) => (k.swatch.length === 1 ? k.swatch[0]! : `linear-gradient(135deg, ${k.swatch.join(', ')})`)
@@ -418,22 +422,24 @@ function drawFeats(into: HTMLElement) {
     section.append(head, grid)
     into.append(section)
   }
-  // The hidden ones: a won one shows its name and hint; one not won shows only that it is secret.
+  // The hidden ones: a won one shows its name and hint; one not won shows only a medal with a question mark and '???'.
   const won = secretsHeld()
   const hidden = words().secrets
   const secrets = el('section', 'cat')
   const sHead = el('header')
   sHead.append(el('h2', '', hidden.hidden), el('span', '', `${won.length}/${SECRETS.length}`), bar(won.length, SECRETS.length))
+  secrets.append(sHead, el('p', 'w-note', hidden.hiddenHint))
   const sGrid = el('div', 'feats')
   for (const s of SECRETS) {
     const done = won.includes(s)
     const card = el('div', done ? 'feat done' : 'feat')
     const text = el('div', 'text')
-    text.append(el('b', '', done ? hidden.names[s] : hidden.hidden), el('span', 'hint', done ? hidden.hints[s] : hidden.hiddenHint))
-    card.append(done ? svgIn('pic', medalSvg(CAT_INK.mochi, '', 'impossible', true)) : svgIn('pic lock', LOCK), text)
+    if (done) text.append(el('b', '', hidden.names[s]), el('span', 'hint', hidden.hints[s]))
+    else text.append(el('b', '', '???'))
+    card.append(svgIn('pic', medalSvg(CAT_INK.mochi, done ? STAR_SIGN : SECRET_SIGN, 'impossible', done)), text)
     sGrid.append(card)
   }
-  secrets.append(sHead, sGrid)
+  secrets.append(sGrid)
   into.append(secrets)
 }
 
