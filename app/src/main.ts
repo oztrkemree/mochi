@@ -22,6 +22,7 @@ import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAb
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
 import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } from './acts'
 import { FRESH, type Stretch, stepBreak } from './breaks'
+import { hopsOn, quipOf, tipsOn } from './temper'
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
 import { lookNow } from './wardrobe'
@@ -534,7 +535,7 @@ type Extra = { what?: string; acts?: { label: string; isMain?: boolean; run: () 
 function speak(text: string, ms: number, ink: string, news: News | null, extra: Extra = {}) {
   saidAt = Date.now()
   if (news) {
-    hop()
+    if (hopsOn(settings.temper)) hop()
     chime(NEWS_SOUND[news.kind])
     if (news.kind === 'back' || news.kind === 'level') hold('party', 4000)
   }
@@ -590,13 +591,19 @@ function requestFor(chat: string, now: number): Request | null {
   return request && request.until > now ? request : null
 }
 
+/** Counts the news said without a request, so every third one can take a playful word. */
+let rolls = 0
+
 /** Says news; a chat that waits with a request the bubble may answer is said with what it asks for and the answers. */
 function tell(news: News) {
   // News brings Mochi up from the edge to say it.
   standUp()
   const now = Date.now()
   const request = news.kind === 'asking' ? requestFor(news.id, now) : null
-  if (!request) return speak(news.line, settings.talkSeconds * 1000, NEWS_INK[news.kind], news)
+  if (!request) {
+    const quip = quipOf(settings.temper, news.kind, rolls++, words().temper.quips)
+    return speak(quip ? news.line + ' ' + quip : news.line, settings.talkSeconds * 1000, NEWS_INK[news.kind], news)
+  }
   const w = words()
   const done = (behavior: 'allow' | 'deny') => () => {
     answer(request, behavior)
@@ -1129,6 +1136,7 @@ async function meet() {
 
 /** One thing more Mochi can do, said when it has been quiet a while, a day after the last. */
 function tip() {
+  if (!tipsOn(settings.temper)) return
   let told: string[] = []
   try {
     told = JSON.parse(localStorage.getItem('tips') ?? '[]') as string[]

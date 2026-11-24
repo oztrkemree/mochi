@@ -1,5 +1,6 @@
 import { LANGS, type Lang } from '../../hooks/i18n'
 import { BREAK_MINUTES } from './breaks'
+import { type Temper, temperFrom } from './temper'
 import type { JobsDetail } from './world'
 
 /**
@@ -33,6 +34,8 @@ export type Settings = {
   jobs: JobsDetail
   /** Unbroken work this many minutes brings a word to rest; 0 never. */
   breakMinutes: number
+  /** How Mochi carries itself: calm as it always was, playful with a word of its own, or serious. */
+  temper: Temper
 }
 
 export type Size = 'small' | 'medium' | 'large' | 'huge'
@@ -43,7 +46,7 @@ export const IDLE_MINUTES = [15, 30, 60, 0] as const
 export const LEAVE_SECONDS = [15, 30, 60, 300, 0] as const
 export const JOBS: readonly JobsDetail[] = ['off', 'brief', 'full']
 
-export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, approve: false, shield: true, sound: false, lang: 'auto', idleMinutes: 30, leaveSeconds: 30, jobs: 'brief', breakMinutes: 90 }
+export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, approve: false, shield: true, sound: false, lang: 'auto', idleMinutes: 30, leaveSeconds: 30, jobs: 'brief', breakMinutes: 90, temper: 'calm' }
 
 export const KEY = 'settings'
 /** The event the settings window sends Mochi's window with every change. */
@@ -75,6 +78,7 @@ export function settingsFrom(text: string | null): Settings {
     leaveSeconds: (LEAVE_SECONDS as readonly unknown[]).includes(v.leaveSeconds) ? (v.leaveSeconds as number) : DEFAULTS.leaveSeconds,
     jobs: (JOBS as readonly unknown[]).includes(v.jobs) ? (v.jobs as JobsDetail) : DEFAULTS.jobs,
     breakMinutes: (BREAK_MINUTES as readonly unknown[]).includes(v.breakMinutes) ? (v.breakMinutes as number) : DEFAULTS.breakMinutes,
+    temper: temperFrom(v.temper),
   }
 }
 

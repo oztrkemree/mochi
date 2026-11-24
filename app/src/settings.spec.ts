@@ -53,3 +53,10 @@ test('the minutes of unbroken work before Mochi suggests a rest: 90 unless set, 
   expect(settingsFrom(JSON.stringify({ breakMinutes: 60 })).breakMinutes).toBe(60)
   expect(settingsFrom(JSON.stringify({ breakMinutes: 45 })).breakMinutes).toBe(90)
 })
+
+test('how Mochi carries itself: calm unless set, playful or serious when chosen, calm for anything else', () => {
+  expect(DEFAULTS.temper).toBe('calm')
+  expect(settingsFrom(JSON.stringify({ temper: 'playful' })).temper).toBe('playful')
+  expect(settingsFrom(JSON.stringify({ temper: 'serious' })).temper).toBe('serious')
+  expect(settingsFrom(JSON.stringify({ temper: 'grumpy' })).temper).toBe('calm')
+})
