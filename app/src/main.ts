@@ -1463,6 +1463,8 @@ const storeText = (key: string, text: string) => {
 let caredAt = 0
 /** When the agents' versions were last looked at: once at the start, then every six hours. */
 let versionsAt = 0
+/** How often the agents' versions are looked at: once at the start, then every six hours. */
+const VERSIONS_EVERY_MS = 6 * 3_600_000
 /** Whether a look at the computer is under way: a second one does not start beside it. */
 let isCaring = false
 /** What was already said of the computer, so each thing is said once. */
@@ -1484,17 +1486,16 @@ async function careLook() {
   isCaring = true
   try {
     caredAt = Date.now()
+    if (!view) return
     const m = machineOf(await invoke<Parameters<typeof machineOf>[0]>('machine'))
     const was = toldMachine.diskDay
     const news = machineNews(m, toldMachine, dayKey(Date.now(), tz()))
     toldMachine = news.told
     if (toldMachine.diskDay !== was) storeText('careDiskDay', toldMachine.diskDay)
     const w = words().care.machine
-    if (view) {
-      for (const kind of news.kinds) {
-        const line = kind === 'disk' ? w.diskLow(gbOf(m.diskFree / 1024)) : kind === 'battery' ? w.batteryLow(m.battery?.percent ?? 0) : w.hot
-        hear([{ id: 'care-' + kind, kind: 'nudge', line, link: '' }], view.peers)
-      }
+    for (const kind of news.kinds) {
+      const line = kind === 'disk' ? w.diskLow(gbOf(m.diskFree / 1024)) : kind === 'battery' ? w.batteryLow(m.battery?.percent ?? 0) : w.hot
+      hear([{ id: 'care-' + kind, kind: 'nudge', line, link: '' }], view.peers)
     }
     const ports = await invoke<{ lsof: string; ps: string; cwd: string }>('ports')
     const told = toldServers()
@@ -1521,9 +1522,18 @@ async function versionLook() {
   const raw = await invoke<Record<Agent, string>>('agent_versions')
   const now: Record<Agent, string | null> = { claude: versionOf(raw.claude), codex: versionOf(raw.codex) }
   const news = versionNews(keptText('agentVersions'), now)
-  if (news.keep !== null) storeText('agentVersions', news.keep)
+  if (news.fresh.length === 0) {
+    if (news.keep !== null) storeText('agentVersions', news.keep)
+    return
+  }
   const agent = news.fresh[0]
-  if (agent === undefined || isBusy() || say.classList.contains('on')) return
+  if (agent === undefined) return
+  // Not stored until said: a version that cannot be said now is still new the next time.
+  if (isBusy() || say.classList.contains('on')) {
+    versionsAt = Date.now() - VERSIONS_EVERY_MS + 10 * 60_000
+    return
+  }
+  if (news.keep !== null) storeText('agentVersions', news.keep)
   const version = now[agent] ?? ''
   const text = (await invoke<string | null>('changes', { agent, version }).catch(() => null)) ?? ''
   const w = words().care.news
@@ -1639,7 +1649,7 @@ async function start() {
     void take([]).catch(note)
     if (Date.now() - syncedAt >= 15 * 60_000) void sync().catch(note)
     if (Date.now() - caredAt >= 10 * 60_000) void careLook().catch(note)
-    if (Date.now() - versionsAt >= 6 * 3_600_000) void versionLook().catch(note)
+    if (Date.now() - versionsAt >= VERSIONS_EVERY_MS) void versionLook().catch(note)
   })
   stirSoon()
   // Everything is told from the start now that someone listens.

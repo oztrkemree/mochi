@@ -310,7 +310,8 @@
       @media (max-width: 1000px) { .u-facts, .u-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
       /* Computer: this machine, the dev servers, the worktrees and what is new. Its rows reuse the usage tab's look. */
-      .care-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .care-tiles { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+      .care-sec:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
       .care-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; }
       .care-row:hover { background: rgba(255, 236, 222, 0.035); }
       .care-row .w-name { flex: 1; min-width: 0; }

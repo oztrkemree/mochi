@@ -48,7 +48,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text 
 
 /** A section of the tab with its heading, as the usage tab builds them. */
 const section = (title: string): HTMLElement => {
-  const s = el('section', 'w-sec')
+  const s = el('section', 'w-sec care-sec')
   s.append(el('h3', '', title))
   return s
 }
