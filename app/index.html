@@ -76,11 +76,13 @@
       #jobs { display: none; position: relative; z-index: 2; flex-direction: column; align-items: flex-end; gap: 5px; margin: 0 calc(var(--size) * 0.3) calc(var(--size) * -0.12) 0; }
       #jobs.on { display: flex; }
       #say.on ~ #jobs, #list.on ~ #jobs, .peek #jobs, .away #jobs, #jobs.on ~ #row #think { display: none; }
-      /* Frosted glass, its edge lit faintly in the chat's ink. */
+      /* Frosted glass, its edge lit in the chat's ink. */
       .job { position: relative; display: grid; grid-template-columns: 7px minmax(0, auto); column-gap: 7px; align-items: baseline; max-width: 260px; padding: 5px 11px 5px 9px; border: 0; border-radius: 12px; font: inherit; font-size: 12px; text-align: left; cursor: pointer;
-        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 80%, rgba(255, 255, 255, 0.16)), color-mix(in srgb, var(--card) 88%, transparent));
+        /* A sheen over the upper half, the chat's ink pooled at the bottom, on the card's colour: glass that reads over any window. */
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 50%, transparent 51%),
+          linear-gradient(180deg, var(--card), color-mix(in srgb, var(--card) 78%, var(--ink, var(--card))));
         -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 0 1px color-mix(in srgb, var(--ink, transparent) 32%, rgba(255, 255, 255, 0.08)), 0 6px 18px rgba(0, 0, 0, 0.3), 0 0 22px -4px color-mix(in srgb, var(--ink, transparent) 75%, transparent); }
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px color-mix(in srgb, var(--ink, transparent) 55%, rgba(255, 255, 255, 0.1)), 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 26px -2px color-mix(in srgb, var(--ink, transparent) 60%, transparent); }
       .job:hover { filter: brightness(1.12); }
       .job:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
       .job .dot { width: 7px; height: 7px; border-radius: 50%; transform: translateY(-1px); background: var(--ink); box-shadow: 0 0 8px var(--ink); }
@@ -88,19 +90,19 @@
       .job .what b { color: var(--fg); font-weight: 650; }
       .job .more { grid-column: 2; color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .job .more + .more::before { content: "↳ "; }
-      .job:last-child::after { content: ""; position: absolute; right: 22px; bottom: -5px; width: 10px; height: 10px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
+      .job:last-child::after { content: ""; position: absolute; right: 22px; bottom: -5px; width: 10px; height: 10px; background: color-mix(in srgb, var(--card) 78%, var(--ink, var(--card))); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
       #jobs .left { padding: 0 10px; color: var(--dim); font-size: 11px; font-weight: 650; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
       /* The limits and how many chats, on one glass base at Mochi's feet, under the middle of its body (51.35%, see peekAt): the rings, then the count.
          Each is still its own button; the base only holds them. */
-      #base { position: absolute; left: 51.35%; bottom: calc(var(--size) * 0.155 - 14px); translate: -50% 0; display: flex; align-items: center; height: 28px; padding: 0 2px; border-radius: 14px; z-index: 1;
-        background: linear-gradient(180deg, color-mix(in srgb, var(--card) 78%, rgba(255, 255, 255, 0.16)), color-mix(in srgb, var(--card) 88%, transparent));
+      #base { position: absolute; left: 51.35%; bottom: 0; translate: -50% 0; display: flex; align-items: center; height: 26px; padding: 0 2px; border-radius: 14px; z-index: 1;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 50%, transparent 51%), var(--card);
         -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 6px 20px rgba(0, 0, 0, 0.35); }
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 6px 20px rgba(0, 0, 0, 0.35); }
       #base:not(:has(> #limits:not(:empty), > #agents:not(.empty):not([hidden]))) { display: none; }
-      #base button { display: flex; align-items: center; gap: 5px; height: 24px; padding: 0 6px; border: 0; border-radius: 12px; background: none; color: inherit; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+      #base button { display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 6px; border: 0; border-radius: 12px; background: none; color: inherit; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
       #base button:hover { background: var(--line); }
       #base button:focus-visible { outline: 2px solid #E08A6A; outline-offset: 1px; }
-      #limits svg { display: block; }
+      #limits svg { display: block; height: 20px; width: auto; }
       #limits:empty, #agents.empty, #agents[hidden] { display: none; }
       #limits:not(:empty) + #agents { margin-left: 1px; box-shadow: -1px 0 0 var(--line); border-radius: 0 12px 12px 0; }
       #agents .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 7px var(--ink); }
