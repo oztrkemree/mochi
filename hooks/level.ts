@@ -351,7 +351,11 @@ export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: nu
 }
 
 /** Whether the pose leaves the right hand down and empty, to hold a cup or a balloon. */
-const canHold = (mood: Mood | Act) => poseOf(mood).held === undefined && poseOf(mood).armR >= -40 && poseOf(mood).armR <= 0
+// The hand holds an item only where it stays: an arm swinging more than a giggle's 8 degrees would leave the item in the air.
+const canHold = (mood: Mood | Act) => {
+  const p = poseOf(mood)
+  return p.held === undefined && p.armR >= -40 && p.armR <= 0 && (p.armLoopR?.values ?? []).every(v => Math.abs(v) <= 8)
+}
 
 /** The person's look as another program reads it (look.json): their own picks, what is open to them, and what the seasons go by. */
 export type Look = { pick: Partial<Outfit>; items: Item[]; tz: number; birthday: string; firstDay: string }
