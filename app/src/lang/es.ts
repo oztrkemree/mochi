@@ -165,9 +165,7 @@ const ES: Words = {
     line: 'Hazme la línea de estado de Claude Code en mis ajustes y te muestro tus límites de uso sin el mod.',
   },
   room: 'La habitación de Mochi',
-  colour: 'Color',
   levelN: (n: number) => `nivel ${n}`,
-  skins: { clay: 'Arcilla', peach: 'Melocotón', cream: 'Crema', rose: 'Rosa', coral: 'Coral', lemon: 'Limón', mint: 'Menta', sky: 'Cielo', lavender: 'Lavanda', sage: 'Salvia', teal: 'Turquesa', plum: 'Ciruela', cocoa: 'Cacao', charcoal: 'Carbón', snow: 'Nieve', cherry: 'Cereza', ocean: 'Océano', forest: 'Bosque', sunset: 'Atardecer', bubblegum: 'Chicle', gold: 'Oro', chrome: 'Cromo', zombie: 'Zombi', ghost: 'Fantasma', lava: 'Lava', ice: 'Hielo', galaxy: 'Galaxia', neon: 'Neón', rainbow: 'Arcoíris', hologram: 'Holograma', sorbet: 'Sorbete', aurora: 'Aurora', lagoon: 'Laguna', dusk: 'Ocaso', opal: 'Ópalo', ember: 'Brasa' },
   feats: {
     title: 'Logros',
     done: (a: number, b: number) => `${a} de ${b} logrados`,

@@ -5,7 +5,7 @@ import type { Badge, History, Item, Outfit } from '../../types'
 import { badgeHint, badgeLook, badgeName, badgesOf, provenBy } from '../../hooks/badges'
 import { dayKey } from '../../hooks/facts'
 import { lang, pickLang, setLang, t } from '../../hooks/i18n'
-import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, dressAs, hintFor, itemName, itemShort, levelOf, lookFrom, skinNow, slotName, xpOf } from '../../hooks/level'
+import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, dressAs, hintFor, itemName, itemShort, levelOf, lookFrom, skinName, skinNow, slotName, xpOf } from '../../hooks/level'
 import { itemIcon, svgFor } from '../../hooks/rig'
 import { SKINS, type Skin, skinOf, skinsAt } from '../../hooks/skins'
 import { bestOutfit, cardSvg } from '../../hooks/share'
@@ -89,7 +89,7 @@ function drawMochi(trying: Item | null = null, tryingSkin: string | null = null)
   const svg = svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit: outfit(trying), ...(skin ? { skin } : {}) }, from: null })
   // Held still: the room never redraws on a clock.
   $('mochi').innerHTML = stillOf(svg)
-  const name = trying ? itemName(trying) : tryingSkin ? words().skins[tryingSkin] ?? tryingSkin : ''
+  const name = trying ? itemName(trying) : tryingSkin ? skinName(tryingSkin) : ''
   $('mochi').setAttribute('aria-label', name || t().ui.wardrobe)
   $('trying').textContent = name
 }
@@ -164,7 +164,7 @@ function drawWardrobe(into: HTMLElement) {
   }
   const dot = el('span', 'paint')
   dot.style.background = paintOf(skinOf(skinWorn)!)
-  shelfButton('colour', dot, words().colour, `${skinsAt(level).length}/${SKINS.length}`)
+  shelfButton('colour', dot, t().ui.colour, `${skinsAt(level).length}/${SKINS.length}`)
   for (const slot of (Object.keys(SLOT_ITEMS) as Slot[])) {
     const on = worn[slot]
     shelfButton(slot, on ? svgIn('on', itemIcon(on, true)) : el('span', 'none'), slotName(slot), `${SLOT_ITEMS[slot].filter(i => open.has(i)).length}/${SLOT_ITEMS[slot].length}`)
@@ -173,7 +173,7 @@ function drawWardrobe(into: HTMLElement) {
   const head = el('header')
   const title = el('div')
   if (shelf === 'colour') {
-    title.append(el('h2', '', words().colour), el('p', '', t().ui.unlockedOf(skinsAt(level).length, SKINS.length)))
+    title.append(el('h2', '', t().ui.colour), el('p', '', t().ui.unlockedOf(skinsAt(level).length, SKINS.length)))
     head.append(title)
     const grid = el('div', 'swatches')
     for (const k of SKINS) {
@@ -185,7 +185,7 @@ function drawWardrobe(into: HTMLElement) {
       const paint = el('span', 'paint')
       paint.style.background = paintOf(k)
       if (!isOpen) paint.append(svgIn('lock', LOCK))
-      b.append(paint, el('b', '', words().skins[k.id] ?? k.id), el('small', '', isOpen ? ' ' : words().levelN(k.level)))
+      b.append(paint, el('b', '', skinName(k.id)), el('small', '', isOpen ? ' ' : words().levelN(k.level)))
       if (isOpen) {
         b.addEventListener('pointerenter', () => drawMochi(null, k.id))
         b.addEventListener('focus', () => drawMochi(null, k.id))

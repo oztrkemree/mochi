@@ -355,6 +355,9 @@ export const ko: typeof en = {
     birthdayBad: want => `날짜가 아닙니다: ${want}. MM-DD 형식으로, 예: /mochi 생일 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: '클레이', peach: '피치', cream: '크림', rose: '로즈', coral: '코랄', lemon: '레몬', mint: '민트', sky: '스카이', lavender: '라벤더', sage: '세이지', teal: '틸', plum: '플럼', cocoa: '코코아', charcoal: '차콜', snow: '스노우', cherry: '체리', ocean: '오션', forest: '포레스트', sunset: '선셋', bubblegum: '버블껌', gold: '골드', chrome: '크롬', zombie: '좀비', ghost: '고스트', lava: '용암', ice: '아이스', galaxy: '갤럭시', neon: '네온', rainbow: '레인보우', holo: '홀로그램', sorbet: '셔벗', aurora: '오로라', lagoon: '라군', dusk: '황혼', opal: '오팔', ember: '잉걸불' },
+
   item: {
     name: {
       hardhat: '안전모', crown: '왕관', partyhat: '파티 모자', witchhat: '마녀 모자', santahat: '산타 모자', nightcap: '수면 모자', gradcap: '학사모',
@@ -526,6 +529,7 @@ export const ko: typeof en = {
   },
 
   ui: {
+    colour: '컬러',
     levelTitle: '레벨',
     wardrobeTitle: '옷장',
     open: '열기',
@@ -740,6 +744,10 @@ export const ko: typeof en = {
     noSuchItem: want => `그런 액세서리는 없습니다: ${want}`,
     itemLocked: (name, hint) => `${name} 잠김 (${hint}).`,
     itemOn: name => `${name} 착용 완료.`,
+    skinList: (a, b, list) => `색: ${a}/${b} · ${list}`,
+    skinHow: '/mochi 색 <색> · 원래 색은 점토',
+    noSuchSkin: (want) => `그런 색은 없어요: ${want}`,
+    skinOn: (name) => `이제 Mochi는 ${name}이에요.`,
     soundOn: '소리 켜짐.',
     soundOff: '소리 꺼짐.',
     hidden: 'Mochi 숨김. 다시 켜려면: /mochi',
@@ -761,7 +769,7 @@ export const ko: typeof en = {
     words: {
       on: ['켜기', '켜'], off: ['끄기', '꺼'],
       hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'], desktop: ['데스크톱', '바탕화면'],
-      status: ['상태'], details: ['상세', '자세히'], level: ['레벨'], wear: ['착용', '입기'], shield: ['보호막', '실드'],
+      status: ['상태'], details: ['상세', '자세히'], level: ['레벨'], wear: ['착용', '입기'], skin: ['색', '색상'], shield: ['보호막', '실드'],
       alerts: ['알림'], lang: ['언어'], auto: ['자동'], none: ['없음', '벗기'],
       card: ['카드'], wrapped: ['결산'], snap: ['스냅샷'], year: ['년', '연간'],
       tips: ['팁'], tour: ['둘러보기', '안내'], news: ['새소식', '소식'],

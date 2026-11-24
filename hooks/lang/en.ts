@@ -379,6 +379,9 @@ export const en = {
   },
 
   /** Things to wear. */
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Clay', peach: 'Peach', cream: 'Cream', rose: 'Rose', coral: 'Coral', lemon: 'Lemon', mint: 'Mint', sky: 'Sky', lavender: 'Lavender', sage: 'Sage', teal: 'Teal', plum: 'Plum', cocoa: 'Cocoa', charcoal: 'Charcoal', snow: 'Snow', cherry: 'Cherry', ocean: 'Ocean', forest: 'Forest', sunset: 'Sunset', bubblegum: 'Bubblegum', gold: 'Gold', chrome: 'Chrome', zombie: 'Zombie', ghost: 'Ghost', lava: 'Lava', ice: 'Ice', galaxy: 'Galaxy', neon: 'Neon', rainbow: 'Rainbow', holo: 'Hologram', sorbet: 'Sorbet', aurora: 'Aurora', lagoon: 'Lagoon', dusk: 'Dusk', opal: 'Opal', ember: 'Ember' },
+
   item: {
     name: {
       hardhat: 'hard hat', crown: 'crown', partyhat: 'party hat', witchhat: 'witch hat', santahat: 'Santa hat', nightcap: 'nightcap', gradcap: 'graduation cap',
@@ -557,6 +560,7 @@ export const en = {
 
   /** The wardrobe and level sections. */
   ui: {
+    colour: 'Colour',
     levelTitle: 'LEVEL',
     wardrobeTitle: 'WARDROBE',
     open: 'Open',
@@ -786,6 +790,10 @@ export const en = {
     noSuchItem: (want: string) => `No such accessory: ${want}`,
     itemLocked: (name: string, hint: string) => `${name} is locked (${hint}).`,
     itemOn: (name: string) => `${name} put on.`,
+    skinList: (a: number, b: number, list: string) => `Colours: ${a}/${b} · ${list}`,
+    skinHow: '/mochi skin <colour> · clay for its own',
+    noSuchSkin: (want: string) => `No such colour: ${want}`,
+    skinOn: (name: string) => `Mochi is ${name} now.`,
     soundOn: 'Sound on.',
     soundOff: 'Sound off.',
     hidden: 'Mochi hidden. To bring it back: /mochi',
@@ -808,7 +816,7 @@ export const en = {
     words: {
       on: [] as string[], off: [] as string[],
       hide: [] as string[], show: [] as string[], small: [] as string[], big: [] as string[], sound: [] as string[], desktop: [] as string[],
-      status: [] as string[], details: [] as string[], level: [] as string[], wear: [] as string[], shield: [] as string[],
+      status: [] as string[], details: [] as string[], level: [] as string[], wear: [] as string[], skin: [] as string[], shield: [] as string[],
       alerts: [] as string[], lang: [] as string[], auto: [] as string[], none: [] as string[],
       card: [] as string[], wrapped: [] as string[], snap: [] as string[], year: [] as string[],
       tips: [] as string[], tour: [] as string[], news: [] as string[],

@@ -358,6 +358,9 @@ export const pt: typeof en = {
     birthdayBad: want => `Não é uma data: ${want}. Use MM-DD, ex.: /mochi aniversário 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Argila', peach: 'Pêssego', cream: 'Creme', rose: 'Rosa', coral: 'Coral', lemon: 'Limão', mint: 'Menta', sky: 'Céu', lavender: 'Lavanda', sage: 'Sálvia', teal: 'Turquesa', plum: 'Ameixa', cocoa: 'Cacau', charcoal: 'Carvão', snow: 'Neve', cherry: 'Cereja', ocean: 'Oceano', forest: 'Floresta', sunset: 'Poente', bubblegum: 'Chiclete', gold: 'Ouro', chrome: 'Cromo', zombie: 'Zumbi', ghost: 'Fantasma', lava: 'Lava', ice: 'Gelo', galaxy: 'Galáxia', neon: 'Neon', rainbow: 'Arco-íris', holo: 'Holograma', sorbet: 'Sorvete', aurora: 'Aurora', lagoon: 'Lagoa', dusk: 'Crepúsculo', opal: 'Opala', ember: 'Brasa' },
+
   item: {
     name: {
       hardhat: 'capacete de obra', crown: 'coroa', partyhat: 'chapéu de festa', witchhat: 'chapéu de bruxa', santahat: 'gorro de Papai Noel', nightcap: 'touca de dormir', gradcap: 'chapéu de formatura',
@@ -529,6 +532,7 @@ export const pt: typeof en = {
   },
 
   ui: {
+    colour: 'Cor',
     levelTitle: 'NÍVEL',
     wardrobeTitle: 'GUARDA-ROUPA',
     open: 'Abrir',
@@ -744,6 +748,10 @@ export const pt: typeof en = {
     noSuchItem: want => `Esse acessório não existe: ${want}`,
     itemLocked: (name, hint) => `Bloqueado: ${name} (${hint}).`,
     itemOn: name => `Agora usando: ${name}.`,
+    skinList: (a, b, list) => `Cores: ${a}/${b} · ${list}`,
+    skinHow: '/mochi cor <cor> · argila para a dele',
+    noSuchSkin: (want) => `Essa cor não existe: ${want}`,
+    skinOn: (name) => `Mochi agora é ${name}.`,
     soundOn: 'Som ligado.',
     soundOff: 'Som desligado.',
     hidden: 'Mochi escondido. Para trazer de volta: /mochi',
@@ -765,7 +773,7 @@ export const pt: typeof en = {
     words: {
       on: ['ligar', 'ativar'], off: ['desligar', 'desativar'],
       hide: ['esconder', 'ocultar'], show: ['mostrar'], small: ['pequeno'], big: ['grande'], sound: ['som'], desktop: ['mesa'],
-      status: [], details: ['detalhes'], level: ['nível', 'nivel'], wear: ['vestir', 'usar'], shield: ['escudo'],
+      status: [], details: ['detalhes'], level: ['nível', 'nivel'], wear: ['vestir', 'usar'], skin: ['cor'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma', 'língua', 'lingua'], auto: ['automático', 'automatico'], none: ['nenhum', 'nada'],
       card: ['cartão'], wrapped: ['retrospectiva', 'resumo'], snap: ['captura', 'foto'], year: ['ano'],
       tips: ['dicas', 'dica'], tour: ['apresentação'], news: ['novidades'],

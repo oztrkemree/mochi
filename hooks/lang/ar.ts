@@ -381,6 +381,9 @@ export const ar: typeof en = {
     birthdayBad: want => `هذا ليس تاريخًا: ${want}. استخدم MM-DD، مثل /mochi ميلاد 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'طين', peach: 'خوخ', cream: 'كريمي', rose: 'ورد', coral: 'مرجان', lemon: 'ليمون', mint: 'نعناع', sky: 'سماء', lavender: 'خزامى', sage: 'مريمية', teal: 'فيروزي', plum: 'برقوق', cocoa: 'كاكاو', charcoal: 'فحم', snow: 'ثلج', cherry: 'كرز', ocean: 'محيط', forest: 'غابة', sunset: 'غروب', bubblegum: 'علكة', gold: 'ذهب', chrome: 'كروم', zombie: 'زومبي', ghost: 'شبح', lava: 'حمم', ice: 'جليد', galaxy: 'مجرة', neon: 'نيون', rainbow: 'قوس قزح', holo: 'هولوغرام', sorbet: 'سوربيه', aurora: 'شفق قطبي', lagoon: 'بحيرة', dusk: 'غسق', opal: 'أوبال', ember: 'جمر' },
+
   item: {
     name: {
       hardhat: 'خوذة البناء', crown: 'تاج', partyhat: 'قبعة الحفلة', witchhat: 'قبعة الساحرة', santahat: 'قبعة بابا نويل', nightcap: 'طاقية النوم', gradcap: 'قبعة التخرج',
@@ -552,6 +555,7 @@ export const ar: typeof en = {
   },
 
   ui: {
+    colour: 'اللون',
     levelTitle: 'المستوى',
     wardrobeTitle: 'خزانة الملابس',
     open: 'فتح',
@@ -771,6 +775,10 @@ export const ar: typeof en = {
     noSuchItem: want => `لا يوجد إكسسوار بهذا الاسم: ${want}`,
     itemLocked: (name, hint) => `لم يُفتح بعد: ${name} (${hint}).`,
     itemOn: name => `ارتدى Mochi: ${name}.`,
+    skinList: (a, b, list) => `الألوان: ${a}/${b} · ${list}`,
+    skinHow: '/mochi لون <لون> · طين للونه الأصلي',
+    noSuchSkin: (want) => `لا يوجد هذا اللون: ${want}`,
+    skinOn: (name) => `أصبح Mochi الآن ${name}.`,
     soundOn: 'الصوت مفعّل.',
     soundOff: 'الصوت معطّل.',
     hidden: 'أُخفي Mochi. لإعادته: /mochi',
@@ -793,7 +801,7 @@ export const ar: typeof en = {
       on: ['تشغيل', 'شغل', 'tashghil'], off: ['إيقاف', 'ايقاف', 'أوقف', 'iqaf'],
       hide: ['إخفاء', 'اخفاء', 'ikhfa'], show: ['إظهار', 'اظهار', 'izhar'], small: ['صغير', 'saghir'], big: ['كبير', 'kabir'], sound: ['صوت', 'الصوت', 'sawt'], desktop: ['المكتب', 'maktab'],
       status: ['حالة', 'الحالة', 'hala'], details: ['تفاصيل', 'التفاصيل', 'tafasil'], level: ['مستوى', 'المستوى', 'mustawa'],
-      wear: ['البس', 'إكسسوارات', 'اكسسوارات', 'خزانة', 'ilbas'], shield: ['درع', 'الدرع', 'dir3'],
+      wear: ['البس', 'إكسسوارات', 'اكسسوارات', 'خزانة', 'ilbas'], skin: ['لون'], shield: ['درع', 'الدرع', 'dir3'],
       alerts: ['تنبيهات', 'إشعارات', 'اشعارات', 'tanbihat'], lang: ['لغة', 'اللغة', 'lugha'], auto: ['تلقائي', 'تلقائيا', 'tilqai'], none: ['لا شيء', 'لاشيء', 'حذف'],
       card: ['بطاقة', 'bitaqa'], wrapped: ['حصاد', 'ملخص', 'hasad'], snap: ['لقطة', 'laqta'], year: ['العام', 'عام', 'سنة', 'sana'],
       tips: ['نصائح', 'نصيحة', 'nasaih'], tour: ['جولة', 'تعريف', 'jawla'], news: ['جديد', 'الجديد', 'أخبار', 'اخبار', 'jadid'],

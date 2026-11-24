@@ -358,6 +358,9 @@ export const es: typeof en = {
     birthdayBad: want => `No es una fecha: ${want}. Usa MM-DD, p. ej. /mochi cumpleaños 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Arcilla', peach: 'Melocotón', cream: 'Crema', rose: 'Rosa', coral: 'Coral', lemon: 'Limón', mint: 'Menta', sky: 'Cielo', lavender: 'Lavanda', sage: 'Salvia', teal: 'Turquesa', plum: 'Ciruela', cocoa: 'Cacao', charcoal: 'Carbón', snow: 'Nieve', cherry: 'Cereza', ocean: 'Océano', forest: 'Bosque', sunset: 'Atardecer', bubblegum: 'Chicle', gold: 'Oro', chrome: 'Cromo', zombie: 'Zombi', ghost: 'Fantasma', lava: 'Lava', ice: 'Hielo', galaxy: 'Galaxia', neon: 'Neón', rainbow: 'Arcoíris', holo: 'Holograma', sorbet: 'Sorbete', aurora: 'Aurora', lagoon: 'Laguna', dusk: 'Ocaso', opal: 'Ópalo', ember: 'Brasa' },
+
   item: {
     name: {
       hardhat: 'casco de obra', crown: 'corona', partyhat: 'gorro de fiesta', witchhat: 'sombrero de bruja', santahat: 'gorro de Papá Noel', nightcap: 'gorro de dormir', gradcap: 'birrete',
@@ -530,6 +533,7 @@ export const es: typeof en = {
   },
 
   ui: {
+    colour: 'Color',
     levelTitle: 'NIVEL',
     wardrobeTitle: 'ARMARIO',
     open: 'Abrir',
@@ -746,6 +750,10 @@ export const es: typeof en = {
     noSuchItem: want => `No existe ese accesorio: ${want}`,
     itemLocked: (name, hint) => `${name} aún no está disponible (${hint}).`,
     itemOn: name => `Mochi lleva ahora: ${name}.`,
+    skinList: (a, b, list) => `Colores: ${a}/${b} · ${list}`,
+    skinHow: '/mochi color <color> · arcilla para el suyo',
+    noSuchSkin: (want) => `No existe ese color: ${want}`,
+    skinOn: (name) => `Mochi ahora es ${name}.`,
     soundOn: 'Sonido activado.',
     soundOff: 'Sonido desactivado.',
     hidden: 'Mochi oculto. Para volver a mostrarlo: /mochi',
@@ -767,7 +775,7 @@ export const es: typeof en = {
     words: {
       on: ['activar', 'encender'], off: ['desactivar', 'apagar'],
       hide: ['ocultar', 'esconder'], show: ['mostrar'], small: ['pequeño', 'pequeno'], big: ['grande'], sound: ['sonido'], desktop: ['escritorio'],
-      status: ['estado'], details: ['detalles', 'detalle'], level: ['nivel'], wear: ['poner', 'vestir'], shield: ['escudo'],
+      status: ['estado'], details: ['detalles', 'detalle'], level: ['nivel'], wear: ['poner', 'vestir'], skin: ['color'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma'], auto: ['automático', 'automatico'], none: ['nada', 'ninguno'],
       card: ['tarjeta'], wrapped: ['resumen'], snap: ['captura'], year: ['año'],
       tips: ['consejos', 'consejo'], tour: ['recorrido'], news: ['novedades'],

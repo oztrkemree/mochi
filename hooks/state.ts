@@ -19,6 +19,8 @@ const OPEN: Record<Section, boolean> = { chats: true, changes: true, context: fa
 export const BLOCKS: readonly Block[] = ['overview', ...SECTIONS]
 /** The pane's tabs, and the tab each block lives in. */
 export const TABS: readonly Tab[] = ['now', 'past', 'mochi', 'settings']
+/** The wardrobe's tabs in the details pane: a slot's items, or Mochi's colours. */
+export const SHELVES: readonly Prefs['shelf'][] = [...SLOTS, 'colour']
 export const TAB_OF: Record<Block, Tab> = {
   overview: 'now', chats: 'now', changes: 'now', context: 'now', activity: 'past', level: 'past', badges: 'past', wardrobe: 'mochi', settings: 'settings', more: 'settings',
 }
@@ -54,7 +56,7 @@ export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | unde
   const open = Object.fromEntries(SECTIONS.map(s => [s, typeof was[s] === 'boolean' ? was[s] : OPEN[s]])) as Record<Section, boolean>
   // No language saved, or one Mochi no longer speaks: the system's and Claude Code's, as for a new chat.
   const lang = typeof saved?.lang === 'string' && (saved.lang === 'auto' || pickLang(saved.lang) !== null) ? saved.lang : 'auto'
-  const shelf = SLOTS.find(slot => slot === saved?.shelf) ?? 'head'
+  const shelf = SHELVES.find(x => x === saved?.shelf) ?? 'head'
   const tab = TABS.find(x => x === saved?.tab) ?? 'now'
   return { ...DEFAULT_PREFS, ...rest, pick, open, shelf, lang, ...layoutOf(saved?.order, saved?.hidden), isArranging: false, tab }
 }

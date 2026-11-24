@@ -162,9 +162,7 @@ const KO: Words = {
     line: '설정에서 저를 Claude Code의 상태 표시줄로 만들면, 모드 없이도 사용 한도를 보여 드려요.',
   },
   room: 'Mochi의 방',
-  colour: '컬러',
   levelN: (n: number) => `레벨 ${n}`,
-  skins: { clay: '클레이', peach: '피치', cream: '크림', rose: '로즈', coral: '코랄', lemon: '레몬', mint: '민트', sky: '스카이', lavender: '라벤더', sage: '세이지', teal: '틸', plum: '플럼', cocoa: '코코아', charcoal: '차콜', snow: '스노우', cherry: '체리', ocean: '오션', forest: '포레스트', sunset: '선셋', bubblegum: '버블껌', gold: '골드', chrome: '크롬', zombie: '좀비', ghost: '고스트', lava: '용암', ice: '아이스', galaxy: '갤럭시', neon: '네온', rainbow: '레인보우', hologram: '홀로그램', sorbet: '셔벗', aurora: '오로라', lagoon: '라군', dusk: '황혼', opal: '오팔', ember: '잉걸불' },
   feats: {
     title: '업적',
     done: (a: number, b: number) => `${b}개 중 ${a}개 달성`,

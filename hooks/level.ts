@@ -5,7 +5,7 @@ import { NO_OWN, occasions } from './fun'
 import type { Occasion, Own } from './fun'
 import { t } from './i18n'
 import { poseOf } from './rig'
-import { skinOf } from './skins'
+import { type SkinId, skinOf } from './skins'
 
 // Mochi grows with the work done in every chat: experience from turns,
 // edits, commits and days, levels from experience, and things to wear that
@@ -16,6 +16,8 @@ import { skinOf } from './skins'
 /** An item's name, and its one-word form for the wardrobe's buttons, in the language in use. */
 export const itemName = (i: Item): string => t().item.name[i]
 export const itemShort = (i: Item): string => t().item.short[i]
+/** A colour's name (hooks/skins.ts), in the language in use. */
+export const skinName = (id: string): string => t().skin[id as SkinId] ?? id
 
 export type Slot = keyof Outfit
 export const SLOTS: Slot[] = ['head', 'eyes', 'face', 'lip', 'chin', 'neck', 'held', 'ground']

@@ -356,6 +356,9 @@ export const id: typeof en = {
     birthdayBad: want => `Bukan tanggal: ${want}. Gunakan BB-HH, mis. /mochi ultah 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Lempung', peach: 'Persik', cream: 'Krem', rose: 'Mawar', coral: 'Koral', lemon: 'Lemon', mint: 'Mint', sky: 'Langit', lavender: 'Lavender', sage: 'Sage', teal: 'Toska', plum: 'Plum', cocoa: 'Kakao', charcoal: 'Arang', snow: 'Salju', cherry: 'Ceri', ocean: 'Samudra', forest: 'Hutan', sunset: 'Senja', bubblegum: 'Permen karet', gold: 'Emas', chrome: 'Krom', zombie: 'Zombi', ghost: 'Hantu', lava: 'Lava', ice: 'Es', galaxy: 'Galaksi', neon: 'Neon', rainbow: 'Pelangi', holo: 'Hologram', sorbet: 'Sorbet', aurora: 'Aurora', lagoon: 'Laguna', dusk: 'Senja', opal: 'Opal', ember: 'Bara' },
+
   item: {
     name: {
       hardhat: 'helm proyek', crown: 'mahkota', partyhat: 'topi pesta', witchhat: 'topi penyihir', santahat: 'topi Sinterklas', nightcap: 'topi tidur', gradcap: 'topi toga',
@@ -527,6 +530,7 @@ export const id: typeof en = {
   },
 
   ui: {
+    colour: 'Warna',
     levelTitle: 'LEVEL',
     wardrobeTitle: 'LEMARI',
     open: 'Buka',
@@ -741,6 +745,10 @@ export const id: typeof en = {
     noSuchItem: want => `Aksesori tidak ditemukan: ${want}`,
     itemLocked: (name, hint) => `${name} masih terkunci (${hint}).`,
     itemOn: name => `${name} dipakai.`,
+    skinList: (a, b, list) => `Warna: ${a}/${b} · ${list}`,
+    skinHow: '/mochi warna <warna> · tanah liat untuk warnanya sendiri',
+    noSuchSkin: (want) => `Tidak ada warna itu: ${want}`,
+    skinOn: (name) => `Mochi sekarang ${name}.`,
     soundOn: 'Suara aktif.',
     soundOff: 'Suara nonaktif.',
     hidden: 'Mochi disembunyikan. Untuk memunculkannya lagi: /mochi',
@@ -762,7 +770,7 @@ export const id: typeof en = {
     words: {
       on: ['nyalakan', 'aktifkan'], off: ['matikan', 'nonaktifkan'],
       hide: ['sembunyikan', 'sembunyi'], show: ['tampilkan', 'tampil'], small: ['kecil'], big: ['besar'], sound: ['suara', 'bunyi'], desktop: [],
-      status: [], details: ['rincian'], level: [], wear: ['pakai', 'kenakan', 'aksesori'], shield: ['perisai', 'pelindung'],
+      status: [], details: ['rincian'], level: [], wear: ['pakai', 'kenakan', 'aksesori'], skin: ['warna'], shield: ['perisai', 'pelindung'],
       alerts: ['notifikasi', 'notif'], lang: ['bahasa'], auto: ['otomatis'], none: ['lepas', 'hapus', 'kosong'],
       card: ['kartu'], wrapped: ['rekap'], snap: ['jepret', 'foto'], year: ['tahun'],
       tips: ['kiat'], tour: ['tur', 'perkenalan'], news: ['baru', 'berita'],
