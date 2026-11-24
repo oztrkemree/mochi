@@ -5,6 +5,7 @@ import { NO_OWN, occasions } from './fun'
 import type { Occasion, Own } from './fun'
 import { t } from './i18n'
 import { poseOf } from './rig'
+import { skinOf } from './skins'
 
 // Mochi grows with the work done in every chat: experience from turns,
 // edits, commits and days, levels from experience, and things to wear that
@@ -394,6 +395,13 @@ export function choiceFrom(text: string | null): Choice | null {
   } catch {
     return null
   }
+}
+
+/** The colour Mochi wears: the one chosen while its level still opens it, else its own clay (none). */
+export function skinNow(chosen: string | undefined, history: History | null): string | undefined {
+  const skin = skinOf(chosen)
+  if (!skin || skin.id === 'clay' || !history) return undefined
+  return levelOf(xpOf(history)).level >= skin.level ? skin.id : undefined
 }
 
 export const choiceText = (c: Choice): string => JSON.stringify({ v: 1, at: c.at, pick: c.pick, ...(c.skin ? { skin: c.skin } : {}) })

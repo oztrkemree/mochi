@@ -20,7 +20,7 @@ import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
-import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, choiceFrom, choiceText, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, summarize, unlocked, xpOf } from './level'
+import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, choiceFrom, choiceText, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, skinNow, summarize, unlocked, xpOf } from './level'
 import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
 import { floorOf, partyOf, spotAt } from './party'
 import { PANEL_H, panelSvg, toolKind } from './panel'
@@ -192,7 +192,8 @@ async function arranged($: Dollar, data: unknown) {
 
 /** The scene the drawing shows, in steps coarse enough not to redraw on every token. */
 function sceneOf(v: Env, outfit: Outfit): Scene {
-  return { context: v.context < 0 ? -1 : Math.round(v.context / 5) * 5, agents: Math.min(3, v.agents), outfit }
+  const skin = skinNow(chat.skin, v.history)
+  return { context: v.context < 0 ? -1 : Math.round(v.context / 5) * 5, agents: Math.min(3, v.agents), outfit, ...(skin ? { skin } : {}) }
 }
 
 const sameScene = (a: Scene, b: Scene) => JSON.stringify(a) === JSON.stringify(b)
@@ -1000,6 +1001,7 @@ async function wearChoice($: Dollar) {
   const c = choiceFrom(await $.fs.read(`${chat.dataDir}/prefs.json`).catch(() => null))
   if (c === null || c.at <= chat.choiceAt) return
   chat.choiceAt = c.at
+  chat.skin = c.skin
   if (JSON.stringify(c.pick) !== JSON.stringify((await read($, prefs)).pick)) await setPrefs($, p => ({ ...p, pick: c.pick }), false)
 }
 

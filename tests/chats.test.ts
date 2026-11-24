@@ -7,6 +7,7 @@ import { setLang } from '../hooks/i18n'
 import { ALIVE_MS, appLink, appSessionOf, deskOf, peerOf } from '../hooks/live'
 import { floorOf, partyOf } from '../hooks/party'
 import { openCommand } from '../hooks/system'
+import { EMPTY_DAY } from '../hooks/level'
 import { NO_ENV, restorePrefs } from '../hooks/state'
 
 // These read the English lines.
@@ -492,6 +493,25 @@ test('a wardrobe choice goes to prefs.json, and a newer one made in the desktop 
   files.set(P, JSON.stringify({ v: 1, at: NOW, pick: { head: null } }))
   await clock.advance(20_000)
   expect(look().pick.head).toBeUndefined()
+})
+
+test('the colour chosen in the desktop app is worn by the band’s Mochi too, while its level opens it', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on, [], true)
+  const worked = { ...EMPTY_DAY, turns: 30, commits: 2 }
+  files.set('/h/.claude/mochi/days/old-1.json', JSON.stringify({ id: 'old-1', label: 'web', days: { '2025-10-08': worked, '2025-10-09': worked } }))
+  files.set('/h/.claude/mochi/prefs.json', JSON.stringify({ v: 1, at: NOW - 60_000, pick: {}, skin: 'peach' }))
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const band = async () => {
+    await $.command.run({ command: 'mochi', args: 'snap' } as never)
+    return files.get('/h/.claude/mochi/share/mochi-band.svg') ?? ''
+  }
+  expect(await band()).toContain('skin-map-peach')
+  // Mint opens far later: Mochi keeps its own clay.
+  files.set('/h/.claude/mochi/prefs.json', JSON.stringify({ v: 1, at: NOW + 60_000, pick: {}, skin: 'mint' }))
+  await clock.advance(20_000)
+  expect(await band()).not.toContain('skin-map-')
 })
 
 test('a peer file’s usage windows are read one by one: junk is dropped, percents are whole, four at most; a file without them has none', async () => {

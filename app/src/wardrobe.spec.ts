@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest'
 
 import { historyOf } from './growth'
-import { choiceFrom, choiceText } from '../../hooks/level'
+import { choiceFrom, choiceText, skinNow } from '../../hooks/level'
 import { svgFor } from '../../hooks/rig'
 import { SKINS, skinFilter, skinOf, skinsAt } from '../../hooks/skins'
-import { chosen, lookNow, skinNow } from './wardrobe'
+import { chosen, lookNow } from './wardrobe'
 
 const days = (record: Record<string, Record<string, number>>) => JSON.stringify({ id: 'c', label: 'c', days: record })
 // Enough work for the first hats: 2 days, 60 turns, 4 commits.
@@ -51,10 +51,10 @@ test('thirty-six colours open by level; the one chosen is worn while the level o
   expect(skinFilter(skinOf('clay'))).toBe('')
   expect(skinFilter(skinOf('mint'))).toContain('id="skin-map-mint"')
   // Level 3 (worked: 2 days, 60 turns, 4 commits) opens peach but not mint.
-  expect(skinNow({ at: 1, pick: {}, skin: 'peach' }, worked)).toBe('peach')
-  expect(skinNow({ at: 1, pick: {}, skin: 'mint' }, worked)).toBeUndefined()
-  expect(skinNow({ at: 1, pick: {}, skin: 'nonsense' }, worked)).toBeUndefined()
-  expect(skinNow(null, worked)).toBeUndefined()
+  expect(skinNow('peach', worked)).toBe('peach')
+  expect(skinNow('mint', worked)).toBeUndefined()
+  expect(skinNow('nonsense', worked)).toBeUndefined()
+  expect(skinNow(undefined, worked)).toBeUndefined()
   expect(choiceFrom(choiceText({ at: 2, pick: { head: 'beanie' }, skin: 'peach' }))).toEqual({ at: 2, pick: { head: 'beanie' }, skin: 'peach' })
   expect(choiceFrom('{"v":1,"at":2,"pick":{},"skin":"<script>"}')).toEqual({ at: 2, pick: {} })
 })
