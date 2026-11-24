@@ -268,6 +268,8 @@ const JA: Words = {
       dirty: '変更あり',
       open: 'チャットが開いています',
       locked: 'ロック中',
+      keeps: (name: string) => `git が無視する ${name} を保持`,
+      total: (gb: string) => `${gb} GB を解放できます。`,
       remove: '削除',
       sure: '削除する?',
       freed: (gb: string) => `${gb} GB 空きました。`,

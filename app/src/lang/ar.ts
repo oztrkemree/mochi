@@ -283,6 +283,8 @@ const AR: Words = {
       dirty: 'فيه تغييرات',
       open: 'توجد فيه محادثة مفتوحة',
       locked: 'مقفل',
+      keeps: (name: string) => `يحتوي على ${name} الذي يتجاهله git`,
+      total: (gb: string) => `يمكن تحرير ${gb} GB.`,
       remove: 'حذف',
       sure: 'أحذفها؟',
       freed: (gb: string) => `تم تحرير ${gb} GB.`,

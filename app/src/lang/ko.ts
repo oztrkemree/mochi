@@ -268,6 +268,8 @@ const KO: Words = {
       dirty: '변경 있음',
       open: '채팅이 열려 있음',
       locked: '잠김',
+      keeps: (name: string) => `git이 무시하는 ${name} 보유`,
+      total: (gb: string) => `${gb} GB를 비울 수 있습니다.`,
       remove: '삭제',
       sure: '삭제할까요?',
       freed: (gb: string) => `${gb} GB 확보했어요.`,

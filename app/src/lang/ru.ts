@@ -275,6 +275,8 @@ const RU: Words = {
       dirty: 'есть изменения',
       open: 'в нём открыт чат',
       locked: 'заблокирован',
+      keeps: (name: string) => `хранит ${name}, который игнорирует git`,
+      total: (gb: string) => `можно освободить ${gb} GB.`,
       remove: 'Удалить',
       sure: 'Удалить?',
       freed: (gb: string) => `Освобождено ${gb} GB.`,

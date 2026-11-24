@@ -275,6 +275,8 @@ const UK: Words = {
       dirty: 'має зміни',
       open: 'у ньому відкритий чат',
       locked: 'заблоковано',
+      keeps: (name: string) => `містить ${name}, який ігнорує git`,
+      total: (gb: string) => `можна звільнити ${gb} GB.`,
       remove: 'Прибрати',
       sure: 'Прибрати?',
       freed: (gb: string) => `Звільнено ${gb} GB.`,

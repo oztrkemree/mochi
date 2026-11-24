@@ -268,6 +268,8 @@ const ID: Words = {
       dirty: 'ada perubahan',
       open: 'ada chat yang terbuka di dalamnya',
       locked: 'terkunci',
+      keeps: (name: string) => `berisi ${name}, yang diabaikan git`,
+      total: (gb: string) => `${gb} GB dapat dibebaskan.`,
       remove: 'Hapus',
       sure: 'Hapus?',
       freed: (gb: string) => `${gb} GB dibebaskan.`,

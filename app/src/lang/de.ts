@@ -271,6 +271,8 @@ const DE: Words = {
       dirty: 'hat Änderungen',
       open: 'ein Chat ist darin offen',
       locked: 'gesperrt',
+      keeps: (name: string) => `enthält ${name}, das git ignoriert`,
+      total: (gb: string) => `${gb} GB können freigegeben werden.`,
       remove: 'Entfernen',
       sure: 'Entfernen?',
       freed: (gb: string) => `${gb} GB frei.`,

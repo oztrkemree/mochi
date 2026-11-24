@@ -271,6 +271,8 @@ const HI: Words = {
       dirty: 'बदलाव हैं',
       open: 'उसमें एक चैट खुली है',
       locked: 'लॉक है',
+      keeps: (name: string) => `इसमें ${name} है, जिसे git अनदेखा करता है`,
+      total: (gb: string) => `${gb} GB खाली किए जा सकते हैं।`,
       remove: 'हटाएँ',
       sure: 'इसे हटाएँ?',
       freed: (gb: string) => `${gb} GB खाली हुए।`,

@@ -268,6 +268,8 @@ const ZH: Words = {
       dirty: '有更改',
       open: '里面有打开的聊天',
       locked: '已锁定',
+      keeps: (name: string) => `保存着 git 忽略的 ${name}`,
+      total: (gb: string) => `可释放 ${gb} GB。`,
       remove: '删除',
       sure: '删除吗？',
       freed: (gb: string) => `已释放 ${gb} GB。`,
