@@ -92,20 +92,20 @@
       .job .more + .more::before { content: "↳ "; }
       .job:last-child::after { content: ""; position: absolute; right: 22px; bottom: -5px; width: 10px; height: 10px; background: color-mix(in srgb, var(--card) 78%, var(--ink, var(--card))); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
       #jobs .left { padding: 0 10px; color: var(--dim); font-size: 11px; font-weight: 650; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
-      /* The limits and how many chats, on one glass base at Mochi's feet, under the middle of its body (51.35%, see peekAt): the rings, then the count.
+      /* The limits and how many chats, on one thin glass base at the window's foot, its top on Mochi's shadow so the feet stay clear, under the middle of its body (51.35%, see peekAt): the rings, then the count.
          Each is still its own button; the base only holds them. */
-      #base { position: absolute; left: 51.35%; bottom: 0; translate: -50% 0; display: flex; align-items: center; height: 26px; padding: 0 2px; border-radius: 14px; z-index: 1;
+      #base { position: absolute; left: 51.35%; bottom: 1px; translate: -50% 0; display: flex; align-items: center; height: 18px; padding: 0 1px; border-radius: 9px; z-index: 1;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 50%, transparent 51%), var(--card);
         -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 6px 20px rgba(0, 0, 0, 0.35); }
       #base:not(:has(> #limits:not(:empty), > #agents:not(.empty):not([hidden]))) { display: none; }
-      #base button { display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 6px; border: 0; border-radius: 12px; background: none; color: inherit; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+      #base button { display: flex; align-items: center; gap: 4px; height: 16px; padding: 0 5px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; font-size: 11px; line-height: 1; font-weight: 650; cursor: pointer; }
       #base button:hover { background: var(--line); }
       #base button:focus-visible { outline: 2px solid #E08A6A; outline-offset: 1px; }
-      #limits svg { display: block; height: 20px; width: auto; }
+      #limits svg { display: block; height: 14px; width: auto; }
       #limits:empty, #agents.empty, #agents[hidden] { display: none; }
-      #limits:not(:empty) + #agents { margin-left: 1px; box-shadow: -1px 0 0 var(--line); border-radius: 0 12px 12px 0; }
-      #agents .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 7px var(--ink); }
+      #limits:not(:empty) + #agents { margin-left: 1px; box-shadow: -1px 0 0 var(--line); border-radius: 0 8px 8px 0; }
+      #agents .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 7px var(--ink); }
       /* While a chat waits for the person its dot wears a soft ring. Nothing here moves by itself: an endless motion redraws the window for as long as it runs. */
       #agents .dot.asking { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 35%, transparent), 0 0 7px var(--ink); }
 
