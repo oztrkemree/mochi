@@ -46,3 +46,10 @@ test('how much the bubbles over Mochi say of each chat: brief unless set, off or
   expect(settingsFrom(JSON.stringify({ jobs: 'full' })).jobs).toBe('full')
   expect(settingsFrom(JSON.stringify({ jobs: 'loud' })).jobs).toBe('brief')
 })
+
+test('the minutes of unbroken work before Mochi suggests a rest: 90 unless set, one of the offered times, 0 for never', () => {
+  expect(DEFAULTS.breakMinutes).toBe(90)
+  expect(settingsFrom(JSON.stringify({ breakMinutes: 0 })).breakMinutes).toBe(0)
+  expect(settingsFrom(JSON.stringify({ breakMinutes: 60 })).breakMinutes).toBe(60)
+  expect(settingsFrom(JSON.stringify({ breakMinutes: 45 })).breakMinutes).toBe(90)
+})

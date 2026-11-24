@@ -21,6 +21,7 @@ import { type Area, type Body, type Edge, type Point, areaOf, fit, nearestEdge, 
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
 import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } from './acts'
+import { FRESH, type Stretch, stepBreak } from './breaks'
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
 import { lookNow } from './wardrobe'
@@ -947,6 +948,10 @@ function leave(id: string) {
 const runs = new Map<string, Run>()
 /** The file edits still within the clash window, for news when two chats edit one file. */
 let edits: Edit[] = []
+/** The stretch of unbroken work Mochi counts for the break nudge. */
+let stretch: Stretch = FRESH
+/** When the person last sent a prompt, which is when they were last at work. */
+let promptAt = 0
 /** The clashes already said, so each is said once. */
 const clashed = new Set<string>()
 
@@ -957,6 +962,7 @@ async function take(calls: string[]) {
   for (const call of calls) {
     const h = hookedOf(call)
     if (!h) continue
+    if (h.name === 'UserPromptSubmit') promptAt = h.at
     const peer = view?.peers.find(p => p.id === h.id)
     const stuck = stepStuck(runs.get(h.id), h.name, h.event)
     if (stuck.run) runs.set(h.id, stuck.run)
@@ -1415,6 +1421,11 @@ async function start() {
       void sayWeek().catch(note)
     }
     tip()
+    // A prompt in the last ten minutes counts as work: someone reading an answer is still at work.
+    const now = Date.now()
+    const b = stepBreak(stretch, now - promptAt <= 10 * 60_000, now, settings.breakMinutes)
+    stretch = b.stretch
+    if (b.due && view) hear([{ id: 'break', kind: 'nudge', line: words().breaks.line(settings.breakMinutes), link: '' }], view.peers)
     // Now and then something Mochi does by itself.
     const fidget = view && !held && !peek && !isBusy() && !say.classList.contains('on') ? fidgetOf(view.mood as Mood, Math.random(), Math.random()) : null
     if (fidget) hold(fidget)
