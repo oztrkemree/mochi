@@ -3,7 +3,8 @@
 //! run with no shell between; the only addresses fetched are this repository's releases and tags.
 
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, SystemTime};
 
 use serde_json::{Value, json};
 
@@ -11,6 +12,7 @@ use crate::work::{numbers, releases, run};
 
 const DOWNLOADS: &str = "https://github.com/oztrkemree/mochi/releases/download/";
 const MOD: &str = "mochi-buddy";
+static BUSY: AtomicBool = AtomicBool::new(false);
 const SHORT: Duration = Duration::from_secs(20);
 const LONG: Duration = Duration::from_secs(300);
 
@@ -79,6 +81,27 @@ pub fn find_mod(installed: &str, settings: &str, home: &Path, plugin_json_of: &d
     })
 }
 
+/// A folder of this call's own in the system's temp folder: no two calls, in this process or another, share one.
+fn scratch(what: &str) -> Result<PathBuf, String> {
+    let nanos = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).map_or(0, |d| d.as_nanos());
+    let dir = std::env::temp_dir().join(format!("mochi-{what}-{}-{nanos}", std::process::id()));
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir)
+}
+
+/// One install at a time: a second press while one runs is refused, not run beside it.
+struct OneAtATime;
+impl OneAtATime {
+    fn take() -> Result<Self, String> {
+        BUSY.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst).map(|_| Self).map_err(|_| "already working".to_owned())
+    }
+}
+impl Drop for OneAtATime {
+    fn drop(&mut self) {
+        BUSY.store(false, Ordering::SeqCst);
+    }
+}
+
 fn read(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_default()
 }
@@ -114,6 +137,7 @@ pub fn install_mod(home: &Path, version: &str) -> Result<(), String> {
     if !is_version(version) {
         return Err("no version".into());
     }
+    let _one = OneAtATime::take()?;
     match mod_found(home) {
         Some((Kind::Plugin, _)) => {
             said("marketplace update", run("claude", &["plugin", "marketplace", "update", "mochi"], None, LONG))?;
@@ -128,28 +152,45 @@ pub fn install_mod(home: &Path, version: &str) -> Result<(), String> {
     }
 }
 
+/// Whether a folder is a plain copy of the mod that may be laid over: the mod's own, a real folder (no link), absolute, and
+/// neither a git checkout nor holding the app's sources, which the tag's files would wipe.
+fn may_replace(dir: &Path) -> Result<(), String> {
+    let meta = std::fs::symlink_metadata(dir).map_err(|e| e.to_string())?;
+    if !dir.is_absolute() || !meta.is_dir() {
+        return Err("not a plain folder".into());
+    }
+    if dir.join(".git").exists() || dir.join("app").exists() {
+        return Err("a checkout of the repository, not a copy".into());
+    }
+    let named = serde_json::from_str::<Value>(&read(&dir.join(".claude-plugin/plugin.json"))).ok();
+    if named.is_none_or(|v| v["name"] != MOD) {
+        return Err("not the mod's folder".into());
+    }
+    Ok(())
+}
+
 /// A folder the mod loads from is a copy of the repository without the app: the tag's files come over it, the app's left out.
 fn replace_dir(dir: &Path, version: &str) -> Result<(), String> {
     if !cfg!(unix) {
         return Err("not on this system".into());
     }
-    let tmp = std::env::temp_dir().join(format!("mochi-mod-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&tmp);
-    std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+    may_replace(dir)?;
+    let tmp = scratch("mod")?;
     let result = (|| {
         let tarball = tmp.join("mod.tar.gz");
         let url = format!("https://github.com/oztrkemree/mochi/archive/refs/tags/v{version}.tar.gz");
         said("download", run("curl", &["-fsSL", "--max-time", "120", "-o", tarball.to_str().ok_or("path")?, &url], None, LONG))?;
         said("unpack", run("tar", &["-xzf", tarball.to_str().ok_or("path")?, "-C", tmp.to_str().ok_or("path")?], None, SHORT))?;
         let src = tmp.join(format!("mochi-{version}"));
-        // What came is the mod of that version, and what it goes over is the mod.
-        let named = |d: &Path| serde_json::from_str::<Value>(&read(&d.join(".claude-plugin/plugin.json"))).ok();
-        let new = named(&src).ok_or("the download is not the mod")?;
-        if new["name"] != MOD || new["version"].as_str() != Some(version) || named(dir).is_none_or(|old| old["name"] != MOD) {
-            return Err("not the mod's folder".into());
+        // What came is the mod of that version.
+        let new = serde_json::from_str::<Value>(&read(&src.join(".claude-plugin/plugin.json"))).map_err(|_| "the download is not the mod")?;
+        if new["name"] != MOD || new["version"].as_str() != Some(version) {
+            return Err("the download is not the mod".into());
         }
+        // Looked at again at the last moment: a folder that became a checkout in the meantime is left alone.
+        may_replace(dir)?;
         let from = format!("{}/", src.display());
-        said("copy", run("rsync", &["-a", "--delete", "--exclude=/app", &from, &format!("{}/", dir.display())], None, SHORT))
+        said("copy", run("rsync", &["-a", "--delete", "--exclude=/app", "--", &from, &format!("{}/", dir.display())], None, SHORT))
     })();
     let _ = std::fs::remove_dir_all(&tmp);
     result
@@ -158,17 +199,33 @@ fn replace_dir(dir: &Path, version: &str) -> Result<(), String> {
 /// The app inside a disk image, copied beside the one it will replace: the image is opened, its app checked to be Mochi, copied, and closed.
 fn stage_mac(dmg: &Path, mount: &Path, staged: &Path) -> Result<(), String> {
     let path = |p: &Path| p.to_str().map(str::to_owned).ok_or_else(|| "path".to_owned());
-    said("open the disk image", run("hdiutil", &["attach", "-nobrowse", "-readonly", "-noverify", "-mountpoint", &path(mount)?, &path(dmg)?], None, SHORT))?;
-    let copied = (|| {
+    let attached = said("open the disk image", run("hdiutil", &["attach", "-nobrowse", "-readonly", "-noverify", "-mountpoint", &path(mount)?, &path(dmg)?], None, SHORT));
+    let copied = attached.and_then(|()| {
         let fresh = std::fs::read_dir(mount).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).find(|p| p.extension().is_some_and(|e| e == "app")).ok_or("no app in the disk image")?;
         if !fresh.join("Contents/MacOS/mochi-desktop").is_file() {
             return Err("not Mochi".to_owned());
         }
         let _ = std::fs::remove_dir_all(staged);
         said("copy", run("ditto", &[&path(&fresh)?, &path(staged)?], None, SHORT))
-    })();
+    });
+    // Closed whether or not it opened in time; a copy that did not finish is not kept.
     let _ = run("hdiutil", &["detach", "-force", &path(mount)?], None, SHORT);
+    if copied.is_err() {
+        let _ = std::fs::remove_dir_all(staged);
+    }
     copied
+}
+
+/// What runs after this app quits, once the old one is gone ($3 is its process): the old app is set aside, the new one put in its
+/// place and opened, and the old one dropped; if putting the new one in fails the old one comes back and is opened. $4 opens an app.
+const SWAP: &str = r#"n=0; while kill -0 "$3" 2>/dev/null && [ "$n" -lt 50 ]; do sleep 0.2; n=$((n+1)); done
+if mv "$1" "$1.old" && mv "$2" "$1"; then "$4" "$1"; rm -rf "$1.old"
+else [ -e "$1.old" ] && [ ! -e "$1" ] && mv "$1.old" "$1"; "$4" "$1"; fi"#;
+
+fn swap_command(bundle: &Path, staged: &Path, waits_for: u32, opener: &str) -> std::process::Command {
+    let mut command = std::process::Command::new("sh");
+    command.args(["-c", SWAP, "sh"]).arg(bundle).arg(staged).arg(waits_for.to_string()).arg(opener).stdin(std::process::Stdio::null());
+    command
 }
 
 /// Puts the app's newest version in and starts it again: the disk image's app takes the place of this one after this one quits.
@@ -176,36 +233,41 @@ pub fn install_app(version: &str) -> Result<(), String> {
     if !is_version(version) {
         return Err("no version".into());
     }
+    let _one = OneAtATime::take()?;
     let json = releases().ok_or("GitHub cannot be reached")?;
     let url = asset_url(&json, version, std::env::consts::OS, std::env::consts::ARCH).ok_or("this release has no installer for this computer")?;
-    let tmp = std::env::temp_dir().join(format!("mochi-app-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&tmp);
-    std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+    let tmp = scratch("app")?;
     let path = |p: &Path| p.to_str().map(str::to_owned).ok_or_else(|| "path".to_owned());
     if cfg!(target_os = "macos") {
+        let mut staged = None;
         let result = (|| {
             let exe = std::env::current_exe().map_err(|e| e.to_string())?;
             let bundle = exe.ancestors().nth(3).filter(|b| b.extension().is_some_and(|e| e == "app")).ok_or("not an installed app")?.to_owned();
             let dmg = tmp.join("app.dmg");
             said("download", run("curl", &["-fsSL", "--max-time", "280", "-o", &path(&dmg)?, &url], None, LONG))?;
-            let staged = bundle.with_file_name(".Mochi Buddy.update.app");
-            stage_mac(&dmg, &tmp.join("mnt"), &staged)?;
-            // After this one quits, its place is taken by the new one, which then opens.
-            std::process::Command::new("sh")
-                .args(["-c", "sleep 1; rm -rf \"$1\" && mv \"$2\" \"$1\" && open \"$1\"", "sh", &path(&bundle)?, &path(&staged)?])
-                .stdin(std::process::Stdio::null())
-                .spawn()
-                .map(|_| ())
-                .map_err(|e| e.to_string())
+            let beside = bundle.with_file_name(".Mochi Buddy.update.app");
+            staged = Some(beside.clone());
+            stage_mac(&dmg, &tmp.join("mnt"), &beside)?;
+            swap_command(&bundle, &beside, std::process::id(), "open").spawn().map(|_| ()).map_err(|e| e.to_string())
         })();
+        // A copy that did not come to be swapped in is not left beside the app.
+        if result.is_err() {
+            if let Some(beside) = staged {
+                let _ = std::fs::remove_dir_all(beside);
+            }
+        }
         let _ = std::fs::remove_dir_all(&tmp);
         result
     } else if cfg!(windows) {
-        // The setup closes this app itself; the person goes through it.
+        // The setup closes this app itself; the person goes through it. Its folder stays until the system clears it.
         let setup = tmp.join("Mochi-Buddy-setup.exe");
-        said("download", run("curl", &["-fsSL", "--max-time", "280", "-o", &path(&setup)?, &url], None, LONG))?;
-        std::process::Command::new(&setup).spawn().map(|_| ()).map_err(|e| e.to_string())
+        let result = said("download", run("curl", &["-fsSL", "--max-time", "280", "-o", &path(&setup)?, &url], None, LONG)).and_then(|()| std::process::Command::new(&setup).spawn().map(|_| ()).map_err(|e| e.to_string()));
+        if result.is_err() {
+            let _ = std::fs::remove_dir_all(&tmp);
+        }
+        result
     } else {
+        let _ = std::fs::remove_dir_all(&tmp);
         Err("not on this system".into())
     }
 }
@@ -281,6 +343,84 @@ mod tests {
         assert_eq!(find_mod(installed, "{}", home, &read), Some((Kind::Plugin, "0.5.0".to_owned())));
         assert_eq!(find_mod("{}", "{}", home, &read), None);
         assert_eq!(find_mod("junk", "junk", home, &read), None);
+    }
+
+    #[cfg(unix)]
+    fn tree(root: &Path, name: &str, files: &[(&str, &str)]) -> PathBuf {
+        let dir = root.join(name);
+        for (file, text) in files {
+            std::fs::create_dir_all(dir.join(file).parent().unwrap()).unwrap();
+            std::fs::write(dir.join(file), text).unwrap();
+        }
+        dir
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn the_swap_puts_the_new_app_in_the_olds_place_in_a_path_with_spaces_and_drops_the_old() {
+        let root = scratch("test-swap").unwrap();
+        let bundle = tree(&root, "My Apps/Mochi Buddy.app", &[("v", "old")]);
+        let staged = tree(&root, "My Apps/.Mochi Buddy.update.app", &[("v", "new")]);
+        // A process that is already gone is waited for no longer; `true` stands for `open`.
+        assert!(swap_command(&bundle, &staged, 2_000_000_000, "true").status().unwrap().success());
+        assert_eq!(read(&bundle.join("v")), "new");
+        assert!(!staged.exists());
+        assert!(!root.join("My Apps/Mochi Buddy.app.old").exists());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_swap_that_cannot_put_the_new_app_in_gives_the_old_one_back() {
+        let root = scratch("test-swap-fail").unwrap();
+        let bundle = tree(&root, "Mochi Buddy.app", &[("v", "old")]);
+        // The staged copy is gone: the second move fails after the first set the old app aside.
+        let missing = root.join("not there.app");
+        assert!(swap_command(&bundle, &missing, 2_000_000_000, "true").status().unwrap().success());
+        assert_eq!(read(&bundle.join("v")), "old");
+        assert!(!root.join("Mochi Buddy.app.old").exists());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_folder_is_laid_over_only_when_it_is_the_mods_plain_copy() {
+        let root = scratch("test-guard").unwrap();
+        let plugin = (".claude-plugin/plugin.json", r#"{"name":"mochi-buddy","version":"0.9.0"}"#);
+        let copy = tree(&root, "copy", &[plugin]);
+        assert!(may_replace(&copy).is_ok());
+        // A checkout of the repository has .git, or the app's sources: the tag's files would wipe them.
+        let checkout = tree(&root, "checkout", &[plugin, (".git/HEAD", "ref")]);
+        assert!(may_replace(&checkout).is_err());
+        let with_app = tree(&root, "with-app", &[plugin, ("app/package.json", "{}")]);
+        assert!(may_replace(&with_app).is_err());
+        let other = tree(&root, "other", &[(".claude-plugin/plugin.json", r#"{"name":"another"}"#)]);
+        assert!(may_replace(&other).is_err());
+        assert!(may_replace(&root.join("nothing")).is_err());
+        assert!(may_replace(Path::new("relative/folder")).is_err());
+        // A link to a copy is not a copy.
+        std::os::unix::fs::symlink(&copy, root.join("link")).unwrap();
+        assert!(may_replace(&root.join("link")).is_err());
+        // And nothing is fetched or written for one of those: the checkout stays as it was.
+        assert!(replace_dir(&checkout, "0.9.0").is_err());
+        assert_eq!(read(&checkout.join(".git/HEAD")), "ref");
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_second_install_while_one_runs_is_refused_and_one_is_allowed_again_after() {
+        let first = OneAtATime::take().unwrap();
+        assert!(OneAtATime::take().is_err());
+        drop(first);
+        assert!(OneAtATime::take().is_ok());
+    }
+
+    #[test]
+    fn two_scratch_folders_are_never_the_same() {
+        let (a, b) = (scratch("test-a").unwrap(), scratch("test-a").unwrap());
+        assert_ne!(a, b);
+        let _ = std::fs::remove_dir_all(a);
+        let _ = std::fs::remove_dir_all(b);
     }
 
     /// By hand (`cargo test -- --ignored`): the real v0.9.0 tag over a folder that holds an older copy and a stale file.

@@ -13,6 +13,11 @@ test('a row offers the update only when GitHub has a newer one, and the install 
 })
 
 test('with GitHub out of reach a row says so and offers nothing', () => {
-  expect(rowOf('1.0.0', null, w)).toEqual({ text: `1.0.0 · ${w.offline}`, action: null })
-  expect(rowOf(null, null, w)).toEqual({ text: `${w.missing} · ${w.offline}`, action: null })
+  expect(rowOf('1.0.0', null, w, false)).toEqual({ text: `1.0.0 · ${w.offline}`, action: null })
+  expect(rowOf(null, null, w, false)).toEqual({ text: `${w.missing} · ${w.offline}`, action: null })
+})
+
+test('with GitHub reached but no release of that kind yet, a row says only what is installed and offers nothing', () => {
+  expect(rowOf('1.0.0', null, w)).toEqual({ text: '1.0.0', action: null })
+  expect(rowOf(null, null, w)).toEqual({ text: w.missing, action: null })
 })

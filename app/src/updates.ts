@@ -5,11 +5,15 @@ import type { Words } from './words'
 export type Row = { text: string; action: 'install' | 'update' | null }
 
 /**
- * `have` is null when it is not installed, `latest` null when GitHub could not be asked.
- * With GitHub out of reach the row says so and offers nothing: there is no version to put in.
+ * `have` is null when it is not installed, `latest` null when there is none to offer: GitHub could not be asked
+ * (`online` false: the row says so), or it has no release of this kind yet (the row says only what is installed).
+ * Either way there is no version to put in.
  */
-export function rowOf(have: string | null, latest: string | null, w: Words['update']): Row {
-  if (latest === null) return { text: have === null ? `${w.missing} · ${w.offline}` : `${have} · ${w.offline}`, action: null }
+export function rowOf(have: string | null, latest: string | null, w: Words['update'], online = true): Row {
+  if (latest === null) {
+    const here = have ?? w.missing
+    return { text: online ? here : `${here} · ${w.offline}`, action: null }
+  }
   if (have === null) return { text: w.missing, action: 'install' }
   if (isNewer(latest, have)) return { text: `${have} → ${latest}`, action: 'update' }
   return { text: w.upToDate(have), action: null }

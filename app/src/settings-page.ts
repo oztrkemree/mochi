@@ -90,10 +90,14 @@ async function drawLine() {
   }
 }
 
-type UpdateState = { mod: { have: string | null; latest: string | null }; app: { have: string; latest: string | null } }
+type UpdateState = { online: boolean; mod: { have: string | null; latest: string | null }; app: { have: string; latest: string | null } }
+
+/** A row whose button was pressed and has not come back: redrawing it meanwhile would give the button back to a second press. */
+const working = { mod: false, app: false }
 
 /** One update row: where it stands, and the one button that puts the newest in. The app quits when it is its own update. */
 function drawUpdate(which: 'mod' | 'app', row: Row, version: string) {
+  if (working[which]) return
   const w = words().update
   const button = $<HTMLButtonElement>(which === 'mod' ? 'updateMod' : 'updateApp')
   const state = $(which === 'mod' ? 'updateModState' : 'updateAppState')
@@ -102,14 +106,19 @@ function drawUpdate(which: 'mod' | 'app', row: Row, version: string) {
   button.disabled = false
   button.textContent = row.action === 'install' ? w.install : w.update
   button.onclick = async () => {
+    working[which] = true
     button.disabled = true
     state.textContent = w.working
     await invoke(which === 'mod' ? 'update_mod' : 'update_app', { version }).then(
       () => {
-        if (which === 'mod') state.textContent = w.modDone
-        setTimeout(() => void drawUpdates(), 1500)
+        // The mod is in: said so, and its row left as it is, since a redraw would take the words away. The app quits instead.
+        if (which === 'mod') {
+          state.textContent = w.modDone
+          button.hidden = true
+        }
       },
       (e: unknown) => {
+        working[which] = false
         state.textContent = `${w.failed} ${String(e).slice(0, 200)}`
         button.disabled = false
       },
@@ -122,8 +131,8 @@ async function drawUpdates() {
   const w = words().update
   const s = await invoke<UpdateState | null>('update_state').catch(() => null)
   if (s === null) return
-  drawUpdate('mod', rowOf(s.mod.have, s.mod.latest, w), s.mod.latest ?? '')
-  drawUpdate('app', rowOf(s.app.have, s.app.latest, w), s.app.latest ?? '')
+  drawUpdate('mod', rowOf(s.mod.have, s.mod.latest, w, s.online), s.mod.latest ?? '')
+  drawUpdate('app', rowOf(s.app.have, s.app.latest, w, s.online), s.app.latest ?? '')
 }
 
 function draw() {

@@ -30,7 +30,9 @@ fn tool(name: &str) -> PathBuf {
 /// The PATH, and Homebrew's folders after it.
 fn search_path() -> Vec<PathBuf> {
     let path = std::env::var_os("PATH").unwrap_or_default();
-    std::env::split_paths(&path).chain(["/opt/homebrew/bin", "/usr/local/bin"].map(PathBuf::from)).collect()
+    // Where Claude Code's own installer puts `claude` is the person's own bin, which a Mac app's PATH has not either.
+    let own = crate::store::home_dir().map(|h| h.join(".local").join("bin"));
+    std::env::split_paths(&path).chain(["/opt/homebrew/bin", "/usr/local/bin"].map(PathBuf::from)).chain(own).collect()
 }
 
 /// Runs a program with no shell between, and gives up on it after `limit`.
@@ -169,7 +171,7 @@ pub fn newer_release(json: &str, current: &str) -> Option<(String, String)> {
 
 /// Asks GitHub, with the person's own curl and nothing about them, which desktop releases there are.
 pub fn releases() -> Option<String> {
-    let out = run("curl", &["-fsSL", "--max-time", "10", "-H", "Accept: application/vnd.github+json", "https://api.github.com/repos/oztrkemree/mochi/releases?per_page=20"], None, Duration::from_secs(15))?;
+    let out = run("curl", &["-fsSL", "--max-time", "10", "-H", "Accept: application/vnd.github+json", "https://api.github.com/repos/oztrkemree/mochi/releases?per_page=100"], None, Duration::from_secs(15))?;
     (out.code == 0).then_some(out.stdout)
 }
 
