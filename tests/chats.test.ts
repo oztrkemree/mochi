@@ -725,3 +725,34 @@ test('the wardrobe stays within what the desktop draws: its pictures together un
   expect(await pane.find({ key: 'wear:crown' })).toBeDefined()
   await pane.unmount()
 })
+
+test('a press on the band’s − makes it compact: a small Mochi, its line and the rings, half the height; + brings the full band back', { timeoutMs: 30_000 }, async ($, on) => {
+  const { clock } = machine(on, [{ kind: 'five_hour', percentUsed: 34, resetsAt: new Date(NOW + 300 * MIN).toISOString() }])
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(4000)
+  const band = async () => {
+    const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+    await clock.advance(500)
+    const svg = (await ui.find({ type: 'Svg' })) as { props: { source: string; height: number } }
+    const small = await ui.find({ key: 'size:small' })
+    const big = await ui.find({ key: 'size:big' })
+    return { ui, height: svg.props.height, source: svg.props.source, small: small !== undefined, big: big !== undefined }
+  }
+  const full = await band()
+  expect(full).toMatchObject({ height: 88, small: true, big: false })
+  expect(full.source).toContain('class="bub"')
+  await full.ui.press({ key: 'size:small' } as never)
+  await full.ui.unmount()
+  const compact = await band()
+  expect(compact).toMatchObject({ small: false, big: true })
+  expect(compact.height <= 50).toBe(true)
+  // Still Mochi, its line and the gauges' numbers; the trail and the branch line are left out.
+  expect(compact.source).toContain('<image href="data:image/webp')
+  expect(compact.source).toContain('class="bub"')
+  expect(compact.source).toContain('>34%<')
+  expect(compact.source).not.toContain('class="rule"')
+  await compact.ui.press({ key: 'size:big' } as never)
+  await compact.ui.unmount()
+  expect((await band()).height).toBe(88)
+})

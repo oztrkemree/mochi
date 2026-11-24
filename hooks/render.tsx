@@ -14,7 +14,7 @@ import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, level
 import type { Slot } from './level'
 import { LOOKS, asciiRows, kaomoji } from './looks'
 import { nameOf } from './live'
-import { PANEL_H, limitName, panelSvg } from './panel'
+import { limitName, panelSvg } from './panel'
 import { SHOWN, floorOf, memberLines, membersOf, partyOf, statusLine } from './party'
 import { duration } from './react'
 import { itemIcon, mascotInner, shiftTimeline, svgFor } from './rig'
@@ -698,14 +698,14 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     // reads the panel alone, which changes only when its drawing should; the
     // drawing resumes its animations mid-loop. An <img> (not interactive)
     // keeps the painted parts the interactive frame's scrub would strip.
-    const { Box, Svg } = $.ui.resolve(e)
+    const { Box, Button, Svg } = $.ui.resolve(e)
     const pane = await read($, panel)
     const now = await $.clock.now()
     const width = Math.round(Math.min(1600, Math.max(420, e.props.bodyColumns * 8.1 - 8)))
     const alt = `${pane.info.label}: ${pane.info.detail}`
     let drawn: ReturnType<typeof panelSvg>
     try {
-      drawn = panelSvg({ panel: pane, now, width, isAway })
+      drawn = panelSvg({ panel: pane, now, width, isAway, isCompact: p.isCompact })
     } catch {
       // Never an empty band: the mascot alone if the panel cannot be drawn.
       return (
@@ -722,15 +722,19 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     if (e.surface === 'desktop') {
       const { Client } = $.ui.resolve(e)
       hit = (
-        <Box marginLeft={-panelCols} width={panelCols} height={PANEL_H / 20} flexShrink={0}>
+        <Box marginLeft={-panelCols} width={panelCols} height={drawn.height / 20} flexShrink={0}>
           <Client key="hit" module="./hit.tsx" props={{ rows: 6 }} width="100%" height="100%" />
         </Box>
       )
     }
     return (
       <Box flexDirection="row" alignItems="stretch">
-        <Svg source={drawn.svg} alt={alt} width={drawn.width} height={PANEL_H} />
+        <Svg source={drawn.svg} alt={alt} width={drawn.width} height={drawn.height} />
         {hit}
+        {/* The band's size: − for the compact band, + for the full one, as /mochi small and big. */}
+        <Box flexDirection="column" justifyContent="flex-start" flexShrink={0}>
+          <Button key={p.isCompact ? 'size:big' : 'size:small'} plain dimColor onPress={pressed}>{p.isCompact ? '+' : '−'}</Button>
+        </Box>
       </Box>
     )
   }

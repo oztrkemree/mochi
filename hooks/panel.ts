@@ -14,10 +14,14 @@ import { mascotInner, shiftTimeline } from './rig'
 // does, and an <img> of it keeps the painted parts an interactive frame would strip.
 
 export const PANEL_H = 88
+/** The compact band's height: a small Mochi, its line and the gauges' rings. */
+export const PANEL_COMPACT_H = 48
+/** The line's box in the compact band, centred in its height. */
+const COMPACT_ROW_H = 38
 /** The height the lines and gauges are laid out in, centred in the band's. */
 const ROW_H = 76
 /** The mascot's box in the band, in pixels: larger than the band, its empty margins outside. */
-const MASCOT = Math.round(PANEL_H * 1.14)
+const MASCOT_FULL = Math.round(PANEL_H * 1.14)
 /** The mascot's box from the band's left edge, room for what stands beside it. */
 const MASCOT_X = 4
 /** The widest the three lines get; past it they sit centred between the mascot and the gauges. */
@@ -109,8 +113,9 @@ export function limitInk(p: number): [string, string] {
 }
 
 
-/** `isAway` leaves the mascot out: it is out on the desktop, and its stage, the lines and the gauges stay. */
-export type PanelInput = { panel: Panel; now: number; width: number; isAway?: boolean }
+/** `isAway` leaves the mascot out: it is out on the desktop, and its stage, the lines and the gauges stay. `isCompact` draws the
+ * short band: a small Mochi, its line and the rings, without the trail, the branch line or the gauges' names. */
+export type PanelInput = { panel: Panel; now: number; width: number; isAway?: boolean; isCompact?: boolean }
 
 /** An Info with every list and figure present, whatever an older version stored. */
 function whole(info: Partial<Info> | undefined): Info {
@@ -327,25 +332,28 @@ export function disco(x0: number, x1: number, w: number, h: number): string {
 }
 
 /** The panel's drawing, and where its gauges sit (in the drawing's pixels) so a click region can lie over them. */
-export function panelSvg({ panel, now, width, isAway = false }: PanelInput): { svg: string; card: { x: number; w: number }; width: number } {
+export function panelSvg({ panel, now, width, isAway = false, isCompact = false }: PanelInput): { svg: string; card: { x: number; w: number }; width: number; height: number } {
   const { shot, infoFrom } = panel
   const info = whole(panel.info)
   const was = infoFrom ? whole(infoFrom) : info
   const W = Math.max(420, Math.round(width))
-  const H = PANEL_H
+  const H = isCompact ? PANEL_COMPACT_H : PANEL_H
+  const MASCOT = isCompact ? Math.round(PANEL_COMPACT_H * 1.14) : MASCOT_FULL
   const ink = MOOD_INK[shot.mood]
   const since = Math.max(0, now - panel.infoAt) / 1000
 
   // ---- three ring gauges on the right ----
   // Narrow columns against the right edge, so the lines in the middle keep the room.
-  const colW = 56
+  const colW = isCompact ? 44 : 56
   const list = gauges(info, was, now)
   const gX = W - colW * list.length
   const sepX = gX - 10
   const rings = list.map((g, i) => {
     const cx = gX + colW * i + colW / 2
-    return ring({ id: g.key, cx, cy: 29, r: 14.5, width: 4.2, arcs: g.arcs, was: g.was, center: esc(g.center), centerSize: 10.5,
-      ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.pace !== undefined ? { pace: g.pace } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) }) +
+    const gauge = ring({ id: g.key, cx, cy: isCompact ? COMPACT_ROW_H / 2 : 29, r: isCompact ? 13 : 14.5, width: isCompact ? 3.4 : 4.2, arcs: g.arcs, was: g.was, center: esc(g.center), centerSize: isCompact ? 9.5 : 10.5,
+      ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.pace !== undefined ? { pace: g.pace } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) })
+    if (isCompact) return gauge
+    return gauge +
       `<text class="t ${g.halo ? '' : 'dim'}" x="${n(cx)}" y="58.5" font-size="10" font-weight="${g.halo ? 650 : 500}" text-anchor="middle"${g.halo ? ` fill="${g.halo}"` : ''}>${esc(g.label)}</text>` +
       `<text class="t${g.subInk ? '' : ' faint'}" x="${n(cx)}" y="69.5" font-size="9.5" text-anchor="middle" font-variant-numeric="tabular-nums"${g.subInk ? ` fill="${g.subInk}" font-weight="600"` : ''}>${esc(g.sub)}</text>`
   }).join('')
@@ -470,13 +478,12 @@ export function panelSvg({ panel, now, width, isAway = false }: PanelInput): { s
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
     STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + show.behind + floor + (isAway ? '' : glow + mascot) +
-    `<g transform="translate(0 ${n((H - ROW_H) / 2)})">` +
+    `<g transform="translate(0 ${n((H - (isCompact ? COMPACT_ROW_H : ROW_H)) / 2)})">` +
     // The bubble's pop and typing run from when the line changed, so a redraw
     // mid-way picks them up where they were; the rest loops on the clock.
     shiftTimeline(title, since) +
-    shiftTimeline(second + third, (now / 1000) % 600) +
-    `<path class="rule" d="M${n(sepX)} 14V62"/>` +
+    (isCompact ? '' : shiftTimeline(second + third, (now / 1000) % 600) + `<path class="rule" d="M${n(sepX)} 14V62"/>`) +
     shiftTimeline(rings, since) +
     '</g>' + show.front + '</svg>'
-  return { svg, card: { x: sepX, w: W - sepX }, width: W }
+  return { svg, card: { x: sepX, w: W - sepX }, width: W, height: H }
 }

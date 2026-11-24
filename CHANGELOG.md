@@ -8,6 +8,7 @@
 - What Mochi wears is chosen in either Mochi: a choice made in the mod goes to `~/.claude/mochi/prefs.json`, and a newer one made in the desktop app is worn in the band too.
 - Mochi's colour is chosen in either Mochi too: `/mochi skin <colour>` or the Colour tab of the details pane's wardrobe writes it to `prefs.json`, and the desktop app wears it, as the band wears one chosen in the app. The wardrobe's Mochi shows the colour it has on. The Hologram colour has its name in every language.
 - While the desktop app's Mochi is out, a new level or badge is claimed before it is said (`said-level.json`, `said-badges.json`), so one Mochi says it. With the app hidden or closed nothing changes.
+- The desktop band has a compact size: the − at its right end (or `/mochi small`) draws a small Mochi, its line and the gauges' rings at about half the height, and + (or `/mochi big`) brings the full band back.
 - The band keeps its Mochi while the desktop app's Mochi is out too; `/mochi desktop on` has it step aside, and `/mochi desktop off` brings it back.
 - `/mochi chats` says how far the plan is of a chat the desktop app follows (`2/4`).
 - `/mochi reset` keeps `statusline.json`, the status line you had before the app's.
