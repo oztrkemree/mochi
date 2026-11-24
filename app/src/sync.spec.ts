@@ -40,8 +40,8 @@ test('a file with a broken time is ignored, and the plan lists its names sorted'
   expect(planOf([file('c.json'), file('a.json'), file('b.json')], [])).toEqual({ pull: [], push: ['a.json', 'b.json', 'c.json'] })
 })
 
-test('a name is a days file when it is letters, digits, dash or underscore and ends in .json, up to 120 characters', () => {
+test('a name is a days file when it is letters, digits, dash or underscore and ends in .json, up to 140 characters', () => {
   expect(isDaysFile('kayit-1_a.json')).toBe(true)
-  expect(isDaysFile('a'.repeat(120) + '.json')).toBe(true)
-  expect(isDaysFile('a'.repeat(121) + '.json')).toBe(false)
+  expect(isDaysFile('a'.repeat(140) + '.json')).toBe(true)
+  expect(isDaysFile('a'.repeat(141) + '.json')).toBe(false)
 })

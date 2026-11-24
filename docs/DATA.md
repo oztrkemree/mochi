@@ -38,6 +38,8 @@ This page is the contract between the two. Change a file's shape here first.
 | `shield.json` | the person, by hand | `{add, off}`: their own shield rules |
 | `share/`, `export-*.json` | the mod, when asked | pictures and exports |
 
+A `days/<id>.json` may also come from the person's other computer, through the folder they chose in the settings: the sync copies it whole, the newer of the two wins, and nothing is deleted. Such a file is written by the app's sync alone, and it belongs to a chat this computer never ran.
+
 ### `live/<id>.json`
 
 One chat as its Mochi last saw it. A file not written for 45 seconds is a closed chat.

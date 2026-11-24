@@ -5,7 +5,7 @@ export type Entry = { name: string; mtime: number; size: number }
 export const SLACK_MS = 2_000
 
 /** Whether a file name is one of a chat's days files and nothing that leaves the folder. */
-export const isDaysFile = (name: string): boolean => /^[A-Za-z0-9_-]{1,120}\.json$/.test(name)
+export const isDaysFile = (name: string): boolean => /^[A-Za-z0-9_-]{1,140}\.json$/.test(name)
 
 /** What to copy between this computer's days and the shared folder's: `pull` into this computer, `push` out of it. Nothing is ever deleted. */
 export function planOf(local: readonly Entry[], shared: readonly Entry[]): { pull: string[]; push: string[] } {

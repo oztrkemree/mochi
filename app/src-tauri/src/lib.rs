@@ -3,11 +3,12 @@ mod stage;
 mod store;
 mod work;
 
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::thread;
 use std::time::Duration;
 
-use serde_json::Value;
+use serde_json::{json, Value};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
@@ -312,6 +313,31 @@ fn read_all_days() -> Vec<String> {
     data_dir().map(|d| store::all_days(&d.join("days"))).unwrap_or_default()
 }
 
+/// This computer's days folder (no folder), or the `mochi-days` inside a shared folder, which must be an existing folder.
+fn days_folder(folder: Option<&str>) -> Result<PathBuf, String> {
+    let Some(f) = folder else { return Ok(data_dir().ok_or("no home")?.join("days")) };
+    if !Path::new(f).is_dir() {
+        return Err("the shared folder is not a folder".into());
+    }
+    Ok(Path::new(f).join("mochi-days"))
+}
+
+/// The days files a sync may copy, in this computer's folder (no folder) or the shared one.
+// async: the folder is read off the window's thread.
+#[tauri::command(async)]
+fn list_days(folder: Option<String>) -> Result<Vec<Value>, String> {
+    let entries = store::list_days_in(&days_folder(folder.as_deref())?);
+    Ok(entries.into_iter().map(|e| json!({ "name": e.name, "mtime": e.mtime, "size": e.size })).collect())
+}
+
+/// Copies the named days files between this computer and the shared folder: into this computer when `pull`. Says how many it copied.
+// async: the files are copied off the window's thread.
+#[tauri::command(async)]
+fn copy_days(folder: String, names: Vec<String>, pull: bool) -> Result<u32, String> {
+    let (local, shared) = (days_folder(None)?, days_folder(Some(folder.as_str()))?);
+    Ok(if pull { store::copy_days_between(&shared, &local, &names) } else { store::copy_days_between(&local, &shared, &names) })
+}
+
 #[tauri::command]
 fn read_shared(name: String) -> Result<Option<String>, String> {
     store::read_shared(&data_dir().ok_or("no home")?, &name)
@@ -441,7 +467,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, list_days, copy_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
