@@ -726,7 +726,7 @@ test('the wardrobe stays within what the desktop draws: its pictures together un
   await pane.unmount()
 })
 
-test('a press on the band’s − makes it compact: a small Mochi, its line and the rings, half the height; + brings the full band back', { timeoutMs: 30_000 }, async ($, on) => {
+test('a press on the band’s size button makes it compact: no Mochi, only its line, the branch and the rings, half the height; pressed again the full band is back', { timeoutMs: 30_000 }, async ($, on) => {
   const { clock } = machine(on, [{ kind: 'five_hour', percentUsed: 34, resetsAt: new Date(NOW + 300 * MIN).toISOString() }])
   await clock.set(NOW)
   await $.session.start(START)
@@ -747,11 +747,13 @@ test('a press on the band’s − makes it compact: a small Mochi, its line and 
   const compact = await band()
   expect(compact).toMatchObject({ small: false, big: true })
   expect(compact.height <= 50).toBe(true)
-  // Still Mochi, its line and the gauges' numbers; the trail and the branch line are left out.
-  expect(compact.source).toContain('<image href="data:image/webp')
+  // Only the data: the line, the gauges' numbers (and the branch and cost when there are); Mochi and the trail are left out.
+  expect(compact.source).not.toContain('<image href="data:image/webp')
   expect(compact.source).toContain('class="bub"')
   expect(compact.source).toContain('>34%<')
   expect(compact.source).not.toContain('class="rule"')
+  // The button says what a press does, in words.
+  expect((await compact.ui.find({ key: 'size:big' }))?.text).toBe('Full')
   await compact.ui.press({ key: 'size:big' } as never)
   await compact.ui.unmount()
   expect((await band()).height).toBe(88)

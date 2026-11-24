@@ -731,9 +731,10 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
       <Box flexDirection="row" alignItems="stretch">
         <Svg source={drawn.svg} alt={alt} width={drawn.width} height={drawn.height} />
         {hit}
-        {/* The band's size: − for the compact band, + for the full one, as /mochi small and big. */}
-        <Box flexDirection="column" justifyContent="flex-start" flexShrink={0}>
-          <Button key={p.isCompact ? 'size:big' : 'size:small'} plain dimColor onPress={pressed}>{p.isCompact ? '+' : '−'}</Button>
+        {/* The band's size at its right edge, in words of what a press does, as /mochi small and big. */}
+        <Box flexGrow={1} />
+        <Box flexDirection="column" justifyContent="center" flexShrink={0} paddingX={1}>
+          <Button key={p.isCompact ? 'size:big' : 'size:small'} plain dimColor onPress={pressed}>{p.isCompact ? t().pane.big : t().pane.small}</Button>
         </Box>
       </Box>
     )
