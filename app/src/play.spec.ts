@@ -18,3 +18,8 @@ test('a layer plays its keyframes as the rig draws them: straight from one to th
     [0, 'scale(1, 1)'], [0.93, 'scale(1, 1)'], [0.955, 'scale(1, 0.12)'], [0.98, 'scale(1, 1)'], [1, 'scale(1, 1)'],
   ])
 })
+
+test('a layer eases from keyframe to keyframe as the drawing does, each step its own curve', () => {
+  const bounce = { tpl: 'translate(0%, {0}%)', frames: [[0], [-4], [0]], times: [0, 0.5, 1], dur: 0.72, ease: [[0.2, 0.6, 0.45, 1], [0.55, 0, 0.8, 0.4]] }
+  expect(animationOf(bounce).keyframes.map(k => k.easing)).toEqual(['cubic-bezier(0.2, 0.6, 0.45, 1)', 'cubic-bezier(0.55, 0, 0.8, 0.4)', undefined])
+})

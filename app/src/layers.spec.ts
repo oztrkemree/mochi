@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 
 import type { Act, Mood } from '../../types'
-import { ACTS, POSES, layersFor, mascotInner, poseOf } from '../../hooks/rig'
+import { ACTS, POSES, layersFor, mascotInner, paramsAt, poseOf, target } from '../../hooks/rig'
 import { ROOM } from './world'
 
 const scene = { context: -1, agents: 0 }
@@ -72,4 +72,36 @@ test('talking and surfing the web, the arms move below the shoulder, never held 
   expect([reach('L', 'web'), reach('R', 'web')].every(v => v <= 46)).toBe(true)
   // Juggling, while Claude Code and Codex both work, the hands toss low by the body, never flung out level.
   expect([reach('L', 'juggle'), reach('R', 'juggle')].every(v => v <= 52)).toBe(true)
+})
+
+test('Mochi moves as if it had weight: loops ease, a bounce squashes as it lands, the antenna and a free arm follow the body', () => {
+  const wave = layersFor({ mood: 'wave', scene }, ROOM)
+  const attr = (html: string, layer: string, name: string) => html.match(new RegExp(`<div class="${layer}"[^>]*data-${name}="([^"]+)"`))?.[1]
+  // A bounce rises fast and slows to the top, then falls faster to the ground, in layers and in the drawing alike.
+  expect(attr(wave, 'move', 'ease')).toBe('[[0.2,0.6,0.45,1],[0.55,0,0.8,0.4]]')
+  expect(mascotInner({ mood: 'wave', scene, from: null })).toContain('keySplines="0.2 0.6 0.45 1;0.55 0 0.8 0.4"')
+  // It squashes on the ground and stretches in the air.
+  expect(attr(wave, 'squash', 'frames')).toBe('[[1.06,0.93],[0.98,1.03],[1.06,0.93]]')
+  // The antenna wobbles: wide on a bouncing body, small at rest; a hat takes it off.
+  expect(attr(wave, 'antenna', 'frames')).toBe('[[-8],[8],[-8]]')
+  expect(attr(layersFor({ mood: 'idle', scene }, ROOM), 'antenna', 'frames')).toBe('[[-3],[3],[-3]]')
+  expect(layersFor({ mood: 'idle', scene: { ...scene, outfit: { head: 'fez', eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null } } }, ROOM)).not.toContain('class="antenna"')
+  // The free arm flaps out as the body lands; the waving arm keeps its own wave, and a hand holding the flag keeps still.
+  expect(attr(wave, 'armL', 'frames')).toBe('[[23],[16],[23]]')
+  expect(attr(wave, 'armR', 'frames')).toBe('[[-140],[-102],[-140]]')
+  expect(attr(layersFor({ mood: 'proud', scene }, ROOM), 'armR', 'frames')).toBeUndefined()
+  // A big turn of an arm swings past where it goes and settles back.
+  expect(mascotInner({ mood: 'wave', scene, from: { params: target('idle'), mood: 'idle', scene } })).toMatch(/values="-16 76\.5 55;-152 76\.5 55;-140 76\.5 55"/)
+})
+
+test('what the layers take over is what the drawing shows: the antenna in step, an arm turning where the drawing has it', () => {
+  // The drawing's antenna starts with every other loop, after the move in, and wobbles as the layers do, a moment's included.
+  for (const mood of ['wave', 'shocked'] as const) {
+    const drawn = mascotInner({ mood, scene, from: null }).match(/<animateTransform attributeName="transform" type="rotate" values="(-?[\d.]+) 50 34;[^"]*" dur="([\d.]+)s" begin="([^"]+)"/)!
+    const layer = layersFor({ mood, scene }, ROOM).match(/<div class="antenna"[^>]*data-frames="\[\[(-?[\d.]+)\][^"]*" data-times="[^"]*" data-dur="([\d.]+)"/)!
+    expect([drawn[1], drawn[2], drawn[3]], mood).toEqual([layer[1], layer[2], '0.34s'])
+  }
+  // 100 ms into idle turning to wave, the drawing's right arm is at -110.8 (from -16 past -152 to -140, keySplines 0.3 0 0.2 1 over
+  // the first 70%): a pose that comes then starts from there, not from a straight ease of -16 to -140.
+  expect(paramsAt(target('idle'), 'wave', 100).armR).toBeCloseTo(-110.8, 0)
 })

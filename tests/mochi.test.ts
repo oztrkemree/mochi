@@ -106,7 +106,8 @@ test('a new shot starts where the old one stands and eases into its own pose', a
   expect(svg).toContain('keySplines')
   expect(svg).toContain('values="0;0;1" keyTimes="0;0.2;1" dur="0.4s"')
   const still = svgFor({ mood: 'idle', scene: { context: 40, agents: 0 }, from: null })
-  expect(still.includes('keySplines')).toBe(false)
+  // A shot that starts from nothing has no move into it (its loops ease, but nothing tweens and holds).
+  expect(still.includes('fill="freeze"')).toBe(false)
 })
 
 test('the panel draws even from state an older version stored', async () => {

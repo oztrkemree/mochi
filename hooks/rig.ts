@@ -125,9 +125,9 @@ type Pose = {
 }
 
 const L = {
-  bob: { dur: 1.8, keys: [{ lift: 0 }, { lift: -2.2 }, { lift: 0 }] },
+  bob: { dur: 1.8, keys: [{ lift: 0, sy: 1 }, { lift: -2.2, sy: 1.02 }, { lift: 0, sy: 1 }] },
   breathe: { dur: 3.4, keys: [{ sx: 1, sy: 1 }, { sx: 1.012, sy: 1.025 }, { sx: 1, sy: 1 }] },
-  bounce: { dur: 0.72, keys: [{ lift: 0 }, { lift: -5 }, { lift: 0 }] },
+  bounce: { dur: 0.72, keys: [{ lift: 0, sx: 1.06, sy: 0.93 }, { lift: -5, sx: 0.98, sy: 1.03 }, { lift: 0, sx: 1.06, sy: 0.93 }] },
   jump: { dur: 0.9, keys: [{ lift: 0, sy: 1 }, { lift: 0, sy: 0.93 }, { lift: -10, sy: 1.04 }, { lift: 0, sy: 0.95 }, { lift: 0, sy: 1 }] },
   shake: { dur: 0.32, keys: [{ shift: 0 }, { shift: -2.2 }, { shift: 2.2 }, { shift: -1.4 }, { shift: 0 }] },
   wiggle: { dur: 1.2, keys: [{ tilt: 0 }, { tilt: -4 }, { tilt: 4 }, { tilt: 0 }] },
@@ -149,7 +149,7 @@ const L = {
   sneeze: { dur: 1.4, once: true, keys: [{ tilt: 0, lift: 0 }, { tilt: -5, lift: -1 }, { tilt: -8, lift: -2 }, { tilt: -9, lift: -2.4 }, { tilt: 7, lift: 1 }, { tilt: 0, lift: 0 }] },
   // Turned about once: drawn narrower to nothing and back the other way round, as a flat thing turns.
   spin: { dur: 1.2, once: true, keys: [{ sx: 1 }, { sx: 0.08 }, { sx: -1 }, { sx: -0.08 }, { sx: 1 }] },
-  dance: { dur: 0.8, keys: [{ tilt: -6, lift: 0 }, { tilt: 0, lift: -3 }, { tilt: 6, lift: 0 }, { tilt: 0, lift: -3 }, { tilt: -6, lift: 0 }] },
+  dance: { dur: 0.8, keys: [{ tilt: -6, lift: 0, sy: 0.96 }, { tilt: 0, lift: -3, sy: 1.03 }, { tilt: 6, lift: 0, sy: 0.96 }, { tilt: 0, lift: -3, sy: 1.03 }, { tilt: -6, lift: 0, sy: 0.96 }] },
   shy: { dur: 1.4, keys: [{ tilt: -3, shift: 0 }, { tilt: 3, shift: 0.6 }, { tilt: -3, shift: 0 }] },
 } satisfies Record<string, BodyLoop>
 
@@ -293,8 +293,63 @@ export function lerp(a: Params, b: Params, t: number): Params {
 }
 
 /** The easing the SVG's keySplines draw, solved for x so the plugin can say where a transition stands. */
-function ease(x: number): number {
-  const [x1, y1, x2, y2] = [0.35, 0, 0.15, 1]
+/** Easing between two keyframes, as a cubic Bézier's x1 y1 x2 y2: SMIL's keySplines and CSS's cubic-bezier() alike. */
+type Spline = readonly [number, number, number, number]
+/** A sway, a breath, a swing: slow out of one keyframe and slow into the next. */
+const IN_OUT: Spline = [0.45, 0, 0.55, 1]
+/** Up off the ground fast, slowing to the top, as if thrown. */
+const RISE: Spline = [0.2, 0.6, 0.45, 1]
+/** Slow off the top, fast to the ground. */
+const FALL: Spline = [0.55, 0, 0.8, 0.4]
+
+/** How each step of a body's loop eases: going two units up or down it rises and falls as if thrown; any other step eases in and out. */
+function stepsOf(loop: BodyLoop): Spline[] {
+  const lift = loop.keys.map(k => k.lift ?? 0)
+  return lift.slice(1).map((l, i) => (l - lift[i]! <= -2 ? RISE : l - lift[i]! >= 2 ? FALL : IN_OUT))
+}
+const swayed = (values: number[]): Spline[] => values.slice(1).map(() => IN_OUT)
+
+/** A SMIL animation's timing for those steps, its keyframes evenly spaced. */
+const splined = (steps: readonly Spline[]) =>
+  ` calcMode="spline" keyTimes="${[0, ...steps.map((_, i) => n((i + 1) / steps.length))].join(';')}" keySplines="${steps.map(k => k.join(' ')).join(';')}"`
+
+/**
+ * An arm's swing: the pose's own, or, on a body that bounces, a flap that follows the body, the arm flung out as it lands and
+ * at rest at the top. A hand that holds the pose's thing keeps still.
+ */
+function swingOf(p: Pose, side: 'L' | 'R'): ArmLoop | undefined {
+  const own = side === 'L' ? p.armLoopL : p.armLoopR
+  if (own || !p.loop || p.loop.once || (side === 'R' && p.held)) return own
+  const lift = p.loop.keys.map(k => k.lift ?? 0)
+  const top = Math.min(...lift)
+  if (top > -3) return undefined
+  return { dur: p.loop.dur, values: lift.map(l => (side === 'L' ? 1 : -1) * 7 * (1 - l / top)) }
+}
+
+/** The antenna's wobble, the body's follower: wide on a body that bounces, less on one that rocks, slow and small at rest. */
+function wobbleOf(loop: BodyLoop | undefined): { deg: number; dur: number } {
+  if (!loop) return { deg: 3, dur: 2.6 }
+  const lift = Math.max(...loop.keys.map(k => -(k.lift ?? 0)))
+  const tilt = Math.max(...loop.keys.map(k => Math.abs(k.tilt ?? 0)))
+  return { deg: lift >= 3 ? 8 : tilt >= 3 ? 6 : 3, dur: Math.min(2.6, Math.max(0.6, loop.dur)) }
+}
+
+/** How far past its new angle a big turn of an arm swings before it settles back, and when, in the transition's 0 to 1. */
+const pastOf = (from: number, to: number) => to + Math.max(-12, Math.min(12, (to - from) * 0.12))
+const PAST_AT = 0.7
+/** A turn this many degrees or more swings past; a smaller one just eases in. */
+const BIG_TURN = 30
+const TO_PAST: Spline = [0.3, 0, 0.2, 1]
+const SETTLE: Spline = [0.4, 0, 0.6, 1]
+
+/** An arm `x` (0 to 1) into its transition, as the drawing turns it (see `arm`): a big turn past and back, a small one eased. */
+function turnAt(from: number, to: number, x: number): number {
+  if (Math.abs(to - from) < BIG_TURN) return mix(from, to, ease(x))
+  const past = pastOf(from, to)
+  return x < PAST_AT ? mix(from, past, ease(x / PAST_AT, TO_PAST)) : mix(past, to, ease((x - PAST_AT) / (1 - PAST_AT), SETTLE))
+}
+
+function ease(x: number, [x1, y1, x2, y2]: Spline = [0.35, 0, 0.15, 1]): number {
   const bez = (t: number, a: number, b: number) => 3 * (1 - t) * (1 - t) * t * a + 3 * (1 - t) * t * t * b + t * t * t
   let lo = 0
   let hi = 1
@@ -307,34 +362,39 @@ function ease(x: number): number {
 }
 
 /** Where a looping list of keyframes stands `seconds` into it. */
-function sample(values: number[], dur: number, seconds: number, once = false): number {
+function sample(values: number[], dur: number, seconds: number, once = false, steps?: readonly Spline[]): number {
   if (values.length === 0) return 0
   const span = values.length - 1
   const phase = once ? Math.min(1, seconds / dur) : (seconds % dur) / dur
   const at = phase * span
   const i = Math.min(span - 1, Math.floor(at))
-  return mix(values[i] ?? 0, values[i + 1] ?? 0, at - i)
+  const step = steps?.[i]
+  return mix(values[i] ?? 0, values[i + 1] ?? 0, step ? ease(at - i, step) : at - i)
 }
 
 /** What a pose drawn `ms` ago shows now: its transition, then its loops on top. */
 export function paramsAt(from: Params | null, mood: Mood | Act, ms: number): Params {
   const to = target(mood)
-  if (from !== null && ms < TRANSITION_MS) return lerp(from, to, ease(ms / TRANSITION_MS))
+  if (from !== null && ms < TRANSITION_MS) {
+    const x = ms / TRANSITION_MS
+    return { ...lerp(from, to, ease(x)), armL: turnAt(from.armL, to.armL, x), armR: turnAt(from.armR, to.armR, x) }
+  }
   const p = poseOf(mood)
   const s = Math.max(0, (ms - TRANSITION_MS) / 1000)
   const out = { ...to }
   if (p.loop) {
     const keys = p.loop.keys
     const at = (k: 'lift' | 'shift' | 'tilt' | 'sx' | 'sy', base: number) =>
-      keys.some(x => x[k] !== undefined) ? sample(keys.map(x => x[k] ?? (k === 'sx' || k === 'sy' ? 1 : 0)), p.loop!.dur, s, p.loop!.once) : base
+      keys.some(x => x[k] !== undefined) ? sample(keys.map(x => x[k] ?? (k === 'sx' || k === 'sy' ? 1 : 0)), p.loop!.dur, s, p.loop!.once, stepsOf(p.loop!)) : base
     out.lift += at('lift', 0)
     out.shift += at('shift', 0)
     out.tilt += at('tilt', 0)
     out.sx *= at('sx', 1)
     out.sy *= at('sy', 1)
   }
-  if (p.armLoopL) out.armL += sample(p.armLoopL.values, p.armLoopL.dur, s)
-  if (p.armLoopR) out.armR += sample(p.armLoopR.values, p.armLoopR.dur, s)
+  const [swingL, swingR] = [swingOf(p, 'L'), swingOf(p, 'R')]
+  if (swingL) out.armL += sample(swingL.values, swingL.dur, s, false, swayed(swingL.values))
+  if (swingR) out.armR += sample(swingR.values, swingR.dur, s, false, swayed(swingR.values))
   return out
 }
 
@@ -386,8 +446,11 @@ const BODY_H = (BODY.w * ART.body.h) / ART.body.w
 function arm(side: 'L' | 'R', from: number, to: number, loop: ArmLoop | undefined, fx = ''): string {
   const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
   const at = (deg: number) => `${n(deg)} ${px} ${py}`
-  const swing = loop ? loopT('rotate', loop.values.map(v => `${n(v)} ${px} ${py}`), loop.dur) : ''
-  return `<g transform="rotate(${at(to)})">${tweenT('rotate', at(from), at(to))}<g${fx}>${swing}<rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g></g>`
+  const swing = loop ? loopT('rotate', loop.values.map(v => `${n(v)} ${px} ${py}`), loop.dur, splined(swayed(loop.values))) : ''
+  // A big turn swings a little past where it is going and settles back.
+  const turn = Math.abs(to - from) < BIG_TURN ? tweenT('rotate', at(from), at(to))
+    : `<animateTransform attributeName="transform" type="rotate" values="${at(from)};${at(pastOf(from, to))};${at(to)}" dur="${D}" fill="freeze" calcMode="spline" keyTimes="0;${PAST_AT};1" keySplines="${TO_PAST.join(' ')};${SETTLE.join(' ')}"/>`
+  return `<g transform="rotate(${at(to)})">${turn}<g${fx}>${swing}<rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g></g>`
 }
 
 function heldSvg(kind: Held): string {
@@ -505,7 +568,7 @@ function bodyLoops(loop: BodyLoop | undefined): { move: string; turn: string; sq
   const has = (k: 'lift' | 'shift' | 'tilt' | 'sx' | 'sy') => loop.keys.some(x => x[k] !== undefined)
   const repeat = loop.once ? '' : ' repeatCount="indefinite"'
   const anim = (type: string, values: string[]) =>
-    `<animateTransform attributeName="transform" type="${type}" values="${values.join(';')}" dur="${loop.dur}s" begin="${D}"${repeat}/>`
+    `<animateTransform attributeName="transform" type="${type}" values="${values.join(';')}" dur="${loop.dur}s" begin="${D}"${repeat}${splined(stepsOf(loop))}/>`
   return {
     move: has('lift') || has('shift') ? anim('translate', loop.keys.map(k => `${n(k.shift ?? 0)} ${n(k.lift ?? 0)}`)) : '',
     turn: has('tilt') ? anim('rotate', loop.keys.map(k => `${n(k.tilt ?? 0)} 50 88`)) : '',
@@ -1294,6 +1357,8 @@ function markup(shot: Drawn): string {
   const was = shot.from ? poseOf(shot.from.mood) : pose
   const wasScene = shot.from?.scene ?? scene
   const loops = bodyLoops(pose.loop)
+  // As the layers wobble it (see layersFor), so a hand-off between them never jumps: a moment's once-only loop leaves it at rest.
+  const wobble = wobbleOf(pose.loop?.once ? undefined : pose.loop)
   const [eyeMove, eyeBlink] = eyeLoops(pose.eyeLoop)
 
   const level = (c: number) => Math.max(0, Math.min(100, c)) / 100
@@ -1378,10 +1443,10 @@ function markup(shot: Drawn): string {
     `<g>${loops.squash}`,
     '<g transform="translate(-50 -82)">',
     // A hat has no room for the antenna: it comes off while something is on the head.
-    outfit.head ? '' : `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/>`,
-    outfit.head ? '' : '<circle cx="50" cy="17.5" r="8" fill="url(#glow)"><animate attributeName="opacity" values="0.45;1;0.45" dur="2.2s" repeatCount="indefinite"/></circle>',
-    outfit.head ? '' : '<circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>',
-    outfit.head ? '' : img(ART.bulb, 45.6, 13.1, 8.8),
+    outfit.head ? '' : `<g>${loopT('rotate', [`${-wobble.deg} 50 34`, `${wobble.deg} 50 34`, `${-wobble.deg} 50 34`], wobble.dur, splined([IN_OUT, IN_OUT]))}` +
+      `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/>` +
+      '<circle cx="50" cy="17.5" r="8" fill="url(#glow)"><animate attributeName="opacity" values="0.45;1;0.45" dur="2.2s" repeatCount="indefinite"/></circle>' +
+      `<circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>${img(ART.bulb, 45.6, 13.1, 8.8)}</g>`,
     `<g${fx}><rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>${img(ART.body, BODY.x, BODY.y, BODY.w)}</g>`,
     skin?.over ?? '',
     `<rect x="18" y="${n(liquidY(scene.context))}" width="64" height="${n(BODY_H * level(scene.context) + 2)}" fill="url(#liq)" opacity="${n(liquidOp(scene.context))}" mask="url(#bm)">` +
@@ -1401,8 +1466,8 @@ function markup(shot: Drawn): string {
     wearSlot('eyes', outfit, wasOutfit),
     wearSlot('neck', outfit, wasOutfit),
     wearSlot('head', outfit, wasOutfit),
-    arm('L', from.armL, to.armL, pose.armLoopL, fx),
-    arm('R', from.armR, to.armR, pose.armLoopR, fx),
+    arm('L', from.armL, to.armL, swingOf(pose, 'L'), fx),
+    arm('R', from.armR, to.armR, swingOf(pose, 'R'), fx),
     // A held thing is drawn over the hand, as if gripped by it.
     wearSlot('held', outfit, wasOutfit),
     held,
@@ -1468,11 +1533,11 @@ export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, 
    * A layer about `origin` holding `base`, or playing keyframes: `tpl` with each `{i}` filled by a frame's numbers, eased from
    * frame to frame over `dur` seconds (at `times`, 0 to 1, when not evenly spaced). The numbers are the app's to play.
    */
-  const layer = (name: string, inner: string, origin: string, base: string, play: { tpl: string; frames: number[][] } | null, dur = 0, times: number[] | null = null) => {
+  const layer = (name: string, inner: string, origin: string, base: string, play: { tpl: string; frames: number[][] } | null, dur = 0, times: number[] | null = null, steps: readonly Spline[] | null = null) => {
     const style = `transform-origin:${origin};transform:${base}`
     if (play === null || play.frames.length < 2) return `<div class="${name}" style="${style}">${inner}</div>`
     const at = times ?? play.frames.map((_, i) => i / (play.frames.length - 1))
-    return `<div class="${name}" style="${style}" data-tpl="${play.tpl}" data-frames="${JSON.stringify(play.frames.map(f => f.map(v => Math.round(v * 1000) / 1000)))}" data-times="${JSON.stringify(at)}" data-dur="${dur}">${inner}</div>`
+    return `<div class="${name}" style="${style}" data-tpl="${play.tpl}" data-frames="${JSON.stringify(play.frames.map(f => f.map(v => Math.round(v * 1000) / 1000)))}" data-times="${JSON.stringify(at)}" data-dur="${dur}"${steps ? ` data-ease="${JSON.stringify(steps)}"` : ''}>${inner}</div>`
   }
   const pc = (v: number, of: number) => (v / of) * 100
 
@@ -1529,20 +1594,21 @@ export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, 
   }
   const armLayer = (side: 'L' | 'R') => {
     const base = side === 'L' ? to.armL : to.armR
-    const swing = side === 'L' ? pose.armLoopL : pose.armLoopR
+    const swing = swingOf(pose, side)
     const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
-    return layer(`arm${side}`, armSvg(side), at(px, py), `rotate(${n(base)}deg)`, swing ? { tpl: 'rotate({0}deg)', frames: swing.values.map(v => [base + v]) } : null, swing?.dur)
+    return layer(`arm${side}`, armSvg(side), at(px, py), `rotate(${n(base)}deg)`, swing ? { tpl: 'rotate({0}deg)', frames: swing.values.map(v => [base + v]) } : null, swing?.dur, null, swing ? swayed(swing.values) : null)
   }
 
   const isHatless = !outfit.head
   const body = svg(still(
-    (isHatless ? `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/><circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>${img(ART.bulb, 45.6, 13.1, 8.8)}` : '') +
     `<g${fx}><rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>${img(ART.body, BODY.x, BODY.y, BODY.w)}</g>` +
     (skin?.over ?? '') +
     `<rect x="18" y="28" width="64" height="56" fill="${rgb(to.tint)}" opacity="${n(to.tintOp)}" mask="url(#bm)"/>` +
     `<g opacity="${n(to.blush)}"><ellipse cx="31" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/><ellipse cx="69" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/></g>`))
-  // The bulb's glow, held lit: a pulse here would be one more thing drawn again on every frame.
-  const glow = isHatless ? svg('<circle cx="50" cy="17.5" r="8" fill="url(#glow)" opacity="0.8"/>') : ''
+  // The antenna wobbles as a layer of its own, its bulb's glow held lit: a pulse would be one more thing drawn again on every frame.
+  const wobble = wobbleOf(loop)
+  const antenna = isHatless ? layer('antenna', svg(`<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/><circle cx="50" cy="17.5" r="8" fill="url(#glow)" opacity="0.8"/><circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>${img(ART.bulb, 45.6, 13.1, 8.8)}`),
+    at(50, 34), 'none', { tpl: 'rotate({0}deg)', frames: [[-wobble.deg], [wobble.deg], [-wobble.deg]] }, wobble.dur, null, [IN_OUT, IN_OUT]) : ''
   const worn = svg(still(wear('chin') + wear('lip') + wear('face') + wear('eyes') + wear('neck') + wear('head')))
   const held = (['laptop', 'book', 'glass', 'flag'] as const).filter(k => pose.held === k).map(heldSvg).join('')
   const hold = svg(wear('held') + held)
@@ -1552,13 +1618,13 @@ export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, 
   const feet = svg(`<g${fx}><rect x="33.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 33, 79, 15)}</g><g${fx}>${tap}<rect x="52.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 52, 79, 15)}</g>`)
   const waves = pose.waves ? `<path d="M-10 93 Q0 88 10 93 T30 93 T50 93 T70 93 T90 93 T110 93" stroke="#5B8DEF" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.8">${loopT('translate', ['0 0', '-20 0'], 1, '', '0s')}</path>` : ''
 
-  const squash = layer('squash', body + glow + eyeLayer + mouthLayer + worn + armLayer('L') + armLayer('R') + hold,
-    at(50, 82), `scale(${n(to.sx)}, ${n(to.sy)})`, squashF, loop?.dur)
+  const squash = layer('squash', antenna + body + eyeLayer + mouthLayer + worn + armLayer('L') + armLayer('R') + hold,
+    at(50, 82), `scale(${n(to.sx)}, ${n(to.sy)})`, squashF, loop?.dur, null, loop ? stepsOf(loop) : null)
   // What floats over Mochi bobs as one layer, as the helpers do: SMIL playing on there would draw it all again on every frame.
   // Held, what floats up and fades (the z's of a sleep, the notes of a hum, a drop of sweat) is shown where it starts.
   const overLayer = over || sweat ? layer('over', svg((over + sweat).replaceAll('<g opacity="0">', '<g>')), at(50, 20), 'none', { tpl: 'translate(0%, {0}%)', frames: [[0], [pc(-1.6, H)], [0]] }, 1.8) : ''
-  const turn = layer('turn', feet + squash + overLayer, at(50, 88), `rotate(${n(to.tilt)}deg)`, turnF, loop?.dur)
-  const move = layer('move', turn, '50% 50%', `translate(${dx(to.shift)}, ${dy(to.lift)})`, moveF, loop?.dur)
+  const turn = layer('turn', feet + squash + overLayer, at(50, 88), `rotate(${n(to.tilt)}deg)`, turnF, loop?.dur, null, loop ? stepsOf(loop) : null)
+  const move = layer('move', turn, '50% 50%', `translate(${dx(to.shift)}, ${dy(to.lift)})`, moveF, loop?.dur, null, loop ? stepsOf(loop) : null)
 
   // Every SMIL animation is taken out: a layer that plays one is drawn again on every frame, which is what costs (measured, in a
   // see-through window always on top: about 31% of a core with them, 5% without). What moves here, the app moves.
