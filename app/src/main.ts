@@ -852,9 +852,9 @@ function drawAgents() {
   }
   // Offered while a chat works, when the temper plays: a round of the hop game, pressed for.
   if (view?.peers.some(p => p.state === 'busy') && !round && playsOn(settings.temper)) {
-    const play = el('button', 'agent')
+    const play = el('button', 'agent play')
     play.type = 'button'
-    play.append(el('span', 'line', w.game.play))
+    play.append(el('span', 'dot', '▶'), el('span', 'name', w.game.play))
     play.addEventListener('click', startRound)
     list.append(play)
   }
@@ -1421,10 +1421,16 @@ function startRound() {
   speak(words().game.go, 4000, QUIET_INK, null)
 }
 
-/** Records a press in the round on; false when none is on, so the press is Mochi's as usual. */
+/** Records a press in the round on, and when it catches a hop says the score so far with a chime; false when none is on, so the press is Mochi's as usual. */
 function pressRound(): boolean {
   if (!round) return false
+  const before = scoreOf(round.hops, round.presses)
   round.presses.push(Date.now() - round.from)
+  const after = scoreOf(round.hops, round.presses)
+  if (after > before) {
+    chime('ding')
+    speak(words().game.score(after, HOPS), 1500, QUIET_INK, null)
+  }
   return true
 }
 

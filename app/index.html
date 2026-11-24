@@ -116,6 +116,10 @@
       .agent { display: grid; grid-template-columns: 10px 1fr; column-gap: 8px; align-items: baseline; width: 100%; padding: 6px 8px; border: 0; border-radius: 9px; background: none; color: inherit; font: inherit; text-align: left; }
       .agent[data-link] { cursor: pointer; }
       .agent[data-link]:hover, .agent[data-link]:focus-visible { background: var(--line); outline: none; }
+      .agent.play { cursor: pointer; margin-top: 2px; }
+      .agent.play:hover, .agent.play:focus-visible { background: var(--line); outline: none; }
+      .agent.play .dot { width: auto; height: auto; border-radius: 0; transform: none; color: #E8926F; font-size: 8px; }
+      .agent.play .name { color: #E8926F; }
       .agent .dot { width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); }
       .agent .name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .agent .line, .agent .sub { grid-column: 2; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
