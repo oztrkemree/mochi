@@ -169,7 +169,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     // shortcut: a measured bound, not the engine's documented one; raise it once the limit is known.
     let pictures = PICTURE_BUDGET
     const pic = (item: Item, isOpen: boolean) => {
-      const svg = itemIcon(item, isOpen)
+      const svg = itemIcon(item, isOpen, true)
       if (svg.length > pictures) return DOT
       pictures -= svg.length
       return svg

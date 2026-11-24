@@ -7,6 +7,7 @@ import { setLang } from '../hooks/i18n'
 import { ALIVE_MS, appLink, appSessionOf, deskOf, peerOf } from '../hooks/live'
 import { floorOf, partyOf } from '../hooks/party'
 import { openCommand } from '../hooks/system'
+import { itemIcon } from '../hooks/rig'
 import { EMPTY_DAY } from '../hooks/level'
 import { NO_ENV, restorePrefs } from '../hooks/state'
 
@@ -706,6 +707,11 @@ test('the wardrobe stays within what the desktop draws: its pictures together un
     expect({ shelf, over: total > 160_000 }).toEqual({ shelf, over: false })
   }
   await pane.press({ key: 'shelf:head' } as never)
+  // The cards show the 1x pictures: the 2x ones are the desktop app's.
+  const sources = ((await pane.findAll({ type: 'Svg' })) as { props: { source: string } }[]).map(el => el.props.source)
+  expect(sources).toContain(itemIcon('crown', true, true))
+  expect(sources).not.toContain(itemIcon('crown', true))
+  expect(itemIcon('crown', true, true).length < itemIcon('crown', true).length * 0.7).toBe(true)
   expect(await pane.find({ key: 'wear:fez' })).toBeDefined()
   expect(await pane.find({ key: 'wear:crown' })).toBeDefined()
   await pane.unmount()

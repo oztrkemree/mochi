@@ -1,6 +1,7 @@
 import type { Act, Item, Mood, Outfit, Params, Scene, Shot } from '../types'
 import { ART } from './assets'
 import { WEAR } from './wear'
+import { WEAR_ICON } from './wear-icons'
 import { skinFilter, skinOf } from './skins'
 
 // The desktop drawing: one rig whose every pose is a set of numbers. A new
@@ -1636,7 +1637,8 @@ export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, 
 }
 
 /** An item's picture for the wardrobe, faded and grey while locked: the band's, and the desktop app's room. */
-export function itemIcon(item: Item, isOpen: boolean): string {
+/** An item's card picture; `isSmall` takes its 1x picture, for the mod's wardrobe, where the 2x ones weigh too much. */
+export function itemIcon(item: Item, isOpen: boolean, isSmall = false): string {
   const vector = VECTOR_WEAR[item]
   if (vector) {
     const [x, y, w, tall] = vector.box
@@ -1649,5 +1651,5 @@ export function itemIcon(item: Item, isOpen: boolean): string {
   const scale = Math.min(44 / a.w, 30 / a.h)
   const w = a.w * scale
   const tall = a.h * scale
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${a.uri}" x="${(46 - w) / 2}" y="${(32 - tall) / 2}" width="${w}" height="${tall}" opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}/></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${(isSmall ? WEAR_ICON[item] : undefined) ?? a.uri}" x="${(46 - w) / 2}" y="${(32 - tall) / 2}" width="${w}" height="${tall}" opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}/></svg>`
 }
