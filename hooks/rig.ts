@@ -75,8 +75,9 @@ function eyeShape(kind: EyeKind, side: -1 | 1): Shape {
 function mouthShape(kind: MouthKind): Shape {
   switch (kind) {
     case 'smile': return crescent(5.6, -1.4, 4, 2.4)
-    case 'grin': return [-6.8, -1.6, ...line([-6.8, -1.6], [0, -1.6]), ...line([0, -1.6], [6.8, -1.6]), ...quadHalves([6.8, -1.6], [0, 14], [-6.8, -1.6])]
-    case 'open': return ellipse(4.2, 3.6, 4.6, 0.5)
+    case 'grin': return [-6.8, -1.6, ...line([-6.8, -1.6], [0, -1.6]), ...line([0, -1.6], [6.8, -1.6]), ...quadHalves([6.8, -1.6], [0, 9.6], [-6.8, -1.6])]
+    // The open mouths stop two units under the shut one, so under a mustache they stay mouths, not a hole down the face.
+    case 'open': return ellipse(4.2, 3.4, 3.4, 0.4)
     case 'o': return ellipse(2.6, 2.6, 2.8, 0.6)
     // Talking: open just a little about the shut mouth's middle, so it stays tucked under a mustache.
     case 'chat': return ellipse(2.8, 1.8, 2, 0.8)
@@ -212,7 +213,7 @@ export const ACTS: Record<Act, Pose> = {
   // A turn cut off halfway.
   oops: { armL: 120, armR: -120, eye: 'wide', mouth: 'o', loop: L.startle, sweat: true, over: 'bang' },
   // Claude and Codex at work at once: one ball each, in the air together.
-  juggle: { armL: 40, armR: -44, armLoopL: { dur: 1.2, values: [0, 26, 0] }, armLoopR: { dur: 1.2, values: [-26, 0, -26] }, eye: 'dot', eyeDy: -2.6, mouth: 'small', loop: L.bob, eyeLoop: 'juggle', over: 'orbs' },
+  juggle: { armL: 30, armR: -32, armLoopL: { dur: 1.2, values: [0, 20, 0] }, armLoopR: { dur: 1.2, values: [-20, 0, -20] }, eye: 'dot', eyeDy: -2.6, mouth: 'small', loop: L.bob, eyeLoop: 'juggle', over: 'orbs' },
   // By itself, while nothing happens.
   hum: { armL: 20, armR: -20, eye: 'closed', mouth: 'small', mouthLoop: 'hum', blush: 0.4, loop: L.hum, eyeLoop: 'none', over: 'notes' },
   curious: { tilt: -8, armL: 16, armR: -16, eye: 'wide', eyeDx: -1.5, mouth: 'o', loop: L.ponder, eyeLoop: 'dart', over: 'question' },
@@ -491,7 +492,7 @@ function mouthLoop(kind: Pose['mouthLoop'], base: MouthKind): string {
     wobble: [['pout', 'flat', 'pout'], 0.7],
     yawn: [['small', 'small', 'open', 'open', 'small'], 4],
     hum: [['small', 'o', 'small', 'o', 'small'], 1.2],
-    laugh: [['grin', 'open', 'grin', 'open', 'grin'], 0.36],
+    laugh: [['grin', 'o', 'grin', 'o', 'grin'], 0.36],
     achoo: [['o', 'o', 'o', 'open', 'small', 'small'], 1.4],
   }
   const [middle, dur] = shapes[kind]
@@ -1426,10 +1427,10 @@ const still = (svg: string) => svg.replace(/<(animate|animateTransform|animateMo
 const MOUTH_PLAY: Record<NonNullable<Pose['mouthLoop']>, [number[][], number]> = {
   talk: [[[1, 1], [0.93, 1.9], [1, 1], [1, 1], [0.93, 1.9], [1, 1]], 0.9],
   wobble: [[[1, 1], [0.82, 1.1], [1, 1]], 0.7],
-  yawn: [[[1, 1], [1, 1], [1.1, 2.4], [1.1, 2.4], [1, 1]], 4],
-  hum: [[[1, 1], [0.9, 1.6], [1, 1], [0.9, 1.6], [1, 1]], 1.2],
-  laugh: [[[1, 1], [1, 1.35], [1, 1], [1, 1.35], [1, 1]], 0.36],
-  achoo: [[[1, 1], [1, 1], [1.1, 1.6], [1, 1]], 1.4],
+  yawn: [[[1, 1], [1, 1], [1.4, 3.1], [1.4, 3.1], [1, 1]], 4],
+  hum: [[[1, 1], [0.87, 2.7], [1, 1], [0.87, 2.7], [1, 1]], 1.2],
+  laugh: [[[1, 1], [0.6, 1], [1, 1], [0.6, 1], [1, 1]], 0.36],
+  achoo: [[[1, 1], [1, 1], [1.6, 1.2], [1, 1]], 1.4],
 }
 
 /** Where the eyes look about, as keyframes of a move in the drawing's units (see `eyeLoops`), with their timing. */
