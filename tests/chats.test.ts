@@ -686,3 +686,27 @@ test('/mochi desktop turns stepping aside for the desktop app off and on, and sa
   expect(await run('desk')).not.toBe(OFF)
   expect(await run('desk')).not.toBe(ON)
 })
+
+test('the wardrobe stays within what the desktop draws: its pictures together under 160,000 characters on every shelf, every open item still pressable', { timeoutMs: 30_000 }, async ($, on) => {
+  const { clock, files } = machine(on, [], true)
+  // Years of busy days: nearly everything is open, the heaviest wardrobe there is.
+  const big = { ...EMPTY_DAY, turns: 400, commits: 40 }
+  const days: Record<string, unknown> = {}
+  for (let i = 1; i <= 28; i++) days[`2025-09-${String(i).padStart(2, '0')}`] = big
+  files.set('/h/.claude/mochi/days/old-1.json', JSON.stringify({ id: 'old-1', label: 'web', days }))
+  files.set('/h/.claude/mochi/prefs.json', JSON.stringify({ v: 1, at: NOW - 60_000, pick: { head: 'fez', face: 'bushybrows', lip: 'mustache', chin: 'goatee', ground: 'sprout' }, skin: 'aurora' }))
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const pane = await $.ui.mount({ plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 140, bodyRows: 40 } } as never)
+  await pane.press({ key: 'tab:mochi' } as never)
+  for (const shelf of ['head', 'eyes', 'face', 'lip', 'chin', 'neck', 'held', 'ground', 'colour']) {
+    await pane.press({ key: `shelf:${shelf}` } as never)
+    const total = ((await pane.findAll({ type: 'Svg' })) as { props: { source: string } }[]).reduce((n, el) => n + el.props.source.length, 0)
+    expect({ shelf, over: total > 160_000 }).toEqual({ shelf, over: false })
+  }
+  await pane.press({ key: 'shelf:head' } as never)
+  expect(await pane.find({ key: 'wear:fez' })).toBeDefined()
+  expect(await pane.find({ key: 'wear:crown' })).toBeDefined()
+  await pane.unmount()
+})

@@ -58,6 +58,11 @@ function tapRegion($: EngineInterface, desk: DeskPane, key: string, rows: number
   return <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key={key} module="./hit.tsx" props={{ rows }} width="100%" height="100%" /></Box>
 }
 
+/** What the pane's pictures may weigh together, in characters of SVG (see `pic` in the details pane). */
+const PICTURE_BUDGET = 150_000
+/** A card's picture once the budget is spent: a dim dot. */
+const DOT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32"><circle cx="23" cy="16" r="7" fill="#8884"/></svg>'
+
 /** Over the floor of chats: a click picks whoever stands there (floor.tsx). */
 /** The pull requests' board, which opens the one pressed (board.tsx). */
 function boardRegion($: EngineInterface, desk: DeskPane, rows: number) {
@@ -159,6 +164,16 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     const room = Math.max(30, e.props.bodyColumns - 9)
     const perRow = Math.max(2, Math.floor((room + 1) / 16))
     const cardW = Math.floor((room + 1) / perRow) - 1
+    // The desktop drops a whole pane whose pictures weigh too much (172 KB drew, 426 KB did not, 2026-11-24), and the
+    // pictured items are large: they are drawn in the order the pane lists them while this budget lasts, the rest as a dot.
+    // shortcut: a measured bound, not the engine's documented one; raise it once the limit is known.
+    let pictures = PICTURE_BUDGET
+    const pic = (item: Item, isOpen: boolean) => {
+      const svg = itemIcon(item, isOpen)
+      if (svg.length > pictures) return DOT
+      pictures -= svg.length
+      return svg
+    }
     const cell = (item: Item) => {
       const slot = SLOT[item]
       const isOn = dressed[slot] === item
@@ -166,7 +181,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       return (
         <Box key={`cell:${item}`} flexDirection="column" alignItems="center" width={cardW} paddingX={1} paddingTop={0.5} overflow="hidden"
           borderStyle="round" borderColor={isOn ? 'claude' : 'inactive'} borderDimColor={!isOn} hover={isOpen && !isOn ? { borderColor: 'claude', borderDimColor: false } : undefined}>
-          <Svg source={itemIcon(item, isOpen)} alt={itemName(item)} width={46} height={32} />
+          <Svg source={pic(item, isOpen)} alt={itemName(item)} width={46} height={32} />
           {isOpen
             ? <Button key={`wear:${item}`} plain onPress={pressed}>{itemShort(item)}</Button>
             : <Text dimColor wrap="truncate">{itemShort(item)}</Text>}
@@ -183,7 +198,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       return (
         <Box key={`tab:${slot}`} flexDirection="row" alignItems="center" gap={1} paddingX={1} overflow="hidden"
           borderStyle="round" borderColor={isHere ? 'claude' : 'inactive'} borderDimColor={!isHere} hover={isHere ? undefined : { borderColor: 'claude', borderDimColor: false }}>
-          {on ? <Svg source={itemIcon(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
+          {on ? <Svg source={pic(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
           <Button key={`shelf:${slot}`} plain onPress={pressed}>
             {`${slotName(slot)} ${SLOT_ITEMS[slot].filter(i => ok.includes(i)).length}/${SLOT_ITEMS[slot].length}`}
           </Button>
@@ -224,6 +239,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       ? `${slotName(slotHere)} · ${here ? itemName(here) : t().ui.empty}${p.pick[slotHere] === undefined ? t().ui.autoMark : ''}`
       : `${t().ui.colour} · ${skinName(skin ?? 'clay')}`
     const mochi = svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit: dressed, ...(skin ? { skin } : {}) }, from: null })
+    pictures -= mochi.length
     // The badges: each medal with how it is earned, in colour once it is.
     const medal = (b: Badge) => {
       const isEarned = v.badges.includes(b)
@@ -441,7 +457,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         <Box flexDirection="row" alignItems="center" gap={2}>
           <Text dimColor wrap="truncate">{gists.wardrobe}</Text>
           <Box flexDirection="row" alignItems="center" gap={1}>
-            {worn.map(x => <Svg key={`worn:${x}`} source={itemIcon(x, true)} alt={itemName(x)} width={23} height={16} />)}
+            {worn.map(x => <Svg key={`worn:${x}`} source={pic(x, true)} alt={itemName(x)} width={23} height={16} />)}
           </Box>
         </Box>
       ), () => (
