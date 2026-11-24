@@ -32,6 +32,7 @@ import { TRANSITION_MS } from '../../hooks/rig'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { type Run, stepStuck } from './stuck'
+import { type Entry, planOf } from './sync'
 import { effortOf, weekDue, weekTop } from './effort'
 import { words } from './words'
 import { spell } from './work-tab'
@@ -1297,6 +1298,7 @@ function watch(mood: Mood | Act) {
 // ---------- settings ----------
 
 async function apply(next: Settings) {
+  const folderChanged = next.syncFolder !== settings.syncFolder
   settings = next
   setLang(settings.lang === 'auto' ? (pickLang(navigator.language) ?? 'en') : settings.lang)
   // Read aloud in its language, and Arabic right to left.
@@ -1314,6 +1316,32 @@ async function apply(next: Settings) {
   draw()
   await place()
   hot()
+  if (folderChanged) void sync().catch(note)
+}
+
+/** When the shared folder was last synced, so it is not done again within 15 minutes. */
+let syncedAt = 0
+/** Whether a sync is running now: a second one does not start beside it. */
+let isSyncing = false
+
+/** Copies the days of work both ways through the shared folder, the newer file winning; nothing is deleted. */
+async function sync() {
+  if (settings.syncFolder === '' || isSyncing) return
+  isSyncing = true
+  syncedAt = Date.now()
+  try {
+    const folder = settings.syncFolder
+    const [local, shared] = await Promise.all([invoke<Entry[]>('list_days', { folder: null }), invoke<Entry[]>('list_days', { folder })])
+    const plan = planOf(local, shared)
+    if (plan.push.length > 0) await invoke('copy_days', { folder, names: plan.push, pull: false })
+    const brought = plan.pull.length > 0 ? await invoke<number>('copy_days', { folder, names: plan.pull, pull: true }) : 0
+    if (brought > 0) {
+      await count()
+      if (!isBusy()) speak(words().sync.brought(brought), settings.talkSeconds * 1000, QUIET_INK, null)
+    }
+  } finally {
+    isSyncing = false
+  }
 }
 
 void listen(CHANGED, e => void apply(settingsFrom(JSON.stringify(e.payload))))
@@ -1505,6 +1533,7 @@ async function start() {
     const fidget = view && !held && !peek && !isBusy() && !say.classList.contains('on') ? fidgetOf(view.mood as Mood, Math.random(), Math.random()) : null
     if (fidget) hold(fidget)
     void take([]).catch(note)
+    if (Date.now() - syncedAt >= 15 * 60_000) void sync().catch(note)
   })
   stirSoon()
   // Everything is told from the start now that someone listens.
@@ -1533,6 +1562,7 @@ async function start() {
     }
   })
   void count().catch(note)
+  void sync().catch(note)
   // The first meeting, once: what Mochi does, the agents to listen to, the bubble's answers, the pocket.
   void meet().catch(note)
   // The list closes when the person turns to another window.

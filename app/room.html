@@ -164,6 +164,7 @@
       select { font: inherit; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--edge); background: var(--wall); color: var(--fg); }
       .settings .button { flex: none; padding: 6px 13px; border: 1px solid var(--edge); border-radius: 8px; background: var(--raised); color: var(--fg); cursor: pointer; }
       .settings .button:hover { border-color: rgba(217, 119, 87, 0.5); }
+      .row input[type="text"] { width: 260px; height: 28px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 8px; background: var(--wall); color: var(--fg); font: inherit; }
       .version { margin: 22px 4px 0; color: var(--faint); font-size: 12px; }
 
       /* Work: where the agents' time went. A river of the days, lit from the right where today is. */
@@ -341,6 +342,11 @@
           <div class="row"><span id="l-leave"></span><div class="seg" id="leaveSeconds" role="group"></div></div>
           <div class="row"><span id="l-breakMinutes"></span><div class="seg" id="breakMinutes" role="group"></div></div>
           <div class="row"><div><span id="l-temper"></span><small id="temperHint"></small></div><div class="seg" id="temper" role="group"></div></div>
+        </div>
+
+        <h2 id="h-sync"></h2>
+        <div class="group">
+          <div class="row"><div><label for="syncFolder" id="l-syncFolder"></label><small id="syncHint"></small></div><input type="text" id="syncFolder" spellcheck="false" autocomplete="off"></div>
         </div>
 
         <h2 id="h-talk"></h2>

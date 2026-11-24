@@ -60,3 +60,11 @@ test('how Mochi carries itself: calm unless set, playful or serious when chosen,
   expect(settingsFrom(JSON.stringify({ temper: 'serious' })).temper).toBe('serious')
   expect(settingsFrom(JSON.stringify({ temper: 'grumpy' })).temper).toBe('calm')
 })
+
+test('the folder the computers share: off unless set, a text of at most 400 characters, anything else off', () => {
+  expect(DEFAULTS.syncFolder).toBe('')
+  expect(settingsFrom(JSON.stringify({ syncFolder: '/Users/me/Dropbox' })).syncFolder).toBe('/Users/me/Dropbox')
+  expect(settingsFrom(JSON.stringify({ syncFolder: 'x'.repeat(400) })).syncFolder).toBe('x'.repeat(400))
+  expect(settingsFrom(JSON.stringify({ syncFolder: 'x'.repeat(401) })).syncFolder).toBe('')
+  expect(settingsFrom(JSON.stringify({ syncFolder: 5 })).syncFolder).toBe('')
+})

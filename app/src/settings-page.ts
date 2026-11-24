@@ -96,7 +96,7 @@ function draw() {
   const w = words()
   const text: Record<string, string> = {
     'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-jobs': w.jobs, 'l-idle': w.hideIdle, 'l-leave': w.leaveIdle,
-    'l-breakMinutes': w.breaks.setting, 'l-temper': w.temper.title, 'temperHint': w.temper.hints[settings.temper], 'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
+    'l-breakMinutes': w.breaks.setting, 'l-temper': w.temper.title, 'temperHint': w.temper.hints[settings.temper], 'h-sync': w.sync.title, 'l-syncFolder': w.sync.folder, 'syncHint': w.sync.hint, 'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
     'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex, 'l-line': w.line,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
   }
@@ -123,6 +123,17 @@ function draw() {
   lang.replaceChildren(new Option(w.sameAsSystem, 'auto'), ...LANGS.map(l => new Option(NATIVE[l], l)))
   lang.value = settings.lang
   lang.onchange = () => void save({ lang: lang.value as Settings['lang'] })
+
+  // Checked once the folder is saved: a folder that cannot be listed says so in the hint's place.
+  const folder = $<HTMLInputElement>('syncFolder')
+  folder.value = settings.syncFolder
+  folder.onchange = async () => {
+    const value = folder.value.trim()
+    folder.value = value
+    void save({ syncFolder: value })
+    const ok = value === '' || (await invoke('list_days', { folder: value }).then(() => true, () => false))
+    $('syncHint').textContent = ok ? w.sync.hint : w.sync.bad
+  }
 
   $('resetPlace').onclick = () => void emit('reset-place')
   for (const agent of AGENTS) void drawAgent(agent)
