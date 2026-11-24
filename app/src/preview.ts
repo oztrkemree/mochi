@@ -24,6 +24,8 @@ const day = (back: number) => new Date(Date.now() - back * 86_400_000).toISOStri
 const isAll = location.search.includes('all')
 const allDays = [JSON.stringify({ id: 'demo', label: 'shop', days: Object.fromEntries(Array.from({ length: isAll ? 120 : 26 }, (_, i) => [day(i), isAll ? { turns: 600, tools: 3000, edits: 500, errors: 1, commits: 60, cost: 0, secs: 40_000, night: 12, add: 9000, del: 9500, early: 6, langs: 63 } : { turns: 4 + ((i * 7) % 11), tools: 30, edits: 6 + (i % 5) * 4, errors: 1, commits: i % 3 === 0 ? 0 : 1 + (i % 4), cost: 0, secs: 900, night: i % 6 === 0 ? 1 : 0, add: 120, del: 40, early: 0, langs: 3 }])) })]
 const shared: Record<string, string> = { 'level.json': JSON.stringify({ level: 1, items: [] }), 'badges.json': '[]', 'repos.json': JSON.stringify({ '/w/shop': 1, '/w/shop/.claude/worktrees/loop-2': 1, '/w/api': 1 }) }
+/** What the computer looks like to Mochi's care: set by window.mochi.care, answered to the Rust commands that read it. */
+const care: Record<string, unknown> = {}
 // For the Work tab: more projects, one worked in from a worktree of shop, a busy day of chats side by side, and a chat tied to no project.
 if (isRoom && !isAll) {
   const more = [{ label: 'api', secs: 5400, every: 11 }, { label: 'docs', secs: 1800, every: 5 }, { label: 'loop-2', secs: 7200, every: 3 }, { label: 'site', secs: 2400, every: 9 }, { label: 'fervent-boyd-1df155', secs: 1200, every: 2 }]
@@ -59,6 +61,11 @@ mockIPC((cmd, args) => {
   if (cmd === 'line_state') return 'off'
   if (cmd === 'read_days') return null
   if (cmd === 'write_days' || cmd === 'answer') return true
+  if (cmd === 'ports') return care.ports ?? { lsof: '', ps: '', cwd: '' }
+  if (cmd === 'machine') return care.machine ?? { df: '', batt: '', load: '', cpus: 1 }
+  if (cmd === 'agent_versions') return care.versions ?? { claude: '', codex: '' }
+  if (cmd === 'changes') return care.changes ?? null
+  if (cmd === 'stop_server') return true
   if (cmd === 'note') console.error('mochi:', args)
   return null
 }, { shouldMockEvents: true })
@@ -78,6 +85,10 @@ Object.assign(window, {
     look: (look: unknown) => emit('look', look === null ? null : JSON.stringify(look)),
     /** What the person last chose to wear, as prefs.json says it. */
     prefs: (pick: unknown) => emit('prefs', JSON.stringify({ v: 1, at: Date.now(), pick })),
+    /** What the computer shows Mochi's care: the machine, the ports, the agents' versions and their changes, as the app's commands would answer. */
+    care: (next: Record<string, unknown>) => {
+      Object.assign(care, next)
+    },
     minute: () => emit('minute'),
     pointer: (x: number, y: number) => emit('pointer', [x, y]),
   },
