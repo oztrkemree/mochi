@@ -22,6 +22,7 @@ export const de: typeof en = {
         'Einunddreißig neue Dinge zum Anziehen, von Level 42 bis 95: ein Samurai-Helm, ein Diadem, ein Pharaonenkopfschmuck, ein fliegender Teller und mehr.',
         '/mochi skin wählt Mochis Farbe, und jedes Mochi trägt die Wahl des anderen.',
         'Der Tonschalter der App gilt für beide Mochis, und /mochi desktop on lässt das Band beiseitetreten, solange das Mochi der App draußen ist.',
+        'Die Einstellungen der Desktop-App zeigen die Versionen von Mod und App im Vergleich zu GitHub, mit einem Knopf zum Aktualisieren oder Installieren, und ihr Computer-Tab kann jeden Worktree entfernen und fragt vorher, wenn etwas verloren ginge.',
       ],
     },
     '0.9.0': {

@@ -49,6 +49,8 @@
       #stage { position: relative; }
       .mochi-layers, .mochi-layers div, .mochi-layers svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
       .mochi-layers div { will-change: transform; }
+      /* A warm halo hugging the clay's outline, so Mochi glows over any wallpaper. */
+      .mochi-layers { filter: drop-shadow(0 0 4px rgba(255, 200, 150, 0.9)) drop-shadow(0 0 14px rgba(240, 140, 90, 0.75)) drop-shadow(0 0 34px rgba(217, 119, 87, 0.6)); }
       @media (prefers-reduced-motion: reduce) { .mochi-layers div { animation: none !important; } }
 
       .card { background: var(--card); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line), 0 4px 14px rgba(0, 0, 0, 0.22); }
@@ -86,8 +88,10 @@
       .job:hover { filter: brightness(1.12); }
       .job:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
       .job .dot { width: 7px; height: 7px; border-radius: 50%; transform: translateY(-1px); background: var(--ink); box-shadow: 0 0 8px var(--ink); }
-      .job .what { color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .job .what b { color: var(--fg); font-weight: 650; }
+      /* Two parts: the name gives way with an ellipsis when it is long, the state beside it never does. */
+      .job .what { display: flex; gap: 5px; min-width: 0; color: var(--dim); white-space: nowrap; }
+      .job .what b { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--fg); font-weight: 650; }
+      .job .what .state { flex: 0 0 auto; max-width: 55%; overflow: hidden; text-overflow: ellipsis; }
       .job .more { grid-column: 2; color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .job .more + .more::before { content: "↳ "; }
       .job:last-child::after { content: ""; position: absolute; right: 22px; bottom: -5px; width: 10px; height: 10px; background: color-mix(in srgb, var(--card) 78%, var(--ink, var(--card))); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }

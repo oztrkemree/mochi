@@ -25,6 +25,7 @@ export const fr: typeof en = {
         'Trente et une nouveautés à porter, du niveau 42 au 95 : un casque de samouraï, un diadème, une coiffe de pharaon, une soucoupe volante et plus encore.',
         '/mochi skin choisit la couleur de Mochi, et chaque Mochi porte le choix de l’autre.',
         'L’interrupteur de son de l’app est le seul pour les deux Mochi, et /mochi desktop on fait s’effacer la bande tant que le Mochi de l’app est sorti.',
+        'Les réglages de l’app de bureau comparent les versions du mod et de l’app à GitHub, avec un bouton pour mettre à jour ou installer, et son onglet Ordinateur peut retirer n’importe quel worktree, en demandant d’abord si quelque chose serait perdu.',
       ],
     },
     '0.9.0': {

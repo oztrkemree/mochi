@@ -22,6 +22,7 @@ export const id: typeof en = {
         'Tiga puluh satu barang baru untuk dipakai, dari level 42 sampai 95: helm samurai, tiara, hiasan kepala firaun, piring terbang, dan lainnya.',
         '/mochi skin memilih warna Mochi, dan kedua Mochi memakai pilihan yang lain.',
         'Sakelar suara aplikasi adalah satu-satunya untuk kedua Mochi, dan /mochi desktop on membuat pita menyingkir selama Mochi aplikasi tampil.',
+        'Pengaturan aplikasi desktop membandingkan versi mod dan aplikasi dengan GitHub, dengan satu tombol untuk memperbarui atau memasang, dan tab Komputer bisa menghapus worktree mana pun, bertanya dulu bila ada yang akan hilang.',
       ],
     },
     '0.9.0': {

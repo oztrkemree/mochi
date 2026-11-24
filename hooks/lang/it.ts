@@ -26,6 +26,7 @@ export const it: typeof en = {
         'Trentuno novità da indossare, dal livello 42 al 95: un elmo da samurai, un diadema, un copricapo da faraone, un disco volante e altro.',
         '/mochi skin sceglie il colore di Mochi, e ogni Mochi indossa la scelta dell’altro.',
         'L’interruttore del suono dell’app è uno solo per entrambi i Mochi, e /mochi desktop on fa spostare la banda finché il Mochi dell’app è fuori.',
+        'Le impostazioni dell’app desktop confrontano le versioni di mod e app con GitHub, con un pulsante per aggiornare o installare, e la scheda Computer può rimuovere qualsiasi worktree, chiedendo prima se qualcosa andrebbe perso.',
       ],
     },
     '0.9.0': {

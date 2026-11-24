@@ -880,7 +880,7 @@ function drawJobs(rows: readonly Row[]) {
     item.style.setProperty('--ink', job.ink)
     const dot = el('span', 'dot')
     const what = el('span', 'what')
-    what.append(el('b', '', job.name), ` ${job.line}`)
+    what.append(el('b', '', job.name), el('span', 'state', job.line))
     item.append(dot, what, ...job.more.map(m => el('span', 'more', m)))
     items.push(item)
   }

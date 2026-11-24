@@ -4,7 +4,7 @@
 
 ### With the desktop app
 
-- Mochi's desktop app (`app/`, for macOS and Windows, released by a `desktop-v` tag) is in this repository: one Mochi on the screen for every agent you run, a room for the week, the work and the usage, and the same level, badges and wardrobe as the mod, from the same files.
+- Mochi's desktop app (`app/`, for macOS and Windows, version 1.1.0, released by a `desktop-v` tag) is in this repository: one Mochi on the screen for every agent you run, a room for the week, the work and the usage, and the same level, badges and wardrobe as the mod, from the same files.
 - The desktop Mochi suggests a rest after 90 unbroken minutes (off, 60, 90 or 120 in the settings), offers a 30-second game while a chat works, says once when a chat fails the same step three times in a row or two chats edit the same file, keeps looks under a name, takes a temper (calm, playful or serious), has six secret achievements and copies the days of work between computers through a shared folder.
 - A Computer tab in its room, and four things Mochi says about it: dev servers left running (with a Stop that takes two presses), worktrees that can go (removed only when merged, clean and holding nothing but build output), free disk, battery and load, and what is new in Claude Code and Codex.
 - Thirty-one new things to wear, opened from level 42 to 95, now that work in every agent counts: a samurai helmet, a tiara, a knight’s helmet, a pharaoh’s headdress, a zombie brain, a flying saucer and a phoenix crown; ski, steampunk, x-ray and diamond glasses; face paint; curly, rainbow and flame mustaches; a life ring, a crystal pendant and a dragon amulet; a guitar, a trophy, a katana, a rubber chicken and a thunderbolt; and a slime, a little ghost, a robot dog, a baby dragon and a portal beside Mochi. The worn ones were drawn as worn on Mochi, and all at up to 256 pixels, sharp on a large Mochi. The wardrobe holds 201.
@@ -13,6 +13,9 @@
 - While the desktop app's Mochi is out, a new level or badge is claimed before it is said (`said-level.json`, `said-badges.json`), so one Mochi says it. With the app hidden or closed nothing changes.
 - The desktop band has a one-line size: the button at its right end (or `/mochi small`) draws only the data at about half the height, Mochi's line with the branch and cost after it and the gauges' rings, without Mochi; pressed again (or `/mochi big`) the full band is back.
 - The band keeps its Mochi while the desktop app's Mochi is out too; `/mochi desktop on` has it step aside, and `/mochi desktop off` brings it back.
+- In the Computer tab every worktree has a Remove. It removes one at once when its branch is merged, nothing in it is uncommitted, no chat is open in it and it holds nothing git ignores that cannot be made again; otherwise a window says what would be lost (a branch not merged stays in git, uncommitted changes and those files do not) and asks. A chat open in it, or git's lock, stops it without a window. The row shows a wait until git is done and cannot be pressed again.
+- The shared folder of the days-of-work sync is chosen in the system's own window (a Choose… button), and its row gives the words the whole width.
+- The room's Settings has an Updates group: the mod and the app each show the version installed and the newest on GitHub, with one button to put the new one in or, for the mod, to install it.
 - The app's sound switch is the one switch for both Mochis: with it off, the band is silent too while the app runs. With the app closed, `/mochi sound` decides again.
 - `/mochi chats` says how far the plan is of a chat the desktop app follows (`2/4`).
 - `/mochi reset` keeps `statusline.json`, the status line you had before the app's.

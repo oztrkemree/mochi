@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { type Tree, type TreeState, canRemove, gbOf, isInside, keepsOf, mergedOf, stateOf, treesOf } from './trees'
+import { type Tree, type TreeState, canRemove, gbOf, hardOf, isInside, keepsOf, lossesOf, mergedOf, pressOf, stateOf, treesOf } from './trees'
 
 const H = (digit: string): string => digit.repeat(40)
 
@@ -92,4 +92,41 @@ test('sizes are shown in gigabytes with one decimal, and anything above zero sho
   expect(gbOf(1572864)).toBe('1.5')
   expect(gbOf(1000)).toBe('0.1')
   expect(gbOf(0)).toBe('0.0')
+})
+
+const sample = (): TreeState => ({ path: '/r/wt', branch: 'claude/x', head: H('2'), isMain: false, isLocked: false, repo: 'shop', isMerged: true, isDirty: false, isOpen: false, kb: 10, keeps: [] })
+
+test('a chat open in a worktree, or git’s lock, stops a removal outright, the chat first; nothing else does', () => {
+  const base = sample()
+  expect(hardOf(base)).toBeNull()
+  expect(hardOf({ ...base, isOpen: true })).toBe('open')
+  expect(hardOf({ ...base, isLocked: true })).toBe('locked')
+  expect(hardOf({ ...base, isOpen: true, isLocked: true })).toBe('open')
+  expect(hardOf({ ...base, isMerged: false, isDirty: true, keeps: ['.env'] })).toBeNull()
+})
+
+test('what a removal would lose is each of: a branch not merged, changes not committed, and every file git ignores that cannot be made again', () => {
+  const clean = sample()
+  expect(lossesOf(clean)).toEqual([])
+  expect(lossesOf({ ...clean, isMerged: false })).toEqual([{ kind: 'notMerged' }])
+  expect(lossesOf({ ...clean, isDirty: true })).toEqual([{ kind: 'dirty' }])
+  expect(lossesOf({ ...clean, isMerged: false, isDirty: true, keeps: ['lib', '.env'] })).toEqual([
+    { kind: 'notMerged' }, { kind: 'dirty' }, { kind: 'keeps', name: 'lib' }, { kind: 'keeps', name: '.env' },
+  ])
+  // A press removes at once only where there is nothing to lose and nothing in the way.
+  expect(canRemove(clean)).toBe(true)
+  expect(canRemove({ ...clean, isDirty: true })).toBe(false)
+})
+
+test('a worktree on no branch loses what was committed only there, which no branch keeps', () => {
+  expect(lossesOf({ ...sample(), branch: '', isMerged: false })).toEqual([{ kind: 'detached' }])
+})
+
+test('a press says why not for a chat or a lock, asks for what would be lost, and removes at once only a worktree that loses nothing', () => {
+  expect(pressOf(sample())).toBe('remove')
+  expect(pressOf({ ...sample(), isDirty: true })).toBe('ask')
+  expect(pressOf({ ...sample(), isMerged: false })).toBe('ask')
+  expect(pressOf({ ...sample(), keeps: ['.env'] })).toBe('ask')
+  expect(pressOf({ ...sample(), isOpen: true, isDirty: true })).toBe('open')
+  expect(pressOf({ ...sample(), isLocked: true, isMerged: false })).toBe('locked')
 })

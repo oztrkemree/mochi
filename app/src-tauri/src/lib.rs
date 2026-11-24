@@ -2,6 +2,7 @@ mod agents;
 mod care;
 mod stage;
 mod store;
+mod upgrade;
 mod work;
 
 use std::path::{Path, PathBuf};
@@ -386,6 +387,25 @@ fn write_shared(name: String, text: String) -> bool {
     data_dir().is_some_and(|d| store::write_shared(&d, &name, &text))
 }
 
+/// What is installed and what GitHub has, for the room's two update rows.
+// async: GitHub is asked off the window's thread.
+#[tauri::command(async)]
+fn update_state() -> Value { store::home_dir().map(|h| upgrade::state(&h)).unwrap_or(Value::Null) }
+
+/// The mod's newest version, put in the way it was installed (or installed, when it is not).
+// async: a download and the person's own programs run off the window's thread.
+#[tauri::command(async)]
+fn update_mod(version: String) -> Result<(), String> { upgrade::install_mod(&store::home_dir().ok_or("no home")?, &version) }
+
+/// The app's newest version, put in; this app then quits and the new one opens in its place.
+// async: a download runs off the window's thread.
+#[tauri::command(async)]
+fn update_app(app: AppHandle, version: String) -> Result<(), String> {
+    upgrade::install_app(&version)?;
+    app.exit(0);
+    Ok(())
+}
+
 // async: the programs and the folders are read off the window's thread.
 #[tauri::command(async)]
 fn ports() -> Value { care::ports() }
@@ -404,7 +424,7 @@ fn worktrees() -> Vec<Value> { data_dir().map(|d| care::worktrees(&d)).unwrap_or
 
 // async: git removes the folder off the window's thread.
 #[tauri::command(async)]
-fn remove_worktree(repo: String, path: String) -> Result<(), String> { care::remove_worktree(&data_dir().ok_or("no home")?, &repo, &path) }
+fn remove_worktree(repo: String, path: String, force: bool) -> Result<(), String> { care::remove_worktree(&data_dir().ok_or("no home")?, &repo, &path, force) }
 
 // async: the chats' files are read off the window's thread.
 #[tauri::command(async)]
@@ -501,6 +521,7 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         // Where the window stands is read when it changes, not at every look at the pointer.
@@ -509,7 +530,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, set_sound, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, list_days, copy_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note, ports, stop_server, machine, worktrees, remove_worktree, chat_folders, agent_versions, changes])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, set_sound, update_state, update_mod, update_app, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, list_days, copy_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note, ports, stop_server, machine, worktrees, remove_worktree, chat_folders, agent_versions, changes])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]

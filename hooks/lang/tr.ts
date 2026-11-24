@@ -21,6 +21,7 @@ export const tr: typeof en = {
         'Seviye 42’den 95’e kadar otuz bir yeni parça: samuray miğferi, taç, firavun başlığı, uçan daire ve daha fazlası.',
         '/mochi skin Mochi’nin rengini seçiyor; iki Mochi de diğerinin seçimini giyiyor.',
         'Uygulamanın ses anahtarı iki Mochi için tek anahtar; /mochi desktop on ise uygulamanın Mochi’si ekrandayken bandın kenara çekilmesini sağlıyor.',
+        'Masaüstü uygulamasının Ayarlar sekmesi modun ve uygulamanın sürümlerini GitHub ile karşılaştırıyor, güncellemek ya da kurmak için tek düğme veriyor; Bilgisayar sekmesi de her worktree’yi kaldırabiliyor, bir şey kaybolacaksa önce soruyor.',
       ],
     },
     '0.9.0': {

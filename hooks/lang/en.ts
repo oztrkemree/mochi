@@ -26,6 +26,7 @@ export const en = {
         'Thirty-one new things to wear, from level 42 to 95: a samurai helmet, a tiara, a pharaoh’s headdress, a flying saucer and more.',
         '/mochi skin chooses Mochi’s colour, and either Mochi wears the other’s choice.',
         'The app’s sound switch is the one switch for both Mochis, and /mochi desktop on has the band step aside while the app’s Mochi is out.',
+        'The desktop app’s Settings shows the mod’s and the app’s versions against GitHub, with one button to update or install, and its Computer tab can remove any worktree, asking first when something would be lost.',
       ],
     },
     '0.9.0': {

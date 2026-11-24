@@ -152,6 +152,11 @@
       .row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 46px; padding: 9px 14px; }
       .row + .row { border-top: 1px solid var(--edge); }
       .row label { flex: 1; }
+      /* A row whose control is wide: its words above, the control below it across the whole row. */
+      .row.stack { flex-direction: column; align-items: stretch; gap: 8px; }
+      .row.stack label { flex: none; }
+      .pick { display: flex; gap: 8px; }
+      .row .pick input[type="text"] { flex: 1; width: auto; min-width: 0; }
       .row small { display: block; margin-top: 2px; color: var(--faint); font-size: 12px; }
       .switch { appearance: none; -webkit-appearance: none; position: relative; flex: none; width: 36px; height: 21px; margin: 0; border-radius: 11px; background: #3A332E; cursor: pointer; transition: background 160ms ease-out; }
       .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); transition: transform 160ms cubic-bezier(0.2, 0.9, 0.3, 1); }
@@ -318,6 +323,17 @@
       .care-size { flex: none; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
       .care-btn { flex: none; height: 26px; padding: 0 11px; border: 1px solid var(--edge); border-radius: 8px; background: none; color: var(--dim); font-size: 12px; cursor: pointer; }
       .care-btn:hover { color: var(--fg); border-color: rgba(255, 236, 222, 0.18); }
+      .care-btn.care-danger { color: #ff9b86; border-color: rgba(255, 120, 90, 0.5); }
+      .care-btn.care-danger:hover { color: #ffb4a3; border-color: rgba(255, 120, 90, 0.8); }
+      .care-wait { flex: none; display: inline-flex; align-items: center; gap: 8px; color: var(--dim); font-size: 12px; }
+      .care-wait::before { content: ''; width: 12px; height: 12px; border: 2px solid var(--edge); border-top-color: var(--clay-hi); border-radius: 50%; animation: care-spin 0.8s linear infinite; }
+      @keyframes care-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .care-wait::before { animation: none; } }
+      .care-veil { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(8, 6, 5, 0.6); }
+      .care-modal { width: min(440px, calc(100vw - 48px)); padding: 18px 20px; border: 1px solid var(--edge); border-radius: 14px; background: var(--raised); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5); }
+      .care-modal h4 { margin: 0 0 10px; font-size: 14px; color: var(--fg); }
+      .care-modal ul { margin: 0 0 16px; padding-left: 18px; color: var(--dim); font-size: 13px; line-height: 1.55; }
+      .care-buttons { display: flex; justify-content: flex-end; gap: 8px; }
       .care-btn[aria-pressed="true"] { color: var(--fg); background: var(--raised); border-color: rgba(217, 119, 87, 0.55); }
       .care-list { margin: 8px 0 0; padding-left: 18px; color: var(--dim); font-size: 12px; }
       .care-list li + li { margin-top: 3px; }
@@ -360,7 +376,7 @@
 
         <h2 id="h-sync"></h2>
         <div class="group">
-          <div class="row"><div><label for="syncFolder" id="l-syncFolder"></label><small id="syncHint"></small></div><input type="text" id="syncFolder" maxlength="400" spellcheck="false" autocomplete="off"></div>
+          <div class="row stack"><div><label for="syncFolder" id="l-syncFolder"></label><small id="syncHint"></small></div><div class="pick"><input type="text" id="syncFolder" maxlength="400" spellcheck="false" autocomplete="off"><button class="button" id="syncChoose" type="button"></button></div></div>
         </div>
 
         <h2 id="h-talk"></h2>
@@ -379,6 +395,12 @@
         <h2 id="h-language"></h2>
         <div class="group">
           <div class="row"><label for="lang" id="l-lang"></label><select id="lang"></select></div>
+        </div>
+
+        <h2 id="h-updates"></h2>
+        <div class="group">
+          <div class="row"><div><span id="l-updateMod"></span><small id="updateModState"></small></div><button class="button" id="updateMod" type="button"></button></div>
+          <div class="row"><div><span id="l-updateApp"></span><small id="updateAppState"></small></div><button class="button" id="updateApp" type="button"></button></div>
         </div>
 
         <h2 id="h-agents"></h2>

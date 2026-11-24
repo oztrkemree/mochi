@@ -24,6 +24,7 @@ export const pt: typeof en = {
         'Trinta e um itens novos para vestir, do nível 42 ao 95: um capacete de samurai, uma tiara, um toucado de faraó, um disco voador e mais.',
         '/mochi skin escolhe a cor do Mochi, e cada Mochi veste a escolha do outro.',
         'O botão de som do app é o único para os dois Mochis, e /mochi desktop on faz a faixa sair da frente enquanto o Mochi do app está na tela.',
+        'As configurações do app de desktop comparam as versões do mod e do app com o GitHub, com um botão para atualizar ou instalar, e a aba Computador pode remover qualquer worktree, perguntando antes se algo se perderia.',
       ],
     },
     '0.9.0': {

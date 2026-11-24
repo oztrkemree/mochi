@@ -41,6 +41,7 @@ export const pl: typeof en = {
         'Trzydzieści jeden nowych rzeczy do noszenia, od poziomu 42 do 95: hełm samuraja, tiara, nakrycie głowy faraona, latający spodek i więcej.',
         '/mochi skin wybiera kolor Mochi, a każdy Mochi nosi wybór drugiego.',
         'Przełącznik dźwięku w aplikacji jest jeden dla obu Mochi, a /mochi desktop on odsuwa pasek, gdy Mochi aplikacji jest na ekranie.',
+        'Ustawienia aplikacji porównują wersje moda i aplikacji z GitHubem i dają jeden przycisk do aktualizacji lub instalacji, a karta Komputer może usunąć dowolny worktree, pytając najpierw, gdy coś przepadnie.',
       ],
     },
     '0.9.0': {

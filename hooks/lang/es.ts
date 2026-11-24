@@ -24,6 +24,7 @@ export const es: typeof en = {
         'Treinta y una cosas nuevas para vestir, del nivel 42 al 95: un casco de samurái, una tiara, un tocado de faraón, un platillo volante y más.',
         '/mochi skin elige el color de Mochi, y cada Mochi lleva la elección del otro.',
         'El interruptor de sonido de la app es el único para los dos Mochis, y /mochi desktop on hace que la banda se aparte mientras el Mochi de la app está fuera.',
+        'Los ajustes de la app de escritorio muestran las versiones del mod y de la app frente a GitHub, con un botón para actualizar o instalar, y su pestaña Equipo puede quitar cualquier worktree, preguntando antes si se perdería algo.',
       ],
     },
     '0.9.0': {
