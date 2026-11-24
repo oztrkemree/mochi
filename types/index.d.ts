@@ -316,8 +316,8 @@ export type Prefs = {
   hasPlugins: boolean
   /** A stretch suggested after two hours of work without a break. */
   hasBreaks: boolean
-  /** The band is drawn without its mascot while the desktop app's Mochi is out. */
-  goesOut: boolean
+  /** The band is drawn without its mascot while the desktop app's Mochi is out; off by default, `/mochi desktop on`. */
+  stepsAside: boolean
   /** The person's birthday as "MM-DD", '' when not given. */
   birthday: string
   /** The first day Mochi ran on this machine ("2026-10-09"), for its anniversary; '' until recorded. */

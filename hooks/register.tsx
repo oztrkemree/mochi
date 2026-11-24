@@ -1428,8 +1428,8 @@ async function setHidden($: Dollar, isHidden: boolean): Promise<string> {
 
 /** Whether the band goes without its mascot while the desktop app's Mochi is out. */
 async function toggleDesktop($: Dollar, arg: string): Promise<string> {
-  const after = await setPrefs($, v => ({ ...v, goesOut: wanted(arg, v.goesOut) }))
-  return after.goesOut ? t().cmd.desktopOn : t().cmd.desktopOff
+  const after = await setPrefs($, v => ({ ...v, stepsAside: wanted(arg, v.stepsAside) }))
+  return after.stepsAside ? t().cmd.desktopOn : t().cmd.desktopOff
 }
 
 /** A setting turned over from the details pane, as its command does with no word after it; the shield's command alone only looks, so it is told which way. */

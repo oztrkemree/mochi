@@ -97,6 +97,9 @@ test('a name takes as many whole words as three lines hold; what does not fit en
 test('the floor shows only the places with someone in them, a "+N" past each one’s room, and a press lands on the Mochi under it', async () => {
   const three = partyOf(peer('me', 'busy'), [peer('a', 'busy'), peer('b', 'idle')], NOW)
   const small = floorOf(three, NOW)
+  // Every Mochi on the floor wears the person's colour, as the band's does; with none, its own clay.
+  expect(small.svg).not.toContain('skin-map-')
+  expect(floorOf(three, NOW, '', () => undefined, 'peach').svg).toContain('filter="url(#skin-map-peach)"')
   expect(small.svg).not.toContain('AT THE DOOR')
   expect(small.svg).toContain('WORKSHOP')
   expect(small.svg).toContain('NAP CORNER')

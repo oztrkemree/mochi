@@ -14,6 +14,10 @@ import { mascotInner, shiftTimeline } from './rig'
 // does, and an <img> of it keeps the painted parts an interactive frame would strip.
 
 export const PANEL_H = 88
+/** The compact band's height: only the data, Mochi's line, the branch and cost and the gauges' rings. */
+export const PANEL_COMPACT_H = 40
+/** The line's box in the compact band, centred in its height. */
+const COMPACT_ROW_H = 36
 /** The height the lines and gauges are laid out in, centred in the band's. */
 const ROW_H = 76
 /** The mascot's box in the band, in pixels: larger than the band, its empty margins outside. */
@@ -109,8 +113,9 @@ export function limitInk(p: number): [string, string] {
 }
 
 
-/** `isAway` leaves the mascot out: it is out on the desktop, and its stage, the lines and the gauges stay. */
-export type PanelInput = { panel: Panel; now: number; width: number; isAway?: boolean }
+/** `isAway` leaves the mascot out: it is out on the desktop, and its stage, the lines and the gauges stay. `isCompact` draws the
+ * short band of data alone: Mochi's line with the branch and cost after it, and the rings; no Mochi, stage, trail or gauge names. */
+export type PanelInput = { panel: Panel; now: number; width: number; isAway?: boolean; isCompact?: boolean }
 
 /** An Info with every list and figure present, whatever an older version stored. */
 function whole(info: Partial<Info> | undefined): Info {
@@ -327,25 +332,27 @@ export function disco(x0: number, x1: number, w: number, h: number): string {
 }
 
 /** The panel's drawing, and where its gauges sit (in the drawing's pixels) so a click region can lie over them. */
-export function panelSvg({ panel, now, width, isAway = false }: PanelInput): { svg: string; card: { x: number; w: number }; width: number } {
+export function panelSvg({ panel, now, width, isAway = false, isCompact = false }: PanelInput): { svg: string; card: { x: number; w: number }; width: number; height: number } {
   const { shot, infoFrom } = panel
   const info = whole(panel.info)
   const was = infoFrom ? whole(infoFrom) : info
   const W = Math.max(420, Math.round(width))
-  const H = PANEL_H
+  const H = isCompact ? PANEL_COMPACT_H : PANEL_H
   const ink = MOOD_INK[shot.mood]
   const since = Math.max(0, now - panel.infoAt) / 1000
 
   // ---- three ring gauges on the right ----
   // Narrow columns against the right edge, so the lines in the middle keep the room.
-  const colW = 56
+  const colW = isCompact ? 44 : 56
   const list = gauges(info, was, now)
   const gX = W - colW * list.length
   const sepX = gX - 10
   const rings = list.map((g, i) => {
     const cx = gX + colW * i + colW / 2
-    return ring({ id: g.key, cx, cy: 29, r: 14.5, width: 4.2, arcs: g.arcs, was: g.was, center: esc(g.center), centerSize: 10.5,
-      ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.pace !== undefined ? { pace: g.pace } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) }) +
+    const gauge = ring({ id: g.key, cx, cy: isCompact ? COMPACT_ROW_H / 2 : 29, r: isCompact ? 13 : 14.5, width: isCompact ? 3.4 : 4.2, arcs: g.arcs, was: g.was, center: esc(g.center), centerSize: isCompact ? 9.5 : 10.5,
+      ...(g.mark !== undefined ? { mark: g.mark } : {}), ...(g.pace !== undefined ? { pace: g.pace } : {}), ...(g.halo ? { halo: g.halo, markColor: g.halo } : {}) })
+    if (isCompact) return gauge
+    return gauge +
       `<text class="t ${g.halo ? '' : 'dim'}" x="${n(cx)}" y="58.5" font-size="10" font-weight="${g.halo ? 650 : 500}" text-anchor="middle"${g.halo ? ` fill="${g.halo}"` : ''}>${esc(g.label)}</text>` +
       `<text class="t${g.subInk ? '' : ' faint'}" x="${n(cx)}" y="69.5" font-size="9.5" text-anchor="middle" font-variant-numeric="tabular-nums"${g.subInk ? ` fill="${g.subInk}" font-weight="600"` : ''}>${esc(g.sub)}</text>`
   }).join('')
@@ -362,7 +369,7 @@ export function panelSvg({ panel, now, width, isAway = false }: PanelInput): { s
   const mascot = `<svg x="${MASCOT_X}" y="${n(mY)}" width="${MASCOT}" height="${MASCOT}" viewBox="0 0 100 100" overflow="visible">${mascotInner(shot, Math.max(0, now - shot.at))}</svg>`
 
   // ---- three lines of what is happening ----
-  const stageEnd = Math.round(MASCOT_X + MASCOT * 0.88 + 6)
+  const stageEnd = isCompact ? 0 : Math.round(MASCOT_X + MASCOT * 0.88 + 6)
   const clock = local(now, info.tz ?? 0)
   // The disco is the line the typing put up for the secret word; any other celebration has fireworks.
   const isDisco = shot.mood === 'party' && info.detail === t().fun.typing.disco
@@ -370,7 +377,8 @@ export function panelSvg({ panel, now, width, isAway = false }: PanelInput): { s
   const floor = isDisco ? disco(stageEnd + 10, sepX - 10, W, H) : ''
   const free = Math.max(0, sepX - stageEnd - 12)
   const room = Math.min(free, LINES_W)
-  const x0 = stageEnd + Math.round((free - room) / 2)
+  // Compact, the line starts at the left edge, the room after it for the branch and cost.
+  const x0 = isCompact ? 2 : stageEnd + Math.round((free - room) / 2)
   const end = x0 + room
   const [verb = '', ...rest] = info.detail.split(' · ')
   const subject = rest.join(' · ')
@@ -468,15 +476,19 @@ export function panelSvg({ panel, now, width, isAway = false }: PanelInput): { s
   const third = (git ? BRANCH(bx, 73) : '') +
     `<text class="t faint" x="${metaX}" y="73" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + ci.svg
 
+  // Compact, the branch and cost follow the bubble on its row, as far as the gauges let them.
+  const metaAt = bx + bw + 14
+  const compactMeta = metaParts.length > 0 && sepX - metaAt > 40
+    ? (git ? BRANCH(metaAt, 23.5) : '') + `<text class="t faint" x="${git ? metaAt + 14 : metaAt}" y="23.5" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.floor((sepX - metaAt - 24) / 6.3)))}</text>`
+    : ''
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
-    STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + show.behind + floor + (isAway ? '' : glow + mascot) +
-    `<g transform="translate(0 ${n((H - ROW_H) / 2)})">` +
+    STYLE + BUBBLE + rtlStyle() + DEFS + (isCompact ? '' : sky(clock.hour, stageEnd, H) + show.behind + floor + (isAway ? '' : glow + mascot)) +
+    `<g transform="translate(0 ${n((H - (isCompact ? COMPACT_ROW_H : ROW_H)) / 2)})">` +
     // The bubble's pop and typing run from when the line changed, so a redraw
     // mid-way picks them up where they were; the rest loops on the clock.
     shiftTimeline(title, since) +
-    shiftTimeline(second + third, (now / 1000) % 600) +
-    `<path class="rule" d="M${n(sepX)} 14V62"/>` +
+    (isCompact ? compactMeta : shiftTimeline(second + third, (now / 1000) % 600) + `<path class="rule" d="M${n(sepX)} 14V62"/>`) +
     shiftTimeline(rings, since) +
     '</g>' + show.front + '</svg>'
-  return { svg, card: { x: sepX, w: W - sepX }, width: W }
+  return { svg, card: { x: sepX, w: W - sepX }, width: W, height: H }
 }
