@@ -152,7 +152,7 @@ pub fn ci(cwd: &str, sha: Option<&str>) -> Value {
 // ---------- a newer version ----------
 
 /// A version's numbers, for comparing: "1.2.10" is after "1.2.9".
-fn numbers(version: &str) -> Vec<u64> {
+pub(crate) fn numbers(version: &str) -> Vec<u64> {
     version.trim_start_matches('v').split('.').map(|n| n.parse().unwrap_or(0)).collect()
 }
 
