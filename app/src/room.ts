@@ -289,17 +289,26 @@ function putLooks(list: Saved[]) {
   }
 }
 
-/** A saved look worn: its whole pick becomes the person's choice at once. */
+/** A saved look worn: its whole pick and its colour, if the level still opens it, become the person's choice at once. */
 function wearLook(s: Saved) {
   if (!look) return
-  prefs = { at: Date.now(), pick: wearable(s.pick, look.items), ...(prefs?.skin ? { skin: prefs.skin } : {}) }
+  const skin = s.skin && skinNow(s.skin, history) === s.skin ? s.skin : undefined
+  prefs = { at: Date.now(), pick: wearable(s.pick, look.items), ...(skin ? { skin } : {}) }
   look = lookNow(history, modLook, prefs, tz())
   drawMochi()
   draw()
   void invoke('write_shared', { name: 'prefs.json', text: choiceText(prefs) })
 }
 
-/** The saved looks under the shelves: a name keeps the look worn now; each kept look is a chip that wears it, with a remove. */
+/** A saved look as a still picture of Mochi in it, in its colour while the level still opens that colour. */
+function lookSvg(s: Saved): string {
+  if (!look) return ''
+  const skin = skinNow(s.skin, history)
+  const outfit = dressAs({ ...look, pick: wearable(s.pick, look.items) }, 'idle', Date.now())
+  return stillOf(svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit, ...(skin ? { skin } : {}) }, from: null }))
+}
+
+/** The saved looks under the shelves: a name keeps the look worn now, in the colour worn now; each kept look is a tile that wears it, with a remove. */
 function drawLooks(into: HTMLElement) {
   const w = words().outfits
   const block = el('section', 'w-sec')
@@ -315,29 +324,34 @@ function drawLooks(into: HTMLElement) {
   form.addEventListener('submit', e => {
     e.preventDefault()
     if (!look || input.value.trim() === '') return
-    putLooks(saved(looksKept(), input.value, look.pick))
+    putLooks(saved(looksKept(), input.value, look.pick, prefs?.skin))
     draw()
   })
   block.append(form)
   const all = looksKept()
   if (all.length === 0) block.append(el('p', 'w-note', w.none))
-  const chips = el('div', 'w-chips')
-  for (const s of all) {
-    const chip = el('span', 'w-chip')
-    const wear = el('button', '', s.name)
-    wear.type = 'button'
-    wear.addEventListener('click', () => wearLook(s))
-    const drop = el('button', '', '×')
-    drop.type = 'button'
-    drop.setAttribute('aria-label', w.remove)
-    drop.addEventListener('click', () => {
-      putLooks(removed(looksKept(), s.name))
-      draw()
-    })
-    chip.append(wear, drop)
-    chips.append(chip)
+  else {
+    const grid = el('div', 'looks')
+    for (const s of all) {
+      const tile = el('div', 'look')
+      const wear = el('button', 'look-wear')
+      wear.type = 'button'
+      const pic = el('span', 'look-pic')
+      pic.innerHTML = lookSvg(s)
+      wear.append(pic, el('b', '', s.name))
+      wear.addEventListener('click', () => wearLook(s))
+      const drop = el('button', 'look-drop', '×')
+      drop.type = 'button'
+      drop.setAttribute('aria-label', w.remove)
+      drop.addEventListener('click', () => {
+        putLooks(removed(looksKept(), s.name))
+        draw()
+      })
+      tile.append(wear, drop)
+      grid.append(tile)
+    }
+    block.append(grid)
   }
-  block.append(chips)
   into.append(block)
 }
 

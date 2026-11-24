@@ -51,3 +51,23 @@ test('a kept look wears only the items still owned, keeps a slot chosen as nothi
   expect(wearable({ head: 'beanie', eyes: null, neck: 'scarf' }, ['beanie'])).toEqual({ head: 'beanie', eyes: null })
   expect(wearable({}, [])).toEqual({})
 })
+
+test('a look saved in a colour reads back with that colour through stored text', () => {
+  const list = saved([], 'Party', {}, 'ocean')
+  expect(outfitsFrom(JSON.stringify(list))).toStrictEqual([{ name: 'Party', pick: {}, skin: 'ocean' }])
+})
+
+test('a stored colour that is not a text of 1 to 40 characters is dropped, and the look stays', () => {
+  const text = JSON.stringify([
+    { name: 'a', pick: {}, skin: 42 },
+    { name: 'b', pick: {}, skin: '' },
+    { name: 'c', pick: {}, skin: 'x'.repeat(41) },
+  ])
+  expect(outfitsFrom(text)).toStrictEqual([{ name: 'a', pick: {} }, { name: 'b', pick: {} }, { name: 'c', pick: {} }])
+})
+
+test('a look saved without a colour has no skin key at all, and so does one saved with a blank or too long colour', () => {
+  expect(saved([], 'a', {})[0]).toStrictEqual({ name: 'a', pick: {} })
+  expect(saved([], 'a', {}, '')[0]).toStrictEqual({ name: 'a', pick: {} })
+  expect(saved([], 'a', {}, 'x'.repeat(41))[0]).toStrictEqual({ name: 'a', pick: {} })
+})
