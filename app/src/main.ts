@@ -7,7 +7,7 @@ import type { Act, Badge, Ci, DayRec, History, Mood } from '../../types'
 import { badgeLook, badgeName } from '../../hooks/badges'
 import { dayKey } from '../../hooks/facts'
 import { lang, pickLang, setLang } from '../../hooks/i18n'
-import { type Choice, type Look, addDay, choiceFrom, levelOf, lookFrom, unlocked, xpOf } from '../../hooks/level'
+import { type Choice, type Look, addDay, choiceFrom, levelOf, lookFrom, skinNow, unlocked, xpOf } from '../../hooks/level'
 import { PEER_INK, appLink, nameOf } from '../../hooks/live'
 import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
@@ -22,7 +22,7 @@ import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nud
 import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } from './acts'
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
-import { lookNow, skinNow } from './wardrobe'
+import { lookNow } from './wardrobe'
 import { animationOf, tracksIn } from './play'
 import { TRANSITION_MS } from '../../hooks/rig'
 import { useRules, verdictOf } from './shield'
@@ -112,7 +112,7 @@ function wear(text: string | null) {
 function dress() {
   const was = JSON.stringify([look, skin])
   look = lookNow(history, modLook, prefs, tz())
-  skin = skinNow(prefs, history)
+  skin = skinNow(prefs?.skin, history)
   if (JSON.stringify([look, skin]) === was || !view) return
   view = null
   draw()

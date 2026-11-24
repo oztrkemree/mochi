@@ -5,7 +5,7 @@ import type { Badge, History, Item, Outfit } from '../../types'
 import { badgeHint, badgeLook, badgeName, badgesOf, provenBy } from '../../hooks/badges'
 import { dayKey } from '../../hooks/facts'
 import { lang, pickLang, setLang, t } from '../../hooks/i18n'
-import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, dressAs, hintFor, itemName, itemShort, levelOf, lookFrom, slotName, xpOf } from '../../hooks/level'
+import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, dressAs, hintFor, itemName, itemShort, levelOf, lookFrom, skinNow, slotName, xpOf } from '../../hooks/level'
 import { itemIcon, svgFor } from '../../hooks/rig'
 import { SKINS, type Skin, skinOf, skinsAt } from '../../hooks/skins'
 import { bestOutfit, cardSvg } from '../../hooks/share'
@@ -15,7 +15,7 @@ import { growthOf, historyOf } from './growth'
 import { SIGN, medalSvg } from './medal'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
-import { chosen, lookNow, skinNow } from './wardrobe'
+import { chosen, lookNow } from './wardrobe'
 import { words } from './words'
 import { PERIODS, type WorkState, drawWork } from './work-tab'
 import { SPANS, quotaOf, usageOf } from './usage'
@@ -82,7 +82,7 @@ function outfit(trying: Item | null = null): Outfit {
 }
 
 /** The colour Mochi wears now: the chosen one, while the level opens it. */
-const wornSkin = () => skinNow(prefs, history)
+const wornSkin = () => skinNow(prefs?.skin, history)
 
 function drawMochi(trying: Item | null = null, tryingSkin: string | null = null) {
   const skin = tryingSkin ?? wornSkin()

@@ -165,6 +165,8 @@ export const chat = {
   lookKey: '',
   /** When the wardrobe choice this chat last wore or made was made (prefs.json). */
   choiceAt: 0,
+  /** Mochi's colour as prefs.json last said it, chosen in the desktop app (hooks/skins.ts); undefined for its own clay. */
+  skin: undefined as string | undefined,
   /** Whether the desktop app's Mochi is out, as app.json last said: then it may say a level too. */
   appRuns: false,
   peersAt: 0,
