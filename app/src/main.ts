@@ -1329,6 +1329,7 @@ async function apply(next: Settings) {
   await invoke('on_top', { on: settings.onTop }).catch(note)
   await invoke('set_approve', { seconds: settings.approve ? APPROVE_S : 0 }).catch(note)
   await invoke('set_shield', { on: settings.shield }).catch(note)
+  await invoke('set_sound', { on: settings.sound }).catch(note)
   if (!settings.approve) for (const request of [...requests.values()]) answer(request, 'none')
   // A language or a size changes the drawing and the words: draw them again, and stand where the new size fits.
   view = null

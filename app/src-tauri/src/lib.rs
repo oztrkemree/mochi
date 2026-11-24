@@ -35,12 +35,14 @@ fn is_shown(app: &AppHandle) -> bool {
 static APPROVE_S: AtomicU64 = AtomicU64::new(0);
 /// Whether the shield is on: a shell command that might destroy something then waits a moment for its word.
 static SHIELD: AtomicBool = AtomicBool::new(true);
+/// Whether the person keeps sound on; off until they ask, as in the settings.
+static SOUND: AtomicBool = AtomicBool::new(false);
 
 fn beat_now(app: &AppHandle) {
     if let Some(dir) = data_dir() {
         // With Mochi off the screen nobody sees its bubble: no request waits on it.
         let shown = is_shown(app);
-        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), shown, if shown { APPROVE_S.load(Ordering::Relaxed) } else { 0 }, shown && SHIELD.load(Ordering::Relaxed)));
+        store::write_whole(&dir.join("app.json"), &store::beat_text(now_ms(), shown, if shown { APPROVE_S.load(Ordering::Relaxed) } else { 0 }, shown && SHIELD.load(Ordering::Relaxed), SOUND.load(Ordering::Relaxed)));
     }
 }
 
@@ -208,6 +210,13 @@ fn set_approve(app: AppHandle, seconds: u64) {
 #[tauri::command]
 fn set_shield(app: AppHandle, on: bool) {
     SHIELD.store(on, Ordering::Relaxed);
+    beat_now(&app);
+}
+
+/// Whether sound is on: said in the app's beat at once, where the mod's band reads it and goes silent with the app.
+#[tauri::command]
+fn set_sound(app: AppHandle, on: bool) {
+    SOUND.store(on, Ordering::Relaxed);
     beat_now(&app);
 }
 
@@ -467,7 +476,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, list_days, copy_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, set_sound, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, list_days, copy_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
