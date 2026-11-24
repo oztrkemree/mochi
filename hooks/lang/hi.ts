@@ -397,6 +397,7 @@ export const hi: typeof en = {
       lavalamp: 'लावा लैंप', taco: 'टैको', tent: 'कैंपिंग टेंट', hedgehog: 'हेजहॉग',
       wateringcan: 'पानी की झारी', macaron: 'मैकरून की मीनार', arcade: 'आर्केड मशीन', snowman: 'स्नोमैन',
       rocket: 'खिलौना रॉकेट', watermelon: 'तरबूज़ की फाँक', chest: 'खज़ाने का संदूक', axolotl: 'एक्सोलोटल', horse: 'छोटा घोड़ा', sprout: 'गमले में अंकुर', bunny: 'खरगोश',
+      kabuto: 'समुराई हेलमेट', tiara: 'टियारा', knight: 'शूरवीर का हेलमेट', pharaoh: 'फ़िरौन का शिरोभूषण', brain: 'ज़ॉम्बी दिमाग', ufo: 'उड़न तश्तरी', phoenix: 'फ़ीनिक्स का मुकुट', skigoggles: 'स्की गॉगल्स', steampunk: 'स्टीमपंक गॉगल्स', xray: 'एक्स-रे चश्मा', diamondshades: 'हीरे वाला चश्मा', butterfly: 'तितली फ़ेस पेंट', heartcheeks: 'गालों पर दिल', warpaint: 'युद्ध रंग', diamondtear: 'हीरे का आँसू', curlystache: 'घुंघराली मूँछ', rainbowstache: 'इंद्रधनुषी मूँछ', flamestache: 'आग वाली मूँछ', lifebuoy: 'तैराकी ट्यूब', pendant: 'क्रिस्टल पेंडेंट', dragonamulet: 'ड्रैगन ताबीज़', guitar: 'इलेक्ट्रिक गिटार', trophy: 'ट्रॉफ़ी', katana: 'कटाना', rubberchicken: 'रबर का मुर्गा', thunderbolt: 'वज्र', slime: 'स्लाइम', ghostie: 'नन्हा भूत', robodog: 'रोबोट कुत्ता', babydragon: 'नन्हा ड्रैगन', portal: 'जादुई पोर्टल',
     },
     short: {
       hardhat: 'हेलमेट', crown: 'ताज', partyhat: 'पार्टी', witchhat: 'चुड़ैल', santahat: 'सांता', nightcap: 'नाइट कैप', gradcap: 'दीक्षांत',
@@ -433,6 +434,7 @@ export const hi: typeof en = {
       lavalamp: 'लावा', taco: 'टैको', tent: 'टेंट', hedgehog: 'हेजहॉग',
       wateringcan: 'झारी', macaron: 'मैकरून', arcade: 'आर्केड', snowman: 'स्नोमैन',
       rocket: 'रॉकेट', watermelon: 'तरबूज़', chest: 'खज़ाना', axolotl: 'एक्सोलोटल', horse: 'घोड़ा', sprout: 'अंकुर', bunny: 'खरगोश',
+      kabuto: 'कबूतो', tiara: 'टियारा', knight: 'शूरवीर', pharaoh: 'फ़िरौन', brain: 'दिमाग', ufo: 'UFO', phoenix: 'फ़ीनिक्स', skigoggles: 'स्की', steampunk: 'स्टीमपंक', xray: 'एक्स-रे', diamondshades: 'हीरा', butterfly: 'तितली', heartcheeks: 'गाल', warpaint: 'युद्ध रंग', diamondtear: 'हीरा', curlystache: 'घुंघराली', rainbowstache: 'इंद्रधनुष', flamestache: 'आग', lifebuoy: 'ट्यूब', pendant: 'पेंडेंट', dragonamulet: 'ताबीज़', guitar: 'गिटार', trophy: 'ट्रॉफ़ी', katana: 'कटाना', rubberchicken: 'मुर्गा', thunderbolt: 'वज्र', slime: 'स्लाइम', ghostie: 'भूत', robodog: 'रोबोट कुत्ता', babydragon: 'नन्हा ड्रैगन', portal: 'पोर्टल',
     },
     slot: { head: 'सिर', eyes: 'चश्मा', face: 'चेहरा', lip: 'मूँछ', chin: 'दाढ़ी', neck: 'गर्दन', held: 'हाथ', ground: 'बगल में' },
     hint: {
@@ -720,8 +722,8 @@ export const hi: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, दिखाना/छिपाना, विवरण, लेवल, पहनावा, बैज, चैट, कवच, अलर्ट, CI, सुझाव, ब्रेक, आवाज़, प्लगइन, कार्ड, लेखा-जोखा, तस्वीर, परिचय, नया क्या है, जन्मदिन, भाषा, छोटा/बड़ा, एक्सपोर्ट, रीसेट, फ़ीडबैक, अपडेट, स्थिति',
-    hint: '[standup | week | desk | prs | city | details | level | wear [चीज़] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [कोड] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, दिखाना/छिपाना, विवरण, लेवल, पहनावा, बैज, चैट, कवच, अलर्ट, CI, सुझाव, ब्रेक, आवाज़, प्लगइन, कार्ड, लेखा-जोखा, तस्वीर, परिचय, नया क्या है, जन्मदिन, भाषा, छोटा/बड़ा, डेस्कटॉप, एक्सपोर्ट, रीसेट, फ़ीडबैक, अपडेट, स्थिति',
+    hint: '[standup | week | desk | prs | city | details | level | wear [चीज़] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [कोड] | small | big | hide | show | desktop | export | reset | feedback | update | status]',
     small: 'Mochi एक लाइन में।',
     big: 'Mochi पूरे आकार में।',
     detailOpened: 'विवरण पैनल खुल गया।',
@@ -747,6 +749,8 @@ export const hi: typeof en = {
     soundOff: 'आवाज़ बंद।',
     hidden: 'Mochi छिप गया। वापस लाने के लिए: /mochi',
     shown: 'Mochi हाज़िर है।',
+    desktopOn: 'डेस्कटॉप चालू: जब तक Mochi डेस्कटॉप पर है, पट्टी उसके बिना दिखेगी।',
+    desktopOff: 'डेस्कटॉप बंद: Mochi पट्टी में ही रहेगा।',
     statusLine: (label, line) => `स्थिति: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Context: ${ctx} · चल रहे एजेंट: ${agents} · इस टर्न के टूल: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -754,14 +758,14 @@ export const hi: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `सुझाव: ${tips ? 'चालू' : 'बंद'} · ब्रेक: ${breaks ? 'चालू' : 'बंद'} · प्लगइन प्रतिक्रियाएँ: ${plugins ? 'चालू' : 'बंद'}`,
     peersLine: (level, peers) => `लेवल ${level} · दूसरी चैट: ${peers}`,
-    commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'कमांड: /mochi (दिखाएँ/छिपाएँ) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | desktop | export | reset | feedback | update | status',
     langNow: (name, list) => `भाषा: ${name}। उपलब्ध: ${list} · /mochi lang <कोड> या auto`,
     langSet: name => `भाषा: ${name}।`,
     langAuto: name => `भाषा Claude Code और सिस्टम के हिसाब से: ${name}।`,
     langUnknown: (code, list) => `अनजान भाषा: ${code}। उपलब्ध: ${list}`,
     words: {
       on: ['चालू'], off: ['बंद'],
-      hide: ['छिपाओ', 'छुपाओ'], show: ['दिखाओ'], small: ['छोटा'], big: ['बड़ा'], sound: ['आवाज़', 'आवाज'],
+      hide: ['छिपाओ', 'छुपाओ'], show: ['दिखाओ'], small: ['छोटा'], big: ['बड़ा'], sound: ['आवाज़', 'आवाज'], desktop: ['डेस्कटॉप'],
       status: ['स्थिति'], details: ['विवरण'], level: ['लेवल'], wear: ['पहनो', 'पहनाओ'], shield: ['कवच', 'शील्ड'],
       alerts: ['अलर्ट', 'सूचना'], lang: ['भाषा'], auto: ['ऑटो', 'अपने-आप'], none: ['कुछ नहीं', 'कोई नहीं'],
       card: ['कार्ड'], wrapped: ['लेखा-जोखा'], snap: ['तस्वीर', 'स्नैप'], year: ['साल', 'वर्ष'],

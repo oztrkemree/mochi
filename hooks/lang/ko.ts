@@ -392,6 +392,7 @@ export const ko: typeof en = {
       lavalamp: '용암 램프', taco: '타코', tent: '캠핑 텐트', hedgehog: '고슴도치',
       wateringcan: '물뿌리개', macaron: '마카롱 탑', arcade: '아케이드 게임기', snowman: '눈사람',
       rocket: '장난감 로켓', watermelon: '수박 조각', chest: '보물 상자', axolotl: '아홀로틀', horse: '아기 말', sprout: '화분 새싹', bunny: '토끼',
+      kabuto: '사무라이 투구', tiara: '티아라', knight: '기사 투구', pharaoh: '파라오 머리장식', brain: '좀비 뇌', ufo: '비행접시', phoenix: '불사조 왕관', skigoggles: '스키 고글', steampunk: '스팀펑크 고글', xray: '엑스레이 안경', diamondshades: '다이아몬드 선글라스', butterfly: '나비 페이스페인팅', heartcheeks: '하트 볼터치', warpaint: '전투 페인트', diamondtear: '다이아몬드 눈물', curlystache: '곱슬 콧수염', rainbowstache: '무지개 콧수염', flamestache: '불꽃 콧수염', lifebuoy: '튜브', pendant: '크리스탈 펜던트', dragonamulet: '용 부적', guitar: '일렉 기타', trophy: '트로피', katana: '카타나', rubberchicken: '고무 닭', thunderbolt: '번개', slime: '슬라임', ghostie: '꼬마 유령', robodog: '로봇 강아지', babydragon: '아기 용', portal: '마법 포털',
     },
     short: {
       hardhat: '안전모', crown: '왕관', partyhat: '파티', witchhat: '마녀', santahat: '산타', nightcap: '수면모', gradcap: '학사모',
@@ -428,6 +429,7 @@ export const ko: typeof en = {
       lavalamp: '용암', taco: '타코', tent: '텐트', hedgehog: '고슴도치',
       wateringcan: '물뿌리개', macaron: '마카롱', arcade: '오락기', snowman: '눈사람',
       rocket: '로켓', watermelon: '수박', chest: '보물', axolotl: '아홀로틀', horse: '말', sprout: '새싹', bunny: '토끼',
+      kabuto: '카부토', tiara: '티아라', knight: '기사', pharaoh: '파라오', brain: '뇌', ufo: 'UFO', phoenix: '불사조', skigoggles: '스키', steampunk: '스팀펑크', xray: '엑스레이', diamondshades: '다이아', butterfly: '나비', heartcheeks: '볼터치', warpaint: '페인트', diamondtear: '다이아', curlystache: '곱슬', rainbowstache: '무지개', flamestache: '불꽃', lifebuoy: '튜브', pendant: '크리스탈', dragonamulet: '부적', guitar: '기타', trophy: '트로피', katana: '카타나', rubberchicken: '고무 닭', thunderbolt: '번개', slime: '슬라임', ghostie: '유령', robodog: '로봇개', babydragon: '아기 용', portal: '포털',
     },
     slot: { head: '머리', eyes: '안경', face: '얼굴', lip: '콧수염', chin: '턱수염', neck: '목', held: '손', ground: '옆' },
     hint: {
@@ -715,8 +717,8 @@ export const ko: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, 표시/숨기기, 상세, 레벨, 착용, 배지, 채팅, 보호막, 알림, CI, 팁, 휴식, 소리, 플러그인, 카드, 결산, 스냅샷, 둘러보기, 새소식, 생일, 언어, 크기, 내보내기, 초기화, 피드백, 업데이트, 상태',
-    hint: '[standup | week | desk | prs | city | details | level | wear [아이템] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [코드] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, 표시/숨기기, 상세, 레벨, 착용, 배지, 채팅, 보호막, 알림, CI, 팁, 휴식, 소리, 플러그인, 카드, 결산, 스냅샷, 둘러보기, 새소식, 생일, 언어, 크기, 데스크톱, 내보내기, 초기화, 피드백, 업데이트, 상태',
+    hint: '[standup | week | desk | prs | city | details | level | wear [아이템] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [코드] | small | big | hide | show | desktop | export | reset | feedback | update | status]',
     small: 'Mochi를 한 줄로.',
     big: 'Mochi를 전체 크기로.',
     detailOpened: '상세 패널을 열었습니다.',
@@ -742,6 +744,8 @@ export const ko: typeof en = {
     soundOff: '소리 꺼짐.',
     hidden: 'Mochi 숨김. 다시 켜려면: /mochi',
     shown: 'Mochi 켜짐.',
+    desktopOn: '데스크톱 켜짐: Mochi가 데스크톱에 나와 있는 동안 밴드는 Mochi 없이 그려집니다.',
+    desktopOff: '데스크톱 꺼짐: Mochi가 밴드에 남습니다.',
     statusLine: (label, line) => `상태: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `컨텍스트: ${ctx} · 실행 중인 에이전트: ${agents} · 이번 턴 도구: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -749,14 +753,14 @@ export const ko: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `팁: ${tips ? '켜짐' : '꺼짐'} · 휴식 알림: ${breaks ? '켜짐' : '꺼짐'} · 플러그인 반응: ${plugins ? '켜짐' : '꺼짐'}`,
     peersLine: (level, peers) => `레벨 ${level} · 다른 채팅: ${peers}`,
-    commands: '명령: /mochi (표시/숨기기) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: '명령: /mochi (표시/숨기기) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | desktop | export | reset | feedback | update | status',
     langNow: (name, list) => `언어: ${name}. 사용 가능: ${list} · /mochi lang <코드> 또는 auto`,
     langSet: name => `언어: ${name}.`,
     langAuto: name => `언어는 Claude Code와 시스템 설정을 따릅니다: ${name}.`,
     langUnknown: (code, list) => `알 수 없는 언어: ${code}. 사용 가능: ${list}`,
     words: {
       on: ['켜기', '켜'], off: ['끄기', '꺼'],
-      hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'],
+      hide: ['숨기기', '숨김'], show: ['보이기', '표시'], small: ['작게'], big: ['크게'], sound: ['소리'], desktop: ['데스크톱', '바탕화면'],
       status: ['상태'], details: ['상세', '자세히'], level: ['레벨'], wear: ['착용', '입기'], shield: ['보호막', '실드'],
       alerts: ['알림'], lang: ['언어'], auto: ['자동'], none: ['없음', '벗기'],
       card: ['카드'], wrapped: ['결산'], snap: ['스냅샷'], year: ['년', '연간'],

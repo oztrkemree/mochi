@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mochi</title>
+    <style>
+      :root { --size: 128px; --card: #2B2A28; --fg: #F0EFEC; --dim: #A1A09B; --line: rgba(255, 255, 255, 0.08); }
+      @media (prefers-color-scheme: light) { :root { --card: #FAF9F5; --fg: #1F1E1D; --dim: #73726C; --line: rgba(0, 0, 0, 0.1); } }
+      html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
+      body { font: 500 12.5px/1.4 ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; color: var(--fg); }
+      /* The window keeps one size, with room over Mochi for what it says and shows: everything stands in its bottom right corner, and the empty room lets every press through. */
+      #root { position: absolute; right: 0; bottom: 0; width: 340px; height: calc(var(--size) * 1.2 + 540px); display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
+      #row { position: relative; display: flex; align-items: flex-end; }
+      /* A thought cloud at the end of the dots Mochi draws when it thinks (they end at 78, 7 in its square). Still; it only comes and goes. */
+      #think { display: none; position: absolute; right: calc(var(--size) * 0.15); bottom: calc(var(--size) * 0.99); width: calc(var(--size) * 0.36); pointer-events: none; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35)); }
+      #think svg { display: block; width: 100%; height: auto; }
+      /* The dots in the ink of whoever thinks, one after another: Claude Code's clay, Codex's blue. */
+      #think .dots { fill: #F59A4A; }
+      #think.codex .dots { fill: #4F8EF7; }
+      #think.on .dots circle { animation: think-dot 1.2s ease-in-out 3 both; }
+      #think.on .dots circle:nth-child(2) { animation-delay: 0.2s; }
+      #think.on .dots circle:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes think-dot { 0%, 100% { opacity: 0.35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+      #think.on { display: block; animation: think-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1); transform-origin: 20% 100%; }
+      #say.on ~ #row #think, #list.on ~ #row #think, .peek #think { display: none; }
+      @keyframes think-in { from { opacity: 0; transform: scale(0.6); } }
+      @media (prefers-reduced-motion: reduce) { #think.on, #think.on .dots circle { animation: none; } }
+      /* Mochi's own square is --size; the drawing has room around it for what it holds (see ROOM in world.ts). */
+      #stage { width: calc(var(--size) * 1.48); height: calc(var(--size) * 1.2); }
+      #stage > svg { display: block; width: 100%; height: 100%; }
+
+      /* A small hop when Mochi has something to say. */
+      #stage.hop { animation: hop 0.5s cubic-bezier(0.3, 0, 0.2, 1); }
+      @keyframes hop { 30% { transform: translateY(calc(var(--size) * -0.09)) scaleY(1.03); } 62% { transform: translateY(0) scaleY(0.96); } 100% { transform: none; } }
+      @media (prefers-reduced-motion: reduce) { #stage.hop { animation: none; } #stage g { transition: none !important; } }
+      #stage:focus { outline: none; }
+      .keys #stage:focus-visible { outline: 2px solid #E08A6A; outline-offset: -6px; border-radius: 40%; }
+      #stage { transform-origin: 50% 100%; transition: rotate 0.35s cubic-bezier(0.3, 1.4, 0.5, 1); }
+      /* Peeking over a side, Mochi lies on its side, its head toward the screen: turned a quarter about its body's middle (see peekAt). */
+      .peek-left #stage, .peek-right #stage { transform-origin: 51.35% 58.33%; }
+      .peek-left #stage { rotate: 90deg; }
+      .peek-right #stage { rotate: -90deg; }
+      @media (prefers-reduced-motion: reduce) { #stage { transition: none; } }
+      /* The eyes follow the pointer smoothly, not in steps. */
+      #stage g[transform="translate(0 -52)"] { transition: translate 0.2s ease-out; }
+      /* Between moves Mochi is its pose in layers (see layersFor in hooks/rig.ts), stacked in the stage's box. Each is drawn
+         once; their motion is a transform the compositor plays, so a Mochi that never stops moving costs next to nothing. */
+      #stage { position: relative; }
+      .mochi-layers, .mochi-layers div, .mochi-layers svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      .mochi-layers div { will-change: transform; }
+      @media (prefers-reduced-motion: reduce) { .mochi-layers div { animation: none !important; } }
+
+      .card { background: var(--card); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line), 0 4px 14px rgba(0, 0, 0, 0.22); }
+
+      /* The band's own bubble: a dark pill, a dot in the news's ink, a tail down to Mochi. */
+      #say { display: none; position: relative; z-index: 2; max-width: 280px; margin: 0 calc(var(--size) * 0.3) calc(var(--size) * -0.16) 0; padding: 7px 12px 7px 24px; border-radius: 13px; white-space: pre-line; font-weight: 650; }
+      #say::before { content: ""; position: absolute; left: 11px; top: 13px; width: 7px; height: 7px; border-radius: 50%; background: var(--ink, #6E6D69); }
+      #say::after { content: ""; position: absolute; right: 22px; bottom: -6px; width: 12px; height: 12px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
+      #say.on { display: block; }
+      /* What a request is for, as it was given: a command, a file. */
+      #say .what { display: block; margin-top: 6px; padding: 5px 8px; border-radius: 7px; background: var(--line); font: 500 11.5px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+      #say .acts { display: flex; gap: 6px; margin: 8px 0 1px; }
+      #say .acts button { flex: 1; height: 26px; padding: 0 10px; border: 0; border-radius: 8px; background: var(--line); color: inherit; font: inherit; font-weight: 650; cursor: pointer; }
+      #say .acts button.main { background: #E08A6A; color: #1F1E1D; }
+      #say .acts button:hover { filter: brightness(1.1); }
+      #say .acts button:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
+      /* A bubble that opens its chat says so under the pointer. */
+      #say.link { cursor: pointer; }
+      #say { overflow-wrap: anywhere; }
+      /* With the list open the bubble steps back: the list already says how each chat stands, and both would stand in the same room over Mochi's head. */
+      #list.on ~ #say { display: none; }
+
+      /* A bubble for each chat at work, stacked over Mochi's head in the room the band keeps there: a dot in the chat's ink, its name and
+         what it does; in full, its plan's step and subagents under that. The one nearest Mochi has the tail. They step back for news and the list. */
+      #jobs { display: none; position: relative; z-index: 2; flex-direction: column; align-items: flex-end; gap: 5px; margin: 0 calc(var(--size) * 0.3) calc(var(--size) * -0.12) 0; }
+      #jobs.on { display: flex; }
+      #say.on ~ #jobs, #list.on ~ #jobs, .peek #jobs, .away #jobs, #jobs.on ~ #row #think { display: none; }
+      .job { position: relative; display: grid; grid-template-columns: 7px minmax(0, auto); column-gap: 7px; align-items: baseline; max-width: 260px; padding: 5px 11px 5px 9px; border: 0; border-radius: 12px; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+      .job:hover { filter: brightness(1.12); }
+      .job:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
+      .job .dot { width: 7px; height: 7px; border-radius: 50%; transform: translateY(-1px); }
+      .job .what { color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .job .what b { color: var(--fg); font-weight: 650; }
+      .job .more { grid-column: 2; color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .job .more + .more::before { content: "↳ "; }
+      .job:last-child::after { content: ""; position: absolute; right: 22px; bottom: -5px; width: 10px; height: 10px; background: var(--card); transform: rotate(45deg); border-radius: 0 0 3px 0; box-shadow: 1px 1px 0 var(--line); }
+      #jobs .left { padding: 0 10px; color: var(--dim); font-size: 11px; font-weight: 650; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+      /* How many chats, on the ground just right of Mochi's shadow (the ground things stand on its left): the shadow lies at 90.5 of Mochi's square and ends at 75, see SHADOW and ROOM in world.ts. */
+      #agents { position: absolute; left: calc(var(--size) * 1.02); bottom: calc(var(--size) * 0.155 - 11px); display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px 0 7px; border: 0; border-radius: 11px; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; z-index: 1; }
+      #agents:hover { filter: brightness(1.12); }
+      #agents:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
+      #agents .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+      /* While a chat waits for the person its dot wears a soft ring. Nothing here moves by itself: an endless motion redraws the window for as long as it runs. */
+      #agents .dot.asking { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 35%, transparent); }
+      #agents.empty, #agents[hidden] { display: none; }
+
+      /* The usage limits as two small rings, on the ground left of Mochi's shadow, where the count stands on its right. */
+      #limits { position: absolute; right: calc(var(--size) * 1.12); bottom: calc(var(--size) * 0.155 - 15px); display: flex; align-items: center; height: 30px; padding: 0 5px; border: 0; border-radius: 15px; cursor: pointer; z-index: 1; }
+      #limits:hover { filter: brightness(1.12); }
+      #limits:focus-visible { outline: 2px solid #E08A6A; outline-offset: 2px; }
+      #limits svg { display: block; }
+      #limits:empty { display: none; }
+
+      /* The list of agents, over Mochi. */
+      /* Close over Mochi's head, into the empty room the drawing keeps above it. */
+      #list { display: none; position: relative; z-index: 2; width: 326px; box-sizing: border-box; overflow-x: hidden; max-height: 530px; overflow-y: auto; scrollbar-width: none; margin: 0 0 calc(var(--size) * -0.2) 0; padding: 6px; border-radius: 14px; }
+      #list.on { display: block; }
+      #list h2 { margin: 4px 8px 6px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+      #list .empty { margin: 6px 8px 8px; color: var(--dim); }
+      .agent { display: grid; grid-template-columns: 10px 1fr; column-gap: 8px; align-items: baseline; width: 100%; padding: 6px 8px; border: 0; border-radius: 9px; background: none; color: inherit; font: inherit; text-align: left; }
+      .agent[data-link] { cursor: pointer; }
+      .agent[data-link]:hover, .agent[data-link]:focus-visible { background: var(--line); outline: none; }
+      .agent .dot { width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); }
+      .agent .name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .agent .line, .agent .sub { grid-column: 2; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* The pocket's two sides: what goes on now, and what the work has added up to. */
+      #tabs { display: flex; gap: 4px; margin: 0 0 6px; padding: 3px; border-radius: 10px; background: var(--line); }
+      #tabs button { flex: 1; height: 24px; border: 0; border-radius: 7px; background: none; color: var(--dim); font: inherit; font-weight: 650; cursor: pointer; }
+      #tabs button[aria-selected="true"] { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18); }
+      #tabs button:focus-visible { outline: 2px solid #E08A6A; outline-offset: 1px; }
+      .level { display: flex; align-items: baseline; justify-content: space-between; margin: 6px 6px 6px; }
+      .level b { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+      .level span { color: var(--dim); font-size: 11.5px; }
+      .bar { height: 7px; margin: 0 6px 10px; border-radius: 4px; background: var(--line); overflow: hidden; }
+      .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #E08A6A, #F2B84B); }
+      .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 2px 8px; }
+      .facts div { padding: 7px 8px; border-radius: 10px; background: var(--line); }
+      .facts b { display: block; font-size: 15px; font-weight: 700; }
+      .facts span { display: block; color: var(--dim); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .medals { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 4px 8px; }
+      .medals span { width: 24px; height: 24px; }
+      .agent .plan { grid-column: 2 / -1; color: var(--fg); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .peek #agents, .peek #limits, .away #agents, .away #limits, .away #think { display: none; }
+      /* With nothing going on Mochi leaves the screen by its nearest edge: the window stands flush against that edge, so its edge is the
+         screen's, and Mochi goes out through it, all of it: a crouch, a hop, a dive over the bottom or a tumble out over a side. Back in,
+         it pops up and lands. */
+      .away-right #row, .back-right #row, .away-left #row, .back-left #row { transform-origin: 51.35% 58.33%; }
+      .away-bottom #row { transform: translateY(115%); animation: out-bottom 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
+      .back-bottom #row { animation: in-bottom 0.65s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+      @keyframes out-bottom { 0% { transform: none; } 22% { transform: translateY(4%) scale(1.06, 0.9); } 45% { transform: translateY(-22%) scale(0.96, 1.05); } 100% { transform: translateY(115%); } }
+      @keyframes in-bottom { 0% { transform: translateY(115%); } 60% { transform: translateY(-12%) scale(0.96, 1.05); } 82% { transform: translateY(2%) scale(1.05, 0.94); } 100% { transform: none; } }
+      .away-right #row { transform: translateX(120%) rotate(-90deg); animation: out-right 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
+      .back-right #row { animation: in-right 0.65s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+      @keyframes out-right { 0% { transform: none; } 20% { transform: translateY(3%) scale(1.05, 0.92); } 45% { transform: translate(8%, -16%) rotate(-25deg); } 100% { transform: translateX(120%) rotate(-90deg); } }
+      @keyframes in-right { 0% { transform: translateX(120%) rotate(-90deg); } 60% { transform: translate(-5%, -12%) rotate(10deg); } 100% { transform: none; } }
+      .away-left #row { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 120%)) rotate(90deg); animation: out-left 0.95s cubic-bezier(0.45, 0, 0.6, 1); }
+      .back-left #row { animation: in-left 0.65s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+      @keyframes out-left { 0% { transform: none; } 20% { transform: translateY(3%) scale(1.05, 0.92); } 45% { transform: translate(-30%, -16%) rotate(25deg); } 100% { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 120%)) rotate(90deg); } }
+      @keyframes in-left { 0% { transform: translateX(calc(-1 * (340px - var(--size) * 1.48) - 120%)) rotate(90deg); } 60% { transform: translate(5%, -12%) rotate(-10deg); } 100% { transform: none; } }
+      @media (prefers-reduced-motion: reduce) { #row { animation: none !important; } }
+      #list h3 { margin: 10px 6px 6px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+      #list h4 { margin: 8px 6px 4px; font-size: 11.5px; font-weight: 650; }
+      .room { display: block; width: calc(100% - 8px); margin: 2px 4px 4px; height: 30px; border: 0; border-radius: 9px; background: linear-gradient(180deg, #E08A6A, #D97757); color: #fff; font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer; box-shadow: 0 2px 6px rgba(217, 119, 87, 0.35); }
+      .room:focus-visible { outline: 2px solid #E08A6A; outline-offset: 1px; }
+
+      /* The limits, at the top of the list: each a ring with its number in it, what it is, and when it comes back. */
+      #use { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 2px 2px 8px; }
+      #use:empty { display: none; }
+      .use { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 7px 8px; border-radius: 10px; background: var(--line); }
+      .use > div { min-width: 0; }
+      .use svg { flex: none; display: block; }
+      .use b { display: block; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .use span { display: block; color: var(--dim); font-size: 11.5px; white-space: nowrap; }
+      .agent .sub::before { content: "↳ "; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="list" class="card" role="dialog"></div>
+      <div id="say" class="card" role="status"></div>
+      <div id="jobs"></div>
+      <div id="row">
+        <button id="limits" class="card" type="button"></button>
+        <button id="agents" class="card" type="button"></button>
+        <div id="stage" role="button" tabindex="0"></div>
+        <div id="think"><svg viewBox="0 0 52 36" aria-hidden="true"><path d="M13 31c-6 0-10-4-10-9s4-8.6 9-8.6C13.4 7.6 18.6 4 24.6 4c5.4 0 9.8 3 11.4 7.4 1-.3 2-.4 3-.4 6 0 10 4.2 10 9.6S45 30 39.4 30.6c-1.2.3-2.4.4-3.6.4z" fill="#F6F1EC" stroke="#E2D7CE" stroke-width="1"/><g class="dots"><circle cx="17" cy="20" r="2.6"/><circle cx="26" cy="20" r="2.6"/><circle cx="35" cy="20" r="2.6"/></g></svg></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

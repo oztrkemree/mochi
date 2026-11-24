@@ -24,7 +24,7 @@ export const TAB_OF: Record<Block, Tab> = {
 }
 /** A tab's blocks in the person's order. */
 export const inTab = (order: readonly Block[], tab: Tab): Block[] => order.filter(b => TAB_OF[b] === tab)
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: OPEN, order: [...BLOCKS], hidden: [], isArranging: false, tab: 'now', shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, birthday: '', firstDay: '' }
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: OPEN, order: [...BLOCKS], hidden: [], isArranging: false, tab: 'now', shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, goesOut: true, birthday: '', firstDay: '' }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**
@@ -161,6 +161,12 @@ export const chat = {
   latestAt: 0,
   liveAt: 0,
   liveKey: '',
+  /** The look last written to look.json by this chat. */
+  lookKey: '',
+  /** When the wardrobe choice this chat last wore or made was made (prefs.json). */
+  choiceAt: 0,
+  /** Whether the desktop app's Mochi is out, as app.json last said: then it may say a level too. */
+  appRuns: false,
   peersAt: 0,
   peerMtimes: {} as Record<string, number>,
   peerCache: {} as Record<string, Peer>,

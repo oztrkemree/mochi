@@ -125,6 +125,9 @@ const LOOK: Record<Badge, { ink: string; sign: string }> = {
   vampire: { ink: '#B5495B', sign: '<path d="M8 9.2c1.2.9 2.4 1.2 4 1.2s2.8-.3 4-1.2M9.6 10.4l1 3.4 1.4-2 1.4 2 1-3.4"/>' },
 }
 
+/** A badge's colour and sign, for another drawing of its medal (the desktop app's achievements). */
+export const badgeLook = (b: Badge): { ink: string; sign: string } => LOOK[b]
+
 /** A badge's medal for the details pane: in its colour once earned, grey and faded until then. */
 export function badgeSvg(b: Badge, isEarned: boolean): string {
   const look = LOOK[b]

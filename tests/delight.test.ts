@@ -468,6 +468,55 @@ test('badges are earned from real work, kept in a file of Mochi’s own, and cel
   expect(((await $.command.run({ command: 'mochi', args: 'badges' } as never)).text ?? '').split('\n')[0]).toBe('Badges 3/18: first green, comeback, first push')
 })
 
+test('while the desktop app runs, a badge it already said is not said again here, and one it did not is claimed first', async ($, on) => {
+  const toasts: string[] = []
+  const clock = engine(on, { prefs: { lang: 'en' } }, toasts)
+  mock.env(on, { HOME: '/home/me' })
+  on('session.id', () => ({ value: 'chat-1' }) as never)
+  const files = memoryFiles(on)
+  let isRed = true
+  on('tool.call', { tool: 'Bash' }, ($, e) => (isRed && e.command === 'npm test'
+    ? { isError: true as const, result: undefined, text: '1 failing' }
+    : { result: { stdout: '', stderr: '', interrupted: false }, text: '' }) as never)
+  const start = at(2026, 7, 1, 12)
+  await clock.set(start)
+  files['mochi/app.json'] = JSON.stringify({ v: 1, at: start, isShown: true, version: '0.1.0', approve: 0 })
+  // The app counted the same work and said its two badges first.
+  files['mochi/said-badges.json'] = JSON.stringify({ at: 2, id: 'app' })
+  await $.session.start(START)
+  await clock.settle()
+  await clock.advance(4000)
+  await $.tool.call({ tool: 'Bash', command: 'npm test' })
+  isRed = false
+  await $.tool.call({ tool: 'Bash', command: 'npm test' })
+  expect(toasts.filter(x => x.includes('badge'))).toEqual([])
+  expect(JSON.parse(files['mochi/badges.json'] ?? '')).toEqual(['green', 'comeback'])
+  // The push's badge nobody claimed: this chat claims it, and says it once the claim holds.
+  const pushing = $.tool.call({ tool: 'Bash', command: 'git push origin main' })
+  await clock.advance(2000)
+  await pushing
+  expect(toasts.filter(x => x.includes('badge'))).toEqual(['new badge: first push · /mochi badges'])
+  expect(JSON.parse(files['mochi/said-badges.json'] ?? '')).toEqual({ at: 3, id: 'chat-1' })
+})
+
+test('while the desktop app runs hidden, its Mochi says nothing, so the band still celebrates', async ($, on) => {
+  const toasts: string[] = []
+  const clock = engine(on, { prefs: { lang: 'en' } }, toasts)
+  mock.env(on, { HOME: '/home/me' })
+  on('session.id', () => ({ value: 'chat-1' }) as never)
+  const files = memoryFiles(on)
+  on('tool.call', { tool: 'Bash' }, () => ({ result: { stdout: '', stderr: '', interrupted: false }, text: '' }) as never)
+  const start = at(2026, 7, 1, 12)
+  await clock.set(start)
+  files['mochi/app.json'] = JSON.stringify({ v: 1, at: start, isShown: false, version: '0.1.0', approve: 0 })
+  files['mochi/said-badges.json'] = JSON.stringify({ at: 1, id: 'app' })
+  await $.session.start(START)
+  await clock.settle()
+  await clock.advance(4000)
+  await $.tool.call({ tool: 'Bash', command: 'git push origin main' })
+  expect(toasts.filter(x => x.includes('badge'))).toEqual(['new badge: first push · /mochi badges'])
+})
+
 test('a badge earned while a question is open is told in a toast; the question keeps the face', { timeoutMs: 30_000 }, async ($, on) => {
   const toasts: string[] = []
   const clock = engine(on, { prefs: { lang: 'en' } }, toasts)

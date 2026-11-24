@@ -393,6 +393,7 @@ export const de: typeof en = {
       lavalamp: 'Lavalampe', taco: 'Taco', tent: 'Campingzelt', hedgehog: 'Igel',
       wateringcan: 'Gießkanne', macaron: 'Macaron-Turm', arcade: 'Arcade-Automat', snowman: 'Schneemann',
       rocket: 'Spielzeugrakete', watermelon: 'Wassermelonenstück', chest: 'Schatztruhe', axolotl: 'Axolotl', horse: 'kleines Pferd', sprout: 'Keimling im Topf', bunny: 'Hase',
+      kabuto: 'Samuraihelm', tiara: 'Tiara', knight: 'Ritterhelm', pharaoh: 'Pharaonenkopfschmuck', brain: 'Zombiegehirn', ufo: 'fliegende Untertasse', phoenix: 'Phönixkrone', skigoggles: 'Skibrille', steampunk: 'Steampunk-Brille', xray: 'Röntgenbrille', diamondshades: 'Diamantbrille', butterfly: 'Schmetterlings-Schminke', heartcheeks: 'Herzchen auf den Wangen', warpaint: 'Kriegsbemalung', diamondtear: 'Diamantträne', curlystache: 'Kringelbart', rainbowstache: 'Regenbogenbart', flamestache: 'Flammenbart', lifebuoy: 'Schwimmring', pendant: 'Kristallanhänger', dragonamulet: 'Drachenamulett', guitar: 'E-Gitarre', trophy: 'Pokal', katana: 'Katana', rubberchicken: 'Gummihuhn', thunderbolt: 'Blitz', slime: 'Slime', ghostie: 'kleines Gespenst', robodog: 'Roboterhund', babydragon: 'Babydrache', portal: 'Zauberportal',
     },
     short: {
       hardhat: 'Helm', crown: 'Krone', partyhat: 'Party', witchhat: 'Hexe', santahat: 'Nikolaus', nightcap: 'Schlafmütze', gradcap: 'Doktorhut',
@@ -429,6 +430,7 @@ export const de: typeof en = {
       lavalamp: 'Lava', taco: 'Taco', tent: 'Zelt', hedgehog: 'Igel',
       wateringcan: 'Kanne', macaron: 'Macarons', arcade: 'Arcade', snowman: 'Schneemann',
       rocket: 'Rakete', watermelon: 'Melone', chest: 'Schatz', axolotl: 'Axolotl', horse: 'Pferd', sprout: 'Keimling', bunny: 'Hase',
+      kabuto: 'Kabuto', tiara: 'Tiara', knight: 'Ritter', pharaoh: 'Pharao', brain: 'Gehirn', ufo: 'UFO', phoenix: 'Phönix', skigoggles: 'Ski', steampunk: 'Steampunk', xray: 'Röntgen', diamondshades: 'Diamant', butterfly: 'Schmetterling', heartcheeks: 'Wangen', warpaint: 'Kriegsbemalung', diamondtear: 'Diamant', curlystache: 'Kringel', rainbowstache: 'Regenbogen', flamestache: 'Flammen', lifebuoy: 'Schwimmring', pendant: 'Anhänger', dragonamulet: 'Amulett', guitar: 'Gitarre', trophy: 'Pokal', katana: 'Katana', rubberchicken: 'Huhn', thunderbolt: 'Blitz', slime: 'Slime', ghostie: 'Gespenst', robodog: 'Roboterhund', babydragon: 'Babydrache', portal: 'Portal',
     },
     slot: { head: 'Kopf', eyes: 'Brille', face: 'Gesicht', lip: 'Schnurrbart', chin: 'Bart', neck: 'Hals', held: 'Hand', ground: 'Daneben' },
     hint: {
@@ -717,8 +719,8 @@ export const de: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
-    hint: '[standup | week | desk | prs | city | details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
+    description: 'Mochi: standup, week, desk, prs, city, zeigen/verstecken, details, level, tragen, abzeichen, chats, schild, hinweise, CI, tipps, pausen, ton, erweiterungen, karte, rückblick, foto, rundgang, neuigkeiten, geburtstag, sprache, klein/groß, schreibtisch, exportieren, zurücksetzen, rückmeldung, aktualisieren, status',
+    hint: '[standup | week | desk | prs | city | details | level | tragen [Teil] | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache [Code] | klein | groß | verstecken | zeigen | schreibtisch | exportieren | zurücksetzen | rückmeldung | aktualisieren | status]',
     small: 'Mochi in einer Zeile.',
     big: 'Mochi in voller Größe.',
     detailOpened: 'Detailansicht geöffnet.',
@@ -746,6 +748,8 @@ export const de: typeof en = {
     soundOff: 'Ton aus.',
     hidden: 'Mochi ausgeblendet. Zurückholen mit: /mochi',
     shown: 'Mochi ist da.',
+    desktopOn: 'Schreibtisch an: Ist Mochi auf dem Schreibtisch unterwegs, erscheint die Leiste ohne Mochi.',
+    desktopOff: 'Schreibtisch aus: Mochi bleibt in der Leiste.',
     statusLine: (label, line) => `Status: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Kontext: ${ctx} · aktive Agenten: ${agents} · Tools in dieser Runde: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -753,14 +757,14 @@ export const de: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tipps: ${tips ? 'an' : 'aus'} · Pausen: ${breaks ? 'an' : 'aus'} · Plugin-Reaktionen: ${plugins ? 'an' : 'aus'}`,
     peersLine: (level, peers) => `Level ${level} · andere Chats: ${peers}`,
-    commands: 'Befehle: /mochi (zeigen/verstecken) | standup | week | desk | prs | city | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
+    commands: 'Befehle: /mochi (zeigen/verstecken) | standup | week | desk | prs | city | details | level | tragen | abzeichen | chats | schild | hinweise | ci | tipps | pausen | ton | erweiterungen | karte | rückblick | foto | rundgang | neuigkeiten | geburtstag | sprache | klein | groß | schreibtisch | exportieren | zurücksetzen | rückmeldung | aktualisieren | status',
     langNow: (name, list) => `Sprache: ${name}. Verfügbar: ${list} · /mochi sprache <Code> oder automatisch`,
     langSet: name => `Sprache: ${name}.`,
     langAuto: name => `Sprache folgt Claude Code und dem System: ${name}.`,
     langUnknown: (code, list) => `Unbekannte Sprache: ${code}. Verfügbar: ${list}`,
     words: {
       on: ['an', 'ein'], off: ['aus'],
-      hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'],
+      hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'], desktop: ['schreibtisch'],
       status: [], details: [], level: [], wear: ['tragen', 'anziehen'], shield: ['schild', 'schutz'],
       alerts: ['hinweise', 'benachrichtigungen', 'meldungen'], lang: ['sprache'], auto: ['automatisch'], none: ['nichts', 'keins'],
       card: ['karte'], wrapped: ['rückblick'], snap: ['schnappschuss', 'foto'], year: ['jahr'],

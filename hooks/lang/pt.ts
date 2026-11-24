@@ -395,6 +395,7 @@ export const pt: typeof en = {
       lavalamp: 'lâmpada de lava', taco: 'taco', tent: 'barraca de acampamento', hedgehog: 'ouriço',
       wateringcan: 'regador', macaron: 'torre de macarons', arcade: 'máquina de arcade', snowman: 'boneco de neve',
       rocket: 'foguete de brinquedo', watermelon: 'fatia de melancia', chest: 'baú do tesouro', axolotl: 'axolote', horse: 'cavalinho', sprout: 'broto no vaso', bunny: 'coelho',
+      kabuto: 'elmo samurai', tiara: 'tiara', knight: 'elmo de cavaleiro', pharaoh: 'toucado de faraó', brain: 'cérebro zumbi', ufo: 'disco voador', phoenix: 'coroa de fênix', skigoggles: 'óculos de esqui', steampunk: 'óculos steampunk', xray: 'óculos de raio X', diamondshades: 'óculos de diamante', butterfly: 'pintura de borboleta', heartcheeks: 'corações nas bochechas', warpaint: 'pintura de guerra', diamondtear: 'lágrima de diamante', curlystache: 'bigode enrolado', rainbowstache: 'bigode arco-íris', flamestache: 'bigode de fogo', lifebuoy: 'boia', pendant: 'pingente de cristal', dragonamulet: 'amuleto de dragão', guitar: 'guitarra elétrica', trophy: 'troféu', katana: 'katana', rubberchicken: 'frango de borracha', thunderbolt: 'raio', slime: 'slime', ghostie: 'fantasminha', robodog: 'cachorro robô', babydragon: 'dragãozinho', portal: 'portal mágico',
     },
     short: {
       hardhat: 'capacete', crown: 'coroa', partyhat: 'festa', witchhat: 'bruxa', santahat: 'Noel', nightcap: 'touca', gradcap: 'formatura',
@@ -431,6 +432,7 @@ export const pt: typeof en = {
       lavalamp: 'lava', taco: 'taco', tent: 'barraca', hedgehog: 'ouriço',
       wateringcan: 'regador', macaron: 'macarons', arcade: 'arcade', snowman: 'boneco',
       rocket: 'foguete', watermelon: 'melancia', chest: 'tesouro', axolotl: 'axolote', horse: 'cavalo', sprout: 'broto', bunny: 'coelho',
+      kabuto: 'kabuto', tiara: 'tiara', knight: 'cavaleiro', pharaoh: 'faraó', brain: 'cérebro', ufo: 'OVNI', phoenix: 'fênix', skigoggles: 'esqui', steampunk: 'steampunk', xray: 'raio X', diamondshades: 'diamante', butterfly: 'borboleta', heartcheeks: 'bochechas', warpaint: 'guerra', diamondtear: 'diamante', curlystache: 'enrolado', rainbowstache: 'arco-íris', flamestache: 'fogo', lifebuoy: 'boia', pendant: 'pingente', dragonamulet: 'amuleto', guitar: 'guitarra', trophy: 'troféu', katana: 'katana', rubberchicken: 'frango', thunderbolt: 'raio', slime: 'slime', ghostie: 'fantasma', robodog: 'cachorro robô', babydragon: 'dragãozinho', portal: 'portal',
     },
     slot: { head: 'Cabeça', eyes: 'Óculos', face: 'Rosto', lip: 'Bigode', chin: 'Barba', neck: 'Pescoço', held: 'Mão', ground: 'Ao lado' },
     hint: {
@@ -718,8 +720,8 @@ export const pt: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, mostrar/esconder, detalhes, nível, vestir, conquistas, conversas, escudo, alertas, CI, dicas, pausas, som, extensões, cartão, retrospectiva, captura, apresentação, novidades, aniversário, idioma, pequeno/grande, exportar, redefinir, relatar, atualizar, status',
-    hint: '[standup | week | desk | prs | city | detalhes | nível | vestir [item] | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma [código] | pequeno | grande | esconder | mostrar | exportar | redefinir | relatar | atualizar | status]',
+    description: 'Mochi: standup, week, desk, prs, city, mostrar/esconder, detalhes, nível, vestir, conquistas, conversas, escudo, alertas, CI, dicas, pausas, som, extensões, cartão, retrospectiva, captura, apresentação, novidades, aniversário, idioma, pequeno/grande, mesa, exportar, redefinir, relatar, atualizar, status',
+    hint: '[standup | week | desk | prs | city | detalhes | nível | vestir [item] | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma [código] | pequeno | grande | esconder | mostrar | mesa | exportar | redefinir | relatar | atualizar | status]',
     small: 'Mochi em uma linha.',
     big: 'Mochi em tamanho completo.',
     detailOpened: 'Painel de detalhes aberto.',
@@ -746,6 +748,8 @@ export const pt: typeof en = {
     soundOff: 'Som desligado.',
     hidden: 'Mochi escondido. Para trazer de volta: /mochi',
     shown: 'Mochi ligado.',
+    desktopOn: 'Área de trabalho ligada: enquanto o Mochi está na área de trabalho, a faixa aparece sem ele.',
+    desktopOff: 'Área de trabalho desligada: o Mochi fica na faixa.',
     statusLine: (label, line) => `Status: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Contexto: ${ctx} · agentes rodando: ${agents} · ferramentas neste turno: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -753,14 +757,14 @@ export const pt: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Dicas: ${tips ? 'ligadas' : 'desligadas'} · Pausas: ${breaks ? 'ligadas' : 'desligadas'} · Reações de plugins: ${plugins ? 'ligadas' : 'desligadas'}`,
     peersLine: (level, peers) => `Nível ${level} · outros chats: ${peers}`,
-    commands: 'Comandos: /mochi (mostrar/esconder) | standup | week | desk | prs | city | detalhes | nível | vestir | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma | pequeno | grande | exportar | redefinir | relatar | atualizar | status',
+    commands: 'Comandos: /mochi (mostrar/esconder) | standup | week | desk | prs | city | detalhes | nível | vestir | conquistas | conversas | escudo | alertas | ci | dicas | pausas | som | extensões | cartão | retrospectiva | captura | apresentação | novidades | aniversário | idioma | pequeno | grande | mesa | exportar | redefinir | relatar | atualizar | status',
     langNow: (name, list) => `Idioma: ${name}. Disponíveis: ${list} · /mochi idioma <código> ou automático`,
     langSet: name => `Idioma: ${name}.`,
     langAuto: name => `O idioma segue o Claude Code e o sistema: ${name}.`,
     langUnknown: (code, list) => `Idioma desconhecido: ${code}. Disponíveis: ${list}`,
     words: {
       on: ['ligar', 'ativar'], off: ['desligar', 'desativar'],
-      hide: ['esconder', 'ocultar'], show: ['mostrar'], small: ['pequeno'], big: ['grande'], sound: ['som'],
+      hide: ['esconder', 'ocultar'], show: ['mostrar'], small: ['pequeno'], big: ['grande'], sound: ['som'], desktop: ['mesa'],
       status: [], details: ['detalhes'], level: ['nível', 'nivel'], wear: ['vestir', 'usar'], shield: ['escudo'],
       alerts: ['alertas', 'avisos'], lang: ['idioma', 'língua', 'lingua'], auto: ['automático', 'automatico'], none: ['nenhum', 'nada'],
       card: ['cartão'], wrapped: ['retrospectiva', 'resumo'], snap: ['captura', 'foto'], year: ['ano'],

@@ -4,10 +4,10 @@ import { expect, mock, test } from 'claude-code/testing'
 import { boardLines, boardOf, chatsCard, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from '../hooks/chats'
 import { detailLines } from '../hooks/detail'
 import { setLang } from '../hooks/i18n'
-import { appLink, appSessionOf, peerOf } from '../hooks/live'
+import { ALIVE_MS, appLink, appSessionOf, deskOf, peerOf } from '../hooks/live'
 import { floorOf, partyOf } from '../hooks/party'
 import { openCommand } from '../hooks/system'
-import { NO_ENV } from '../hooks/state'
+import { NO_ENV, restorePrefs } from '../hooks/state'
 
 // These read the English lines.
 setLang('en')
@@ -126,6 +126,9 @@ test('the board puts this chat first, then the waiting ones, the longest wait fi
   const old = peerOf({ id: 'x', label: 'old', state: 'idle', line: 'ready', since: 0, at: NOW }, NOW)
   expect(old).toEqual({ id: 'x', label: 'old', state: 'idle', line: 'ready', since: 0, at: NOW, folder: '', branch: '', isWorktree: false, stateAt: 0, title: '' })
   expect(boardLines(undefined, [old!], NOW)).toEqual(['Chats: 1 open', '  ○ old · idle'])
+  // A chat the desktop app follows says how far its plan is.
+  const planned = peerOf({ id: 'p', label: 'codex', state: 'idle', line: '', since: 0, at: NOW, v: 2, plan: { total: 4, done: 2, now: 'Fixing' } }, NOW)
+  expect(boardLines(undefined, [planned!], NOW)).toEqual(['Chats: 1 open', '  ○ codex · idle · 2/4'])
 })
 
 test('the details pane draws the board as a card, and as lines in the terminal', async () => {
@@ -427,4 +430,185 @@ test('Claude Code’s file of a session is read for its name and desktop session
   // Windows opens an app's link as a link, not as a path.
   expect(openCommand('windows', 'claude://code/continue?session=local_ab-1')).toEqual(['explorer.exe', 'claude://code/continue?session=local_ab-1'])
   expect(openCommand('windows', 'C:/x/y')).toEqual(['explorer.exe', 'C:\\x\\y'])
+})
+
+test('this chat’s file lists its usage windows in whole percents, and is written again when one moves by a whole percent', { timeoutMs: 20_000 }, async ($, on) => {
+  const resetsAt = NOW + 60 * MIN
+  const at = new Date(resetsAt).toISOString()
+  const limits = [{ kind: 'five_hour', percentUsed: 33.6, resetsAt: at }, { kind: 'seven_day', percentUsed: 40, resetsAt: at }]
+  const { clock, files } = machine(on, limits)
+  on('turn.start', () => ({ turnId: 't' }) as never)
+  on('turn.complete', () => ({ text: '' }) as never)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(2000)
+  expect(liveFile(files).windows).toEqual([{ kind: 'five_hour', p: 34, resetsAt }, { kind: 'seven_day', p: 40, resetsAt }])
+  // The used-up window is told as before.
+  expect(liveFile(files).limit).toBeNull()
+  // A turn's end measures again: a fraction more leaves the windows as they were, a whole percent more is in the file within two seconds.
+  const turn = async () => {
+    await $.turn.start({ text: 'go', turnId: 't' } as never)
+    await $.turn.complete({ turnId: 't', reason: 'answer', answer: '', durationMs: 1000, isAborted: false } as never)
+    await clock.advance(2000)
+  }
+  limits[0]!.percentUsed = 34.4
+  await turn()
+  expect(liveFile(files).windows[0]).toEqual({ kind: 'five_hour', p: 34, resetsAt })
+  limits[0]!.percentUsed = 35.2
+  await turn()
+  expect(liveFile(files).windows[0]).toEqual({ kind: 'five_hour', p: 35, resetsAt })
+})
+
+test('the person’s look is written for the desktop app (look.json), and again when a pick changes it', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const look = () => JSON.parse(files.get('/h/.claude/mochi/look.json') ?? 'null')
+  expect(look()).toMatchObject({ v: 1, pick: {}, birthday: '' })
+  expect(Array.isArray(look().items)).toBe(true)
+  expect(typeof look().tz).toBe('number')
+  // Taking the hat off is a pick too: the app's Mochi goes bareheaded as well.
+  expect((await $.command.run({ command: 'mochi', args: 'wear none' } as never)).text).toBeTruthy()
+  await clock.advance(20_000)
+  expect(look().pick.head).toBeNull()
+})
+
+test('a wardrobe choice goes to prefs.json, and a newer one made in the desktop app is worn here too', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const P = '/h/.claude/mochi/prefs.json'
+  const look = () => JSON.parse(files.get('/h/.claude/mochi/look.json') ?? 'null')
+  await $.command.run({ command: 'mochi', args: 'wear none' } as never)
+  expect(JSON.parse(files.get(P) ?? 'null')).toMatchObject({ v: 1, pick: { head: null } })
+  // The app gives the head back to Mochi: this chat wears that too, and does not write it back.
+  files.set(P, JSON.stringify({ v: 1, at: NOW + 60_000, pick: {} }))
+  await clock.advance(20_000)
+  expect(look().pick.head).toBeUndefined()
+  expect(JSON.parse(files.get(P) ?? 'null')).toEqual({ v: 1, at: NOW + 60_000, pick: {} })
+  // A choice older than the one worn is not worn.
+  files.set(P, JSON.stringify({ v: 1, at: NOW, pick: { head: null } }))
+  await clock.advance(20_000)
+  expect(look().pick.head).toBeUndefined()
+})
+
+test('a peer file’s usage windows are read one by one: junk is dropped, percents are whole, four at most; a file without them has none', async () => {
+  const at = NOW + 60 * MIN
+  const base = { id: 'y', label: 'new', state: 'idle', line: '', since: 0, at: NOW, v: 2 }
+  expect(peerOf(base, NOW)?.windows).toEqual([])
+  expect(peerOf({ ...base, windows: 'all of them' }, NOW)?.windows).toEqual([])
+  const windows = [
+    { kind: 'five_hour', p: 33.6, resetsAt: at }, 'nonsense', null, { kind: 'seven_day', p: '40', resetsAt: at }, { p: 5, resetsAt: at }, { kind: 'opus', p: 9 },
+    { kind: 'seven_day', p: 140, resetsAt: at }, { kind: 'x'.repeat(90), p: -3, resetsAt: 0 }, { kind: 'a', p: 1, resetsAt: at }, { kind: 'b', p: 2, resetsAt: at },
+  ]
+  const read = peerOf({ ...base, windows }, NOW)?.windows ?? []
+  expect(read.map(w => w.p)).toEqual([34, 100, 0, 1])
+  expect(read[0]).toEqual({ kind: 'five_hour', p: 34, resetsAt: at })
+  expect(read[1]).toEqual({ kind: 'seven_day', p: 100, resetsAt: at })
+  expect(read[2]?.kind.length).toBeLessThanOrEqual(20)
+  // An older Mochi's file has none of the newer fields, whatever else is in it.
+  expect(peerOf({ ...base, v: undefined, windows }, NOW)?.windows).toBeUndefined()
+})
+
+test('the desktop app’s Mochi is out only while its file says shown and is fresh', async () => {
+  expect(deskOf({ v: 1, at: NOW, isShown: true, version: '0.1.0' }, NOW)).toBe(true)
+  expect(deskOf({ v: 1, at: NOW - ALIVE_MS, isShown: true }, NOW)).toBe(true)
+  // Silent for too long: the app was closed without a goodbye.
+  expect(deskOf({ v: 1, at: NOW - ALIVE_MS - 1, isShown: true }, NOW)).toBe(false)
+  expect(deskOf({ v: 1, at: NOW, isShown: false }, NOW)).toBe(false)
+  for (const junk of [null, undefined, 'shown', 7, [], {}, { isShown: true }, { at: NOW, isShown: 'true' }, { at: String(NOW), isShown: true }]) expect(deskOf(junk, NOW)).toBe(false)
+  // Saved settings from before the setting was there step aside too.
+  expect(restorePrefs({ lang: 'en' }).goesOut).toBe(true)
+  expect(restorePrefs({ goesOut: false }).goesOut).toBe(false)
+})
+
+const BAND = {
+  plugin: 'mochi-buddy',
+  component: 'AbovePrompt' as const,
+  props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} },
+}
+
+test('the band draws no mascot while the desktop app’s Mochi is out, and the rest stays; it is back when the app goes, and stays with the setting off', { timeoutMs: 30_000 }, async ($, on) => {
+  const { clock, files } = machine(on, [{ kind: 'five_hour', percentUsed: 34, resetsAt: new Date(NOW + 300 * MIN).toISOString() }])
+  const APP = '/h/.claude/mochi/app.json'
+  let now = NOW
+  const pass = async (ms: number) => {
+    await clock.advance(ms)
+    now += ms
+  }
+  /** The desktop app writes its file, now. */
+  const app = (isShown: boolean) => files.set(APP, JSON.stringify({ v: 1, at: now, isShown, version: '0.1.0' }))
+  /** The band as each surface draws it now: the terminal's mascot and facts, its one-line face, and the desktop's panel. */
+  const drawn = async () => {
+    const terminal = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    const ascii = (await terminal.find({ text: /╭─────╮/ })) !== undefined
+    const facts = (await terminal.find({ text: /context 1%/ })) !== undefined
+    await terminal.unmount()
+    const line = await $.ui.mount({ ...BAND, surface: 'terminal', props: { ...BAND.props, maxRows: 2 } })
+    const face = (await line.find({ text: /^\(.{3}\) / })) !== undefined
+    await line.unmount()
+    const desktop = await $.ui.mount({ ...BAND, surface: 'desktop' })
+    await pass(500)
+    const svg = String((await desktop.find({ type: 'Svg' }))?.props.source)
+    await desktop.unmount()
+    return { ascii, face, facts, mascot: svg.includes('<image href="data:image/webp'), rings: svg.includes('>1%<') && svg.includes('>34%<'), line: svg.includes('class="bub"') }
+  }
+  const WITH = { ascii: true, face: true, facts: true, mascot: true, rings: true, line: true }
+  const WITHOUT = { ...WITH, ascii: false, face: false, mascot: false }
+  const beat = () => pass(4000)
+  await clock.set(NOW)
+  await $.session.start(START)
+  await beat()
+  // No desktop app: Mochi is in the band.
+  expect(await drawn()).toEqual(WITH)
+  // Its Mochi comes out: the band's steps aside at the next read, and everything else stays.
+  app(true)
+  await beat()
+  expect(await drawn()).toEqual(WITHOUT)
+  // Hidden in the app: back in the band.
+  app(false)
+  await beat()
+  expect(await drawn()).toEqual(WITH)
+  app(true)
+  await beat()
+  expect(await drawn()).toEqual(WITHOUT)
+  // The app quits and takes its file with it.
+  files.delete(APP)
+  await beat()
+  expect(await drawn()).toEqual(WITH)
+  // An app that went silent without a goodbye is gone after a while.
+  app(true)
+  await beat()
+  expect(await drawn()).toEqual(WITHOUT)
+  await pass(ALIVE_MS)
+  expect(await drawn()).toEqual(WITH)
+  // With the setting off the band never changes for the app.
+  await $.command.run({ command: 'mochi', args: 'desktop off' } as never)
+  app(true)
+  await beat()
+  expect(await drawn()).toEqual(WITH)
+  await $.command.run({ command: 'mochi', args: 'desktop on' } as never)
+  expect(await drawn()).toEqual(WITHOUT)
+  // Hidden is hidden, whatever the app does.
+  await $.command.run({ command: 'mochi', args: 'hide' } as never)
+  expect(await drawn()).toMatchObject({ ascii: false, facts: false })
+})
+
+test('/mochi desktop turns stepping aside for the desktop app off and on, and says which', async ($, on) => {
+  const { clock } = machine(on)
+  await clock.set(NOW)
+  await $.session.start(START)
+  const run = async (args: string) => (await $.command.run({ command: 'mochi', args } as never)).text
+  const [ON, OFF] = ['Desktop on: while Mochi is out on the desktop, the band is drawn without it.', 'Desktop off: Mochi stays in the band.']
+  // On from the start; alone the word turns it over, with on or off it sets it.
+  expect(await run('desktop')).toBe(OFF)
+  expect(await run('desktop')).toBe(ON)
+  expect(await run('desktop on')).toBe(ON)
+  expect(await run('desktop off')).toBe(OFF)
+  expect(await run('desktop off')).toBe(OFF)
+  // /mochi desk is still the work not yet safe on a remote.
+  expect(await run('desk')).not.toBe(OFF)
+  expect(await run('desk')).not.toBe(ON)
 })

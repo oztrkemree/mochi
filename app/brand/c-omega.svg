@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- C · m-face: two eyes over a cat's ω smile, which is an m turned over: Mochi's face and its initial in three strokes. -->
+  <circle cx="86" cy="98" r="20"/>
+  <circle cx="170" cy="98" r="20"/>
+  <path d="M70 150c4 34 54 34 58 0c4 34 54 34 58 0" fill="none" stroke="#000" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- B · Peek: Mochi peeks up from the bottom edge of your screen; the tip of its antenna is the notification dot. -->
+  <circle cx="196" cy="56" r="22"/>
+  <path d="M128 112c2-26 18-44 46-52l4 13c-22 6-34 20-36 41z"/>
+  <path fill-rule="evenodd" d="M36 228v-46c0-44 32-76 76-76h32c44 0 76 32 76 76v46z
+    M92 152a15 15 0 1 0 0 30a15 15 0 1 0 0-30z M164 152a15 15 0 1 0 0 30a15 15 0 1 0 0-30z"/>
+</svg>

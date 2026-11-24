@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Mochi · ikon</title>
+<style>
+  body { margin: 0; padding: 26px; font: 14px/1.4 -apple-system, system-ui, sans-serif; color: #222; background: linear-gradient(160deg, #cfd8e6, #e9e2f0 55%, #f3e6dc); min-height: 100vh; box-sizing: border-box; }
+  .row { display: grid; grid-template-columns: 250px 1fr; gap: 26px; align-items: center; margin-bottom: 26px; background: rgba(255,255,255,.55); border-radius: 18px; padding: 18px; }
+  .row img.big { width: 240px; height: 240px; }
+  .name { font-weight: 700; font-size: 17px; } .note { color: #555; margin: 4px 0 12px; max-width: 460px; }
+  .sizes { display: flex; gap: 16px; align-items: flex-end; }
+  .sizes div { display: grid; justify-items: center; gap: 4px; font-size: 11px; color: #666; }
+  .dock { margin-top: 12px; display: inline-flex; gap: 10px; padding: 8px 12px; border-radius: 18px; background: rgba(255,255,255,.35); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.6); align-items: flex-end; }
+  .dock span { width: 54px; height: 54px; border-radius: 13px; background: #8aa0c0; display: block; opacity: .6; }
+  .bar { margin-top: 10px; display: inline-flex; gap: 14px; align-items: center; background: rgba(30,27,25,.85); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 12px; }
+  .bar img { filter: invert(1); }
+</style></head><body>
+<script>
+const C = [
+  ['icon-a.svg', 'a2-squish.svg', 'A · Pofuduk  ← önerim', 'Kil Mochi sıcak, koyu bir karede; anteninin ampulü yanıyor. Uygulamanın kendisi gibi: o odadaki ışıklı sahne.'],
+  ['icon-c.svg', 'c-omega.svg', 'C · m-yüz', 'Kendi kilinin üstünde krem bir yüz: iki göz, ω ağız (ters m) ve üstte yanan ampul. Daha grafik, daha az karakter.'],
+]
+for (const [icon, mono, name, note] of C) {
+  const sizes = [128, 64, 32, 16].map(s => `<div><img src="${icon}" width="${s}" height="${s}">${s}</div>`).join('')
+  document.write(`<div class="row"><img class="big" src="${icon}"><div><div class="name">${name}</div><p class="note">${note}</p><div class="sizes">${sizes}</div>
+  <div class="dock"><span></span><span></span><img src="${icon}" width="64" height="64"><span></span></div>
+  <div><div class="bar">Menü çubuğu <img src="${mono}" width="16" height="16"> 16 px tek renk</div></div></div></div>`)
+}
+</script>
+</body></html>

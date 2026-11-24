@@ -14,7 +14,7 @@ und hat Kontext, Sitzung und Wochenlimit immer gut sichtbar für dich im Blick.
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude-Code-Plugin](https://img.shields.io/badge/Claude_Code-Plugin-D97757?style=for-the-badge)](#-in-10-sekunden-installiert)
 [![16 Sprachen](https://img.shields.io/badge/Sprachen-16-7AA2F7?style=for-the-badge)](#-16-sprachen)
-[![170 Accessoires](https://img.shields.io/badge/Kleiderschrank-170_Teile-B684F6?style=for-the-badge)](#-ein-kleiderschrank-der-mit-dir-wächst)
+[![201 Accessoires](https://img.shields.io/badge/Kleiderschrank-201_Teile-B684F6?style=for-the-badge)](#-ein-kleiderschrank-der-mit-dir-wächst)
 [![Keine Telemetrie](https://img.shields.io/badge/Telemetrie-keine-4CC38A?style=for-the-badge)](#-worauf-mochi-zugreift)
 
 <sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · **Deutsch** · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
@@ -68,7 +68,7 @@ Tipp das in einen beliebigen Claude-Code-Chat, antworte mit `y`, um den Marketpl
 <td align="center" width="25%">🎭<br><b>30 Stimmungen</b><br><sub>die jedem Tool-Aufruf folgen</sub></td>
 <td align="center" width="25%">🛡️<br><b>Ein Schild</b><br><sub>gegen <code>rm -rf</code>, Force-Pushes und geleakte Schlüssel</sub></td>
 <td align="center" width="25%">📊<br><b>Limit-Ringe</b><br><sub>mit Prognose, wann es knapp wird</sub></td>
-<td align="center" width="25%">👒<br><b>170 Teile zum Anziehen</b><br><sub>verdient durch echte Arbeit</sub></td>
+<td align="center" width="25%">👒<br><b>201 Teile zum Anziehen</b><br><sub>verdient durch echte Arbeit</sub></td>
 </tr>
 </table>
 
@@ -209,7 +209,7 @@ Weiter unten: der Kontext nach Kategorien, deine letzten Runden, ein Kalender mi
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi probiert ein Outfit nach dem anderen an: Strickmütze mit Kaffee, Krone mit Monokel und Katze, Zauberhut und Schal, Partyhut mit Medaille und Ballon, Cowboyhut mit Schnurrbart, Doktorhut mit Brille, Piratenhut mit Sonnenbrille und Ente, Bauarbeiterhelm mit Schraubenschlüssel, Kochmütze mit Fliege und Kuchen und eine Schlafmütze neben einem Kaktus">
 </p>
 
-Jede Runde, jede Bearbeitung, jeder Commit und jeder Arbeitstag bringt Erfahrung. Mit den Levels schaltest du Sachen zum Anziehen frei: **170 Teile** für Kopf, Brille, Gesicht, Schnurrbart, Bart, Hals, Hand und den Platz neben Mochi. Nichts gibt es einfach nach Datum: Das meiste öffnen die Levels, einiges deine Gewohnheiten und den Rest die harten Abzeichen (ein Hexenhut und ein Kürbis für hundertfünfzig Nächte, ein Kuchen für fünfhundert Commits). Einmal verdient, kommt der Hexenhut an Halloween und der Kuchen an deinem Geburtstag; Kaffee gibt es am Morgen und eine Schlafmütze nach Mitternacht.
+Jede Runde, jede Bearbeitung, jeder Commit und jeder Arbeitstag bringt Erfahrung. Mit den Levels schaltest du Sachen zum Anziehen frei: **201 Teile** für Kopf, Brille, Gesicht, Schnurrbart, Bart, Hals, Hand und den Platz neben Mochi. Nichts gibt es einfach nach Datum: Das meiste öffnen die Levels, einiges deine Gewohnheiten und den Rest die harten Abzeichen (ein Hexenhut und ein Kürbis für hundertfünfzig Nächte, ein Kuchen für fünfhundert Commits). Einmal verdient, kommt der Hexenhut an Halloween und der Kuchen an deinem Geburtstag; Kaffee gibt es am Morgen und eine Schlafmütze nach Mitternacht.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Zwölf Mochis in verschiedenen Outfits: Strickmütze mit Kaffee, Cowboy mit Schnurrbart, Zauberer, Partyhut, Krone mit Monokel und Katze, Schlafmütze mit Schal und mehr">
@@ -269,6 +269,7 @@ Du brauchst keinen einzigen: Mochi legt los, sobald er installiert ist. Wenn du 
 | `/mochi shield [on \| off]` | Sehen, ob der Schild an ist und was wo immer erlaubt ist |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Ein Bild zum Teilen speichern |
 | `/mochi small` · `/mochi big` | Eine Zeile oder volle Größe |
+| `/mochi desktop` | Platz machen für die Desktop-App an- oder ausschalten: Solange deren Mochi draußen ist, erscheint die Leiste ohne Mochi |
 
 <details>
 <summary><b>Alle Befehle</b></summary>
@@ -304,6 +305,7 @@ Du brauchst keinen einzigen: Mochi legt los, sobald er installiert ist. Wenn du 
 | `/mochi birthday [MM-DD \| none]` | Mochi deinen Geburtstag verraten, ihn anzeigen oder vergessen lassen |
 | `/mochi lang [code \| auto]` | Sprache anzeigen oder ändern |
 | `/mochi small` · `/mochi big` | Eine Zeile oder volle Größe |
+| `/mochi desktop` | Platz machen für die Desktop-App an- oder ausschalten: Solange deren Mochi draußen ist, erscheint die Leiste ohne Mochi |
 | `/mochi export` | Alles, was Mochi speichert, in einer JSON-Datei sichern |
 | `/mochi reset [level \| history \| all]` | Den Level-Speicher, den Verlauf oder alles löschen, Einstellungen eingeschlossen; Mochi fragt vorher nach, und Exporte und deine `shield.json` bleiben erhalten |
 | `/mochi feedback` | Ein Link zu einem Bugreport, schon ausgefüllt mit den Versionen, deinem System, der Oberfläche und der Sprache |

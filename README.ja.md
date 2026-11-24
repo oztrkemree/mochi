@@ -14,7 +14,7 @@ Claudeのすることすべてに反応し、あとで後悔しそうなコマ�
 [![ライセンス: MIT](https://img.shields.io/badge/ライセンス-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Codeプラグイン](https://img.shields.io/badge/Claude_Code-プラグイン-D97757?style=for-the-badge)](#-10秒でインストール)
 [![16言語](https://img.shields.io/badge/対応言語-16-7AA2F7?style=for-the-badge)](#-16言語に対応)
-[![170個のアクセサリー](https://img.shields.io/badge/着せ替え-170個-B684F6?style=for-the-badge)](#-使うほど増える着せ替え)
+[![201個のアクセサリー](https://img.shields.io/badge/着せ替え-201個-B684F6?style=for-the-badge)](#-使うほど増える着せ替え)
 [![テレメトリなし](https://img.shields.io/badge/テレメトリ-なし-4CC38A?style=for-the-badge)](#-mochiがアクセスするもの)
 
 <sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · **日本語** · [한국어](README.ko.md)</sub>
@@ -68,7 +68,7 @@ Claudeのすることすべてに反応し、あとで後悔しそうなコマ�
 <td align="center" width="25%">🎭<br><b>30種類の表情</b><br><sub>ツール呼び出しのたびに変わる</sub></td>
 <td align="center" width="25%">🛡️<br><b>シールド</b><br><sub><code>rm -rf</code>、force push、キーの流出から守る</sub></td>
 <td align="center" width="25%">📊<br><b>上限のリング</b><br><sub>使い切る時刻の予測つき</sub></td>
-<td align="center" width="25%">👒<br><b>170の着せ替え</b><br><sub>実際の作業で手に入る</sub></td>
+<td align="center" width="25%">👒<br><b>201の着せ替え</b><br><sub>実際の作業で手に入る</sub></td>
 </tr>
 </table>
 
@@ -209,7 +209,7 @@ Mochiが手すきのとき、たまに、いま起きたことに合わせてCla
   <img src="docs/gif/wardrobe.webp" width="760" alt="次々に着せ替えを試すMochi。ニット帽にコーヒー、モノクルとねこを連れた王冠、魔法使いの帽子とマフラー、メダルと風船つきのパーティー帽、口ひげのカウボーイハット、メガネに角帽、サングラスとアヒルつきの海賊帽、レンチを持ったヘルメット、蝶ネクタイとケーキのコック帽、そしてサボテンの横でナイトキャップ">
 </p>
 
-ターン、編集、コミット、そして作業した日のひとつひとつが経験値になります。レベルが上がるごとに着られるものが増え、頭、メガネ、顔、口ひげ、あごひげ、首、手、そしてMochiのとなりに、全部で**170アイテム**。日付で解放されるものはありません。ほとんどはレベルで、いくつかは習慣で、残りは手ごわいバッジで手に入ります（150回の夜ふかしで魔女の帽子とかぼちゃ、500回のコミットでケーキ）。一度手に入れれば、ハロウィンには魔女の帽子、誕生日にはケーキを身につけます。朝はコーヒー、深夜0時を過ぎたらナイトキャップです。
+ターン、編集、コミット、そして作業した日のひとつひとつが経験値になります。レベルが上がるごとに着られるものが増え、頭、メガネ、顔、口ひげ、あごひげ、首、手、そしてMochiのとなりに、全部で**201アイテム**。日付で解放されるものはありません。ほとんどはレベルで、いくつかは習慣で、残りは手ごわいバッジで手に入ります（150回の夜ふかしで魔女の帽子とかぼちゃ、500回のコミットでケーキ）。一度手に入れれば、ハロウィンには魔女の帽子、誕生日にはケーキを身につけます。朝はコーヒー、深夜0時を過ぎたらナイトキャップです。
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="いろいろな着せ替えをした12体のMochi。ニット帽にコーヒー、口ひげのカウボーイ、魔法使い、パーティー帽、モノクルとねこを連れた王冠、マフラーとナイトキャップ、ほかにもたくさん">
@@ -269,6 +269,7 @@ Mochiが手すきのとき、たまに、いま起きたことに合わせてCla
 | `/mochi shield [on \| off]` | シールドがONかどうかと、どこで何を常に許可しているかの確認 |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | シェア用の画像を保存 |
 | `/mochi small` · `/mochi big` | 1行表示か、フルサイズか |
+| `/mochi desktop` | デスクトップアプリに場所をゆずるかのON/OFF：アプリのMochiが出ている間、バーはMochiなしで表示 |
 
 <details>
 <summary><b>すべてのコマンド</b></summary>
@@ -304,6 +305,7 @@ Mochiが手すきのとき、たまに、いま起きたことに合わせてCla
 | `/mochi birthday [MM-DD \| none]` | 誕生日を教える、確認する、または忘れさせる |
 | `/mochi lang [code \| auto]` | 言語の確認と切り替え |
 | `/mochi small` · `/mochi big` | 1行表示か、フルサイズか |
+| `/mochi desktop` | デスクトップアプリに場所をゆずるかのON/OFF：アプリのMochiが出ている間、バーはMochiなしで表示 |
 | `/mochi export` | Mochiが保存しているものをすべて1つのJSONファイルに書き出す |
 | `/mochi reset [level \| history \| all]` | レベルの記憶、履歴、またはすべて（設定も含む）を消す。消す前に確認があり、エクスポートと`shield.json`は残る |
 | `/mochi feedback` | バージョン、OS、使っている画面、言語が入力済みのバグ報告へのリンク |

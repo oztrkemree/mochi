@@ -14,7 +14,7 @@ et garde sous vos yeux vos limites de contexte, de session et de semaine.
 [![Licence : MIT](https://img.shields.io/badge/licence-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Plugin Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-installer-en-10-secondes)
 [![16 langues](https://img.shields.io/badge/langues-16-7AA2F7?style=for-the-badge)](#-16-langues)
-[![170 accessoires](https://img.shields.io/badge/garde--robe-170_accessoires-B684F6?style=for-the-badge)](#-une-garde-robe-qui-grandit-avec-vous)
+[![201 accessoires](https://img.shields.io/badge/garde--robe-201_accessoires-B684F6?style=for-the-badge)](#-une-garde-robe-qui-grandit-avec-vous)
 [![Aucune télémétrie](https://img.shields.io/badge/t%C3%A9l%C3%A9m%C3%A9trie-aucune-4CC38A?style=for-the-badge)](#-ce-que-mochi-touche)
 
 <sub>[English](README.md) · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · **Français** · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
@@ -68,7 +68,7 @@ Tapez cette commande dans n’importe quelle conversation Claude Code, répondez
 <td align="center" width="25%">🎭<br><b>30 humeurs</b><br><sub>qui suivent chaque appel d’outil</sub></td>
 <td align="center" width="25%">🛡️<br><b>Un bouclier</b><br><sub>contre <code>rm -rf</code>, les force push et les clés qui fuient</sub></td>
 <td align="center" width="25%">📊<br><b>Des anneaux de limites</b><br><sub>avec une prévision du moment où vous serez à court</sub></td>
-<td align="center" width="25%">👒<br><b>170 accessoires</b><br><sub>gagnés par du vrai travail</sub></td>
+<td align="center" width="25%">👒<br><b>201 accessoires</b><br><sub>gagnés par du vrai travail</sub></td>
 </tr>
 </table>
 
@@ -209,7 +209,7 @@ Plus bas : le contexte par catégorie, vos derniers tours, un calendrier des jou
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi qui essaie des tenues l’une après l’autre : un bonnet avec un café, une couronne avec un monocle et un chat, un chapeau de magicien et une écharpe, un chapeau de fête avec une médaille et un ballon, un chapeau de cow-boy avec une moustache, une toque de diplômé avec des lunettes, un chapeau de pirate avec des lunettes de soleil et un canard, un casque de chantier avec une clé, une toque de chef avec un nœud papillon et un gâteau, et un bonnet de nuit à côté d’un cactus">
 </p>
 
-Chaque tour, chaque modification, chaque commit et chaque journée de travail rapporte de l’expérience. Les niveaux débloquent de quoi s’habiller : **170 accessoires** pour la tête, les lunettes, le visage, la moustache, la barbe, le cou, la main et la place juste à côté de Mochi. Rien ne s’ouvre selon la date : les niveaux en ouvrent la plupart, les habitudes quelques-uns, et les badges coriaces le reste (un chapeau de sorcière et une citrouille pour cent cinquante nuits, un gâteau pour cinq cents commits). Une fois gagnés, le chapeau de sorcière sort à Halloween et le gâteau le jour de votre anniversaire ; le café arrive le matin et le bonnet de nuit après minuit.
+Chaque tour, chaque modification, chaque commit et chaque journée de travail rapporte de l’expérience. Les niveaux débloquent de quoi s’habiller : **201 accessoires** pour la tête, les lunettes, le visage, la moustache, la barbe, le cou, la main et la place juste à côté de Mochi. Rien ne s’ouvre selon la date : les niveaux en ouvrent la plupart, les habitudes quelques-uns, et les badges coriaces le reste (un chapeau de sorcière et une citrouille pour cent cinquante nuits, un gâteau pour cinq cents commits). Une fois gagnés, le chapeau de sorcière sort à Halloween et le gâteau le jour de votre anniversaire ; le café arrive le matin et le bonnet de nuit après minuit.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Douze Mochi dans des tenues différentes : un bonnet avec un café, un cow-boy moustachu, un magicien, un chapeau de fête, une couronne avec un monocle et un chat, un bonnet de nuit avec une écharpe, et bien d’autres">
@@ -269,6 +269,7 @@ Vous n’en avez jamais besoin : Mochi fonctionne dès qu’il est installé. Qu
 | `/mochi shield [on \| off]` | Dit si le bouclier est actif et ce qui est toujours autorisé et où |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Enregistre une image à partager |
 | `/mochi small` · `/mochi big` | Sur une seule ligne ou en grand |
+| `/mochi desktop` | Active ou désactive le retrait devant l’app de bureau : tant que son Mochi est sorti, le bandeau s’affiche sans lui |
 
 <details>
 <summary><b>Toutes les commandes</b></summary>
@@ -304,6 +305,7 @@ Vous n’en avez jamais besoin : Mochi fonctionne dès qu’il est installé. Qu
 | `/mochi birthday [MM-DD \| none]` | Donne votre anniversaire à Mochi, l’affiche ou le fait oublier |
 | `/mochi lang [code \| auto]` | Affiche ou change la langue |
 | `/mochi small` · `/mochi big` | Sur une seule ligne ou en grand |
+| `/mochi desktop` | Active ou désactive le retrait devant l’app de bureau : tant que son Mochi est sorti, le bandeau s’affiche sans lui |
 | `/mochi export` | Enregistre tout ce que Mochi conserve dans un seul fichier JSON |
 | `/mochi reset [level \| history \| all]` | Efface la mémoire du niveau, l’historique, ou tout, réglages compris ; il demande d’abord, et les exports et votre `shield.json` restent |
 | `/mochi feedback` | Un lien vers un rapport de bug, prérempli avec les versions, votre système, l’interface et la langue |

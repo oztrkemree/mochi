@@ -17,10 +17,9 @@ import { nameOf } from './live'
 import { PANEL_H, limitName, panelSvg } from './panel'
 import { SHOWN, floorOf, memberLines, membersOf, partyOf, statusLine } from './party'
 import { duration } from './react'
-import { VECTOR_WEAR, mascotInner, shiftTimeline, svgFor } from './rig'
+import { itemIcon, mascotInner, shiftTimeline, svgFor } from './rig'
 import { prsBoard } from './prs'
 import { ALL_ITEMS, DEFAULT_PREFS, NO_DIFF, NO_ENV, NO_FACE, NO_PANEL, NO_SAID, TABS, TAB_OF, chat, inTab } from './state'
-import { WEAR } from './wear'
 
 // What Mochi draws: the band above the prompt (the mascot and its line in the
 // terminal, the panel on the desktop) and the details pane, with its level,
@@ -38,6 +37,7 @@ const said = atom({ plugin: 'mochi-buddy', key: 'said' } as const, NO_SAID)
 const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
 const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
 const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
+const away = atom({ plugin: 'mochi-buddy', key: 'away' } as const, false)
 
 const width = (s: string) => [...s].length
 const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0, Math.max(1, max - 1)).join('')}…`)
@@ -72,23 +72,6 @@ function floorRegion($: EngineInterface, desk: DeskPane, rows: number) {
 function arrangeRegion($: EngineInterface, desk: DeskPane, props: { rows: { id: Block; title: string; gist: string; isHidden: boolean }[]; shown: string; hidden: string }) {
   const { Client } = $.ui.resolve(desk)
   return <Client key="arrange" module="./arrange.tsx" props={props} width="100%" height={props.rows.length * 2} />
-}
-
-/** An item's picture for the wardrobe, faded and grey while locked. */
-function iconSvg(item: Item, isOpen: boolean): string {
-  const vector = VECTOR_WEAR[item]
-  if (vector) {
-    const [x, y, w, tall] = vector.box
-    // Glasses read as glasses on a patch of Mochi's own clay, not on the dark card.
-    const skin = vector.onSkin ? `<rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${tall - 2}" rx="${Math.min(w, tall) / 2 - 1}" fill="#D97757"/>` : ''
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${tall}" width="100%" height="100%"><g opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}>${skin}${vector.svg}</g></svg>`
-  }
-  const a = WEAR[item]
-  if (a === undefined) return ''
-  const scale = Math.min(44 / a.w, 30 / a.h)
-  const w = a.w * scale
-  const tall = a.h * scale
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${a.uri}" x="${(46 - w) / 2}" y="${(32 - tall) / 2}" width="${w}" height="${tall}" opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}/></svg>`
 }
 
 /** The terminal drawing's hat row, when the mood leaves it empty and something is worn on the head. */
@@ -181,7 +164,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       return (
         <Box key={`cell:${item}`} flexDirection="column" alignItems="center" width={cardW} paddingX={1} paddingTop={0.5} overflow="hidden"
           borderStyle="round" borderColor={isOn ? 'claude' : 'inactive'} borderDimColor={!isOn} hover={isOpen && !isOn ? { borderColor: 'claude', borderDimColor: false } : undefined}>
-          <Svg source={iconSvg(item, isOpen)} alt={itemName(item)} width={46} height={32} />
+          <Svg source={itemIcon(item, isOpen)} alt={itemName(item)} width={46} height={32} />
           {isOpen
             ? <Button key={`wear:${item}`} plain onPress={pressed}>{itemShort(item)}</Button>
             : <Text dimColor wrap="truncate">{itemShort(item)}</Text>}
@@ -198,7 +181,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       return (
         <Box key={`tab:${slot}`} flexDirection="row" alignItems="center" gap={1} paddingX={1} overflow="hidden"
           borderStyle="round" borderColor={isHere ? 'claude' : 'inactive'} borderDimColor={!isHere} hover={isHere ? undefined : { borderColor: 'claude', borderDimColor: false }}>
-          {on ? <Svg source={iconSvg(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
+          {on ? <Svg source={itemIcon(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
           <Button key={`shelf:${slot}`} plain onPress={pressed}>
             {`${slotName(slot)} ${SLOT_ITEMS[slot].filter(i => ok.includes(i)).length}/${SLOT_ITEMS[slot].length}`}
           </Button>
@@ -426,7 +409,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         <Box flexDirection="row" alignItems="center" gap={2}>
           <Text dimColor wrap="truncate">{gists.wardrobe}</Text>
           <Box flexDirection="row" alignItems="center" gap={1}>
-            {worn.map(x => <Svg key={`worn:${x}`} source={iconSvg(x, true)} alt={itemName(x)} width={23} height={16} />)}
+            {worn.map(x => <Svg key={`worn:${x}`} source={itemIcon(x, true)} alt={itemName(x)} width={23} height={16} />)}
           </Box>
         </Box>
       ), () => (
@@ -650,6 +633,8 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
   chat.canClick = e.surface === 'desktop'
   const p = await read($, prefs)
   if (p.isHidden) return next(e)
+  // Out on the desktop, Mochi is not drawn here as well: the band keeps its line and its facts.
+  const isAway = p.goesOut && (await read($, away))
 
   if (e.surface === 'desktop' || e.surface === 'mobile' || e.surface === 'vscode') {
     // The desktop rebuilds the whole band on every redraw, so this branch
@@ -663,7 +648,7 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     const alt = `${pane.info.label}: ${pane.info.detail}`
     let drawn: ReturnType<typeof panelSvg>
     try {
-      drawn = panelSvg({ panel: pane, now, width })
+      drawn = panelSvg({ panel: pane, now, width, isAway })
     } catch {
       // Never an empty band: the mascot alone if the panel cannot be drawn.
       return (
@@ -714,7 +699,7 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
   const room = Math.max(12, e.props.bodyColumns)
 
   if (p.isCompact || e.props.maxRows < 5) {
-    const head = `${kaomoji(f.mood, n)} `
+    const head = isAway ? '' : `${kaomoji(f.mood, n)} `
     const tail = facts === '' ? '' : `  ${facts}`
     return (
       <Box flexDirection="row" gap={1}>
@@ -728,11 +713,13 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
 
   return (
     <Box flexDirection="row" gap={1}>
-      <Box flexDirection="column">
-        {withHat(asciiRows(f.mood, n, n === f.frameAt), outfitNow(p, v, f.mood, now).head, LOOKS[f.mood].isShaking === true && n % 2 === 0).map(row => (
-          <Text color={look.color} wrap="truncate">{row}</Text>
-        ))}
-      </Box>
+      {isAway ? null : (
+        <Box flexDirection="column">
+          {withHat(asciiRows(f.mood, n, n === f.frameAt), outfitNow(p, v, f.mood, now).head, LOOKS[f.mood].isShaking === true && n % 2 === 0).map(row => (
+            <Text color={look.color} wrap="truncate">{row}</Text>
+          ))}
+        </Box>
+      )}
       <Box flexDirection="column" flexShrink={1} justifyContent="center">
         <Text bold color={look.color} wrap="truncate">{cut(status, room - 12)}</Text>
         <Text dimColor color={factsColor} wrap="truncate">{facts === '' ? ' ' : facts}</Text>

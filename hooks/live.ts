@@ -1,4 +1,4 @@
-import type { Activity, Crew, Mood, Peer } from '../types'
+import type { Activity, Crew, Mood, Peer, Plan } from '../types'
 import { t } from './i18n'
 import { duration } from './react'
 import { clip, cols } from './text'
@@ -51,8 +51,21 @@ export function appSessionOf(value: unknown): { id: string; name: string; app: s
 /** The desktop app's link that opens one of its sessions, or '' for one it cannot. */
 export const appLink = (app: string | undefined): string => (app && APP_SESSION.test(app) ? `claude://code/continue?session=${app}` : '')
 
+/**
+ * Whether the desktop app's Mochi is out now, by the file the app keeps while
+ * it runs (app.json): shown, and written no longer ago than a chat may be silent.
+ * The file is another program's: anything else reads as not out.
+ */
+export function deskOf(value: unknown, now: number): boolean {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as { at?: unknown; isShown?: unknown }
+  return v.isShown === true && typeof v.at === 'number' && now - v.at <= ALIVE_MS
+}
+
 /** A chat's subagents in its file: at most this many. */
 export const CREW_MAX = 8
+/** A chat's usage windows in its file: at most this many. */
+export const WINDOWS_MAX = 4
 
 const ACTIVITIES: readonly Activity[] = ['thinking', 'talking', 'reading', 'searching', 'writing', 'running', 'testing', 'web', 'agent', 'waiting']
 const isActivity = (v: unknown): v is Activity => typeof v === 'string' && (ACTIVITIES as readonly string[]).includes(v)
@@ -72,6 +85,25 @@ function crewOf(value: unknown): Crew | null {
   const v = value as Partial<Crew>
   if (typeof v.id !== 'string' || v.id === '') return null
   return { id: v.id.slice(0, 80), type: oneLine(v.type, 40), task: oneLine(v.task, 40), activity: isActivity(v.activity) ? v.activity : 'thinking', since: typeof v.since === 'number' ? v.since : 0 }
+}
+
+/** A plan as a peer file gives it, if it is one with steps: counts whole, done no more than all. */
+function planOf(value: unknown): Plan | null {
+  if (typeof value !== 'object' || value === null) return null
+  const v = value as { total?: unknown; done?: unknown; now?: unknown }
+  if (typeof v.total !== 'number' || typeof v.done !== 'number' || v.total < 1) return null
+  const total = Math.min(999, Math.round(v.total))
+  return { total, done: Math.min(total, Math.max(0, Math.round(v.done))), now: oneLine(v.now, 60) }
+}
+
+type UsageWindow = NonNullable<Peer['windows']>[number]
+
+/** A usage window as a peer file lists it, if it is one: its percent whole and within 0-100. */
+function windowOf(value: unknown): UsageWindow | null {
+  if (typeof value !== 'object' || value === null) return null
+  const v = value as { kind?: unknown; p?: unknown; resetsAt?: unknown }
+  if (typeof v.kind !== 'string' || v.kind === '' || typeof v.p !== 'number' || typeof v.resetsAt !== 'number') return null
+  return { kind: oneLine(v.kind, 20), p: Math.min(100, Math.max(0, Math.round(v.p))), resetsAt: v.resetsAt }
 }
 
 /** A peer file's content, if it is one and still alive. What another chat wrote is checked field by field, and its words cut short. */
@@ -97,9 +129,11 @@ export function peerOf(value: unknown, now: number): Peer | null {
       ? { at: turn.at, reason: oneLine(turn.reason, 20), seconds: turn.seconds }
       : null,
     agents: Array.isArray(v.agents) ? v.agents.map(crewOf).filter((c): c is Crew => c !== null).slice(0, CREW_MAX) : [],
+    plan: planOf(v.plan),
     context: typeof v.context === 'number' && v.context >= 0 ? Math.min(100, v.context) : -1,
     cost: typeof v.cost === 'number' && v.cost >= 0 ? v.cost : 0,
     limit: typeof limit === 'object' && limit !== null && typeof limit.kind === 'string' && typeof limit.resetsAt === 'number' ? { kind: oneLine(limit.kind, 20), resetsAt: limit.resetsAt } : null,
+    windows: Array.isArray(v.windows) ? v.windows.map(windowOf).filter((w): w is UsageWindow => w !== null).slice(0, WINDOWS_MAX) : [],
     app: typeof v.app === 'string' && APP_SESSION.test(v.app) ? v.app : '',
   }
 }

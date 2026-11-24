@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Mochi · logo</title>
+<style>
+  body { margin: 0; padding: 28px; background: #f4f1ec; font: 14px/1.4 -apple-system, system-ui, sans-serif; color: #222; }
+  h1 { font-size: 18px; margin: 0 0 18px; }
+  .row { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: center; padding: 18px 0; border-top: 1px solid #ddd6cc; }
+  .big { width: 200px; height: 200px; }
+  .sizes { display: flex; align-items: flex-end; gap: 22px; }
+  .sizes div { display: grid; justify-items: center; gap: 6px; font-size: 11px; color: #777; }
+  .dark { background: #1E1B19; padding: 10px 14px; border-radius: 10px; display: flex; gap: 18px; align-items: flex-end; }
+  .dark img { filter: invert(1); }
+  .name { font-weight: 700; font-size: 16px; }
+  .note { color: #666; max-width: 480px; }
+  .mini { image-rendering: auto; }
+</style></head><body>
+<h1>Mochi Buddy · üç yön (siyah-beyaz, gerçek boyutlar)</h1>
+<script>
+const C = [
+  ['a2-squish.svg', 'A · Pofuduk', 'Yumuşak bir mochi: oturduğu yerde geniş, gözleri aşağıda (bebek yüzü oranı), anteni kıvrık.'],
+  ['b2-peek.svg', 'B · Dikizleme', 'Mochi ekranın altından dikizliyor; anteninin ucu bildirim noktası: “bir sohbet seni bekliyor”.'],
+  ['c-omega.svg', 'C · m-yüz', 'İki göz ve kedi ağzı ω: ters çevrilmiş bir m, yani Mochi’nin hem yüzü hem baş harfi.'],
+]
+for (const [f, name, note] of C) {
+  const sizes = [64, 32, 16].map(s => `<div><img class="mini" src="${f}" width="${s}" height="${s}">${s}px</div>`).join('')
+  document.write(`<div class="row"><img class="big" src="${f}"><div><div class="name">${name}</div><p class="note">${note}</p><div class="sizes">${sizes}<div class="dark">${[64, 32, 16].map(s => `<img src="${f}" width="${s}" height="${s}">`).join('')}</div></div></div></div>`)
+}
+</script>
+</body></html>

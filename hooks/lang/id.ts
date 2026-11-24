@@ -393,6 +393,7 @@ export const id: typeof en = {
       lavalamp: 'lampu lava', taco: 'taco', tent: 'tenda kemah', hedgehog: 'landak',
       wateringcan: 'poci penyiram', macaron: 'tumpukan makaron', arcade: 'mesin arkade', snowman: 'manusia salju',
       rocket: 'roket mainan', watermelon: 'irisan semangka', chest: 'peti harta karun', axolotl: 'axolotl', horse: 'kuda kecil', sprout: 'tunas di pot', bunny: 'kelinci',
+      kabuto: 'helm samurai', tiara: 'tiara', knight: 'helm ksatria', pharaoh: 'hiasan kepala firaun', brain: 'otak zombi', ufo: 'piring terbang', phoenix: 'mahkota feniks', skigoggles: 'kacamata ski', steampunk: 'kacamata steampunk', xray: 'kacamata sinar-X', diamondshades: 'kacamata berlian', butterfly: 'lukisan wajah kupu-kupu', heartcheeks: 'gambar hati di pipi', warpaint: 'cat perang', diamondtear: 'air mata berlian', curlystache: 'kumis keriting', rainbowstache: 'kumis pelangi', flamestache: 'kumis api', lifebuoy: 'ban renang', pendant: 'liontin kristal', dragonamulet: 'jimat naga', guitar: 'gitar listrik', trophy: 'piala', katana: 'katana', rubberchicken: 'ayam karet', thunderbolt: 'petir', slime: 'slime', ghostie: 'hantu kecil', robodog: 'anjing robot', babydragon: 'bayi naga', portal: 'portal ajaib',
     },
     short: {
       hardhat: 'helm', crown: 'mahkota', partyhat: 'pesta', witchhat: 'penyihir', santahat: 'Sinterklas', nightcap: 'topi tidur', gradcap: 'toga',
@@ -429,6 +430,7 @@ export const id: typeof en = {
       lavalamp: 'lava', taco: 'taco', tent: 'tenda', hedgehog: 'landak',
       wateringcan: 'penyiram', macaron: 'makaron', arcade: 'arkade', snowman: 'salju',
       rocket: 'roket', watermelon: 'semangka', chest: 'harta', axolotl: 'axolotl', horse: 'kuda', sprout: 'tunas', bunny: 'kelinci',
+      kabuto: 'kabuto', tiara: 'tiara', knight: 'ksatria', pharaoh: 'firaun', brain: 'otak', ufo: 'UFO', phoenix: 'feniks', skigoggles: 'ski', steampunk: 'steampunk', xray: 'sinar-X', diamondshades: 'berlian', butterfly: 'kupu-kupu', heartcheeks: 'pipi', warpaint: 'cat perang', diamondtear: 'berlian', curlystache: 'keriting', rainbowstache: 'pelangi', flamestache: 'api', lifebuoy: 'ban renang', pendant: 'kristal', dragonamulet: 'jimat', guitar: 'gitar', trophy: 'piala', katana: 'katana', rubberchicken: 'ayam', thunderbolt: 'petir', slime: 'slime', ghostie: 'hantu', robodog: 'anjing robot', babydragon: 'bayi naga', portal: 'portal',
     },
     slot: { head: 'Kepala', eyes: 'Kacamata', face: 'Wajah', lip: 'Kumis', chin: 'Janggut', neck: 'Leher', held: 'Tangan', ground: 'Di samping' },
     hint: {
@@ -716,8 +718,8 @@ export const id: typeof en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, tampilkan/sembunyikan, detail, level, pakai, lencana, chat, perisai, notifikasi, CI, tips, istirahat, suara, plugin, kartu, rekap, jepret, tur, baru, ultah, bahasa, kecil/besar, ekspor, reset, masukan, perbarui, status',
-    hint: '[standup | week | desk | prs | city | detail | level | pakai [barang] | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa [kode] | kecil | besar | sembunyikan | tampilkan | ekspor | reset | masukan | perbarui | status]',
+    description: 'Mochi: standup, week, desk, prs, city, tampilkan/sembunyikan, detail, level, pakai, lencana, chat, perisai, notifikasi, CI, tips, istirahat, suara, plugin, kartu, rekap, jepret, tur, baru, ultah, bahasa, kecil/besar, desktop, ekspor, reset, masukan, perbarui, status',
+    hint: '[standup | week | desk | prs | city | detail | level | pakai [barang] | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa [kode] | kecil | besar | sembunyikan | tampilkan | desktop | ekspor | reset | masukan | perbarui | status]',
     small: 'Mochi dalam satu baris.',
     big: 'Mochi ukuran penuh.',
     detailOpened: 'Panel detail dibuka.',
@@ -743,6 +745,8 @@ export const id: typeof en = {
     soundOff: 'Suara nonaktif.',
     hidden: 'Mochi disembunyikan. Untuk memunculkannya lagi: /mochi',
     shown: 'Mochi aktif.',
+    desktopOn: 'Desktop aktif: selama Mochi tampil di desktop, bilah digambar tanpa Mochi.',
+    desktopOff: 'Desktop nonaktif: Mochi tetap di bilah.',
     statusLine: (label, line) => `Status: ${label} · ${line}`,
     contextLine: (ctx, agents, tools) => `Konteks: ${ctx} · agen berjalan: ${agents} · tool di giliran ini: ${tools}`,
     prefsLine: (sound, shield, alerts, compact) =>
@@ -750,14 +754,14 @@ export const id: typeof en = {
     moreLine: (tips, breaks, plugins) =>
       `Tips: ${tips ? 'aktif' : 'nonaktif'} · Istirahat: ${breaks ? 'aktif' : 'nonaktif'} · Reaksi plugin: ${plugins ? 'aktif' : 'nonaktif'}`,
     peersLine: (level, peers) => `Level ${level} · chat lain: ${peers}`,
-    commands: 'Perintah: /mochi (tampilkan/sembunyikan) | standup | week | desk | prs | city | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | ekspor | reset | masukan | perbarui | status',
+    commands: 'Perintah: /mochi (tampilkan/sembunyikan) | standup | week | desk | prs | city | detail | level | pakai | lencana | chat | perisai | notifikasi | ci | tips | istirahat | suara | plugin | kartu | rekap | jepret | tur | baru | ultah | bahasa | kecil | besar | desktop | ekspor | reset | masukan | perbarui | status',
     langNow: (name, list) => `Bahasa: ${name}. Tersedia: ${list} · /mochi bahasa <kode> atau otomatis`,
     langSet: name => `Bahasa: ${name}.`,
     langAuto: name => `Bahasa mengikuti Claude Code dan sistem: ${name}.`,
     langUnknown: (code, list) => `Bahasa tidak dikenal: ${code}. Tersedia: ${list}`,
     words: {
       on: ['nyalakan', 'aktifkan'], off: ['matikan', 'nonaktifkan'],
-      hide: ['sembunyikan', 'sembunyi'], show: ['tampilkan', 'tampil'], small: ['kecil'], big: ['besar'], sound: ['suara', 'bunyi'],
+      hide: ['sembunyikan', 'sembunyi'], show: ['tampilkan', 'tampil'], small: ['kecil'], big: ['besar'], sound: ['suara', 'bunyi'], desktop: [],
       status: [], details: ['rincian'], level: [], wear: ['pakai', 'kenakan', 'aksesori'], shield: ['perisai', 'pelindung'],
       alerts: ['notifikasi', 'notif'], lang: ['bahasa'], auto: ['otomatis'], none: ['lepas', 'hapus', 'kosong'],
       card: ['kartu'], wrapped: ['rekap'], snap: ['jepret', 'foto'], year: ['tahun'],

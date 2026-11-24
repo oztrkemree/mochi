@@ -167,6 +167,11 @@ test('an export takes every file Mochi keeps; each reset clears its own and keep
   expect(take('live', 'abc-2.json')).toEqual([false, false, false, true])
   expect(take('', 'export-2026-07-01.json')).toEqual([false, false, false, false])
   expect(take('', 'shield.json')).toEqual([true, false, false, false])
+  // The desktop app's file is the app's; the look is written again from the rest, so only a full reset takes it.
+  expect(take('', 'app.json')).toEqual([false, false, false, false])
+  expect(take('', 'look.json')).toEqual([false, false, false, true])
+  // The status line the person had before Mochi's: the only copy of it, so no reset takes it.
+  expect(take('', 'statusline.json')).toEqual([false, false, false, false])
   expect(take('days', 'notes.txt')).toEqual([false, false, false, false])
   const out = exportOf(Date.UTC(2026, 6, 1, 9, 0), '0.2.0', { prefs: { lang: 'en' } }, { 'level.json': '{"level":3}', 'days/a.json': 'half{' })
   expect(out).toEqual({ mochi: '0.2.0', exportedAt: '2026-07-01T09:00:00.000Z', store: { prefs: { lang: 'en' } }, files: { 'level.json': { level: 3 }, 'days/a.json': 'half{' } })

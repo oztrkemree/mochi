@@ -1,0 +1,26 @@
+[package]
+name = "mochi-desktop"
+version = "1.0.0"
+description = "Mochi Buddy on the desktop: one Mochi for every agent you run, with or without the mod"
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "mochi_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "macos-private-api", "image-png"] }
+tauri-plugin-opener = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
+# Keys stay in the order a file had them: the app writes other programs' settings back and must not shuffle them.
+serde_json = { version = "1", features = ["preserve_order"] }
+
+# Only to let the window stand over an app that fills the screen, which Tauri has no call for.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSResponder", "NSWindow"] }

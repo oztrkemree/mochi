@@ -1,10 +1,10 @@
-import type { Badge, DayRec, Env, History, Item, Mood, Outfit, Prefs } from '../types'
+import type { Act, Badge, DayRec, Env, History, Item, Mood, Outfit, Prefs } from '../types'
 import { badgeName, provenBy } from './badges'
 import { dayKey, local, shiftDay } from './facts'
 import { NO_OWN, occasions } from './fun'
 import type { Occasion, Own } from './fun'
 import { t } from './i18n'
-import { POSES } from './rig'
+import { poseOf } from './rig'
 
 // Mochi grows with the work done in every chat: experience from turns,
 // edits, commits and days, levels from experience, and things to wear that
@@ -24,21 +24,28 @@ export const slotName = (s: Slot): string => t().item.slot[s]
 export const SLOT_ITEMS: Record<Slot, Item[]> = {
   head: ['beanie', 'hardhat', 'gradcap', 'chefhat', 'cowboy', 'crown', 'pirate', 'viking', 'wizard', 'partyhat', 'propeller', 'fez', 'nightcap', 'witchhat', 'santahat', 'sakura',
     'bandana', 'sailorhat', 'strawhat', 'daisyhat', 'leaf', 'catears', 'bunnyears', 'flowercrown', 'beret', 'tophat', 'jester', 'nursecap', 'sombrero', 'antlers', 'farmer', 'sunflowercrown', 'bee', 'halo', 'unicorn', 'shortcake', 'rainbow', 'dragon', 'astronaut',
-    'bowler', 'flatcap', 'explorer', 'baseballcap'],
+    'bowler', 'flatcap', 'explorer', 'baseballcap',
+    'kabuto', 'tiara', 'knight', 'pharaoh', 'brain', 'ufo', 'phoenix'],
   eyes: ['glasses', 'sunglasses', 'monocle',
     'heartglasses', 'eyepatch', 'goggles', 'starglasses', 'cinema3d', 'nerdglasses', 'visor',
-    'aviators', 'cateye', 'pixelshades', 'masquerade', 'divemask', 'vrheadset'],
+    'aviators', 'cateye', 'pixelshades', 'masquerade', 'divemask', 'vrheadset',
+    'skigoggles', 'steampunk', 'xray', 'diamondshades'],
   face: ['clownnose', 'catwhiskers', 'plaster', 'freckles', 'bushybrows', 'eyelashes', 'fangs', 'teardrop',
-    'goldstars', 'wheat', 'facemask', 'lollipop', 'bubblegum', 'rose'],
-  lip: ['mustache', 'pencilstache', 'chevron', 'handlebar', 'horseshoe', 'walrus'],
+    'goldstars', 'wheat', 'facemask', 'lollipop', 'bubblegum', 'rose',
+    'butterfly', 'heartcheeks', 'warpaint', 'diamondtear'],
+  lip: ['mustache', 'pencilstache', 'chevron', 'handlebar', 'horseshoe', 'walrus',
+    'curlystache', 'rainbowstache', 'flamestache'],
   chin: ['beard', 'goatee', 'soulpatch', 'chinstrap', 'wizardbeard', 'braidbeard'],
   neck: ['bowtie', 'necktie', 'scarf', 'evileye', 'medal', 'pin', 'rosette',
     'spikedcollar', 'pearls', 'bellcollar', 'neckerchief', 'lei', 'goldchain', 'overalls',
-    'sailorcollar', 'whistle', 'lanyard', 'camera', 'stethoscope', 'binoculars', 'headphones', 'bib', 'ruff', 'bolotie', 'boa', 'locket'],
+    'sailorcollar', 'whistle', 'lanyard', 'camera', 'stethoscope', 'binoculars', 'headphones', 'bib', 'ruff', 'bolotie', 'boa', 'locket',
+    'lifebuoy', 'pendant', 'dragonamulet'],
   held: ['mug', 'tea', 'pencil', 'simit', 'wrench', 'balloon', 'candy', 'lantern', 'envelope',
-    'flag', 'whisk', 'pinwheel', 'compass', 'key', 'icecream', 'cupcake', 'sunflower', 'clover', 'toadstool', 'cactuspot', 'wand', 'potion', 'paddle', 'joystick', 'bubblewand', 'rollingpin', 'harmonica', 'tambourine'],
+    'flag', 'whisk', 'pinwheel', 'compass', 'key', 'icecream', 'cupcake', 'sunflower', 'clover', 'toadstool', 'cactuspot', 'wand', 'potion', 'paddle', 'joystick', 'bubblewand', 'rollingpin', 'harmonica', 'tambourine',
+    'guitar', 'trophy', 'katana', 'rubberchicken', 'thunderbolt'],
   ground: ['sprout', 'bunny', 'horse', 'cactus', 'duck', 'cat', 'gift', 'pumpkin', 'diya', 'songpyeon', 'cake',
-    'mushroom', 'frog', 'robot', 'ramen', 'snail', 'campfire', 'bonsai', 'penguin', 'lavalamp', 'taco', 'tent', 'hedgehog', 'wateringcan', 'macaron', 'arcade', 'snowman', 'rocket', 'watermelon', 'chest', 'axolotl'],
+    'mushroom', 'frog', 'robot', 'ramen', 'snail', 'campfire', 'bonsai', 'penguin', 'lavalamp', 'taco', 'tent', 'hedgehog', 'wateringcan', 'macaron', 'arcade', 'snowman', 'rocket', 'watermelon', 'chest', 'axolotl',
+    'slime', 'ghostie', 'robodog', 'babydragon', 'portal'],
 }
 
 export const SLOT: Record<Item, Slot> = Object.fromEntries(
@@ -192,6 +199,8 @@ export const UNLOCKS: ({ item: Item } & Need)[] = ([
   { item: 'envelope', badge: 'craftsman' },
   { item: 'candy', badge: 'bulldozer' },
   { item: 'witchhat', badge: 'vampire' }, { item: 'pumpkin', badge: 'vampire' },
+  // Added with the desktop app's 1.0: higher, now that every agent's work counts.
+  { item: 'kabuto', level: 42 }, { item: 'tiara', level: 46 }, { item: 'knight', level: 54 }, { item: 'pharaoh', level: 62 }, { item: 'brain', level: 66 }, { item: 'ufo', level: 80 }, { item: 'phoenix', level: 95 }, { item: 'skigoggles', level: 44 }, { item: 'steampunk', level: 56 }, { item: 'xray', level: 66 }, { item: 'diamondshades', level: 85 }, { item: 'butterfly', level: 45 }, { item: 'heartcheeks', level: 55 }, { item: 'warpaint', level: 62 }, { item: 'diamondtear', level: 75 }, { item: 'curlystache', level: 50 }, { item: 'rainbowstache', level: 70 }, { item: 'flamestache', level: 90 }, { item: 'lifebuoy', level: 46 }, { item: 'pendant', level: 60 }, { item: 'dragonamulet', level: 80 }, { item: 'guitar', level: 48 }, { item: 'trophy', level: 55 }, { item: 'katana', level: 60 }, { item: 'rubberchicken', level: 65 }, { item: 'thunderbolt', level: 85 }, { item: 'slime', level: 48 }, { item: 'ghostie', level: 56 }, { item: 'robodog', level: 62 }, { item: 'babydragon', level: 70 }, { item: 'portal', level: 95 },
 // By level, the habits and badges after them, so the first one still locked is the next to come.
 ] satisfies ({ item: Item } & Need)[]).sort((a, b) => (a.level ?? Infinity) - (b.level ?? Infinity))
 
@@ -321,13 +330,13 @@ const MUG_MOODS: ReadonlySet<Mood> = new Set(['idle', 'listening', 'pleased', 's
  * then the best item earned; coffee in the morning. A held item only while
  * the pose leaves the hand free.
  */
-export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood, canHold: boolean, own: Own = NO_OWN): Outfit {
+export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: number, tz: number, mood: Mood | Act, canHold: boolean, own: Own = NO_OWN): Outfit {
   const s = season(now, tz, own)
-  const dressed = (i: Item | undefined) => (i !== undefined && items.includes(i) ? i : undefined)
+  const dressed = (i: Item | null | undefined) => (i != null && items.includes(i) ? i : undefined)
   const isAsleep = mood === 'sleeping' || mood === 'sleepy'
   const head = pick.head !== undefined ? pick.head : dressed(s.head) ?? (isAsleep || s.isNight ? 'nightcap' : HEAD_RANK.find(i => items.includes(i)) ?? null)
   const neck = pick.neck !== undefined ? pick.neck : dressed(s.neck) ?? NECK_RANK.find(i => items.includes(i)) ?? null
-  const held = pick.held !== undefined ? pick.held : dressed(s.held) ?? (s.isMorning && MUG_MOODS.has(mood) ? 'mug' : null)
+  const held = pick.held !== undefined ? pick.held : dressed(s.held) ?? (s.isMorning && MUG_MOODS.has(mood as Mood) ? 'mug' : null)
   return {
     head,
     eyes: pick.eyes ?? null,
@@ -341,7 +350,70 @@ export function outfitFor(pick: Partial<Outfit>, items: readonly Item[], now: nu
 }
 
 /** Whether the pose leaves the right hand down and empty, to hold a cup or a balloon. */
-const canHold = (mood: Mood) => POSES[mood].held === undefined && POSES[mood].armR >= -40 && POSES[mood].armR <= 0
+const canHold = (mood: Mood | Act) => poseOf(mood).held === undefined && poseOf(mood).armR >= -40 && poseOf(mood).armR <= 0
+
+/** The person's look as another program reads it (look.json): their own picks, what is open to them, and what the seasons go by. */
+export type Look = { pick: Partial<Outfit>; items: Item[]; tz: number; birthday: string; firstDay: string }
+
+/** The look this chat's Mochi wears by, for the desktop app; null until the history is read. */
+export function lookOf(p: Prefs, v: Env): Look | null {
+  if (v.history === null) return null
+  const items = unlocked(v.history)
+  const pick: Partial<Outfit> = {}
+  for (const slot of SLOTS) {
+    const chosen = p.pick[slot]
+    if (chosen === null || (chosen !== undefined && items.includes(chosen))) pick[slot] = chosen
+  }
+  return { pick, items, tz: v.tz, birthday: p.birthday, firstDay: p.firstDay }
+}
+
+/** A choice as a file holds it, slot by slot: an item, null for nothing; an item this version does not know is left to Mochi. */
+export function pickOf(value: unknown): Partial<Outfit> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return {}
+  const picked = value as Record<string, unknown>
+  const pick: Partial<Outfit> = {}
+  for (const slot of SLOTS) {
+    if (picked[slot] === null) pick[slot] = null
+    else {
+      const item = itemOf(picked[slot])
+      if (item !== null) pick[slot] = item
+    }
+  }
+  return pick
+}
+
+/** The wardrobe choice last made in either Mochi, the mod or the desktop app, and when (prefs.json). */
+export type Choice = { at: number; pick: Partial<Outfit>; /** Mochi's colour (hooks/skins.ts), chosen in the desktop app; absent for its own clay. */ skin?: string }
+
+/** prefs.json's content; null when there is none, or not one this version reads. */
+export function choiceFrom(text: string | null): Choice | null {
+  try {
+    const v = JSON.parse(text ?? '') as { v?: unknown; at?: unknown; pick?: unknown; skin?: unknown }
+    if (v.v !== 1 || typeof v.at !== 'number') return null
+    return { at: v.at, pick: pickOf(v.pick), ...(typeof v.skin === 'string' && /^[a-z]{2,16}$/.test(v.skin) ? { skin: v.skin } : {}) }
+  } catch {
+    return null
+  }
+}
+
+export const choiceText = (c: Choice): string => JSON.stringify({ v: 1, at: c.at, pick: c.pick, ...(c.skin ? { skin: c.skin } : {}) })
+
+/** A look file's content, checked field by field: a version this does not know, or no picks or items, is no look. */
+export function lookFrom(value: unknown): Look | null {
+  if (typeof value !== 'object' || value === null) return null
+  const v = value as { v?: unknown; pick?: unknown; items?: unknown; tz?: unknown; birthday?: unknown; firstDay?: unknown }
+  if (v.v !== 1 || typeof v.pick !== 'object' || v.pick === null || Array.isArray(v.pick) || !Array.isArray(v.items)) return null
+  return {
+    pick: pickOf(v.pick),
+    items: v.items.map(itemOf).filter((i): i is Item => i !== null),
+    tz: typeof v.tz === 'number' && Math.abs(v.tz) <= 14 * 60 ? v.tz : 0,
+    birthday: typeof v.birthday === 'string' && /^\d\d-\d\d$/.test(v.birthday) ? v.birthday : '',
+    firstDay: typeof v.firstDay === 'string' && /^\d{4}-\d\d-\d\d$/.test(v.firstDay) ? v.firstDay : '',
+  }
+}
+
+/** What a Mochi wears in a mood by a look, as the band's Mochi would. */
+export const dressAs = (look: Look, mood: Mood | Act, now: number): Outfit => outfitFor(look.pick, look.items, now, look.tz, mood, canHold(mood), look)
 
 /** What Mochi has on now: the person's choice (while it can still be worn), what it earned, the season and the hour. */
 export function outfitNow(p: Prefs, v: Env, mood: Mood, now: number): Outfit {
@@ -386,4 +458,5 @@ export const ASCII_HAT: Partial<Record<Item, string>> = {
   flatcap: '▁▄▆▄▁',
   explorer: '▁▟█▙▁',
   baseballcap: '▄██▄▁',
+  kabuto: '╰▄█▄╯', tiara: ' ▴▴▴ ', knight: ' ▟█▙ ', pharaoh: '▐▄▀▄▌', brain: ' ▄▓▄ ', ufo: ' ▁▆▁ ', phoenix: ' ╿╿╿ ',
 }

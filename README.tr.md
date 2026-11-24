@@ -14,7 +14,7 @@ context'ini, oturum ve haftalık limitlerini de hep göz önünde tutar.
 [![Lisans: MIT](https://img.shields.io/badge/lisans-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code eklentisi](https://img.shields.io/badge/Claude_Code-eklenti-D97757?style=for-the-badge)](#-10-saniyede-kurulum)
 [![16 dil](https://img.shields.io/badge/dil-16-7AA2F7?style=for-the-badge)](#-16-dil)
-[![170 aksesuar](https://img.shields.io/badge/gardırop-170_parça-B684F6?style=for-the-badge)](#-seninle-büyüyen-bir-gardırop)
+[![201 aksesuar](https://img.shields.io/badge/gardırop-201_parça-B684F6?style=for-the-badge)](#-seninle-büyüyen-bir-gardırop)
 [![Telemetri yok](https://img.shields.io/badge/telemetri-yok-4CC38A?style=for-the-badge)](#-neye-dokunur)
 
 <sub>[English](README.md) · **Türkçe** · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
@@ -68,7 +68,7 @@ Herhangi bir Claude Code sohbetine yaz, marketplace'i eklemek için `y` de ve **
 <td align="center" width="25%">🎭<br><b>30 ruh hali</b><br><sub>her araç çağrısını takip eder</sub></td>
 <td align="center" width="25%">🛡️<br><b>Bir kalkan</b><br><sub><code>rm -rf</code>, force push ve sızan anahtarlar için</sub></td>
 <td align="center" width="25%">📊<br><b>Limit halkaları</b><br><sub>ne zaman biteceğinin tahminiyle</sub></td>
-<td align="center" width="25%">👒<br><b>Giyilecek 170 şey</b><br><sub>gerçek işle kazanılır</sub></td>
+<td align="center" width="25%">👒<br><b>Giyilecek 201 şey</b><br><sub>gerçek işle kazanılır</sub></td>
 </tr>
 </table>
 
@@ -209,7 +209,7 @@ Aşağısında: kategorilere göre context, son turların, bütün sohbetlerinin
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi kıyafetleri birbiri ardına deniyor: kahveli bere, monokllü ve kedili taç, sihirbaz şapkası ve atkı, madalyalı ve balonlu parti şapkası, bıyıklı kovboy şapkası, gözlüklü mezuniyet kepi, güneş gözlüklü ve ördekli korsan şapkası, İngiliz anahtarlı baret, papyonlu ve pastalı aşçı şapkası ve bir kaktüsün yanında gece şapkası">
 </p>
 
-Her tur, her düzenleme, her commit ve çalıştığın her gün deneyim kazandırır. Seviyeler giyilecek şeyler açar: baş, gözlük, yüz, bıyık, sakal, boyun, el ve Mochi'nin yanı için **170 parça**. Hiçbiri takvimle açılmaz: çoğunu seviyeler, bir kısmını alışkanlıklar, kalanını da zor rozetler açar (yüz elli gece için cadı şapkası ve balkabağı, beş yüz commit için pasta). Bir kez kazanıldı mı, cadı şapkası Cadılar Bayramı'nda, pasta doğum gününde gelir; kahve sabahları, gece şapkası da gece yarısından sonra.
+Her tur, her düzenleme, her commit ve çalıştığın her gün deneyim kazandırır. Seviyeler giyilecek şeyler açar: baş, gözlük, yüz, bıyık, sakal, boyun, el ve Mochi'nin yanı için **201 parça**. Hiçbiri takvimle açılmaz: çoğunu seviyeler, bir kısmını alışkanlıklar, kalanını da zor rozetler açar (yüz elli gece için cadı şapkası ve balkabağı, beş yüz commit için pasta). Bir kez kazanıldı mı, cadı şapkası Cadılar Bayramı'nda, pasta doğum gününde gelir; kahve sabahları, gece şapkası da gece yarısından sonra.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Farklı kıyafetlerle on iki Mochi: kahveli bere, bıyıklı kovboy, sihirbaz, parti şapkası, monokllü ve kedili taç, atkılı gece şapkası ve daha fazlası">
@@ -269,6 +269,7 @@ Hiçbirine ihtiyacın yok: Mochi kurulduğu an çalışır. Yön vermek istediğ
 | `/mochi shield [on \| off]` | Kalkanın açık olup olmadığını ve neyin nerede hep izinli olduğunu gösterir |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Paylaşmak için bir resim kaydeder |
 | `/mochi small` · `/mochi big` | Tek satır ya da tam boy |
+| `/mochi desktop` | Masaüstü uygulamasına yer açmayı açar ya da kapatır: onun Mochi’si ortadayken bant Mochi’siz çizilir |
 
 <details>
 <summary><b>Bütün komutlar</b></summary>
@@ -304,6 +305,7 @@ Hiçbirine ihtiyacın yok: Mochi kurulduğu an çalışır. Yön vermek istediğ
 | `/mochi birthday [MM-DD \| none]` | Doğum gününü kaydeder, gösterir ya da siler |
 | `/mochi lang [code \| auto]` | Dili gösterir ya da değiştirir |
 | `/mochi small` · `/mochi big` | Tek satır ya da tam boy |
+| `/mochi desktop` | Masaüstü uygulamasına yer açmayı açar ya da kapatır: onun Mochi’si ortadayken bant Mochi’siz çizilir |
 | `/mochi export` | Mochi'nin tuttuğu her şeyi tek bir JSON dosyasına kaydeder |
 | `/mochi reset [level \| history \| all]` | Seviye hafızasını, geçmişi ya da ayarlar dahil her şeyi siler; önce sorar, dışa aktarılan dosyalar ve `shield.json`'ın kalır |
 | `/mochi feedback` | Sürümlerin, sisteminin, arayüzün ve dilin önceden doldurulduğu bir hata bildirimi bağlantısı |

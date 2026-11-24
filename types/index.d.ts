@@ -30,6 +30,15 @@ export type Mood =
   | 'love'
   | 'wink'
 
+/**
+ * A moment Mochi plays and leaves (the desktop app's): a reaction to a chat, a
+ * pat or a pull, or something it does by itself while nothing happens. Never a
+ * state a chat is in, so never said in words.
+ */
+export type Act =
+  | 'perk' | 'giggle' | 'whee' | 'land' | 'cheer' | 'phew' | 'ready' | 'fistpump' | 'oops' | 'juggle'
+  | 'hum' | 'curious' | 'hop' | 'sneeze' | 'spin' | 'dance' | 'dream' | 'shy'
+
 export type Face = {
   mood: Mood
   /** Short status text: what is happening, never a joke. */
@@ -83,6 +92,8 @@ export type Item =
   | 'sailorcollar' | 'whistle' | 'lanyard' | 'camera' | 'stethoscope' | 'binoculars' | 'headphones' | 'bib' | 'ruff' | 'bolotie' | 'boa' | 'locket'
   | 'flag' | 'whisk' | 'pinwheel' | 'compass'  | 'key' | 'icecream' | 'cupcake' | 'sunflower' | 'clover' | 'toadstool' | 'cactuspot' | 'wand' | 'potion' | 'paddle' | 'joystick' | 'bubblewand' | 'rollingpin' | 'harmonica' | 'tambourine'
   | 'mushroom' | 'frog' | 'robot' | 'ramen' | 'snail' | 'campfire' | 'bonsai' | 'penguin' | 'lavalamp' | 'taco' | 'tent' | 'hedgehog' | 'wateringcan' | 'macaron' | 'arcade' | 'snowman' | 'rocket' | 'watermelon' | 'chest' | 'axolotl' | 'horse' | 'sprout' | 'bunny'
+  // Added with the desktop app's 1.0, opened from level 42 to 95.
+  | 'kabuto' | 'tiara' | 'knight' | 'pharaoh' | 'brain' | 'ufo' | 'phoenix' | 'skigoggles' | 'steampunk' | 'xray' | 'diamondshades' | 'butterfly' | 'heartcheeks' | 'warpaint' | 'diamondtear' | 'curlystache' | 'rainbowstache' | 'flamestache' | 'lifebuoy' | 'pendant' | 'dragonamulet' | 'guitar' | 'trophy' | 'katana' | 'rubberchicken' | 'thunderbolt' | 'slime' | 'ghostie' | 'robodog' | 'babydragon' | 'portal'
 
 /** Something earned once from real work (see hooks/badges.ts). */
 export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' | 'owl' | 'bird' | 'polyglot' | 'marathon' | 'week' | 'hundred' | 'month' | 'fivehundred' | 'regular' | 'craftsman' | 'bulldozer' | 'vampire'
@@ -90,7 +101,7 @@ export type Badge = 'green' | 'push' | 'steady' | 'comeback' | 'tidy' | 'team' |
 /** What is on Mochi right now, slot by slot. On the face: glasses (`eyes`), the rest (`face`), a mustache (`lip`) and a beard (`chin`), each worn with the others. */
 export type Outfit = { head: Item | null; eyes: Item | null; face: Item | null; lip: Item | null; chin: Item | null; neck: Item | null; held: Item | null; ground: Item | null }
 
-export type Scene = { context: number; agents: number; outfit?: Outfit }
+export type Scene = { context: number; agents: number; outfit?: Outfit; /** Mochi's colour (hooks/skins.ts); its own clay when absent. */ skin?: string }
 
 /** A pull request as the list shows it. */
 export type Pull = {
@@ -222,12 +233,16 @@ export type Peer = {
   lastTurn?: { at: number; reason: string; seconds: number } | null
   /** The chat's subagents running now, at most 8. */
   agents?: Crew[]
+  /** The chat's plan (its to-do list or tasks): how many steps, how many done, the one under way; null or absent with none. */
+  plan?: Plan | null
   /** Context window use in 5% steps, -1 until measured. */
   context?: number
   /** The session's cost so far in US dollars, to the cent. */
   cost?: number
   /** A usage window used up: which, and when it resets (epoch ms); null when none is. */
   limit?: { kind: string; resetsAt: number } | null
+  /** The usage windows the chat knows now, at most 4: which (five_hour, seven_day…), percent used as a whole number 0-100, and when it resets (epoch ms, 0 when not known). */
+  windows?: { kind: string; p: number; resetsAt: number }[]
   /** The chat's session in the desktop app (local_…), which a link opens; '' when it runs elsewhere or the app does not say. */
   app?: string
 }
@@ -241,6 +256,9 @@ export type Activity = 'thinking' | 'talking' | 'reading' | 'searching' | 'writi
  * now, and when it started.
  */
 export type Crew = { id: string; type: string; task: string; activity: Activity; since: number }
+
+/** How far a chat's plan is: steps in all, steps done, and the one under way in a few words ('' for none). */
+export type Plan = { total: number; done: number; now: string }
 
 /**
  * One day of work, in one chat or all of them: besides the counts, the lines
@@ -298,6 +316,8 @@ export type Prefs = {
   hasPlugins: boolean
   /** A stretch suggested after two hours of work without a break. */
   hasBreaks: boolean
+  /** The band is drawn without its mascot while the desktop app's Mochi is out. */
+  goesOut: boolean
   /** The person's birthday as "MM-DD", '' when not given. */
   birthday: string
   /** The first day Mochi ran on this machine ("2026-10-09"), for its anniversary; '' until recorded. */
@@ -431,6 +451,8 @@ declare module 'claude-code' {
       party: { pick: string }
       /** The folders opened in the details pane's Changes, from the repository's root. */
       dirs: { open: string[] }
+      /** The desktop app's Mochi is out now, as its file (app.json) last said. */
+      away: boolean
     }
   }
 }

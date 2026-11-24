@@ -1,6 +1,7 @@
-import type { Item, Mood, Outfit, Params, Scene, Shot } from '../types'
+import type { Act, Item, Mood, Outfit, Params, Scene, Shot } from '../types'
 import { ART } from './assets'
 import { WEAR } from './wear'
+import { skinFilter, skinOf } from './skins'
 
 // The desktop drawing: one rig whose every pose is a set of numbers. A new
 // pose's SVG starts from the numbers that were on screen (mid-transition or
@@ -90,6 +91,7 @@ type BodyLoop = { dur: number; keys: { lift?: number; shift?: number; tilt?: num
 type ArmLoop = { dur: number; values: number[] }
 type Held = 'laptop' | 'book' | 'glass' | 'flag'
 type Over = 'question' | 'bang' | 'zzz' | 'check' | 'dizzy' | 'thought' | 'hourglass' | 'confetti' | 'terminal' | 'squeeze' | 'hearts'
+  | 'notes' | 'burst' | 'orbs' | 'dust' | 'speed' | 'dream' | 'achoo' | 'fling'
 type Special = 'x' | 'star' | 'spiral'
 
 type Pose = {
@@ -110,8 +112,8 @@ type Pose = {
   loop?: BodyLoop
   armLoopL?: ArmLoop
   armLoopR?: ArmLoop
-  eyeLoop?: 'blink' | 'glance' | 'dart' | 'scan' | 'none'
-  mouthLoop?: 'talk' | 'wobble' | 'yawn'
+  eyeLoop?: 'blink' | 'glance' | 'dart' | 'scan' | 'juggle' | 'none'
+  mouthLoop?: 'talk' | 'wobble' | 'yawn' | 'hum' | 'laugh' | 'achoo'
   held?: Held
   over?: Over
   sweat?: boolean
@@ -132,6 +134,20 @@ const L = {
   squash: { dur: 0.6, keys: [{ sx: 1, sy: 1 }, { sx: 1.13, sy: 0.88 }, { sx: 1, sy: 1 }] },
   slowBreathe: { dur: 4.6, keys: [{ sx: 1, sy: 1 }, { sx: 1.018, sy: 1.035 }, { sx: 1, sy: 1 }] },
   stretch: { dur: 2.8, keys: [{ sx: 1, sy: 1 }, { sx: 0.95, sy: 1.07 }, { sx: 1, sy: 1 }] },
+  // The moments' own: each crouches before it leaps and squashes when it lands, the way a soft thing would.
+  pop: { dur: 0.5, once: true, keys: [{ lift: 0, sy: 1 }, { lift: 0, sy: 0.9 }, { lift: -5, sy: 1.06 }, { lift: 0, sy: 0.95 }, { lift: 0, sy: 1 }] },
+  giggle: { dur: 0.16, keys: [{ shift: 0, lift: 0 }, { shift: -1.2, lift: -1 }, { shift: 1.2, lift: 0 }, { shift: 0, lift: -1 }, { shift: 0, lift: 0 }] },
+  flutter: { dur: 0.8, keys: [{ tilt: -5 }, { tilt: 5 }, { tilt: -5 }] },
+  land: { dur: 0.55, once: true, keys: [{ sx: 1.24, sy: 0.78 }, { sx: 0.93, sy: 1.07 }, { sx: 1.04, sy: 0.97 }, { sx: 1, sy: 1 }] },
+  leap: { dur: 0.9, once: true, keys: [{ lift: 0, sy: 1 }, { lift: 0, sy: 0.9 }, { lift: -7, sy: 1.06 }, { lift: 0, sy: 0.94 }, { lift: 0, sy: 1 }] },
+  hum: { dur: 1.6, keys: [{ tilt: -4 }, { tilt: 4 }, { tilt: -4 }] },
+  ponder: { dur: 3, keys: [{ tilt: 0 }, { tilt: -8 }, { tilt: -8 }, { tilt: 8 }, { tilt: 8 }, { tilt: 0 }] },
+  hops: { dur: 1.1, keys: [{ lift: 0, sy: 1 }, { lift: 0, sy: 0.9 }, { lift: -7, sy: 1.05 }, { lift: 0, sy: 0.93 }, { lift: -4, sy: 1.03 }, { lift: 0, sy: 0.97 }, { lift: 0, sy: 1 }] },
+  sneeze: { dur: 1.4, once: true, keys: [{ tilt: 0, lift: 0 }, { tilt: -5, lift: -1 }, { tilt: -8, lift: -2 }, { tilt: -9, lift: -2.4 }, { tilt: 7, lift: 1 }, { tilt: 0, lift: 0 }] },
+  // Turned about once: drawn narrower to nothing and back the other way round, as a flat thing turns.
+  spin: { dur: 1.2, once: true, keys: [{ sx: 1 }, { sx: 0.08 }, { sx: -1 }, { sx: -0.08 }, { sx: 1 }] },
+  dance: { dur: 0.8, keys: [{ tilt: -6, lift: 0 }, { tilt: 0, lift: -3 }, { tilt: 6, lift: 0 }, { tilt: 0, lift: -3 }, { tilt: -6, lift: 0 }] },
+  shy: { dur: 1.4, keys: [{ tilt: -3, shift: 0 }, { tilt: 3, shift: 0.6 }, { tilt: -3, shift: 0 }] },
 } satisfies Record<string, BodyLoop>
 
 const RED: [string, number] = ['#E0412E', 0.32]
@@ -169,14 +185,59 @@ export const POSES: Record<Mood, Pose> = {
   wink: { tilt: 5, armL: 16, armR: -16, eye: 'wink', mouth: 'smile', blush: 0.5, loop: L.breathe, eyeLoop: 'none' },
 }
 
+/**
+ * The moments: each held for a breath or two and then left (the desktop app
+ * says for how long). Drawn by the same rig as the moods, eased in from what
+ * was on screen and out to what comes next.
+ */
+export const ACTS: Record<Act, Pose> = {
+  // The pointer comes over it: it notices, hops a little, glad.
+  perk: { armL: 40, armR: -40, eye: 'wide', mouth: 'smile', blush: 0.5, loop: L.pop, eyeLoop: 'blink', over: 'burst' },
+  // Pressed again and again: it cannot stop laughing.
+  giggle: { armL: 40, armR: -40, armLoopL: { dur: 0.18, values: [0, -8, 0] }, armLoopR: { dur: 0.18, values: [0, 8, 0] }, eye: 'squint', mouth: 'grin', mouthLoop: 'laugh', blush: 1, loop: L.giggle, eyeLoop: 'none', over: 'burst' },
+  // Carried through the air by its window.
+  whee: { lift: -6, sy: 1.06, armL: 150, armR: -150, armLoopL: { dur: 0.3, values: [0, -10, 0] }, armLoopR: { dur: 0.3, values: [0, 10, 0] }, eye: 'wide', mouth: 'open', blush: 0.6, loop: L.flutter, eyeLoop: 'none', over: 'speed' },
+  // And set down: a squash, a puff of dust.
+  land: { armL: 60, armR: -60, eye: 'squint', mouth: 'flat', loop: L.land, eyeLoop: 'none', over: 'dust' },
+  // A chat's turn finished.
+  cheer: { armL: 150, armR: -150, armLoopL: { dur: 0.35, values: [0, -18, 0] }, armLoopR: { dur: 0.35, values: [0, 18, 0] }, eye: 'happy', mouth: 'grin', blush: 0.8, loop: L.jump, over: 'burst' },
+  // A long one finished: a wipe of the brow.
+  phew: { tilt: -3, armL: 16, armR: -128, armLoopR: { dur: 0.7, values: [0, -22, 0] }, eye: 'closed', mouth: 'o', loop: L.breathe, eyeLoop: 'none', over: 'fling' },
+  // A chat starts on something: sleeves up.
+  ready: { armL: -30, armR: -150, armLoopR: { dur: 0.4, values: [0, 20, 0] }, eye: 'dot', eyeDy: -1, mouth: 'grin', loop: L.leap, eyeLoop: 'blink', over: 'burst' },
+  // A step of a chat's plan done.
+  fistpump: { armL: 16, armR: -150, armLoopR: { dur: 0.3, values: [0, 30, 0] }, eye: 'happy', mouth: 'grin', loop: L.bounce },
+  // A turn cut off halfway.
+  oops: { armL: 120, armR: -120, eye: 'wide', mouth: 'o', loop: L.startle, sweat: true, over: 'bang' },
+  // Claude and Codex at work at once: one ball each, in the air together.
+  juggle: { armL: 40, armR: -44, armLoopL: { dur: 1.2, values: [0, 26, 0] }, armLoopR: { dur: 1.2, values: [-26, 0, -26] }, eye: 'dot', eyeDy: -2.6, mouth: 'small', loop: L.bob, eyeLoop: 'juggle', over: 'orbs' },
+  // By itself, while nothing happens.
+  hum: { armL: 20, armR: -20, eye: 'closed', mouth: 'small', mouthLoop: 'hum', blush: 0.4, loop: L.hum, eyeLoop: 'none', over: 'notes' },
+  curious: { tilt: -8, armL: 16, armR: -16, eye: 'wide', eyeDx: -1.5, mouth: 'o', loop: L.ponder, eyeLoop: 'dart', over: 'question' },
+  hop: { armL: 40, armR: -40, eye: 'happy', mouth: 'smile', loop: L.hops, eyeLoop: 'none' },
+  sneeze: { armL: 30, armR: -30, eye: 'squint', mouth: 'o', mouthLoop: 'achoo', loop: L.sneeze, eyeLoop: 'none', over: 'achoo' },
+  spin: { armL: 40, armR: -40, eye: 'happy', mouth: 'grin', loop: L.spin, eyeLoop: 'none', over: 'burst' },
+  dance: { armL: 90, armR: -90, armLoopL: { dur: 0.8, values: [40, -40, 40] }, armLoopR: { dur: 0.8, values: [40, -40, 40] }, eye: 'happy', mouth: 'grin', blush: 0.5, loop: L.dance, eyeLoop: 'none', over: 'notes' },
+  // Asleep, a dream comes by.
+  dream: { lift: 1.5, tilt: -3, armL: 6, armR: -6, eye: 'closed', mouth: 'smile', blush: 0.6, tint: ['#5B4FB0', 0.14], loop: L.slowBreathe, eyeLoop: 'none', over: 'dream' },
+  // Patted: a little bashful.
+  shy: { armL: -46, armR: 46, armLoopL: { dur: 0.7, values: [0, 6, 0] }, armLoopR: { dur: 0.7, values: [0, -6, 0] }, eye: 'happy', eyeDy: 1, mouth: 'small', blush: 1, loop: L.shy, eyeLoop: 'none', over: 'hearts' },
+}
+
+/** A mood's pose or a moment's. */
+export const poseOf = (m: Mood | Act): Pose => (Object.hasOwn(POSES, m) ? POSES[m as Mood] : ACTS[m as Act])
+
+/** Whether a name is a moment's rather than a mood's. */
+export const isAct = (m: Mood | Act): m is Act => Object.hasOwn(ACTS, m)
+
 // ---------- the numbers on screen ----------
 
 
 const hex = (c: string): [number, number, number] => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)]
 const rgb = (c: [number, number, number]) => `#${c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('')}`
 
-export function target(mood: Mood): Params {
-  const p = POSES[mood]
+export function target(mood: Mood | Act): Params {
+  const p = poseOf(mood)
   const tint = p.tint ?? ['#E0412E', 0]
   return {
     lift: p.lift ?? 0,
@@ -253,10 +314,10 @@ function sample(values: number[], dur: number, seconds: number, once = false): n
 }
 
 /** What a pose drawn `ms` ago shows now: its transition, then its loops on top. */
-export function paramsAt(from: Params | null, mood: Mood, ms: number): Params {
+export function paramsAt(from: Params | null, mood: Mood | Act, ms: number): Params {
   const to = target(mood)
   if (from !== null && ms < TRANSITION_MS) return lerp(from, to, ease(ms / TRANSITION_MS))
-  const p = POSES[mood]
+  const p = poseOf(mood)
   const s = Math.max(0, (ms - TRANSITION_MS) / 1000)
   const out = { ...to }
   if (p.loop) {
@@ -319,11 +380,11 @@ const SHOULDER_R: Pt = [76.5, 55]
 const BODY = { x: 21, y: 31, w: 58 }
 const BODY_H = (BODY.w * ART.body.h) / ART.body.w
 
-function arm(side: 'L' | 'R', from: number, to: number, loop: ArmLoop | undefined): string {
+function arm(side: 'L' | 'R', from: number, to: number, loop: ArmLoop | undefined, fx = ''): string {
   const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
   const at = (deg: number) => `${n(deg)} ${px} ${py}`
   const swing = loop ? loopT('rotate', loop.values.map(v => `${n(v)} ${px} ${py}`), loop.dur) : ''
-  return `<g transform="rotate(${at(to)})">${tweenT('rotate', at(from), at(to))}<g>${swing}<rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g></g>`
+  return `<g transform="rotate(${at(to)})">${tweenT('rotate', at(from), at(to))}<g${fx}>${swing}<rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g></g>`
 }
 
 function heldSvg(kind: Held): string {
@@ -342,7 +403,17 @@ const HELD_AT: Record<Held, Pt> = { laptop: [50, 72], book: [50, 70], glass: [75
 const OVER_AT: Record<Over, Pt> = {
   question: [79, 13], bang: [80, 13], zzz: [76, 16], check: [79, 14], dizzy: [50, 26], thought: [74, 18],
   hourglass: [80, 13], confetti: [50, 20], terminal: [79, 12], squeeze: [50, 56], hearts: [50, 20],
+  notes: [76, 16], burst: [50, 50], orbs: [50, 40], dust: [50, 86], speed: [50, 55], dream: [76, 14], achoo: [62, 62], fling: [66, 36],
 }
+/** A note of music, its head at (0, 0). */
+const NOTE = (fill: string) => `<g fill="${fill}"><ellipse rx="1.9" ry="1.35" transform="rotate(-22)"/><rect x="1.2" y="-7.4" width="0.75" height="7.4"/><path d="M1.95 -7.4q3.4 1 2.8 4.4" stroke="${fill}" stroke-width="0.75" fill="none" stroke-linecap="round"/></g>`
+/** The two balls juggled while Claude and Codex both work: Claude's clay, Codex's blue. */
+const ORB_INK = ['#F59A4A', '#4F8EF7'] as const
+/** Each ball's way between the hands: up from one, over Mochi's head, down into the other, and back; clear of the face all the way. One flies higher, so they pass and never meet. */
+const ORB_WAYS = [
+  ['19 62', '18 36', '28 13', '50 3', '72 13', '82 36', '81 62', '82 36', '72 13', '50 3', '28 13', '18 36', '19 62'],
+  ['19 62', '14 42', '22 24', '50 15', '78 24', '86 42', '81 62', '86 42', '78 24', '50 15', '22 24', '14 42', '19 62'],
+]
 
 function overSvg(kind: Over): string {
   const floatUp = (dur: number, delay: number) =>
@@ -367,6 +438,32 @@ function overSvg(kind: Over): string {
       .map(d => `<path d="${d}" stroke="#9A8F8A" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">${loopT('translate', ['0 0', d.startsWith('M6') ? '2 0' : '-2 0', '0 0'], 0.6)}</path>`).join('')
     case 'hearts': return [[30, 27, 3.4, 0], [70, 23, 4.2, 0.9], [60, 12, 3, 1.8]]
       .map(([x, y, s, delay]) => `<g opacity="0">${floatUp(2.7, delay ?? 0)}<path transform="translate(${x} ${y}) scale(${s})" d="${HEART}" fill="#FF7A95" stroke="#E0245E" stroke-width="${n(0.5 / (s ?? 1))}"/></g>`).join('')
+    case 'notes': return ([[70, 26, '#8B6BD9', 0], [80, 18, '#E0245E', 0.7], [64, 14, '#4F8EF7', 1.4]] as const)
+      .map(([x, y, fill, delay]) => `<g opacity="0">${floatUp(2.1, delay)}<g transform="translate(${x} ${y})"><g>${loopT('rotate', ['-12', '12', '-12'], 1, '', '0s')}${NOTE(fill)}</g></g></g>`).join('')
+    // Sparkles popping up around Mochi, one after another.
+    case 'burst': return [[18, 34, 0], [84, 30, 0.12], [12, 60, 0.24], [88, 58, 0.36], [30, 16, 0.48], [72, 12, 0.6]]
+      .map(([x, y, delay]) => `<g transform="translate(${x} ${y})"><g transform="scale(0)"><animateTransform attributeName="transform" type="scale" values="0;1.25;0" keyTimes="0;0.35;1" dur="0.9s" begin="${n(delay ?? 0)}s" repeatCount="indefinite"/>${img(ART.sparkle, -3.5, -3.5, 7)}</g></g>`).join('')
+    case 'orbs': return ORB_INK.map((fill, i) =>
+      // Held still, each ball rests in a hand.
+      `<g transform="translate(${ORB_WAYS[i]![i * 6]})"><animateTransform attributeName="transform" type="translate" values="${ORB_WAYS[i]!.join(';')}" dur="2.4s" begin="${n(-0.6 - 0.6 * i)}s" repeatCount="indefinite"/>` +
+      `<circle r="4.2" fill="${fill}" stroke="#2B1B17" stroke-opacity="0.25" stroke-width="0.6"/><circle cx="-1.4" cy="-1.5" r="1.3" fill="#fff" opacity="0.7"/></g>`).join('')
+    // Puffs from under the feet, out and away.
+    case 'dust': return ([[-1, 34], [1, 66]] as const)
+      .map(([dir, x]) => [0, 0.08].map(delay => `<circle cx="${x}" cy="87" r="1.5" fill="#E8DCD2" opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;${dir * 9} -3" dur="0.6s" begin="${delay}s" fill="freeze"/><animate attributeName="r" values="1.5;4.5" dur="0.6s" begin="${delay}s" fill="freeze"/><animate attributeName="opacity" values="0.9;0" dur="0.6s" begin="${delay}s" fill="freeze"/></circle>`).join('')).join('')
+    // Lines of the air rushing by.
+    case 'speed': return ([[6, 40, 0], [2, 56, 0.15], [8, 72, 0.3], [94, 44, 0.08], [98, 62, 0.22]] as const)
+      .map(([x, y, delay]) => `<path d="M${x} ${y}h${x < 50 ? -9 : 9}" stroke="#C9B8AE" stroke-width="1.6" stroke-linecap="round" opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 10" dur="0.45s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.9;0" dur="0.45s" begin="${delay}s" repeatCount="indefinite"/></path>`).join('')
+    // A small cloud with a heart in it, and a bubble at the mouth that swells and shrinks with each breath.
+    case 'dream': return `<g transform="translate(62 2) scale(0.42)"><path d="M13 31c-6 0-10-4-10-9s4-8.6 9-8.6C13.4 7.6 18.6 4 24.6 4c5.4 0 9.8 3 11.4 7.4 1-.3 2-.4 3-.4 6 0 10 4.2 10 9.6S45 30 39.4 30.6c-1.2.3-2.4.4-3.6.4z" fill="#F6F1EC" stroke="#E2D7CE" stroke-width="1.4"/>` +
+      `<g transform="translate(26 18)"><g transform="scale(5)">${loopT('scale', ['5', '6.2', '5'], 1.4, '', '0s')}<path d="${HEART}" fill="#FF7A95"/></g></g></g>` +
+      [[66, 24, 1.2], [70, 19, 1.8]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#F6F1EC" stroke="#E2D7CE" stroke-width="0.5"/>`).join('') +
+      `<circle cx="56" cy="65" r="1.4" fill="#BFE3FF" fill-opacity="0.55" stroke="#8CC8F2" stroke-width="0.4"><animate attributeName="r" values="1.4;4.2;1.4" dur="4.6s" repeatCount="indefinite"/></circle>`
+    // The sneeze itself, once, after the breath in.
+    case 'achoo': return `<g opacity="0"><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.6;1" dur="0.7s" begin="1.35s" fill="freeze"/>` +
+      ['M58 62l7 -3', 'M59 65l8 0', 'M58 68l7 3'].map(d => `<path d="${d}" stroke="#9A8F8A" stroke-width="1.2" stroke-linecap="round"/>`).join('') +
+      [[68, 59], [70, 65], [68, 71]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${n(0.9 - i * 0.15)}" fill="#BFE3FF"><animateTransform attributeName="transform" type="translate" values="0 0;5 ${i - 1}" dur="0.6s" begin="1.35s" fill="freeze"/></circle>`).join('') + '</g>'
+    // A drop of sweat flicked off the brow.
+    case 'fling': return `<g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;8 -6;15 8" dur="1.1s" begin="0.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.7;1" dur="1.1s" begin="0.4s" repeatCount="indefinite"/>${img(ART.drop, 62, 32, 4.5)}</g>`
   }
 }
 
@@ -378,6 +475,8 @@ function eyeLoops(kind: Pose['eyeLoop']): [string, string] {
     case 'glance': return [loopT('translate', ['0 0', '0 0', '-2.2 0', '-2.2 0', '0 0', '0 0', '2.2 0', '2.2 0', '0 0'], 9, ' keyTimes="0;0.3;0.34;0.46;0.5;0.72;0.76;0.88;1"'), blink]
     case 'dart': return [loopT('translate', ['0 0', '-2.4 0', '-2.4 0', '2.4 0', '2.4 0', '0 0'], 2.4, ' keyTimes="0;0.08;0.42;0.5;0.92;1"'), blink]
     case 'scan': return [loopT('translate', ['0 0', '2.2 0', '-2.2 0.8', '2.2 0.8', '-2.2 0', '0 0'], 3.6, ' keyTimes="0;0.25;0.3;0.7;0.75;1"'), '']
+    // Following the balls up and across.
+    case 'juggle': return [loopT('translate', ['-2.2 0', '0 -1.6', '2.2 0', '0 -1.6', '-2.2 0'], 1.2), '']
   }
 }
 
@@ -389,6 +488,9 @@ function mouthLoop(kind: Pose['mouthLoop'], base: MouthKind): string {
     talk: [['small', 'open', 'o', 'small', 'open', 'small'], 0.9],
     wobble: [['pout', 'flat', 'pout'], 0.7],
     yawn: [['small', 'small', 'open', 'open', 'small'], 4],
+    hum: [['small', 'o', 'small', 'o', 'small'], 1.2],
+    laugh: [['grin', 'open', 'grin', 'open', 'grin'], 0.36],
+    achoo: [['o', 'o', 'o', 'open', 'small', 'small'], 1.4],
   }
   const [middle, dur] = shapes[kind]
   const list = [base, ...middle.slice(1, -1), base]
@@ -430,7 +532,7 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   mustache: { x: 50, y: 62.1, w: 35.3 },
   monocle: { x: 62.1, y: 55.7, w: 17.5 },
   bowtie: { x: 50, y: 73.5, w: 30.4 },
-  medal: { x: 50, y: 78.6, w: 16.9 },
+  medal: { x: 64, y: 72, w: 10 },
   scarf: { x: 50.2, y: 75.7, w: 20 },
   necktie: { x: 50, y: 78, w: 12 },
   evileye: { x: 50, y: 73, w: 48.8, stretch: 0.6 },
@@ -446,8 +548,8 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   cat: { x: 13.5, y: 74.4, w: 24, ground: true },
   gift: { x: 12, y: 77.6, w: 20, ground: true },
   sakura: { x: 39, y: 31, w: 18, s: 1.3 },
-  pin: { x: 34.6, y: 70.8, w: 9, s: 1.6 },
-  rosette: { x: 50, y: 76, w: 12, s: 1.5 },
+  pin: { x: 64, y: 72, w: 9, s: 1.2 },
+  rosette: { x: 63.5, y: 67.5, w: 12, s: 1.1 },
   candy: { x: 83, y: 69, w: 14, s: 1.8 },
   lantern: { x: 80.5, y: 73, w: 9, s: 1.9 },
   envelope: { x: 83, y: 70, w: 9, s: 1.8 },
@@ -520,12 +622,12 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   eyelashes: { x: 50.1, y: 47.7, w: 37.4 },
   fangs: { x: 50.5, y: 67.1, w: 16.3, stretch: 1.95 },
   teardrop: { x: 39.7, y: 60.1, w: 6.6 },
-  spikedcollar: { x: 49.9, y: 71.4, w: 59.3, stretch: 0.73 },
-  pearls: { x: 50.1, y: 67.1, w: 56.2, stretch: 0.52 },
-  bellcollar: { x: 50, y: 74.8, w: 58.1, stretch: 0.79 },
+  spikedcollar: { x: 50, y: 69.6, w: 56 },
+  pearls: { x: 50, y: 70.9, w: 56 },
+  bellcollar: { x: 50, y: 72, w: 54 },
   neckerchief: { x: 49.9, y: 74.4, w: 30.4 },
-  lei: { x: 49.9, y: 68.8, w: 56.8, stretch: 0.61 },
-  goldchain: { x: 50.1, y: 72.9, w: 50.7, stretch: 0.58 },
+  lei: { x: 50, y: 73, w: 58 },
+  goldchain: { x: 50, y: 74, w: 52 },
   overalls: { x: 50, y: 72.9, w: 45.8, stretch: 0.81 },
   sailorcollar: { x: 50, y: 73, w: 58 },
   whistle: { x: 54, y: 76.5, w: 11 },
@@ -580,6 +682,38 @@ export const WEAR_AT: Record<Item, { x: number; y: number; w: number; r?: number
   rollingpin: { x: 85.1, y: 55.4, w: 7.1, r: 33 },
   harmonica: { x: 80.3, y: 63.8, w: 17.1, r: -20, stretch: 1.23 },
   tambourine: { x: 85, y: 59.9, w: 23, r: 45, stretch: 0.79 },
+  // Added with the desktop app's 1.0: the worn ones drawn on Mochi itself and measured from the drawing, the rest placed like their kin.
+  kabuto: { x: 49.8, y: 44.7, w: 72.8 },
+  tiara: { x: 50.0, y: 32.3, w: 45.6 },
+  knight: { x: 49.5, y: 38.2, w: 62.6 },
+  pharaoh: { x: 49.7, y: 50.7, w: 61.8 },
+  brain: { x: 49.2, y: 28.1, w: 48.0 },
+  ufo: { x: 50.0, y: 23.5, w: 22.4 },
+  phoenix: { x: 50.0, y: 32.5, w: 50.8 },
+  skigoggles: { x: 49.8, y: 50.8, w: 55.2 },
+  steampunk: { x: 50.0, y: 50.5, w: 52.0 },
+  xray: { x: 50.0, y: 55.0, w: 62.4 },
+  diamondshades: { x: 50.0, y: 51.6, w: 43.2 },
+  butterfly: { x: 50.0, y: 41.7, w: 28.4 },
+  heartcheeks: { x: 50.0, y: 60.2, w: 49.2 },
+  warpaint: { x: 50.0, y: 61.1, w: 40.0 },
+  diamondtear: { x: 38.2, y: 58.3, w: 4.4 },
+  curlystache: { x: 50.0, y: 58.0, w: 24.8 },
+  rainbowstache: { x: 50.1, y: 58.0, w: 38.6 },
+  flamestache: { x: 50.0, y: 57.3, w: 25.6 },
+  lifebuoy: { x: 50.0, y: 78.0, w: 69.2 },
+  pendant: { x: 50.0, y: 73.8, w: 48.8 },
+  dragonamulet: { x: 50, y: 78.4, w: 16 },
+  guitar: { x: 85, y: 60, w: 15, r: 18 },
+  trophy: { x: 84, y: 67, w: 20 },
+  katana: { x: 84, y: 56, w: 7.5, r: 22 },
+  rubberchicken: { x: 84, y: 64, w: 13 },
+  thunderbolt: { x: 84, y: 54, w: 14, r: 12 },
+  slime: { x: 12.9, y: 76, w: 22, ground: true },
+  ghostie: { x: 13, y: 72, w: 21, ground: true },
+  robodog: { x: 13.5, y: 74.4, w: 24, ground: true },
+  babydragon: { x: 13.5, y: 73.5, w: 25, ground: true },
+  portal: { x: 13.5, y: 73, w: 24, ground: true },
 }
 
 const NO_OUTFIT: Outfit = { head: null, eyes: null, face: null, lip: null, chin: null, neck: null, held: null, ground: null }
@@ -675,19 +809,22 @@ export const VECTOR_WEAR: Partial<Record<Item, { svg: string; box: [number, numb
       '<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.5;0.6;0.9;1" dur="6s" repeatCount="indefinite"/></ellipse>',
   },
   pin: {
-    box: [29, 65, 11.5, 11.5],
+    box: [58.4, 66.2, 11.5, 11.5],
     onSkin: true,
-    svg: '<circle cx="35" cy="71.4" r="4.4" fill="#2B1B17" opacity="0.18"/><circle cx="34.6" cy="70.8" r="4.2" fill="#2B2D5C" stroke="#E9B949" stroke-width="0.9"/>' +
+    // Drawn at the neck, pinned on the chest instead: the wearer's left, as badges are worn.
+    svg: '<g transform="translate(29.4 1.2)">' +
+      '<circle cx="35" cy="71.4" r="4.4" fill="#2B1B17" opacity="0.18"/><circle cx="34.6" cy="70.8" r="4.2" fill="#2B2D5C" stroke="#E9B949" stroke-width="0.9"/>' +
       '<path d="M33 69.2L31.4 70.8L33 72.4M36.2 69.2L37.8 70.8L36.2 72.4M35.2 68.6L34 73" stroke="#FFB38A" stroke-width="0.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '<path d="M31.8 68.6Q32.6 67.4 34 67.2" stroke="#fff" stroke-opacity="0.45" stroke-width="0.7" fill="none" stroke-linecap="round"/>',
+      '<path d="M31.8 68.6Q32.6 67.4 34 67.2" stroke="#fff" stroke-opacity="0.45" stroke-width="0.7" fill="none" stroke-linecap="round"/></g>',
   },
   rosette: {
-    box: [41, 66.5, 18, 20],
+    box: [54.5, 58.5, 18, 20],
     onSkin: true,
-    svg: '<path d="M47.8 76.4L45.4 84.6L47.2 83.6L48.4 85.4L50.6 77Z" fill="#B8322B"/><path d="M52.2 76.4L54.6 84.6L52.8 83.6L51.6 85.4L49.4 77Z" fill="#B8322B"/>' +
+    svg: '<g transform="translate(13.5 -8)">' +
+      '<path d="M47.8 76.4L45.4 84.6L47.2 83.6L48.4 85.4L50.6 77Z" fill="#B8322B"/><path d="M52.2 76.4L54.6 84.6L52.8 83.6L51.6 85.4L49.4 77Z" fill="#B8322B"/>' +
       `<g fill="#D8433B" stroke="#B8322B" stroke-width="0.3">${around(50, 75.5, 4.6, 1.7, 12)}</g>` +
       '<circle cx="50" cy="75.5" r="4.6" fill="#D8433B"/><circle cx="50" cy="75.5" r="3.3" fill="#F3ECE4"/><circle cx="50" cy="75.5" r="2.3" fill="#E9B949" stroke="#B8862A" stroke-width="0.4"/>' +
-      '<path d="M48.7 74.4Q49.2 73.6 50.2 73.5" stroke="#fff" stroke-opacity="0.7" stroke-width="0.6" fill="none" stroke-linecap="round"/>',
+      '<path d="M48.7 74.4Q49.2 73.6 50.2 73.5" stroke="#fff" stroke-opacity="0.7" stroke-width="0.6" fill="none" stroke-linecap="round"/></g>',
   },
   candy: {
     box: [74, 62, 18, 14],
@@ -1132,23 +1269,26 @@ export function shiftTimeline(svg: string, seconds: number): string {
 const ROOT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">'
 
 /** The SVG for a shot, `elapsedMs` after it began: from what was on screen into `mood`, then its loops. */
-export function svgFor(shot: Pick<Shot, 'mood' | 'scene' | 'from'>, elapsedMs = 0): string {
+/** What a drawing is of: a mood or a moment, eased in from what was on screen. */
+type Drawn = { mood: Mood | Act; scene: Scene; from: { params: Params; mood: Mood | Act; scene: Scene } | null }
+
+export function svgFor(shot: Drawn, elapsedMs = 0): string {
   return shiftTimeline(markup(shot), elapsedMs / 1000)
 }
 
 /** The mascot's markup without its root, to nest inside a larger drawing. */
-export function mascotInner(shot: Pick<Shot, 'mood' | 'scene' | 'from'>, elapsedMs = 0): string {
+export function mascotInner(shot: Drawn, elapsedMs = 0): string {
   const full = svgFor(shot, elapsedMs)
   const open = full.indexOf('<defs>')
   return full.slice(open, full.lastIndexOf('</svg>'))
 }
 
-function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
+function markup(shot: Drawn): string {
   const { mood, scene } = shot
-  const pose = POSES[mood]
+  const pose = poseOf(mood)
   const to = target(mood)
   const from = shot.from?.params ?? to
-  const was = shot.from ? POSES[shot.from.mood] : pose
+  const was = shot.from ? poseOf(shot.from.mood) : pose
   const wasScene = shot.from?.scene ?? scene
   const loops = bodyLoops(pose.loop)
   const [eyeMove, eyeBlink] = eyeLoops(pose.eyeLoop)
@@ -1158,14 +1298,18 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
   const liquidFill = (c: number) => (c >= 80 ? '#B3261E' : '#7A2E16')
   const liquidOp = (c: number) => (c <= 0 ? 0 : c >= 80 ? 0.3 : 0.16)
 
+  // Mochi's colour: its clay through the skin's filter, what the skin lays over it, and the face's ink where the clay is dark.
+  const skin = skinOf(scene.skin)
+  const fx = skin?.map ? ` filter="url(#skin-map-${skin.id})"` : ''
+  const ink = (svg: string) => (skin?.ink ? svg.replaceAll('#2B1B17', skin.ink) : svg)
   const eyes = [[-1, 40, from.eyeL, to.eyeL], [1, 60, from.eyeR, to.eyeR]] as const
-  const eyesSvg = eyes.map(([side, cx, a, b]) =>
+  const eyesSvg = ink(eyes.map(([side, cx, a, b]) =>
     `<path d="${pathOf(b, cx, 52)}" fill="#2B1B17">${tween('d', pathOf(a, cx, 52), pathOf(b, cx, 52))}</path>` +
     `<circle cx="${cx + 1.3}" cy="50.2" r="1.15" fill="#fff" opacity="${n(to.catchlight * 0.9)}">${tween('opacity', n(from.catchlight * 0.9), n(to.catchlight * 0.9))}</circle>` +
     `<g opacity="${n(to.x)}">${tween('opacity', n(from.x), n(to.x))}<path d="M${cx - 3.6} ${48.4}L${cx + 3.6} ${55.6}M${cx + 3.6} ${48.4}L${cx - 3.6} ${55.6}" stroke="#2B1B17" stroke-width="2.4" stroke-linecap="round"/></g>` +
     `<g opacity="${n(to.star)}">${tween('opacity', n(from.star), n(to.star))}${img(ART.sparkle, cx - 5, 47, 10)}</g>` +
     `<g opacity="${n(to.spiral)}">${tween('opacity', n(from.spiral), n(to.spiral))}<g>${loopT('rotate', [`0 ${cx} 52`, `${side * 360} ${cx} 52`], 1.1)}<path d="M${cx} 52m-0.9 0a0.9 0.9 0 1 1 1.8 0a2.3 2.3 0 1 1 -4.6 0a3.8 3.8 0 1 1 7.6 0" stroke="#2B1B17" stroke-width="1.6" fill="none" stroke-linecap="round"/></g></g>`,
-  ).join('')
+  ).join(''))
 
   const held = (['laptop', 'book', 'glass', 'flag'] as const).map(k => {
     const isNow = pose.held === k
@@ -1215,6 +1359,7 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     `<linearGradient id="liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${liquidFill(scene.context)}" stop-opacity="0"/><stop offset="0.35" stop-color="${liquidFill(scene.context)}" stop-opacity="0.8"/><stop offset="1" stop-color="${liquidFill(scene.context)}"/></linearGradient>`,
     '<radialGradient id="glow"><stop offset="0" stop-color="#FFE7CF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFE7CF" stop-opacity="0"/></radialGradient>',
     '<radialGradient id="blush"><stop offset="0" stop-color="#FF7A95" stop-opacity="0.8"/><stop offset="1" stop-color="#FF7A95" stop-opacity="0"/></radialGradient>',
+    skinFilter(skin),
     '</defs>',
     helpers(wasScene.agents, scene.agents),
     '<ellipse cx="50" cy="88.5" rx="21" ry="3" fill="#2B1B17" opacity="0.13"/>',
@@ -1223,20 +1368,19 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     `<g>${loops.move}`,
     `<g transform="rotate(${n(to.tilt)} 50 88)">${tweenT('rotate', `${n(from.tilt)} 50 88`, `${n(to.tilt)} 50 88`)}`,
     `<g>${loops.turn}`,
-    '<rect x="33.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>',
-    img(ART.foot, 33, 79, 15),
-    `<g>${tap}<rect x="52.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 52, 79, 15)}</g>`,
+    `<g${fx}><rect x="33.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 33, 79, 15)}</g>`,
+    `<g${fx}>${tap}<rect x="52.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 52, 79, 15)}</g>`,
     '<g transform="translate(50 82)">',
     `<g transform="scale(${n(to.sx)} ${n(to.sy)})">${tweenT('scale', `${n(from.sx)} ${n(from.sy)}`, `${n(to.sx)} ${n(to.sy)}`)}`,
     `<g>${loops.squash}`,
     '<g transform="translate(-50 -82)">',
     // A hat has no room for the antenna: it comes off while something is on the head.
-    outfit.head ? '' : '<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+    outfit.head ? '' : `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/>`,
     outfit.head ? '' : '<circle cx="50" cy="17.5" r="8" fill="url(#glow)"><animate attributeName="opacity" values="0.45;1;0.45" dur="2.2s" repeatCount="indefinite"/></circle>',
     outfit.head ? '' : '<circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>',
     outfit.head ? '' : img(ART.bulb, 45.6, 13.1, 8.8),
-    '<rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>',
-    img(ART.body, BODY.x, BODY.y, BODY.w),
+    `<g${fx}><rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>${img(ART.body, BODY.x, BODY.y, BODY.w)}</g>`,
+    skin?.over ?? '',
     `<rect x="18" y="${n(liquidY(scene.context))}" width="64" height="${n(BODY_H * level(scene.context) + 2)}" fill="url(#liq)" opacity="${n(liquidOp(scene.context))}" mask="url(#bm)">` +
       tween('y', n(liquidY(wasScene.context)), n(liquidY(scene.context))) +
       tween('height', n(BODY_H * level(wasScene.context) + 2), n(BODY_H * level(scene.context) + 2)) +
@@ -1246,7 +1390,7 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     `<g opacity="${n(to.blush)}">${tween('opacity', n(from.blush), n(to.blush))}<ellipse cx="31" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/><ellipse cx="69" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/></g>`,
     `<g transform="translate(${n(to.eyeDx)} ${n(to.eyeDy)})">${tweenT('translate', `${n(from.eyeDx)} ${n(from.eyeDy)}`, `${n(to.eyeDx)} ${n(to.eyeDy)}`)}`,
     `<g>${eyeMove}<g transform="translate(0 52)"><g>${eyeBlink}<g transform="translate(0 -52)">${eyesSvg}</g></g></g></g></g>`,
-    `<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17">${tween('d', pathOf(from.mouth, 50, 64), pathOf(to.mouth, 50, 64))}${mouthLoop(pose.mouthLoop, pose.mouth)}</path>`,
+    ink(`<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17">${tween('d', pathOf(from.mouth, 50, 64), pathOf(to.mouth, 50, 64))}${mouthLoop(pose.mouthLoop, pose.mouth)}</path>`),
     // The face from the skin out: a beard, a mustache over it, the rest, then glasses on top.
     wearSlot('chin', outfit, wasOutfit),
     wearSlot('lip', outfit, wasOutfit),
@@ -1254,8 +1398,8 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     wearSlot('eyes', outfit, wasOutfit),
     wearSlot('neck', outfit, wasOutfit),
     wearSlot('head', outfit, wasOutfit),
-    arm('L', from.armL, to.armL, pose.armLoopL),
-    arm('R', from.armR, to.armR, pose.armLoopR),
+    arm('L', from.armL, to.armL, pose.armLoopL, fx),
+    arm('R', from.armR, to.armR, pose.armLoopR, fx),
     // A held thing is drawn over the hand, as if gripped by it.
     wearSlot('held', outfit, wasOutfit),
     held,
@@ -1268,4 +1412,172 @@ function markup(shot: Pick<Shot, 'mood' | 'scene' | 'from'>): string {
     wearSlot('ground', outfit, wasOutfit),
     '</svg>',
   ].join('')
+}
+
+/** The room around Mochi's own square a drawing gives it, in its units: what it holds or floats over it reaches past that square. */
+export type Room = { left: number; top: number; right: number; bottom: number }
+
+/** SMIL's own animations taken out of a drawing, leaving it as it stands. */
+const still = (svg: string) => svg.replace(/<(animate|animateTransform|animateMotion|set)\b[^>]*?(?:\/>|>[\s\S]*?<\/\1>)/g, '')
+
+/** How a mouth's loop is played by a layer: stretched open and shut (or narrowed), keyframe by keyframe, over its time. */
+const MOUTH_PLAY: Record<NonNullable<Pose['mouthLoop']>, [number[][], number]> = {
+  talk: [[[1, 1], [1.05, 1.9], [1, 1.3], [1, 1], [1.05, 1.8], [1, 1]], 0.9],
+  wobble: [[[1, 1], [0.82, 1.1], [1, 1]], 0.7],
+  yawn: [[[1, 1], [1, 1], [1.1, 2.4], [1.1, 2.4], [1, 1]], 4],
+  hum: [[[1, 1], [0.9, 1.6], [1, 1], [0.9, 1.6], [1, 1]], 1.2],
+  laugh: [[[1, 1], [1, 1.35], [1, 1], [1, 1.35], [1, 1]], 0.36],
+  achoo: [[[1, 1], [1, 1], [1.1, 1.6], [1, 1]], 1.4],
+}
+
+/** Where the eyes look about, as keyframes of a move in the drawing's units (see `eyeLoops`), with their timing. */
+const EYE_PLAY: Partial<Record<NonNullable<Pose['eyeLoop']>, [[number, number][], number, number[]]>> = {
+  glance: [[[0, 0], [0, 0], [-2.2, 0], [-2.2, 0], [0, 0], [0, 0], [2.2, 0], [2.2, 0], [0, 0]], 9, [0, 0.3, 0.34, 0.46, 0.5, 0.72, 0.76, 0.88, 1]],
+  dart: [[[0, 0], [-2.4, 0], [-2.4, 0], [2.4, 0], [2.4, 0], [0, 0]], 2.4, [0, 0.08, 0.42, 0.5, 0.92, 1]],
+  scan: [[[0, 0], [2.2, 0], [-2.2, 0.8], [2.2, 0.8], [-2.2, 0], [0, 0]], 3.6, [0, 0.25, 0.3, 0.7, 0.75, 1]],
+  juggle: [[[-2.2, 0], [0, -1.6], [2.2, 0], [0, -1.6], [-2.2, 0]], 1.2, [0, 0.25, 0.5, 0.75, 1]],
+}
+
+/**
+ * A pose as it is held a while, in layers that move: the body breathing,
+ * bobbing or swaying, the arms swinging, the eyes looking about and blinking,
+ * the mouth talking. Each layer is drawn once; its motion is a transform the
+ * app plays from the numbers each layer carries (`data-tpl`, `data-frames`,
+ * `data-times`, `data-dur`), at a frame rate of its choosing, so Mochi never
+ * stops moving and costs little. What only SMIL can play (a note floating, a
+ * cursor blinking) stays in small layers of its own.
+ *
+ * The layers stack in one box: give `.mochi-layers` and every element in it
+ * the whole box (see the app's style). `back` is drawn under all of it.
+ */
+export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, back = ''): string {
+  const { mood, scene } = shot
+  const pose = poseOf(mood)
+  const to = target(mood)
+  const W = 100 + room.left + room.right
+  const H = 100 + room.top + room.bottom
+  const at = (x: number, y: number) => `${n(((x + room.left) / W) * 100)}% ${n(((y + room.top) / H) * 100)}%`
+  const dx = (v: number) => `${n((v / W) * 100)}%`
+  const dy = (v: number) => `${n((v / H) * 100)}%`
+  const svg = (inner: string, cls = '') =>
+    `<svg${cls ? ` class="${cls}"` : ''} viewBox="${-room.left} ${-room.top} ${W} ${H}" preserveAspectRatio="xMidYMax meet"><svg x="0" y="0" width="100" height="100" viewBox="0 0 100 100" overflow="visible">${inner}</svg></svg>`
+  /**
+   * A layer about `origin` holding `base`, or playing keyframes: `tpl` with each `{i}` filled by a frame's numbers, eased from
+   * frame to frame over `dur` seconds (at `times`, 0 to 1, when not evenly spaced). The numbers are the app's to play.
+   */
+  const layer = (name: string, inner: string, origin: string, base: string, play: { tpl: string; frames: number[][] } | null, dur = 0, times: number[] | null = null) => {
+    const style = `transform-origin:${origin};transform:${base}`
+    if (play === null || play.frames.length < 2) return `<div class="${name}" style="${style}">${inner}</div>`
+    const at = times ?? play.frames.map((_, i) => i / (play.frames.length - 1))
+    return `<div class="${name}" style="${style}" data-tpl="${play.tpl}" data-frames="${JSON.stringify(play.frames.map(f => f.map(v => Math.round(v * 1000) / 1000)))}" data-times="${JSON.stringify(at)}" data-dur="${dur}">${inner}</div>`
+  }
+  const pc = (v: number, of: number) => (v / of) * 100
+
+  // The body's own loop, played whole: a moment's once-only loop is the app's to play in full, not held here.
+  const loop = pose.loop && !pose.loop.once ? pose.loop : undefined
+  const keys = loop?.keys ?? []
+  const has = (k: 'lift' | 'shift' | 'tilt' | 'sx' | 'sy') => keys.some(x => x[k] !== undefined)
+  const moveF = has('lift') || has('shift') ? { tpl: 'translate({0}%, {1}%)', frames: keys.map(k => [pc(to.shift + (k.shift ?? 0), W), pc(to.lift + (k.lift ?? 0), H)]) } : null
+  const turnF = has('tilt') ? { tpl: 'rotate({0}deg)', frames: keys.map(k => [to.tilt + (k.tilt ?? 0)]) } : null
+  const squashF = has('sx') || has('sy') ? { tpl: 'scale({0}, {1})', frames: keys.map(k => [to.sx * (k.sx ?? 1), to.sy * (k.sy ?? 1)]) } : null
+
+  const skin = skinOf(scene.skin)
+  const fx = skin?.map ? ` filter="url(#skin-map-${skin.id})"` : ''
+  const ink = (v: string) => (skin?.ink ? v.replaceAll('#2B1B17', skin.ink) : v)
+  const fit = (o: Outfit | undefined): Outfit => {
+    const v = { ...NO_OUTFIT, ...o }
+    for (const slot of Object.keys(NO_OUTFIT) as (keyof Outfit)[]) if (!Object.hasOwn(WEAR_AT, v[slot] ?? '')) v[slot] = null
+    return scene.agents >= 1 && v.ground ? { ...v, ground: null } : v
+  }
+  const outfit = fit(scene.outfit)
+  const wear = (slot: keyof Outfit) => wearSlot(slot, outfit, outfit)
+
+  const defs = '<defs>' +
+    `<mask id="bm" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100" style="mask-type:alpha">${img(ART.body, BODY.x, BODY.y, BODY.w)}</mask>` +
+    '<radialGradient id="glow"><stop offset="0" stop-color="#FFE7CF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFE7CF" stop-opacity="0"/></radialGradient>' +
+    '<radialGradient id="blush"><stop offset="0" stop-color="#FF7A95" stop-opacity="0.8"/><stop offset="1" stop-color="#FF7A95" stop-opacity="0"/></radialGradient>' +
+    skinFilter(skin) + '</defs>'
+
+  const eyes = ink(([[-1, 40, to.eyeL], [1, 60, to.eyeR]] as const).map(([side, cx, shape]) =>
+    `<path d="${pathOf(shape, cx, 52)}" fill="#2B1B17"/>` +
+    `<circle cx="${cx + 1.3}" cy="50.2" r="1.15" fill="#fff" opacity="${n(to.catchlight * 0.9)}"/>` +
+    (to.x ? `<path d="M${cx - 3.6} 48.4L${cx + 3.6} 55.6M${cx + 3.6} 48.4L${cx - 3.6} 55.6" stroke="#2B1B17" stroke-width="2.4" stroke-linecap="round"/>` : '') +
+    (to.star ? img(ART.sparkle, cx - 5, 47, 10) : '') +
+    (to.spiral ? `<g>${loopT('rotate', [`0 ${cx} 52`, `${side * 360} ${cx} 52`], 1.1, '', '0s')}<path d="M${cx} 52m-0.9 0a0.9 0.9 0 1 1 1.8 0a2.3 2.3 0 1 1 -4.6 0a3.8 3.8 0 1 1 7.6 0" stroke="#2B1B17" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>` : ''),
+  ).join(''))
+  // The group the app turns toward the pointer (see its `gaze`).
+  const eyeSvg = svg(`<g transform="translate(0 52)"><g transform="translate(0 -52)">${eyes}</g></g>`)
+  const look = pose.eyeLoop ? EYE_PLAY[pose.eyeLoop] : undefined
+  const eyeBase = `translate(${dx(to.eyeDx)}, ${dy(to.eyeDy)})`
+  const blinks = (pose.eyeLoop ?? 'blink') === 'blink' || pose.eyeLoop === 'glance' || pose.eyeLoop === 'dart'
+  const eyeLayer = layer('look',
+    layer('blink', eyeSvg, at(50, 52), 'scale(1, 1)', blinks ? { tpl: 'scale(1, {0})', frames: [[1], [1], [0.08], [1]] } : null, 4.2, [0, 0.93, 0.965, 1]),
+    at(50, 52), eyeBase,
+    look ? { tpl: 'translate({0}%, {1}%)', frames: look[0].map(([x, y]) => [pc(to.eyeDx + x, W), pc(to.eyeDy + y, H)]) } : null, look?.[1], look?.[2] ?? null)
+
+  const mouth = svg(ink(`<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17"/>`))
+  const talk = pose.mouthLoop ? MOUTH_PLAY[pose.mouthLoop] : undefined
+  const mouthLayer = layer('mouth', mouth, at(50, 64), 'none', talk ? { tpl: 'scale({0}, {1})', frames: talk[0] } : null, talk?.[1])
+
+  const armSvg = (side: 'L' | 'R') => {
+    const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
+    return svg(`<g${fx}><rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g>`)
+  }
+  const armLayer = (side: 'L' | 'R') => {
+    const base = side === 'L' ? to.armL : to.armR
+    const swing = side === 'L' ? pose.armLoopL : pose.armLoopR
+    const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
+    return layer(`arm${side}`, armSvg(side), at(px, py), `rotate(${n(base)}deg)`, swing ? { tpl: 'rotate({0}deg)', frames: swing.values.map(v => [base + v]) } : null, swing?.dur)
+  }
+
+  const isHatless = !outfit.head
+  const body = svg(still(
+    (isHatless ? `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/><circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>${img(ART.bulb, 45.6, 13.1, 8.8)}` : '') +
+    `<g${fx}><rect x="22" y="32" width="56" height="48.5" rx="19" fill="#D97757"/>${img(ART.body, BODY.x, BODY.y, BODY.w)}</g>` +
+    (skin?.over ?? '') +
+    `<rect x="18" y="28" width="64" height="56" fill="${rgb(to.tint)}" opacity="${n(to.tintOp)}" mask="url(#bm)"/>` +
+    `<g opacity="${n(to.blush)}"><ellipse cx="31" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/><ellipse cx="69" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/></g>`))
+  // The bulb's glow, held lit: a pulse here would be one more thing drawn again on every frame.
+  const glow = isHatless ? svg('<circle cx="50" cy="17.5" r="8" fill="url(#glow)" opacity="0.8"/>') : ''
+  const worn = svg(still(wear('chin') + wear('lip') + wear('face') + wear('eyes') + wear('neck') + wear('head')))
+  const held = (['laptop', 'book', 'glass', 'flag'] as const).filter(k => pose.held === k).map(heldSvg).join('')
+  const hold = svg(wear('held') + held)
+  const sweat = pose.sweat ? `<g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 9" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.7;1" dur="1.5s" repeatCount="indefinite"/>${img(ART.drop, 24, 30, 5)}</g>` : ''
+  const over = pose.over ? overSvg(pose.over) : ''
+  const tap = pose.tapsFoot ? loopT('rotate', ['0 55 84', '-14 55 84', '0 55 84', '0 55 84'], 0.5, '', '0s') : ''
+  const feet = svg(`<g${fx}><rect x="33.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 33, 79, 15)}</g><g${fx}>${tap}<rect x="52.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 52, 79, 15)}</g>`)
+  const waves = pose.waves ? `<path d="M-10 93 Q0 88 10 93 T30 93 T50 93 T70 93 T90 93 T110 93" stroke="#5B8DEF" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.8">${loopT('translate', ['0 0', '-20 0'], 1, '', '0s')}</path>` : ''
+
+  const squash = layer('squash', body + glow + eyeLayer + mouthLayer + worn + armLayer('L') + armLayer('R') + hold,
+    at(50, 82), `scale(${n(to.sx)}, ${n(to.sy)})`, squashF, loop?.dur)
+  // What floats over Mochi bobs as one layer, as the helpers do: SMIL playing on there would draw it all again on every frame.
+  // Held, what floats up and fades (the z's of a sleep, the notes of a hum, a drop of sweat) is shown where it starts.
+  const overLayer = over || sweat ? layer('over', svg((over + sweat).replaceAll('<g opacity="0">', '<g>')), at(50, 20), 'none', { tpl: 'translate(0%, {0}%)', frames: [[0], [pc(-1.6, H)], [0]] }, 1.8) : ''
+  const turn = layer('turn', feet + squash + overLayer, at(50, 88), `rotate(${n(to.tilt)}deg)`, turnF, loop?.dur)
+  const move = layer('move', turn, '50% 50%', `translate(${dx(to.shift)}, ${dy(to.lift)})`, moveF, loop?.dur)
+
+  // Every SMIL animation is taken out: a layer that plays one is drawn again on every frame, which is what costs (measured, in a
+  // see-through window always on top: about 31% of a core with them, 5% without). What moves here, the app moves.
+  return still('<div class="mochi-layers">' +
+    svg(defs + back + '<ellipse cx="50" cy="88.5" rx="21" ry="3" fill="#2B1B17" opacity="0.13"/>') +
+    (scene.agents ? layer('helpers', svg(helpers(scene.agents, scene.agents)), '50% 50%', 'none', { tpl: 'translate(0%, {0}%)', frames: [[0], [pc(-3.5, H)], [0]] }, 0.7) : '') +
+    (waves ? svg(waves) : '') +
+    move + svg(still(wear('ground'))) + '</div>')
+}
+
+/** An item's picture for the wardrobe, faded and grey while locked: the band's, and the desktop app's room. */
+export function itemIcon(item: Item, isOpen: boolean): string {
+  const vector = VECTOR_WEAR[item]
+  if (vector) {
+    const [x, y, w, tall] = vector.box
+    // Glasses read as glasses on a patch of Mochi's own clay, not on the dark card.
+    const skin = vector.onSkin ? `<rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${tall - 2}" rx="${Math.min(w, tall) / 2 - 1}" fill="#D97757"/>` : ''
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${tall}" width="100%" height="100%"><g opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}>${skin}${vector.svg}</g></svg>`
+  }
+  const a = WEAR[item]
+  if (a === undefined) return ''
+  const scale = Math.min(44 / a.w, 30 / a.h)
+  const w = a.w * scale
+  const tall = a.h * scale
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32" width="100%" height="100%"><image href="${a.uri}" x="${(46 - w) / 2}" y="${(32 - tall) / 2}" width="${w}" height="${tall}" opacity="${isOpen ? 1 : 0.32}"${isOpen ? '' : ' style="filter:grayscale(1)"'}/></svg>`
 }

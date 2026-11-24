@@ -416,6 +416,7 @@ export const en = {
       lavalamp: 'lava lamp', taco: 'taco', tent: 'camping tent', hedgehog: 'hedgehog',
       wateringcan: 'watering can', macaron: 'macaron stack', arcade: 'arcade machine', snowman: 'snowman',
       rocket: 'toy rocket', watermelon: 'watermelon slice', chest: 'treasure chest', axolotl: 'axolotl', horse: 'little horse', sprout: 'sprout in a pot', bunny: 'bunny',
+      kabuto: 'samurai helmet', tiara: 'tiara', knight: 'knight’s helmet', pharaoh: 'pharaoh’s headdress', brain: 'zombie brain', ufo: 'flying saucer', phoenix: 'phoenix crown', skigoggles: 'ski goggles', steampunk: 'steampunk goggles', xray: 'x-ray specs', diamondshades: 'diamond shades', butterfly: 'butterfly face paint', heartcheeks: 'heart cheeks', warpaint: 'war paint', diamondtear: 'diamond tear', curlystache: 'curly mustache', rainbowstache: 'rainbow mustache', flamestache: 'flame mustache', lifebuoy: 'life ring', pendant: 'crystal pendant', dragonamulet: 'dragon amulet', guitar: 'electric guitar', trophy: 'trophy', katana: 'katana', rubberchicken: 'rubber chicken', thunderbolt: 'thunderbolt', slime: 'slime', ghostie: 'little ghost', robodog: 'robot dog', babydragon: 'baby dragon', portal: 'magic portal',
     },
     short: {
       hardhat: 'hard hat', crown: 'crown', partyhat: 'party', witchhat: 'witch', santahat: 'Santa', nightcap: 'nightcap', gradcap: 'grad cap',
@@ -452,6 +453,7 @@ export const en = {
       lavalamp: 'lava lamp', taco: 'taco', tent: 'tent', hedgehog: 'hedgehog',
       wateringcan: 'water can', macaron: 'macarons', arcade: 'arcade', snowman: 'snowman',
       rocket: 'rocket', watermelon: 'watermelon', chest: 'treasure', axolotl: 'axolotl', horse: 'horse', sprout: 'sprout', bunny: 'bunny',
+      kabuto: 'kabuto', tiara: 'tiara', knight: 'knight', pharaoh: 'pharaoh', brain: 'brain', ufo: 'UFO', phoenix: 'phoenix', skigoggles: 'ski', steampunk: 'steampunk', xray: 'x-ray', diamondshades: 'diamond', butterfly: 'butterfly', heartcheeks: 'hearts', warpaint: 'war paint', diamondtear: 'diamond', curlystache: 'curly', rainbowstache: 'rainbow', flamestache: 'flame', lifebuoy: 'life ring', pendant: 'pendant', dragonamulet: 'amulet', guitar: 'guitar', trophy: 'trophy', katana: 'katana', rubberchicken: 'chicken', thunderbolt: 'bolt', slime: 'slime', ghostie: 'ghost', robodog: 'robot dog', babydragon: 'dragon', portal: 'portal',
     },
     slot: { head: 'Head', eyes: 'Glasses', face: 'Face', lip: 'Mustache', chin: 'Beard', neck: 'Neck', held: 'Hand', ground: 'Beside' },
     hint: {
@@ -760,8 +762,8 @@ export const en = {
   },
 
   cmd: {
-    description: 'Mochi: standup, week, desk, prs, city, show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, export, reset, feedback, update, status',
-    hint: '[standup | week | desk | prs | city | details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | export | reset | feedback | update | status]',
+    description: 'Mochi: standup, week, desk, prs, city, show/hide, details, level, wear, badges, chats, shield, alerts, CI, tips, breaks, sound, plugins, card, wrapped, snap, tour, news, birthday, language, small/big, desktop, export, reset, feedback, update, status',
+    hint: '[standup | week | desk | prs | city | details | level | wear [item] | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang [code] | small | big | hide | show | desktop | export | reset | feedback | update | status]',
     small: 'Mochi on one line.',
     big: 'Mochi full size.',
     detailOpened: 'Details pane opened.',
@@ -788,6 +790,8 @@ export const en = {
     soundOff: 'Sound off.',
     hidden: 'Mochi hidden. To bring it back: /mochi',
     shown: 'Mochi is on.',
+    desktopOn: 'Desktop on: while Mochi is out on the desktop, the band is drawn without it.',
+    desktopOff: 'Desktop off: Mochi stays in the band.',
     statusLine: (label: string, line: string) => `Status: ${label} · ${line}`,
     contextLine: (ctx: string, agents: number, tools: number) => `Context: ${ctx} · agents running: ${agents} · tools this turn: ${tools}`,
     prefsLine: (sound: boolean, shield: boolean, alerts: boolean, compact: boolean) =>
@@ -795,7 +799,7 @@ export const en = {
     moreLine: (tips: boolean, breaks: boolean, plugins: boolean) =>
       `Tips: ${tips ? 'on' : 'off'} · Breaks: ${breaks ? 'on' : 'off'} · Plugin reactions: ${plugins ? 'on' : 'off'}`,
     peersLine: (level: number, peers: string) => `Level ${level} · other chats: ${peers}`,
-    commands: 'Commands: /mochi (show/hide) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | export | reset | feedback | update | status',
+    commands: 'Commands: /mochi (show/hide) | standup | week | desk | prs | city | details | level | wear | badges | chats | shield | alerts | ci | tips | breaks | sound | plugins | card | wrapped | snap | tour | news | birthday | lang | small | big | desktop | export | reset | feedback | update | status',
     langNow: (name: string, list: string) => `Language: ${name}. Available: ${list} · /mochi lang <code> or auto`,
     langSet: (name: string) => `Language: ${name}.`,
     langAuto: (name: string) => `Language follows Claude Code and the system: ${name}.`,
@@ -803,7 +807,7 @@ export const en = {
     /** Words this language accepts for each command, besides the English ones; `on` and `off` follow a setting’s command (/mochi tips off). */
     words: {
       on: [] as string[], off: [] as string[],
-      hide: [] as string[], show: [] as string[], small: [] as string[], big: [] as string[], sound: [] as string[],
+      hide: [] as string[], show: [] as string[], small: [] as string[], big: [] as string[], sound: [] as string[], desktop: [] as string[],
       status: [] as string[], details: [] as string[], level: [] as string[], wear: [] as string[], shield: [] as string[],
       alerts: [] as string[], lang: [] as string[], auto: [] as string[], none: [] as string[],
       card: [] as string[], wrapped: [] as string[], snap: [] as string[], year: [] as string[],

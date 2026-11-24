@@ -109,7 +109,8 @@ export function limitInk(p: number): [string, string] {
 }
 
 
-export type PanelInput = { panel: Panel; now: number; width: number }
+/** `isAway` leaves the mascot out: it is out on the desktop, and its stage, the lines and the gauges stay. */
+export type PanelInput = { panel: Panel; now: number; width: number; isAway?: boolean }
 
 /** An Info with every list and figure present, whatever an older version stored. */
 function whole(info: Partial<Info> | undefined): Info {
@@ -326,7 +327,7 @@ export function disco(x0: number, x1: number, w: number, h: number): string {
 }
 
 /** The panel's drawing, and where its gauges sit (in the drawing's pixels) so a click region can lie over them. */
-export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card: { x: number; w: number }; width: number } {
+export function panelSvg({ panel, now, width, isAway = false }: PanelInput): { svg: string; card: { x: number; w: number }; width: number } {
   const { shot, infoFrom } = panel
   const info = whole(panel.info)
   const was = infoFrom ? whole(infoFrom) : info
@@ -468,7 +469,7 @@ export function panelSvg({ panel, now, width }: PanelInput): { svg: string; card
     `<text class="t faint" x="${metaX}" y="73" font-size="11">${esc(clip(metaParts.join('  ·  '), Math.max(4, Math.floor((room3 - (ci.width > 0 ? ci.width + 14 : 0)) / 6.3))))}</text>` + ci.svg
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">` +
-    STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + show.behind + floor + glow + mascot +
+    STYLE + BUBBLE + rtlStyle() + DEFS + sky(clock.hour, stageEnd, H) + show.behind + floor + (isAway ? '' : glow + mascot) +
     `<g transform="translate(0 ${n((H - ROW_H) / 2)})">` +
     // The bubble's pop and typing run from when the line changed, so a redraw
     // mid-way picks them up where they were; the rest loops on the clock.

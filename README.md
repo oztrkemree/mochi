@@ -14,7 +14,7 @@ and keeps your context, session and weekly limits in plain sight.
 [![License: MIT](https://img.shields.io/badge/license-MIT-E08A6A?style=for-the-badge)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-D97757?style=for-the-badge)](#-install-in-10-seconds)
 [![16 languages](https://img.shields.io/badge/languages-16-7AA2F7?style=for-the-badge)](#-16-languages)
-[![170 accessories](https://img.shields.io/badge/wardrobe-170_items-B684F6?style=for-the-badge)](#-a-wardrobe-that-grows-with-you)
+[![201 accessories](https://img.shields.io/badge/wardrobe-201_items-B684F6?style=for-the-badge)](#-a-wardrobe-that-grows-with-you)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-4CC38A?style=for-the-badge)](#-what-it-touches)
 
 <sub>**English** · [Türkçe](README.tr.md) · [Español](README.es.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Русский](README.ru.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md)</sub>
@@ -68,9 +68,13 @@ Type it in any Claude Code chat, answer `y` to add the marketplace and pick the 
 <td align="center" width="25%">🎭<br><b>30 moods</b><br><sub>that follow every tool call</sub></td>
 <td align="center" width="25%">🛡️<br><b>A shield</b><br><sub>for <code>rm -rf</code>, force pushes and leaked keys</sub></td>
 <td align="center" width="25%">📊<br><b>Limit rings</b><br><sub>with a forecast of when you run out</sub></td>
-<td align="center" width="25%">👒<br><b>170 things to wear</b><br><sub>earned by real work</sub></td>
+<td align="center" width="25%">👒<br><b>201 things to wear</b><br><sub>earned by real work</sub></td>
 </tr>
 </table>
+
+## 🖥️ On the desktop too
+
+Mochi Buddy also comes as a small app for macOS and Windows: one Mochi in a corner of your screen for every agent you run, Claude Code (with the mod or without it) and Codex alike. It tells you when a chat finishes, waits for you or fails, lets you answer a request for permission from its bubble, shows your limits, and keeps the same level, badges and wardrobe as the mod, from the same files. Download it from the latest `desktop-v` release; [app/README.md](app/README.md) says what it does and how to install it.
 
 ## 🎭 It feels what Claude is doing
 
@@ -209,7 +213,7 @@ Further down: the context by category, your recent turns, a calendar of every ch
   <img src="docs/gif/wardrobe.webp" width="760" alt="Mochi trying on outfits one after another: a beanie with coffee, a crown with a monocle and a cat, a wizard hat and scarf, a party hat with a medal and balloon, a cowboy hat with a mustache, a graduation cap with glasses, a pirate hat with sunglasses and a duck, a hard hat with a wrench, a chef's hat with a bow tie and cake, and a night cap beside a cactus">
 </p>
 
-Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **170 items** across head, glasses, face, mustache, beard, neck, hand and the spot beside Mochi. Nothing opens by the date: levels open most, habits some, and the hard badges the rest (a witch hat and a pumpkin for a hundred and fifty nights, a cake for five hundred commits). Once earned, a witch hat comes on at Halloween, a cake on your birthday; coffee comes in the morning and a night cap after midnight.
+Every turn, edit, commit and working day earns experience. Levels unlock things to wear: **201 items** across head, glasses, face, mustache, beard, neck, hand and the spot beside Mochi. Nothing opens by the date: levels open most, habits some, and the hard badges the rest (a witch hat and a pumpkin for a hundred and fifty nights, a cake for five hundred commits). Once earned, a witch hat comes on at Halloween, a cake on your birthday; coffee comes in the morning and a night cap after midnight.
 
 <p align="center">
   <img src="docs/wardrobe.png" width="840" alt="Twelve Mochis in different outfits: a beanie with coffee, a cowboy with a mustache, a wizard, a party hat, a crown with a monocle and a cat, a night cap with a scarf, and more">
@@ -269,6 +273,7 @@ You never need one: Mochi works the moment it is installed. When you want to ste
 | `/mochi shield [on \| off]` | See whether the shield is on and what is always allowed where |
 | `/mochi card [path]` · `/mochi wrapped [year]` · `/mochi snap` | Save a picture to share |
 | `/mochi small` · `/mochi big` | One line or full size |
+| `/mochi desktop` | Turn stepping aside for the desktop app on or off: while its Mochi is out, the band is drawn without one |
 
 <details>
 <summary><b>All commands</b></summary>
@@ -304,6 +309,7 @@ You never need one: Mochi works the moment it is installed. When you want to ste
 | `/mochi birthday [MM-DD \| none]` | Tell Mochi your birthday, see it, or forget it |
 | `/mochi lang [code \| auto]` | Show or change the language |
 | `/mochi small` · `/mochi big` | One line or full size |
+| `/mochi desktop` | Turn stepping aside for the desktop app on or off: while its Mochi is out, the band is drawn without one |
 | `/mochi export` | Save everything Mochi keeps in one JSON file |
 | `/mochi reset [level \| history \| all]` | Clear the level's memory, the history, or everything, settings included; it asks first, and exports and your `shield.json` stay |
 | `/mochi feedback` | A link to a bug report, filled in with the versions, your system, the surface and the language |
