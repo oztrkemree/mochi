@@ -375,6 +375,9 @@ export const pl: typeof en = {
     birthdayBad: want => `To nie data: ${want}. Użyj MM-DD, np. /mochi urodziny 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Glina', peach: 'Brzoskwinia', cream: 'Krem', rose: 'Róża', coral: 'Koral', lemon: 'Cytryna', mint: 'Mięta', sky: 'Niebo', lavender: 'Lawenda', sage: 'Szałwia', teal: 'Turkus', plum: 'Śliwka', cocoa: 'Kakao', charcoal: 'Węgiel', snow: 'Śnieg', cherry: 'Wiśnia', ocean: 'Ocean', forest: 'Las', sunset: 'Zmierzch', bubblegum: 'Balonówka', gold: 'Złoto', chrome: 'Chrom', zombie: 'Zombie', ghost: 'Duch', lava: 'Lawa', ice: 'Lód', galaxy: 'Galaktyka', neon: 'Neon', rainbow: 'Tęcza', holo: 'Hologram', sorbet: 'Sorbet', aurora: 'Zorza', lagoon: 'Laguna', dusk: 'Zmierzch', opal: 'Opal', ember: 'Żar' },
+
   item: {
     name: {
       hardhat: 'kask budowlany', crown: 'korona', partyhat: 'czapeczka imprezowa', witchhat: 'kapelusz czarownicy', santahat: 'czapka Mikołaja', nightcap: 'szlafmyca', gradcap: 'biret absolwenta',
@@ -546,6 +549,7 @@ export const pl: typeof en = {
   },
 
   ui: {
+    colour: 'Kolor',
     levelTitle: 'POZIOM',
     wardrobeTitle: 'GARDEROBA',
     open: 'Otwórz',
@@ -762,6 +766,10 @@ export const pl: typeof en = {
     noSuchItem: want => `Nie ma takiego dodatku: ${want}`,
     itemLocked: (name, hint) => `Jeszcze zablokowane: ${name} (${hint}).`,
     itemOn: name => `Założono: ${name}.`,
+    skinList: (a, b, list) => `Kolory: ${a}/${b} · ${list}`,
+    skinHow: '/mochi kolor <kolor> · glina dla własnego',
+    noSuchSkin: (want) => `Nie ma takiego koloru: ${want}`,
+    skinOn: (name) => `Mochi jest teraz ${name}.`,
     soundOn: 'Dźwięk włączony.',
     soundOff: 'Dźwięk wyłączony.',
     hidden: 'Mochi ukryty. Żeby go przywrócić: /mochi',
@@ -783,7 +791,7 @@ export const pl: typeof en = {
     words: {
       on: ['włącz', 'wlacz'], off: ['wyłącz', 'wylacz'],
       hide: ['ukryj', 'schowaj'], show: ['pokaż'], small: ['mały', 'maly', 'mini'], big: ['duży'], sound: ['dźwięk'], desktop: ['pulpit'],
-      status: ['stan'], details: ['szczegóły', 'szczegoly'], level: ['poziom'], wear: ['ubierz', 'załóż', 'zaloz', 'garderoba'], shield: ['tarcza', 'ochrona'],
+      status: ['stan'], details: ['szczegóły', 'szczegoly'], level: ['poziom'], wear: ['ubierz', 'załóż', 'zaloz', 'garderoba'], skin: ['kolor'], shield: ['tarcza', 'ochrona'],
       alerts: ['powiadomienia', 'alerty'], lang: ['język'], auto: ['automatycznie'], none: ['nic', 'brak'],
       card: ['karta', 'wizytówka'], wrapped: ['podsumowanie'], snap: ['zrzut', 'migawka'], year: ['rok'],
       tips: ['porady', 'porada', 'wskazówki'], tour: ['wprowadzenie', 'przewodnik'], news: ['nowości', 'nowe'],

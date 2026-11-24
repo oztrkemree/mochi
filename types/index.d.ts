@@ -304,8 +304,8 @@ export type Prefs = {
   isArranging: boolean
   /** The detail pane's tab in view. */
   tab: Tab
-  /** The wardrobe's category (slot) shown in the details pane. */
-  shelf: keyof Outfit
+  /** The wardrobe's tab shown in the details pane: a slot, or Mochi's colours. */
+  shelf: keyof Outfit | 'colour'
   /** `auto` follows Claude Code's language setting and the system; otherwise a language code (en, tr, de…). */
   lang: string
   /** Follow the CI of a push made in this chat, and show the branch's pull request, through gh. */
@@ -453,6 +453,8 @@ declare module 'claude-code' {
       dirs: { open: string[] }
       /** The desktop app's Mochi is out now, as its file (app.json) last said. */
       away: boolean
+      /** Mochi's chosen colour (hooks/skins.ts), '' for its own clay. */
+      colour: string
     }
   }
 }

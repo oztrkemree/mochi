@@ -356,6 +356,9 @@ export const de: typeof en = {
     birthdayBad: want => `Kein Datum: ${want}. Format MM-TT, z. B. /mochi geburtstag 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Ton', peach: 'Pfirsich', cream: 'Creme', rose: 'Rose', coral: 'Koralle', lemon: 'Zitrone', mint: 'Minze', sky: 'Himmel', lavender: 'Lavendel', sage: 'Salbei', teal: 'Petrol', plum: 'Pflaume', cocoa: 'Kakao', charcoal: 'Anthrazit', snow: 'Schnee', cherry: 'Kirsche', ocean: 'Ozean', forest: 'Wald', sunset: 'Abendrot', bubblegum: 'Kaugummi', gold: 'Gold', chrome: 'Chrom', zombie: 'Zombie', ghost: 'Geist', lava: 'Lava', ice: 'Eis', galaxy: 'Galaxie', neon: 'Neon', rainbow: 'Regenbogen', holo: 'Hologramm', sorbet: 'Sorbet', aurora: 'Polarlicht', lagoon: 'Lagune', dusk: 'Dämmerung', opal: 'Opal', ember: 'Glut' },
+
   item: {
     name: {
       hardhat: 'Schutzhelm', crown: 'Krone', partyhat: 'Partyhut', witchhat: 'Hexenhut', santahat: 'Weihnachtsmütze', nightcap: 'Schlafmütze', gradcap: 'Doktorhut',
@@ -528,6 +531,7 @@ export const de: typeof en = {
   },
 
   ui: {
+    colour: 'Farbe',
     levelTitle: 'LEVEL',
     wardrobeTitle: 'KLEIDERSCHRANK',
     open: 'Öffnen',
@@ -744,6 +748,10 @@ export const de: typeof en = {
     noSuchItem: want => `Accessoire nicht gefunden: ${want}`,
     itemLocked: (name, hint) => `${name} ist gesperrt (${hint}).`,
     itemOn: name => `${name} ist jetzt dabei.`,
+    skinList: (a, b, list) => `Farben: ${a}/${b} · ${list}`,
+    skinHow: '/mochi farbe <Farbe> · Ton für die eigene',
+    noSuchSkin: (want) => `Diese Farbe gibt es nicht: ${want}`,
+    skinOn: (name) => `Mochi ist jetzt ${name}.`,
     soundOn: 'Ton an.',
     soundOff: 'Ton aus.',
     hidden: 'Mochi ausgeblendet. Zurückholen mit: /mochi',
@@ -765,7 +773,7 @@ export const de: typeof en = {
     words: {
       on: ['an', 'ein'], off: ['aus'],
       hide: ['verstecken', 'ausblenden'], show: ['zeigen', 'anzeigen', 'einblenden'], small: ['klein'], big: ['groß', 'gross'], sound: ['ton'], desktop: ['schreibtisch'],
-      status: [], details: [], level: [], wear: ['tragen', 'anziehen'], shield: ['schild', 'schutz'],
+      status: [], details: [], level: [], wear: ['tragen', 'anziehen'], skin: ['farbe'], shield: ['schild', 'schutz'],
       alerts: ['hinweise', 'benachrichtigungen', 'meldungen'], lang: ['sprache'], auto: ['automatisch'], none: ['nichts', 'keins'],
       card: ['karte'], wrapped: ['rückblick'], snap: ['schnappschuss', 'foto'], year: ['jahr'],
       tips: ['tipps', 'tipp'], tour: ['rundgang'], news: ['neuigkeiten', 'neu'],

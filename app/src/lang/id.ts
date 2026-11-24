@@ -162,9 +162,7 @@ const ID: Words = {
     line: 'Jadikan aku baris status Claude Code di pengaturanku, dan aku menampilkan limit pemakaianmu tanpa mod.',
   },
   room: 'Kamar Mochi',
-  colour: 'Warna',
   levelN: (n: number) => `level ${n}`,
-  skins: { clay: 'Lempung', peach: 'Persik', cream: 'Krem', rose: 'Mawar', coral: 'Koral', lemon: 'Lemon', mint: 'Mint', sky: 'Langit', lavender: 'Lavender', sage: 'Sage', teal: 'Toska', plum: 'Plum', cocoa: 'Kakao', charcoal: 'Arang', snow: 'Salju', cherry: 'Ceri', ocean: 'Samudra', forest: 'Hutan', sunset: 'Senja', bubblegum: 'Permen karet', gold: 'Emas', chrome: 'Krom', zombie: 'Zombi', ghost: 'Hantu', lava: 'Lava', ice: 'Es', galaxy: 'Galaksi', neon: 'Neon', rainbow: 'Pelangi', hologram: 'Hologram', sorbet: 'Sorbet', aurora: 'Aurora', lagoon: 'Laguna', dusk: 'Senja', opal: 'Opal', ember: 'Bara' },
   feats: {
     title: 'Pencapaian',
     done: (a: number, b: number) => `${a} dari ${b} tercapai`,

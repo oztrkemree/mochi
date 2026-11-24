@@ -20,7 +20,7 @@ import { NEW_WATCH, dangers, isShell, say, setRules, watchCall } from './guard'
 import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
-import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, choiceFrom, choiceText, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, skinNow, summarize, unlocked, xpOf } from './level'
+import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, choiceFrom, choiceText, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, skinName, skinNow, summarize, unlocked, xpOf } from './level'
 import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
 import { floorOf, partyOf, spotAt } from './party'
 import { PANEL_H, panelSvg, toolKind } from './panel'
@@ -34,7 +34,8 @@ import type { Commit, Desk } from './standup'
 import { PRS_QUERY, PRS_SEARCH, inboxOf, prsBoard, prsText } from './prs'
 import type { Inbox } from '../types'
 import { clip } from './sound'
-import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_DIFF, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
+import { ALL_ITEMS, BLOCKS, DEFAULT_PREFS, FIRST_SHOT, NO_DIFF, NO_ENV, NO_FACE, NO_INFO, NO_PANEL, NO_SAID, SECTIONS, SHELVES, TABS, chat, reordered, rest0, restorePrefs, stepped } from './state'
+import { SKINS, type Skin, type SkinId, skinOf, skinsAt } from './skins'
 import { alertCommands, langCodes, langCommand, openCommand, pngCommands, removeCommand } from './system'
 import type { Platform } from './system'
 
@@ -55,6 +56,8 @@ const frame = atom({ plugin: 'mochi-buddy', key: 'frame' } as const, 0)
 const sec = atom({ plugin: 'mochi-buddy', key: 'sec' } as const, 0)
 const env = atom({ plugin: 'mochi-buddy', key: 'env' } as const, NO_ENV)
 const prefs = atom({ plugin: 'mochi-buddy', key: 'prefs' } as const, DEFAULT_PREFS)
+/** Mochi's chosen colour as chat.skin holds it ('' for its own clay), for the pane to redraw by. */
+const colour = atom({ plugin: 'mochi-buddy', key: 'colour' } as const, '')
 const said = atom({ plugin: 'mochi-buddy', key: 'said' } as const, NO_SAID)
 const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
 const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
@@ -132,8 +135,12 @@ async function toggleItem($: Dollar, item: Item) {
 async function pressed($: Dollar, element: string, surface?: RenderSurface) {
   const fold = SECTIONS.find(s => `fold:${s}` === element)
   if (fold !== undefined) await setPrefs($, p => ({ ...p, open: { ...p.open, [fold]: !p.open[fold] } }))
+  if (element.startsWith('skin:')) {
+    const k = skinOf(element.slice(5))
+    if (k && skinsAt(levelIn(await read($, env))).includes(k)) await wearSkin($, k.id)
+  }
   if (element.startsWith('shelf:')) {
-    const shelf = SLOTS.find(slot => slot === element.slice(6))
+    const shelf = SHELVES.find(x => x === element.slice(6))
     if (shelf !== undefined) await setPrefs($, p => ({ ...p, shelf }))
   }
   if (element.startsWith('set:')) await turn($, element.slice(4))
@@ -1002,6 +1009,7 @@ async function wearChoice($: Dollar) {
   if (c === null || c.at <= chat.choiceAt) return
   chat.choiceAt = c.at
   chat.skin = c.skin
+  await update($, colour, () => c.skin ?? '')
   if (JSON.stringify(c.pick) !== JSON.stringify((await read($, prefs)).pick)) await setPrefs($, p => ({ ...p, pick: c.pick }), false)
 }
 
@@ -1246,6 +1254,7 @@ function commands($: Dollar, p: Prefs): Command[] {
     { name: 'lang', english: ['lang', 'language'], run: (arg, raw) => language($, arg, raw) },
     { name: 'level', english: ['level', 'xp'], run: () => levelNow($) },
     { name: 'wear', english: ['wear', 'outfit', 'accessory', 'accessories'], run: arg => wear($, arg, p) },
+    { name: 'skin', english: ['skin', 'colour', 'color'], run: arg => skin($, arg) },
     { name: 'sound', english: ['sound'], run: arg => toggleSound($, arg) },
     { name: 'hide', english: ['hide'], run: () => setHidden($, true) },
     { name: 'show', english: ['show'], run: () => setHidden($, false) },
@@ -1376,6 +1385,34 @@ async function wear($: Dollar, arg: string, p: Prefs): Promise<string> {
   await setPrefs($, x => ({ ...x, pick: { ...x.pick, [SLOT[item]]: item } }))
   await sync($)
   return d.itemOn(itemName(item))
+}
+
+/** /mochi skin: the colours the level opens, or one put on by its id or its name, in the language in use or in English. */
+async function skin($: Dollar, arg: string): Promise<string> {
+  const d = t().cmd
+  const v = await read($, env)
+  const open = skinsAt(levelIn(v))
+  if (arg === '') return [d.skinList(open.length, SKINS.length, open.map(k => skinName(k.id)).join(', ')), d.skinHow].join('\n')
+  const keys = (k: Skin) => [k.id, skinName(k.id), DICTS.en.skin[k.id]].map(plain)
+  const found = SKINS.find(k => keys(k).includes(arg)) ?? SKINS.find(k => keys(k).some(n => n.startsWith(arg)))
+  if (found === undefined) return d.noSuchSkin(arg)
+  if (!open.includes(found)) return d.itemLocked(skinName(found.id), t().item.hint.level(found.level))
+  await wearSkin($, found.id)
+  return d.skinOn(skinName(found.id))
+}
+
+const levelIn = (v: Env) => (v.history ? levelOf(xpOf(v.history)).level : 1)
+
+/** Mochi's colour chosen here: worn now, and written to prefs.json with the outfit, for the desktop app and the other chats to wear too. */
+async function wearSkin($: Dollar, id: SkinId) {
+  chat.skin = id === 'clay' ? undefined : id
+  chat.choiceAt = await $.clock.now()
+  await update($, colour, () => chat.skin ?? '')
+  if (chat.dataDir !== '') {
+    await $.fs.write(`${chat.dataDir}/prefs.json`, choiceText({ at: chat.choiceAt, pick: (await read($, prefs)).pick, ...(chat.skin ? { skin: chat.skin } : {}) })).catch(() => undefined)
+  }
+  await refreshStatus($)
+  await sync($)
 }
 
 async function toggleSound($: Dollar, arg: string): Promise<string> {

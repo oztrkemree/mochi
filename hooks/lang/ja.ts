@@ -355,6 +355,9 @@ export const ja: typeof en = {
     birthdayBad: want => `日付ではない: ${want}。MM-DD 形式で。例: /mochi 誕生日 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'クレイ', peach: 'ピーチ', cream: 'クリーム', rose: 'ローズ', coral: 'コーラル', lemon: 'レモン', mint: 'ミント', sky: 'スカイ', lavender: 'ラベンダー', sage: 'セージ', teal: 'ティール', plum: 'プラム', cocoa: 'ココア', charcoal: 'チャコール', snow: 'スノー', cherry: 'チェリー', ocean: 'オーシャン', forest: 'フォレスト', sunset: 'サンセット', bubblegum: 'バブルガム', gold: 'ゴールド', chrome: 'クローム', zombie: 'ゾンビ', ghost: 'ゴースト', lava: 'マグマ', ice: 'アイス', galaxy: 'ギャラクシー', neon: 'ネオン', rainbow: 'レインボー', holo: 'ホログラム', sorbet: 'シャーベット', aurora: 'オーロラ', lagoon: 'ラグーン', dusk: '夕暮れ', opal: 'オパール', ember: '残り火' },
+
   item: {
     name: {
       hardhat: 'ヘルメット', crown: '王冠', partyhat: 'パーティー帽', witchhat: '魔女の帽子', santahat: 'サンタ帽', nightcap: 'ナイトキャップ', gradcap: '卒業帽',
@@ -526,6 +529,7 @@ export const ja: typeof en = {
   },
 
   ui: {
+    colour: 'カラー',
     levelTitle: 'レベル',
     wardrobeTitle: '着せ替え',
     open: '開く',
@@ -740,6 +744,10 @@ export const ja: typeof en = {
     noSuchItem: want => `そのアクセサリーはない: ${want}`,
     itemLocked: (name, hint) => `${name}は未解放 (${hint})。`,
     itemOn: name => `${name}を装着。`,
+    skinList: (a, b, list) => `色: ${a}/${b} · ${list}`,
+    skinHow: '/mochi 色 <色> · 元の色は粘土',
+    noSuchSkin: (want) => `その色はありません: ${want}`,
+    skinOn: (name) => `Mochi は ${name} になりました。`,
     soundOn: 'サウンドON。',
     soundOff: 'サウンドOFF。',
     hidden: 'Mochiを非表示にした。戻すには: /mochi',
@@ -761,7 +769,7 @@ export const ja: typeof en = {
     words: {
       on: ['オン'], off: ['オフ'],
       hide: ['非表示', '隠す'], show: ['表示'], small: ['小さく', '小'], big: ['大きく', '大'], sound: ['サウンド', '音'], desktop: ['デスクトップ'],
-      status: ['状態', 'ステータス'], details: ['詳細'], level: ['レベル'], wear: ['着せ替え', '着る'], shield: ['シールド'],
+      status: ['状態', 'ステータス'], details: ['詳細'], level: ['レベル'], wear: ['着せ替え', '着る'], skin: ['色', 'カラー'], shield: ['シールド'],
       alerts: ['通知'], lang: ['言語'], auto: ['自動'], none: ['なし'],
       card: ['カード'], wrapped: ['まとめ'], snap: ['スナップ'], year: ['年'],
       tips: ['ヒント'], tour: ['ツアー', '紹介'], news: ['新機能', 'ニュース'],

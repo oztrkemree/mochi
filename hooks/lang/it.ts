@@ -360,6 +360,9 @@ export const it: typeof en = {
     birthdayBad: want => `Non è una data: ${want}. Usa MM-GG, ad es. /mochi compleanno 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Argilla', peach: 'Pesca', cream: 'Crema', rose: 'Rosa', coral: 'Corallo', lemon: 'Limone', mint: 'Menta', sky: 'Cielo', lavender: 'Lavanda', sage: 'Salvia', teal: 'Ottanio', plum: 'Prugna', cocoa: 'Cacao', charcoal: 'Carbone', snow: 'Neve', cherry: 'Ciliegia', ocean: 'Oceano', forest: 'Foresta', sunset: 'Tramonto', bubblegum: 'Confetto', gold: 'Oro', chrome: 'Cromo', zombie: 'Zombie', ghost: 'Fantasma', lava: 'Lava', ice: 'Ghiaccio', galaxy: 'Galassia', neon: 'Neon', rainbow: 'Arcobaleno', holo: 'Ologramma', sorbet: 'Sorbetto', aurora: 'Aurora', lagoon: 'Laguna', dusk: 'Crepuscolo', opal: 'Opale', ember: 'Brace' },
+
   item: {
     name: {
       hardhat: 'casco da cantiere', crown: 'corona', partyhat: 'cappellino da festa', witchhat: 'cappello da strega', santahat: 'cappello di Babbo Natale', nightcap: 'berretto da notte', gradcap: 'tocco di laurea',
@@ -531,6 +534,7 @@ export const it: typeof en = {
   },
 
   ui: {
+    colour: 'Colore',
     levelTitle: 'LIVELLO',
     wardrobeTitle: 'GUARDAROBA',
     open: 'Apri',
@@ -747,6 +751,10 @@ export const it: typeof en = {
     noSuchItem: want => `Nessun accessorio con questo nome: ${want}`,
     itemLocked: (name, hint) => `${name}: ancora da sbloccare (${hint}).`,
     itemOn: name => `Ora Mochi indossa: ${name}.`,
+    skinList: (a, b, list) => `Colori: ${a}/${b} · ${list}`,
+    skinHow: '/mochi colore <colore> · argilla per il suo',
+    noSuchSkin: (want) => `Questo colore non esiste: ${want}`,
+    skinOn: (name) => `Ora Mochi è ${name}.`,
     soundOn: 'Suono attivo.',
     soundOff: 'Suono disattivato.',
     hidden: 'Mochi nascosto. Per farlo tornare: /mochi',
@@ -768,7 +776,7 @@ export const it: typeof en = {
     words: {
       on: ['attiva', 'accendi'], off: ['disattiva', 'spegni'],
       hide: ['nascondi'], show: ['mostra'], small: ['piccolo'], big: ['grande'], sound: ['suono', 'audio'], desktop: ['scrivania'],
-      status: ['stato'], details: ['dettagli', 'dettaglio'], level: ['livello'], wear: ['indossa', 'accessori'], shield: ['scudo'],
+      status: ['stato'], details: ['dettagli', 'dettaglio'], level: ['livello'], wear: ['indossa', 'accessori'], skin: ['colore'], shield: ['scudo'],
       alerts: ['avvisi', 'notifiche'], lang: ['lingua'], auto: ['automatico'], none: ['niente', 'nessuno'],
       card: ['scheda'], wrapped: ['riepilogo'], snap: ['istantanea', 'foto'], year: ['anno'],
       tips: ['consigli', 'consiglio'], tour: ['giro'], news: ['novità'],

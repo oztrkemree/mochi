@@ -355,6 +355,9 @@ export const tr: typeof en = {
     birthdayBad: want => `Tarih değil: ${want}. AA-GG biçiminde yaz, ör. /mochi doğumgünü 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Kil', peach: 'Şeftali', cream: 'Krem', rose: 'Gül', coral: 'Mercan', lemon: 'Limon', mint: 'Nane', sky: 'Gökyüzü', lavender: 'Lavanta', sage: 'Adaçayı', teal: 'Camgöbeği', plum: 'Erik', cocoa: 'Kakao', charcoal: 'Kömür', snow: 'Kar', cherry: 'Kiraz', ocean: 'Okyanus', forest: 'Orman', sunset: 'Gün batımı', bubblegum: 'Sakız', gold: 'Altın', chrome: 'Krom', zombie: 'Zombi', ghost: 'Hayalet', lava: 'Lav', ice: 'Buz', galaxy: 'Galaksi', neon: 'Neon', rainbow: 'Gökkuşağı', holo: 'Hologram', sorbet: 'Sorbe', aurora: 'Kutup ışığı', lagoon: 'Lagün', dusk: 'Alacakaranlık', opal: 'Opal', ember: 'Kor' },
+
   item: {
     name: {
       hardhat: 'baret', crown: 'taç', partyhat: 'parti şapkası', witchhat: 'cadı şapkası', santahat: 'noel şapkası', nightcap: 'gece şapkası', gradcap: 'mezuniyet kepi',
@@ -526,6 +529,7 @@ export const tr: typeof en = {
   },
 
   ui: {
+    colour: 'Renk',
     levelTitle: 'SEVİYE',
     wardrobeTitle: 'GARDIROP',
     open: 'Aç',
@@ -740,6 +744,10 @@ export const tr: typeof en = {
     noSuchItem: want => `Böyle bir aksesuar yok: ${want}`,
     itemLocked: (name, hint) => `${name} kilitli (${hint}).`,
     itemOn: name => `${name} takıldı.`,
+    skinList: (a, b, list) => `Renkler: ${a}/${b} · ${list}`,
+    skinHow: '/mochi renk <renk> · kendi rengi için kil',
+    noSuchSkin: (want) => `Böyle bir renk yok: ${want}`,
+    skinOn: (name) => `Mochi artık ${name}.`,
     soundOn: 'Ses açık.',
     soundOff: 'Ses kapalı.',
     hidden: 'Mochi gizlendi. Geri getirmek için: /mochi',
@@ -761,7 +769,7 @@ export const tr: typeof en = {
     words: {
       on: ['aç', 'açık'], off: ['kapat', 'kapalı'],
       hide: ['gizle'], show: ['göster', 'goster'], small: ['küçük', 'kucuk'], big: ['büyük', 'buyuk'], sound: ['ses'], desktop: ['masaüstü', 'masaustu'],
-      status: ['durum'], details: ['detay'], level: ['seviye'], wear: ['aksesuar', 'giy'], shield: ['kalkan'],
+      status: ['durum'], details: ['detay'], level: ['seviye'], wear: ['aksesuar', 'giy'], skin: ['renk'], shield: ['kalkan'],
       alerts: ['bildirim'], lang: ['dil'], auto: ['otomatik'], none: ['yok', 'hiçbiri', 'hicbiri'],
       card: ['kart'], wrapped: ['özet'], snap: ['fotoğraf', 'anlık'], year: ['yıl', 'sene'],
       tips: ['ipucu', 'ipuçları'], tour: ['tanıtım'], news: ['yenilikler'],

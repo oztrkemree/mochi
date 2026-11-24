@@ -377,6 +377,9 @@ export const uk: typeof en = {
     birthdayBad: want => `Це не дата: ${want}. Формат ММ-ДД, наприклад /mochi дн 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'Глина', peach: 'Персик', cream: 'Крем', rose: 'Троянда', coral: 'Корал', lemon: 'Лимон', mint: 'М’ята', sky: 'Небо', lavender: 'Лаванда', sage: 'Шавлія', teal: 'Бірюза', plum: 'Слива', cocoa: 'Какао', charcoal: 'Вугілля', snow: 'Сніг', cherry: 'Вишня', ocean: 'Океан', forest: 'Ліс', sunset: 'Захід сонця', bubblegum: 'Жуйка', gold: 'Золото', chrome: 'Хром', zombie: 'Зомбі', ghost: 'Привид', lava: 'Лава', ice: 'Лід', galaxy: 'Галактика', neon: 'Неон', rainbow: 'Веселка', holo: 'Голограма', sorbet: 'Сорбет', aurora: 'Аврора', lagoon: 'Лагуна', dusk: 'Сутінки', opal: 'Опал', ember: 'Жар' },
+
   item: {
     name: {
       hardhat: 'будівельна каска', crown: 'корона', partyhat: 'святковий ковпак', witchhat: 'капелюх відьми', santahat: 'шапка Санти', nightcap: 'нічний ковпак', gradcap: 'шапочка випускника',
@@ -548,6 +551,7 @@ export const uk: typeof en = {
   },
 
   ui: {
+    colour: 'Колір',
     levelTitle: 'РІВЕНЬ',
     wardrobeTitle: 'ГАРДЕРОБ',
     open: 'Відкрити',
@@ -764,6 +768,10 @@ export const uk: typeof en = {
     noSuchItem: want => `Немає такого аксесуара: ${want}`,
     itemLocked: (name, hint) => `Поки закрито: ${name} (${hint}).`,
     itemOn: name => `Вдягнуто: ${name}.`,
+    skinList: (a, b, list) => `Кольори: ${a}/${b} · ${list}`,
+    skinHow: '/mochi колір <колір> · глина — свій',
+    noSuchSkin: (want) => `Такого кольору немає: ${want}`,
+    skinOn: (name) => `Тепер Mochi: ${name}.`,
     soundOn: 'Звук увімкнено.',
     soundOff: 'Звук вимкнено.',
     hidden: 'Mochi сховано. Щоб повернути: /mochi',
@@ -785,7 +793,7 @@ export const uk: typeof en = {
     words: {
       on: ['увімк', 'увімкнути'], off: ['вимк', 'вимкнути'],
       hide: ['сховати', 'приховати'], show: ['показати'], small: ['маленький', 'міні'], big: ['великий'], sound: ['звук'], desktop: ['стіл'],
-      status: ['статус', 'стан'], details: ['деталі', 'докладно'], level: ['рівень'], wear: ['вдягнути', 'вдягти', 'аксесуари', 'гардероб'], shield: ['щит', 'захист'],
+      status: ['статус', 'стан'], details: ['деталі', 'докладно'], level: ['рівень'], wear: ['вдягнути', 'вдягти', 'аксесуари', 'гардероб'], skin: ['колір'], shield: ['щит', 'захист'],
       alerts: ['сповіщення'], lang: ['мова'], auto: ['авто', 'автоматично'], none: ['нічого', 'ні'],
       card: ['картка'], wrapped: ['підсумки'], snap: ['знімок'], year: ['рік'],
       tips: ['поради', 'підказки'], tour: ['знайомство', 'тур'], news: ['новини', 'нове'],

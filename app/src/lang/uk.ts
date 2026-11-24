@@ -169,9 +169,7 @@ const UK: Words = {
     line: 'Зроби мене рядком стану Claude Code у моїх налаштуваннях, і я покажу твої ліміти використання без мода.',
   },
   room: 'Кімната Mochi',
-  colour: 'Колір',
   levelN: (n: number) => `рівень ${n}`,
-  skins: { clay: 'Глина', peach: 'Персик', cream: 'Крем', rose: 'Троянда', coral: 'Корал', lemon: 'Лимон', mint: 'М’ята', sky: 'Небо', lavender: 'Лаванда', sage: 'Шавлія', teal: 'Бірюза', plum: 'Слива', cocoa: 'Какао', charcoal: 'Вугілля', snow: 'Сніг', cherry: 'Вишня', ocean: 'Океан', forest: 'Ліс', sunset: 'Захід сонця', bubblegum: 'Жуйка', gold: 'Золото', chrome: 'Хром', zombie: 'Зомбі', ghost: 'Привид', lava: 'Лава', ice: 'Лід', galaxy: 'Галактика', neon: 'Неон', rainbow: 'Веселка', hologram: 'Голограма', sorbet: 'Сорбет', aurora: 'Аврора', lagoon: 'Лагуна', dusk: 'Сутінки', opal: 'Опал', ember: 'Жар' },
   feats: {
     title: 'Досягнення',
     done: (a: number, b: number) => `Виконано: ${a} з ${b}`,

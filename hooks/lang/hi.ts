@@ -360,6 +360,9 @@ export const hi: typeof en = {
     birthdayBad: want => `यह तारीख़ नहीं है: ${want}। MM-DD लिखें, जैसे /mochi birthday 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: 'मिट्टी', peach: 'आड़ू', cream: 'क्रीम', rose: 'गुलाब', coral: 'मूंगा', lemon: 'नींबू', mint: 'पुदीना', sky: 'आसमान', lavender: 'लैवेंडर', sage: 'सेज', teal: 'फ़िरोज़ी', plum: 'जामुनी', cocoa: 'कोको', charcoal: 'कोयला', snow: 'हिम', cherry: 'चेरी', ocean: 'सागर', forest: 'जंगल', sunset: 'सूर्यास्त', bubblegum: 'बबलगम', gold: 'सोना', chrome: 'क्रोम', zombie: 'ज़ॉम्बी', ghost: 'भूत', lava: 'लावा', ice: 'बर्फ़', galaxy: 'आकाशगंगा', neon: 'नियॉन', rainbow: 'इंद्रधनुष', holo: 'होलोग्राम', sorbet: 'शर्बत', aurora: 'अरोरा', lagoon: 'लैगून', dusk: 'सांझ', opal: 'ओपल', ember: 'अंगारा' },
+
   item: {
     name: {
       hardhat: 'सेफ़्टी हेलमेट', crown: 'ताज', partyhat: 'पार्टी टोपी', witchhat: 'चुड़ैल की टोपी', santahat: 'सांता टोपी', nightcap: 'नाइट कैप', gradcap: 'दीक्षांत टोपी',
@@ -531,6 +534,7 @@ export const hi: typeof en = {
   },
 
   ui: {
+    colour: 'रंग',
     levelTitle: 'लेवल',
     wardrobeTitle: 'अलमारी',
     open: 'खोलें',
@@ -745,6 +749,10 @@ export const hi: typeof en = {
     noSuchItem: want => `ऐसी कोई एक्सेसरी नहीं: ${want}`,
     itemLocked: (name, hint) => `${name} अभी लॉक है (${hint})।`,
     itemOn: name => `${name} अब Mochi पर।`,
+    skinList: (a, b, list) => `रंग: ${a}/${b} · ${list}`,
+    skinHow: '/mochi रंग <रंग> · अपने रंग के लिए मिट्टी',
+    noSuchSkin: (want) => `ऐसा कोई रंग नहीं: ${want}`,
+    skinOn: (name) => `Mochi अब ${name} है।`,
     soundOn: 'आवाज़ चालू।',
     soundOff: 'आवाज़ बंद।',
     hidden: 'Mochi छिप गया। वापस लाने के लिए: /mochi',
@@ -766,7 +774,7 @@ export const hi: typeof en = {
     words: {
       on: ['चालू'], off: ['बंद'],
       hide: ['छिपाओ', 'छुपाओ'], show: ['दिखाओ'], small: ['छोटा'], big: ['बड़ा'], sound: ['आवाज़', 'आवाज'], desktop: ['डेस्कटॉप'],
-      status: ['स्थिति'], details: ['विवरण'], level: ['लेवल'], wear: ['पहनो', 'पहनाओ'], shield: ['कवच', 'शील्ड'],
+      status: ['स्थिति'], details: ['विवरण'], level: ['लेवल'], wear: ['पहनो', 'पहनाओ'], skin: ['रंग'], shield: ['कवच', 'शील्ड'],
       alerts: ['अलर्ट', 'सूचना'], lang: ['भाषा'], auto: ['ऑटो', 'अपने-आप'], none: ['कुछ नहीं', 'कोई नहीं'],
       card: ['कार्ड'], wrapped: ['लेखा-जोखा'], snap: ['तस्वीर', 'स्नैप'], year: ['साल', 'वर्ष'],
       tips: ['सुझाव', 'टिप्स'], tour: ['परिचय', 'टूर'], news: ['नया', 'ख़बरें'],

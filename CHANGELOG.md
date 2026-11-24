@@ -6,6 +6,7 @@
 
 - Thirty-one new things to wear, opened from level 42 to 95, now that work in every agent counts: a samurai helmet, a tiara, a knight’s helmet, a pharaoh’s headdress, a zombie brain, a flying saucer and a phoenix crown; ski, steampunk, x-ray and diamond glasses; face paint; curly, rainbow and flame mustaches; a life ring, a crystal pendant and a dragon amulet; a guitar, a trophy, a katana, a rubber chicken and a thunderbolt; and a slime, a little ghost, a robot dog, a baby dragon and a portal beside Mochi. The worn ones were drawn as worn on Mochi, and all at up to 256 pixels, sharp on a large Mochi. The wardrobe holds 201.
 - What Mochi wears is chosen in either Mochi: a choice made in the mod goes to `~/.claude/mochi/prefs.json`, and a newer one made in the desktop app is worn in the band too.
+- Mochi's colour is chosen in either Mochi too: `/mochi skin <colour>` or the Colour tab of the details pane's wardrobe writes it to `prefs.json`, and the desktop app wears it, as the band wears one chosen in the app. The wardrobe's Mochi shows the colour it has on. The Hologram colour has its name in every language.
 - While the desktop app's Mochi is out, a new level or badge is claimed before it is said (`said-level.json`, `said-badges.json`), so one Mochi says it. With the app hidden or closed nothing changes.
 - `/mochi chats` says how far the plan is of a chat the desktop app follows (`2/4`).
 - `/mochi reset` keeps `statusline.json`, the status line you had before the app's.

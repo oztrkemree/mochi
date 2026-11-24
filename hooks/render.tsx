@@ -10,7 +10,7 @@ import { baseName, clockAt, dayKey, forecasts, local } from './facts'
 import { citySvg } from './city'
 import { birthdayName } from './fun'
 import { DICTS, LANGS, t } from './i18n'
-import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, outfitNow, slotName, unlocked } from './level'
+import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, levelOf, outfitNow, skinName, skinNow, slotName, unlocked, xpOf } from './level'
 import type { Slot } from './level'
 import { LOOKS, asciiRows, kaomoji } from './looks'
 import { nameOf } from './live'
@@ -19,6 +19,7 @@ import { SHOWN, floorOf, memberLines, membersOf, partyOf, statusLine } from './p
 import { duration } from './react'
 import { itemIcon, mascotInner, shiftTimeline, svgFor } from './rig'
 import { prsBoard } from './prs'
+import { SKINS, type Skin, skinsAt, swatchSvg } from './skins'
 import { ALL_ITEMS, DEFAULT_PREFS, NO_DIFF, NO_ENV, NO_FACE, NO_PANEL, NO_SAID, TABS, TAB_OF, chat, inTab } from './state'
 
 // What Mochi draws: the band above the prompt (the mascot and its line in the
@@ -38,6 +39,7 @@ const diff = atom({ plugin: 'mochi-buddy', key: 'diff' } as const, NO_DIFF)
 const party = atom({ plugin: 'mochi-buddy', key: 'party' } as const, { pick: '' })
 const dirs = atom({ plugin: 'mochi-buddy', key: 'dirs' } as const, { open: [] as string[] })
 const away = atom({ plugin: 'mochi-buddy', key: 'away' } as const, false)
+const colour = atom({ plugin: 'mochi-buddy', key: 'colour' } as const, '')
 
 const width = (s: string) => [...s].length
 const cut = (s: string, max: number) => (width(s) <= max ? s : `${[...s].slice(0, Math.max(1, max - 1)).join('')}…`)
@@ -189,9 +191,39 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         </Box>
       )
     }
-    const here = dressed[p.shelf]
-    const shelf = [...SLOT_ITEMS[p.shelf].filter(i => ok.includes(i)), ...SLOT_ITEMS[p.shelf].filter(i => !ok.includes(i))]
-    const mochi = svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit: dressed }, from: null })
+    // Mochi's colours: a tab of their own after the slots, each a swatch card; the one worn is marked.
+    const skin = skinNow(await read($, colour), v.history)
+    const skinsOpen = skinsAt(v.history ? levelOf(xpOf(v.history)).level : 1)
+    const colourCell = (k: Skin) => {
+      const isOn = (skin ?? 'clay') === k.id
+      const isOpen = skinsOpen.includes(k)
+      return (
+        <Box key={`cell:skin:${k.id}`} flexDirection="column" alignItems="center" width={cardW} paddingX={1} paddingTop={0.5} overflow="hidden"
+          borderStyle="round" borderColor={isOn ? 'claude' : 'inactive'} borderDimColor={!isOn} hover={isOpen && !isOn ? { borderColor: 'claude', borderDimColor: false } : undefined}>
+          <Svg source={swatchSvg(k, isOpen)} alt={skinName(k.id)} width={32} height={32} />
+          {isOpen
+            ? <Button key={`skin:${k.id}`} plain onPress={pressed}>{skinName(k.id)}</Button>
+            : <Text dimColor wrap="truncate">{skinName(k.id)}</Text>}
+          {isOn ? <Text color="claude" wrap="truncate">✓</Text> : <Text dimColor wrap="truncate">{isOpen ? ' ' : t().item.hint.level(k.level)}</Text>}
+          {isOpen ? tap(`skin:${k.id}`) : null}
+        </Box>
+      )
+    }
+    const isColour = p.shelf === 'colour'
+    const colourTab = (
+      <Box key="tab:colour" flexDirection="row" alignItems="center" gap={1} paddingX={1} overflow="hidden"
+        borderStyle="round" borderColor={isColour ? 'claude' : 'inactive'} borderDimColor={!isColour} hover={isColour ? undefined : { borderColor: 'claude', borderDimColor: false }}>
+        <Button key="shelf:colour" plain onPress={pressed}>{`${t().ui.colour} ${skinsOpen.length}/${SKINS.length}`}</Button>
+        {tap('shelf:colour')}
+      </Box>
+    )
+    const slotHere = p.shelf === 'colour' ? null : p.shelf
+    const here = slotHere ? dressed[slotHere] : null
+    const shelf = slotHere ? [...SLOT_ITEMS[slotHere].filter(i => ok.includes(i)), ...SLOT_ITEMS[slotHere].filter(i => !ok.includes(i))] : []
+    const shelfLine = slotHere
+      ? `${slotName(slotHere)} · ${here ? itemName(here) : t().ui.empty}${p.pick[slotHere] === undefined ? t().ui.autoMark : ''}`
+      : `${t().ui.colour} · ${skinName(skin ?? 'clay')}`
+    const mochi = svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit: dressed, ...(skin ? { skin } : {}) }, from: null })
     // The badges: each medal with how it is earned, in colour once it is.
     const medal = (b: Badge) => {
       const isEarned = v.badges.includes(b)
@@ -417,8 +449,8 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
           <Box flexDirection="row" alignItems="center" gap={2}>
             <Svg source={mochi} alt={t().ui.wearing(worn.length > 0 ? worn.map(itemName).join(', ') : t().ui.nothing)} width={96} height={96} />
             <Box flexDirection="column" flexShrink={1} gap={1}>
-              <Box flexDirection="row" flexWrap="wrap" columnGap={1} rowGap={0.5}>{SLOTS.map(slotTab)}</Box>
-              <Text dimColor wrap="truncate">{`${slotName(p.shelf)} · ${here ? itemName(here) : t().ui.empty}${p.pick[p.shelf] === undefined ? t().ui.autoMark : ''}`}</Text>
+              <Box flexDirection="row" flexWrap="wrap" columnGap={1} rowGap={0.5}>{SLOTS.map(slotTab)}{colourTab}</Box>
+              <Text dimColor wrap="truncate">{shelfLine}</Text>
               <Box flexDirection="row" gap={1}>
                 <Button key="wear:auto" variant={isAuto ? 'primary' : 'secondary'} onPress={pressed}>{t().ui.auto}</Button>
                 <Button key="wear:none" variant="secondary" onPress={pressed}>{t().ui.takeAllOff}</Button>
@@ -426,7 +458,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
             </Box>
           </Box>
           <Box flexDirection="row" flexWrap="wrap" columnGap={1} rowGap={0.5}>
-            {shelf.map(cell)}
+            {isColour ? SKINS.map(colourCell) : shelf.map(cell)}
           </Box>
         </Box>
       ), false),
@@ -494,6 +526,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
   // As at rest, like the desktop's wardrobe and the press that toggles it.
   const dressed = outfitNow(p, v, 'idle', now)
   const ok = unlocked(v.history)
+  const chosen = await read($, colour)
   const lines = partLines(v, now)
   const head = (id: Section, title: string, gist: string) => (
     <Box key={`head:${id}`} flexDirection="row" gap={1}>
@@ -539,6 +572,14 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
             ))}
           </Box>
         )) : null}
+        {p.open.wardrobe ? (
+          <Box key="slot:colour" flexDirection="row" flexWrap="wrap" columnGap={1}>
+            <Text dimColor>{`${t().ui.colour}:`}</Text>
+            {skinsAt(v.history ? levelOf(xpOf(v.history)).level : 1).map(k => (
+              <Button key={`skin:${k.id}`} plain dimColor={(skinNow(chosen, v.history) ?? 'clay') !== k.id} onPress={pressed}>{skinName(k.id)}</Button>
+            ))}
+          </Box>
+        ) : null}
         {p.open.wardrobe ? (
           <Box flexDirection="row" gap={1}>
             <Button key="wear:auto" onPress={pressed}>{t().ui.auto}</Button>

@@ -355,6 +355,9 @@ export const zh: typeof en = {
     birthdayBad: want => `不是日期：${want}。请用 MM-DD 格式，例如 /mochi 生日 04-23`,
   },
 
+  /** Mochi's colours (hooks/skins.ts), by id. */
+  skin: { clay: '陶土', peach: '蜜桃', cream: '奶油', rose: '玫瑰', coral: '珊瑚', lemon: '柠檬', mint: '薄荷', sky: '天空', lavender: '薰衣草', sage: '鼠尾草', teal: '青绿', plum: '梅子', cocoa: '可可', charcoal: '炭黑', snow: '白雪', cherry: '樱桃', ocean: '海洋', forest: '森林', sunset: '日落', bubblegum: '泡泡糖', gold: '黄金', chrome: '镀铬', zombie: '僵尸', ghost: '幽灵', lava: '熔岩', ice: '寒冰', galaxy: '银河', neon: '霓虹', rainbow: '彩虹', holo: '全息', sorbet: '雪葩', aurora: '极光', lagoon: '泻湖', dusk: '暮色', opal: '欧泊', ember: '余烬' },
+
   item: {
     name: {
       hardhat: '安全帽', crown: '王冠', partyhat: '派对帽', witchhat: '女巫帽', santahat: '圣诞帽', nightcap: '睡帽', gradcap: '学士帽',
@@ -526,6 +529,7 @@ export const zh: typeof en = {
   },
 
   ui: {
+    colour: '颜色',
     levelTitle: '等级',
     wardrobeTitle: '衣橱',
     open: '打开',
@@ -740,6 +744,10 @@ export const zh: typeof en = {
     noSuchItem: want => `没有这个配饰：${want}`,
     itemLocked: (name, hint) => `${name}尚未解锁（${hint}）。`,
     itemOn: name => `已戴上${name}。`,
+    skinList: (a, b, list) => `颜色: ${a}/${b} · ${list}`,
+    skinHow: '/mochi 颜色 <颜色> · 黏土为原色',
+    noSuchSkin: (want) => `没有这种颜色: ${want}`,
+    skinOn: (name) => `Mochi 现在是${name}。`,
     soundOn: '声音已开启。',
     soundOff: '声音已关闭。',
     hidden: 'Mochi 已隐藏。重新显示：/mochi',
@@ -761,7 +769,7 @@ export const zh: typeof en = {
     words: {
       on: ['开', '开启', '打开'], off: ['关', '关闭'],
       hide: ['隐藏'], show: ['显示'], small: ['小', '缩小'], big: ['大', '放大'], sound: ['声音', '音效'], desktop: ['桌面'],
-      status: ['状态'], details: ['详情'], level: ['等级'], wear: ['穿戴', '配饰'], shield: ['护盾'],
+      status: ['状态'], details: ['详情'], level: ['等级'], wear: ['穿戴', '配饰'], skin: ['颜色'], shield: ['护盾'],
       alerts: ['提醒', '通知'], lang: ['语言'], auto: ['自动'], none: ['无', '不戴'],
       card: ['卡片'], wrapped: ['回顾'], snap: ['快照'], year: ['年'],
       tips: ['提示', '技巧'], tour: ['导览'], news: ['新功能', '更新'],

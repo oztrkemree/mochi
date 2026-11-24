@@ -162,9 +162,7 @@ const JA: Words = {
     line: '設定で私を Claude Code のステータスラインにすると、mod なしでも利用上限を表示します。',
   },
   room: 'Mochi の部屋',
-  colour: 'カラー',
   levelN: (n: number) => `レベル ${n}`,
-  skins: { clay: 'クレイ', peach: 'ピーチ', cream: 'クリーム', rose: 'ローズ', coral: 'コーラル', lemon: 'レモン', mint: 'ミント', sky: 'スカイ', lavender: 'ラベンダー', sage: 'セージ', teal: 'ティール', plum: 'プラム', cocoa: 'ココア', charcoal: 'チャコール', snow: 'スノー', cherry: 'チェリー', ocean: 'オーシャン', forest: 'フォレスト', sunset: 'サンセット', bubblegum: 'バブルガム', gold: 'ゴールド', chrome: 'クローム', zombie: 'ゾンビ', ghost: 'ゴースト', lava: 'マグマ', ice: 'アイス', galaxy: 'ギャラクシー', neon: 'ネオン', rainbow: 'レインボー', hologram: 'ホログラム', sorbet: 'シャーベット', aurora: 'オーロラ', lagoon: 'ラグーン', dusk: '夕暮れ', opal: 'オパール', ember: '残り火' },
   feats: {
     title: '実績',
     done: (a: number, b: number) => `${b}個中${a}個達成`,

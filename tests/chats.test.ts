@@ -514,6 +514,60 @@ test('the colour chosen in the desktop app is worn by the band’s Mochi too, wh
   expect(await band()).not.toContain('skin-map-')
 })
 
+test('a colour chosen in the mod is worn here and goes to prefs.json for the desktop app, while its level opens it', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on, [], true)
+  const worked = { ...EMPTY_DAY, turns: 30, commits: 2 }
+  files.set('/h/.claude/mochi/days/old-1.json', JSON.stringify({ id: 'old-1', label: 'web', days: { '2025-10-08': worked, '2025-10-09': worked } }))
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const P = '/h/.claude/mochi/prefs.json'
+  const saved = () => JSON.parse(files.get(P) ?? 'null')
+  const band = async () => {
+    await $.command.run({ command: 'mochi', args: 'snap' } as never)
+    return files.get('/h/.claude/mochi/share/mochi-band.svg') ?? ''
+  }
+  const skin = async (arg: string) => (await $.command.run({ command: 'mochi', args: `skin ${arg}`.trim() } as never)).text
+  expect(await skin('')).toContain('Peach')
+  expect(await skin('peach')).toBe('Mochi is Peach now.')
+  expect(saved()).toMatchObject({ v: 1, skin: 'peach' })
+  await clock.advance(20_000)
+  expect(await band()).toContain('skin-map-peach')
+  // A wardrobe change keeps the colour.
+  await $.command.run({ command: 'mochi', args: 'wear none' } as never)
+  expect(saved()).toMatchObject({ pick: { head: null }, skin: 'peach' })
+  // Mint opens far later, and a colour that does not exist is not one: nothing changes.
+  expect(await skin('mint')).toBe('Mint is locked (level 13).')
+  expect(await skin('plaid')).toBe('No such colour: plaid')
+  expect(saved().skin).toBe('peach')
+  // Its own clay takes the colour off, here and for the app; the outfit stays.
+  expect(await skin('clay')).toBe('Mochi is Clay now.')
+  expect(saved()).toMatchObject({ pick: { head: null } })
+  expect(saved().skin).toBeUndefined()
+  // The drawing changes once Mochi has held its last pose a moment.
+  await clock.advance(20_000)
+  expect(await band()).not.toContain('skin-map-')
+})
+
+test('the details pane’s wardrobe has a Colour tab: a colour pressed is worn and written for the desktop app', { timeoutMs: 20_000 }, async ($, on) => {
+  const { clock, files } = machine(on, [], true)
+  const worked = { ...EMPTY_DAY, turns: 30, commits: 2 }
+  files.set('/h/.claude/mochi/days/old-1.json', JSON.stringify({ id: 'old-1', label: 'web', days: { '2025-10-08': worked, '2025-10-09': worked } }))
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const pane = await $.ui.mount({ plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 100, bodyRows: 40 } } as never)
+  await pane.press({ key: 'tab:mochi' } as never)
+  await pane.press({ key: 'shelf:colour' } as never)
+  // What is locked shows the level that opens it, and no button.
+  expect(await pane.find({ key: 'skin:mint' })).toBeUndefined()
+  expect(await pane.find({ type: 'Text', text: 'level 13' })).toBeDefined()
+  await pane.press({ key: 'skin:peach' } as never)
+  expect(JSON.parse(files.get('/h/.claude/mochi/prefs.json') ?? 'null')).toMatchObject({ skin: 'peach' })
+  expect((await pane.find({ type: 'Text', text: /^Colour · / }))?.text).toBe('Colour · Peach')
+  await pane.unmount()
+})
+
 test('a peer file’s usage windows are read one by one: junk is dropped, percents are whole, four at most; a file without them has none', async () => {
   const at = NOW + 60 * MIN
   const base = { id: 'y', label: 'new', state: 'idle', line: '', since: 0, at: NOW, v: 2 }

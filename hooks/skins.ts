@@ -168,3 +168,10 @@ export function skinFilter(k: Skin | undefined): string {
   // Named by the skin: several Mochis on one page share one set of definitions, and the first of a name wins.
   return `<filter id="skin-map-${k.id}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${grey}  ${grey}  ${grey}  0 0 0 1 0"/><feComponentTransfer>${fn('R', 0)}${fn('G', 1)}${fn('B', 2)}${alpha}</feComponentTransfer></filter>`
 }
+
+/** A colour's swatch for the mod's wardrobe: a dot in its colours, greyed while locked. */
+export function swatchSvg(k: Skin, isOpen: boolean): string {
+  const stops = k.swatch.map((c, i) => `<stop offset="${k.swatch.length > 1 ? +(i / (k.swatch.length - 1)).toFixed(3) : 0}" stop-color="${c}"/>`).join('')
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="100%" height="100%"><defs><linearGradient id="sw-${k.id}" x1="0" y1="0" x2="1" y2="1">${stops}</linearGradient></defs>` +
+    `<circle cx="16" cy="16" r="13" fill="url(#sw-${k.id})" stroke="#0003"${isOpen ? '' : ' opacity="0.32" style="filter:grayscale(1)"'}/></svg>`
+}
