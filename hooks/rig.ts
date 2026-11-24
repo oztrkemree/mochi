@@ -438,8 +438,11 @@ function presence(body: string, isNew: boolean, isGone: boolean, cx: number, cy:
     `<g transform="translate(${n(-cx)} ${n(-cy)})">${body}</g></g></g></g>`
 }
 
-const SHOULDER_L: Pt = [23.5, 55]
-const SHOULDER_R: Pt = [76.5, 55]
+// Well inside the body's edge (22 and 78 at this height), so a raised arm still grows out of the body.
+const SHOULDER_L: Pt = [26, 55]
+const SHOULDER_R: Pt = [74, 55]
+/** What the hand holds was placed for a shoulder at 76.5: it moves with the hand. */
+const inHand = (svg: string) => (svg ? `<g transform="translate(${n(SHOULDER_R[0] - 76.5)} 0)">${svg}</g>` : '')
 const BODY = { x: 21, y: 31, w: 58 }
 const BODY_H = (BODY.w * ART.body.h) / ART.body.w
 
@@ -1458,9 +1461,9 @@ function markup(shot: Drawn): string {
     `<g opacity="${n(to.blush)}">${tween('opacity', n(from.blush), n(to.blush))}<ellipse cx="31" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/><ellipse cx="69" cy="60" rx="5.5" ry="3.2" fill="url(#blush)"/></g>`,
     `<g transform="translate(${n(to.eyeDx)} ${n(to.eyeDy)})">${tweenT('translate', `${n(from.eyeDx)} ${n(from.eyeDy)}`, `${n(to.eyeDx)} ${n(to.eyeDy)}`)}`,
     `<g>${eyeMove}<g transform="translate(0 52)"><g>${eyeBlink}<g transform="translate(0 -52)">${eyesSvg}</g></g></g></g></g>`,
-    ink(`<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17">${tween('d', pathOf(from.mouth, 50, 64), pathOf(to.mouth, 50, 64))}${mouthLoop(pose.mouthLoop, pose.mouth)}</path>`),
-    // The face from the skin out: a beard, a mustache over it, the rest, then glasses on top.
+    // The face from the skin out: a beard, the mouth on it, a mustache over that, the rest, then glasses on top.
     wearSlot('chin', outfit, wasOutfit),
+    ink(`<path class="mouth" d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17">${tween('d', pathOf(from.mouth, 50, 64), pathOf(to.mouth, 50, 64))}${mouthLoop(pose.mouthLoop, pose.mouth)}</path>`),
     wearSlot('lip', outfit, wasOutfit),
     wearSlot('face', outfit, wasOutfit),
     wearSlot('eyes', outfit, wasOutfit),
@@ -1469,7 +1472,7 @@ function markup(shot: Drawn): string {
     arm('L', from.armL, to.armL, swingOf(pose, 'L'), fx),
     arm('R', from.armR, to.armR, swingOf(pose, 'R'), fx),
     // A held thing is drawn over the hand, as if gripped by it.
-    wearSlot('held', outfit, wasOutfit),
+    inHand(wearSlot('held', outfit, wasOutfit)),
     held,
     sweat,
     strain,
@@ -1609,16 +1612,18 @@ export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, 
   const wobble = wobbleOf(loop)
   const antenna = isHatless ? layer('antenna', svg(`<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/><circle cx="50" cy="17.5" r="8" fill="url(#glow)" opacity="0.8"/><circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>${img(ART.bulb, 45.6, 13.1, 8.8)}`),
     at(50, 34), 'none', { tpl: 'rotate({0}deg)', frames: [[-wobble.deg], [wobble.deg], [-wobble.deg]] }, wobble.dur, null, [IN_OUT, IN_OUT]) : ''
-  const worn = svg(still(wear('chin') + wear('lip') + wear('face') + wear('eyes') + wear('neck') + wear('head')))
+  // A beard under the mouth, the mustache and the rest over it, as in the drawing.
+  const beard = outfit.chin ? svg(still(wear('chin'))) : ''
+  const worn = svg(still(wear('lip') + wear('face') + wear('eyes') + wear('neck') + wear('head')))
   const held = (['laptop', 'book', 'glass', 'flag'] as const).filter(k => pose.held === k).map(heldSvg).join('')
-  const hold = svg(wear('held') + held)
+  const hold = svg(inHand(wear('held')) + held)
   const sweat = pose.sweat ? `<g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 9" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.7;1" dur="1.5s" repeatCount="indefinite"/>${img(ART.drop, 24, 30, 5)}</g>` : ''
   const over = pose.over ? overSvg(pose.over) : ''
   const tap = pose.tapsFoot ? loopT('rotate', ['0 55 84', '-14 55 84', '0 55 84', '0 55 84'], 0.5, '', '0s') : ''
   const feet = svg(`<g${fx}><rect x="33.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 33, 79, 15)}</g><g${fx}>${tap}<rect x="52.5" y="79.6" width="14" height="6.4" rx="3.2" fill="#C9694A"/>${img(ART.foot, 52, 79, 15)}</g>`)
   const waves = pose.waves ? `<path d="M-10 93 Q0 88 10 93 T30 93 T50 93 T70 93 T90 93 T110 93" stroke="#5B8DEF" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.8">${loopT('translate', ['0 0', '-20 0'], 1, '', '0s')}</path>` : ''
 
-  const squash = layer('squash', antenna + body + eyeLayer + mouthLayer + worn + armLayer('L') + armLayer('R') + hold,
+  const squash = layer('squash', antenna + body + eyeLayer + beard + mouthLayer + worn + armLayer('L') + armLayer('R') + hold,
     at(50, 82), `scale(${n(to.sx)}, ${n(to.sy)})`, squashF, loop?.dur, null, loop ? stepsOf(loop) : null)
   // What floats over Mochi bobs as one layer, as the helpers do: SMIL playing on there would draw it all again on every frame.
   // Held, what floats up and fades (the z's of a sleep, the notes of a hum, a drop of sweat) is shown where it starts.

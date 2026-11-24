@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 
 import { setLang } from '../../hooks/i18n'
-import { usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
+import { readingsOf, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
 import { peersOf } from './world'
 
 setLang('en')
@@ -68,4 +68,16 @@ test('in the list each limit is a ring with its number in it, its name, and when
   expect(card.back).toBe('resets in 2h')
   expect(card.ring).toContain('>62<')
   expect(usageCard({ kind: 'seven_day', p: 5, resetsAt: 0 }, NOW)).toMatchObject({ name: 'weekly limit', back: '' })
+})
+
+test('with no chat knowing the limits, the mod\'s last fresh reading of each window stands in, without a reset time', () => {
+  const text = JSON.stringify([
+    { kind: 'seven_day', at: NOW - 60 * 60_000, p: 20 },
+    { kind: 'seven_day', at: NOW - 4 * 60_000, p: 30 },
+    { kind: 'five_hour', at: NOW - 3 * HOUR, p: 90 },
+  ])
+  expect(readingsOf(text, NOW)).toEqual([{ kind: 'seven_day', p: 30, resetsAt: 0 }])
+  expect(readingsOf(null, NOW)).toEqual([])
+  expect(readingsOf('not json', NOW)).toEqual([])
+  expect(readingsOf('[{"kind":"seven_day","p":"x","at":1}]', NOW)).toEqual([])
 })

@@ -35,6 +35,29 @@ export function usageOf(peers: readonly Peer[], now: number): Usage[] {
     .sort((a, b) => place(a.kind) - place(b.kind) || a.kind.localeCompare(b.kind))
 }
 
+/** A reading in usage.json counts this long: the mod writes one every 5 minutes while a chat is open. */
+const READING_FRESH = 20 * 60_000
+
+/**
+ * The usage windows from the mod's readings (usage.json, `[{kind, at, p}]`), for when no chat in view knows them:
+ * the newest fresh reading of each window. They carry no reset time, so the rings draw without a pace tick.
+ */
+export function readingsOf(text: string | null | undefined, now: number): Usage[] {
+  let raw: unknown
+  try { raw = JSON.parse(text ?? '[]') } catch { return [] }
+  if (!Array.isArray(raw)) return []
+  const best = new Map<string, { at: number; p: number }>()
+  for (const r of raw) {
+    if (typeof r !== 'object' || r === null) continue
+    const { kind, at, p } = r as { kind?: unknown; at?: unknown; p?: unknown }
+    if (typeof kind !== 'string' || typeof at !== 'number' || typeof p !== 'number' || !Number.isFinite(p)) continue
+    if (now - at > READING_FRESH) continue
+    if ((best.get(kind)?.at ?? -1) < at) best.set(kind, { at, p })
+  }
+  return [...best].map(([kind, r]) => ({ kind, p: Math.min(100, Math.max(0, r.p)), resetsAt: 0 }))
+    .sort((a, b) => place(a.kind) - place(b.kind) || a.kind.localeCompare(b.kind))
+}
+
 /** Mochi speaks of a limit when it passes these, in percent. */
 const MARKS = [80, 95]
 /** A limit used at least this much was worth worrying about, so its reset is worth saying. */
