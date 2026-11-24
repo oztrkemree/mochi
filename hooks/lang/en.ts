@@ -19,6 +19,16 @@ export const en = {
 
   /** What each version brought: the headline its first start shows once, and the notes /mochi news prints. */
   news: {
+    '0.10.0': {
+      headline: 'a desktop app, 31 new things to wear, and your colour in both Mochis',
+      notes: [
+        'Mochi has a desktop app for macOS and Windows: one Mochi on your screen for every agent you run, with a room for your week, your work and your usage. It keeps the same level, badges and wardrobe as the mod.',
+        'Thirty-one new things to wear, from level 42 to 95: a samurai helmet, a tiara, a pharaoh’s headdress, a flying saucer and more.',
+        '/mochi skin chooses Mochi’s colour, and either Mochi wears the other’s choice.',
+        'The app’s sound switch is the one switch for both Mochis, and /mochi desktop on has the band step aside while the app’s Mochi is out.',
+        'The desktop app’s Settings shows the mod’s and the app’s versions against GitHub, with one button to update or install, and its Computer tab can remove any worktree, asking first when something would be lost.',
+      ],
+    },
     '0.9.0': {
       headline: 'your stand-up, your pull requests and a city of your last four weeks',
       notes: [

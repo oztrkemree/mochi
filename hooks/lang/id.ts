@@ -15,6 +15,16 @@ export const id: typeof en = {
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
 
   news: {
+    '0.10.0': {
+      headline: 'aplikasi desktop, 31 barang baru untuk dipakai, dan warnamu di kedua Mochi',
+      notes: [
+        'Mochi punya aplikasi desktop untuk macOS dan Windows: satu Mochi di layarmu untuk setiap agen yang kamu jalankan, dengan ruangan untuk minggumu, pekerjaanmu, dan pemakaianmu. Level, lencana, dan lemari pakaiannya sama dengan mod.',
+        'Tiga puluh satu barang baru untuk dipakai, dari level 42 sampai 95: helm samurai, tiara, hiasan kepala firaun, piring terbang, dan lainnya.',
+        '/mochi skin memilih warna Mochi, dan kedua Mochi memakai pilihan yang lain.',
+        'Sakelar suara aplikasi adalah satu-satunya untuk kedua Mochi, dan /mochi desktop on membuat pita menyingkir selama Mochi aplikasi tampil.',
+        'Pengaturan aplikasi desktop membandingkan versi mod dan aplikasi dengan GitHub, dengan satu tombol untuk memperbarui atau memasang, dan tab Komputer bisa menghapus worktree mana pun, bertanya dulu bila ada yang akan hilang.',
+      ],
+    },
     '0.9.0': {
       headline: 'stand-up kamu, pull request kamu, dan kota dari empat minggu terakhirmu',
       notes: [

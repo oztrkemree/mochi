@@ -34,6 +34,16 @@ export const pl: typeof en = {
   months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
 
   news: {
+    '0.10.0': {
+      headline: 'aplikacja na pulpit, 31 nowych rzeczy do noszenia i twój kolor w obu Mochi',
+      notes: [
+        'Mochi ma aplikację na macOS i Windows: osobny Mochi na ekranie dla każdego agenta, którego uruchamiasz, i pokój na twój tydzień, pracę i zużycie. Poziom, odznaki i garderobę dzieli z modem.',
+        'Trzydzieści jeden nowych rzeczy do noszenia, od poziomu 42 do 95: hełm samuraja, tiara, nakrycie głowy faraona, latający spodek i więcej.',
+        '/mochi skin wybiera kolor Mochi, a każdy Mochi nosi wybór drugiego.',
+        'Przełącznik dźwięku w aplikacji jest jeden dla obu Mochi, a /mochi desktop on odsuwa pasek, gdy Mochi aplikacji jest na ekranie.',
+        'Ustawienia aplikacji porównują wersje moda i aplikacji z GitHubem i dają jeden przycisk do aktualizacji lub instalacji, a karta Komputer może usunąć dowolny worktree, pytając najpierw, gdy coś przepadnie.',
+      ],
+    },
     '0.9.0': {
       headline: 'twój stand-up, twoje pull requesty i miasto z ostatnich czterech tygodni',
       notes: [

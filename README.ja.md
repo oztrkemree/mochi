@@ -282,6 +282,7 @@ Mochiが手すきのとき、たまに、いま起きたことに合わせてCla
 | `/mochi details` | 詳細パネルを開く |
 | `/mochi level` | レベル、経験値、まだ解放されていないもの |
 | `/mochi wear [item \| auto \| none]` | 何かを着せる、Mochiにおまかせする、または全部外す |
+| `/mochi skin [colour]` | Mochi の色を選ぶ(30色、レベルで開きます) |
 | `/mochi badges` | 獲得したバッジと、残りのバッジの手に入れ方 |
 | `/mochi chats` | このマシンのすべてのチャット。返事待ちのものが先頭 |
 | `/mochi shield [on \| off]` | シールドがONかどうかと、どこで何を常に許可しているかの確認。`on`か`off`で切り替え |
