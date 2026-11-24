@@ -131,6 +131,7 @@
       .progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; margin-top: 8px; }
       .progress small { color: var(--faint); font-size: 10.5px; font-variant-numeric: tabular-nums; }
       .tag { position: absolute; top: 11px; right: 11px; font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: 0.02em; color: var(--faint); }
+      .feat .lock { color: var(--faint); }
       .tag.easy { color: #D9A07A; } .tag.medium { color: #C9D1D9; } .tag.hard { color: #F2C14E; } .tag.impossible { color: #D7A6FF; }
 
       /* The settings, in the room's colours. */
@@ -328,6 +329,7 @@
           <div class="row"><span id="l-jobs"></span><div class="seg" id="jobs" role="group"></div></div>
           <div class="row"><span id="l-idle"></span><div class="seg" id="idleMinutes" role="group"></div></div>
           <div class="row"><span id="l-leave"></span><div class="seg" id="leaveSeconds" role="group"></div></div>
+          <div class="row"><span id="l-breakMinutes"></span><div class="seg" id="breakMinutes" role="group"></div></div>
         </div>
 
         <h2 id="h-talk"></h2>

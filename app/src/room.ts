@@ -14,6 +14,7 @@ import { type Effort, effortOf, sumOf } from './effort'
 import { growthOf, historyOf } from './growth'
 import { SIGN, medalSvg } from './medal'
 import { KEY, NAME_MAX, type Saved, outfitsFrom, removed, saved, wearable } from './outfits'
+import { SECRETS, type Secret, secretsNow, secretsWon } from './secrets'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
 import { chosen, lookNow } from './wardrobe'
@@ -117,12 +118,38 @@ function drawPlate() {
   }))
 }
 
+/** The hidden achievements won: those kept in this browser, and any the history proves now, which are kept from then on. */
+function secretsHeld(): Secret[] {
+  if (!history) return []
+  let kept: string | null = null
+  try {
+    kept = localStorage.getItem('secrets')
+  } catch {
+    // Storage refused: only what the history proves now.
+  }
+  const s = secretsWon(kept, secretsNow(history))
+  if (s.keep !== null) {
+    try {
+      localStorage.setItem('secrets', s.keep)
+    } catch {
+      // Storage refused: the win is not kept.
+    }
+  }
+  return s.won
+}
+
+/** The achievements counted together: the feats done and the hidden ones won, of all of them. */
+function countAll(feats: readonly Feat[]): { done: number; all: number } {
+  const t = tally(feats)
+  return { done: t.done + secretsHeld().length, all: t.all + SECRETS.length }
+}
+
 function drawTabs() {
   const tabs = $('tabs')
   tabs.replaceChildren()
   const open = look?.items.length ?? 0
   const all = Object.values(SLOT_ITEMS).flat().length
-  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['usage', words().usage.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
+  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(countAll(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['usage', words().usage.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
     const b = el('button', '', label)
     b.type = 'button'
     b.setAttribute('role', 'tab')
@@ -340,7 +367,7 @@ function drawFeats(into: HTMLElement) {
   const w = words().feats
   const n = new Intl.NumberFormat(lang())
   const feats = featsOf(history, badges)
-  const all = tally(feats)
+  const all = countAll(feats)
   const top = el('div', 'overall')
   const sum = el('div', 'sum')
   sum.append(el('strong', '', `${all.done}`), el('span', '', `/ ${all.all}`), el('p', '', w.done(all.done, all.all)), bar(all.done, all.all))
@@ -377,6 +404,23 @@ function drawFeats(into: HTMLElement) {
     section.append(head, grid)
     into.append(section)
   }
+  // The hidden ones: a won one shows its name and hint; one not won shows only that it is secret.
+  const won = secretsHeld()
+  const hidden = words().secrets
+  const secrets = el('section', 'cat')
+  const sHead = el('header')
+  sHead.append(el('h2', '', hidden.hidden), el('span', '', `${won.length}/${SECRETS.length}`), bar(won.length, SECRETS.length))
+  const sGrid = el('div', 'feats')
+  for (const s of SECRETS) {
+    const done = won.includes(s)
+    const card = el('div', done ? 'feat done' : 'feat')
+    const text = el('div', 'text')
+    text.append(el('b', '', done ? hidden.names[s] : hidden.hidden), el('span', 'hint', done ? hidden.hints[s] : hidden.hiddenHint))
+    card.append(done ? svgIn('pic', medalSvg(CAT_INK.mochi, '', 'impossible', true)) : svgIn('pic lock', LOCK), text)
+    sGrid.append(card)
+  }
+  secrets.append(sHead, sGrid)
+  into.append(secrets)
 }
 
 function show(name: Tab) {
