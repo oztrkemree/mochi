@@ -34,7 +34,7 @@ fn search_path() -> Vec<PathBuf> {
 }
 
 /// Runs a program with no shell between, and gives up on it after `limit`.
-fn run(name: &str, args: &[&str], dir: Option<&Path>, limit: Duration) -> Option<Out> {
+pub(crate) fn run(name: &str, args: &[&str], dir: Option<&Path>, limit: Duration) -> Option<Out> {
     let mut command = Command::new(tool(name));
     command.args(args).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
     // A script's `#!/usr/bin/env node` finds node in Homebrew too.
@@ -77,7 +77,7 @@ fn run(name: &str, args: &[&str], dir: Option<&Path>, limit: Duration) -> Option
     Some(Out { code: status.code().unwrap_or(-1), stdout: out.join().unwrap_or_default(), stderr: err.join().unwrap_or_default() })
 }
 
-fn git(root: &Path, args: &[&str]) -> Option<Out> {
+pub(crate) fn git(root: &Path, args: &[&str]) -> Option<Out> {
     let mut all = vec!["-C", root.to_str()?];
     all.extend_from_slice(args);
     run("git", &all, None, Duration::from_secs(5)).filter(|o| o.code == 0)
