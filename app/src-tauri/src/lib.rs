@@ -1,4 +1,5 @@
 mod agents;
+mod care;
 mod stage;
 mod store;
 mod work;
@@ -385,9 +386,41 @@ fn write_shared(name: String, text: String) -> bool {
     data_dir().is_some_and(|d| store::write_shared(&d, &name, &text))
 }
 
+// async: the programs and the folders are read off the window's thread.
+#[tauri::command(async)]
+fn ports() -> Value { care::ports() }
+
+// async: a process is asked to stop off the window's thread.
+#[tauri::command(async)]
+fn stop_server(pid: u32, port: u16) -> bool { care::stop_server(pid, port) }
+
+// async: the programs run off the window's thread.
+#[tauri::command(async)]
+fn machine() -> Value { care::machine() }
+
+// async: git runs in every repository Mochi knows, off the window's thread.
+#[tauri::command(async)]
+fn worktrees() -> Vec<Value> { data_dir().map(|d| care::worktrees(&d)).unwrap_or_default() }
+
+// async: git removes the folder off the window's thread.
+#[tauri::command(async)]
+fn remove_worktree(repo: String, path: String) -> Result<(), String> { care::remove_worktree(&data_dir().ok_or("no home")?, &repo, &path) }
+
+// async: the chats' files are read off the window's thread.
+#[tauri::command(async)]
+fn chat_folders() -> Vec<String> { data_dir().map(|d| care::chat_folders(&d)).unwrap_or_default() }
+
+// async: the agents' version commands run off the window's thread.
+#[tauri::command(async)]
+fn agent_versions() -> Value { care::agent_versions() }
+
+// async: the changelog is fetched off the window's thread.
+#[tauri::command(async)]
+fn changes(agent: String, version: String) -> Option<String> { care::changes(&agent, &version) }
+
 /// The room's tab asked for, if it is one of its tabs.
 fn room_tab(tab: Option<&str>) -> Option<&str> {
-    tab.filter(|t| ["wardrobe", "feats", "work", "usage", "settings"].contains(t))
+    tab.filter(|t| ["wardrobe", "feats", "work", "usage", "settings", "care"].contains(t))
 }
 
 /// Mochi's room: the wardrobe, the achievements and the settings, in a window of its own, opened or brought to the
@@ -476,7 +509,7 @@ pub fn run() {
                 stage::measure(window);
             }
         })
-        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, set_sound, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, list_days, copy_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note])
+        .invoke_handler(tauri::generate_handler![ready, shown, on_top, set_approve, set_shield, set_sound, read_shield, save_share, open_room, read_look, answer, gaze, set_hot, own_live, read_days, write_days, read_all_days, list_days, copy_days, read_shared, write_shared, usage, claim, see_repo, git_state, ci, agent_state, set_agent, line_state, set_line, note, ports, stop_server, machine, worktrees, remove_worktree, chat_folders, agent_versions, changes])
         .setup(|app| {
             // A companion, not a window to switch to: no icon in the Dock.
             #[cfg(target_os = "macos")]
@@ -547,7 +580,7 @@ mod tests {
 
     #[test]
     fn the_room_opens_on_any_of_its_tabs_and_on_nothing_else() {
-        for tab in ["wardrobe", "feats", "work", "usage", "settings"] {
+        for tab in ["wardrobe", "feats", "work", "usage", "settings", "care"] {
             assert_eq!(room_tab(Some(tab)), Some(tab));
         }
         assert_eq!(room_tab(Some("../index")), None);

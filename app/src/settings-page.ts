@@ -96,7 +96,7 @@ function draw() {
   const w = words()
   const text: Record<string, string> = {
     'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-jobs': w.jobs, 'l-idle': w.hideIdle, 'l-leave': w.leaveIdle,
-    'l-breakMinutes': w.breaks.setting, 'l-temper': w.temper.title, 'temperHint': w.temper.hints[settings.temper], 'h-sync': w.sync.title, 'l-syncFolder': w.sync.folder, 'syncHint': w.sync.hint, 'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
+    'l-breakMinutes': w.breaks.setting, 'l-temper': w.temper.title, 'temperHint': w.temper.hints[settings.temper], 'h-sync': w.sync.title, 'l-syncFolder': w.sync.folder, 'syncHint': w.sync.hint, 'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-care': w.care.setting, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
     'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex, 'l-line': w.line,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
   }
@@ -116,6 +116,7 @@ function draw() {
   for (const kind of ['asking', 'done', 'failed', 'limit'] as const) switchOf(`talk-${kind}`, settings.talk[kind], on => void save({ talk: { ...settings.talk, [kind]: on } }))
   segment('talkSeconds', TALK_SECONDS, w.seconds, settings.talkSeconds, v => void save({ talkSeconds: v }))
   switchOf('sound', settings.sound, on => void save({ sound: on }))
+  switchOf('care', settings.care, on => void save({ care: on }))
   switchOf('approve', settings.approve, on => void save({ approve: on }))
   switchOf('shield', settings.shield, on => void save({ shield: on }))
 
