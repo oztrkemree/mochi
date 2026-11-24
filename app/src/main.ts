@@ -852,8 +852,8 @@ function drawJobs(rows: readonly Row[]) {
       item.dataset.link = job.link
       item.title = w.openHint
     }
+    item.style.setProperty('--ink', job.ink)
     const dot = el('span', 'dot')
-    dot.style.background = job.ink
     const what = el('span', 'what')
     what.append(el('b', '', job.name), ` ${job.line}`)
     item.append(dot, what, ...job.more.map(m => el('span', 'more', m)))
