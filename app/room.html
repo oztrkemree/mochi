@@ -309,6 +309,19 @@
       .u-impact.medium { background: rgba(242, 184, 75, 0.16); color: var(--gold); }
       @media (max-width: 1000px) { .u-facts, .u-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+      /* Computer: this machine, the dev servers, the worktrees and what is new. Its rows reuse the usage tab's look. */
+      .care-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .care-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; }
+      .care-row:hover { background: rgba(255, 236, 222, 0.035); }
+      .care-row .w-name { flex: 1; min-width: 0; }
+      .care-size { flex: none; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+      .care-btn { flex: none; height: 26px; padding: 0 11px; border: 1px solid var(--edge); border-radius: 8px; background: none; color: var(--dim); font-size: 12px; cursor: pointer; }
+      .care-btn:hover { color: var(--fg); border-color: rgba(255, 236, 222, 0.18); }
+      .care-btn[aria-pressed="true"] { color: var(--fg); background: var(--raised); border-color: rgba(217, 119, 87, 0.55); }
+      .care-list { margin: 8px 0 0; padding-left: 18px; color: var(--dim); font-size: 12px; }
+      .care-list li + li { margin-top: 3px; }
+      .care-link { margin-top: 10px; padding: 0; border: 0; background: none; color: var(--clay-hi); font-size: 12px; font-weight: 650; cursor: pointer; }
+
       @media (prefers-reduced-motion: reduce) { * { transition: none !important; } .w-river.reveal .w-pic { animation: none; } }
     </style>
   </head>
@@ -357,6 +370,7 @@
           <div class="row"><label for="talk-limit" id="l-talk-limit"></label><input type="checkbox" class="switch" id="talk-limit" /></div>
           <div class="row"><span id="l-talkSeconds"></span><div class="seg" id="talkSeconds" role="group"></div></div>
           <div class="row"><label for="sound" id="l-sound"></label><input type="checkbox" class="switch" id="sound" /></div>
+          <div class="row"><label for="care" id="l-care"></label><input type="checkbox" class="switch" id="care" /></div>
         </div>
 
         </div>

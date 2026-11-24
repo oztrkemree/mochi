@@ -3,6 +3,12 @@ export const AGENTS = ['claude', 'codex'] as const
 /** One of the agents in AGENTS. */
 export type Agent = (typeof AGENTS)[number]
 
+/** The page that tells everything that changed, per agent. */
+export const CHANGES_PAGE: Record<Agent, string> = {
+  claude: 'https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md',
+  codex: 'https://github.com/openai/codex/releases',
+}
+
 /** The version in what a program printed for --version: the first run of numbers and dots like 1.2.3; null when there is none. */
 export function versionOf(text: string): string | null {
   return text.match(/\d+(\.\d+)+/)?.[0] ?? null

@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+import { openUrl } from '@tauri-apps/plugin-opener'
 
 import type { Badge, History, Item, Outfit } from '../../types'
 import { badgeHint, badgeLook, badgeName, badgesOf, provenBy } from '../../hooks/badges'
@@ -9,14 +10,19 @@ import { type Choice, type Look, type Slot, SLOT_ITEMS, choiceFrom, choiceText, 
 import { itemIcon, svgFor } from '../../hooks/rig'
 import { SKINS, type Skin, skinOf, skinsAt } from '../../hooks/skins'
 import { bestOutfit, cardSvg } from '../../hooks/share'
+import { type CareActs, type CareState, EMPTY, drawCare } from './care-tab'
 import { BADGE_PLACE, CATS, type Cat, type Feat, TIERS, featsOf, tally } from './feats'
 import { type Effort, effortOf, sumOf } from './effort'
 import { growthOf, historyOf } from './growth'
+import { machineOf } from './machine'
 import { SIGN, medalSvg } from './medal'
 import { KEY, NAME_MAX, type Saved, outfitsFrom, removed, saved, wearable } from './outfits'
 import { SECRETS, type Secret, secretsNow, secretsWon } from './secrets'
+import { serversOf } from './servers'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
+import { gbOf, mergedOf, stateOf, treesOf, type TreeState } from './trees'
+import { AGENTS, CHANGES_PAGE, changesOf, versionOf } from './whatsnew'
 import { chosen, lookNow } from './wardrobe'
 import { words } from './words'
 import { PERIODS, type WorkState, drawWork } from './work-tab'
@@ -54,7 +60,7 @@ let modLook: Look | null = null
 let prefs: Choice | null = null
 let badges: Badge[] = []
 let look: Look | null = null
-const TABS = ['wardrobe', 'feats', 'work', 'usage', 'settings'] as const
+const TABS = ['wardrobe', 'feats', 'work', 'usage', 'care', 'settings'] as const
 type Tab = (typeof TABS)[number]
 const isTab = (v: unknown): v is Tab => (TABS as readonly unknown[]).includes(v)
 /** The tab asked for (the tray's Settings), else the one last open. */
@@ -73,6 +79,11 @@ let usageSt: UsageState = { span: Math.min(SPANS.length - 1, Math.max(0, Number(
 const feed: Feed = { report: null, quota: [], claude: [], busy: false, error: '' }
 const counting = new Set<string>()
 const USAGE_FRESH_MS = 5 * 60_000
+/** What the Computer tab shows; its worktrees are read again when older than five minutes, or after a removal. */
+let care: CareState = EMPTY
+let careReading = false
+let treesAt = 0
+const CARE_TREES_MS = 5 * 60_000
 
 /** What Mochi has on, as it stands at rest; with an item tried on, that item in its slot. */
 function outfit(trying: Item | null = null): Outfit {
@@ -149,7 +160,7 @@ function drawTabs() {
   tabs.replaceChildren()
   const open = look?.items.length ?? 0
   const all = Object.values(SLOT_ITEMS).flat().length
-  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(countAll(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['usage', words().usage.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
+  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(countAll(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['usage', words().usage.tab, ''], ['care', words().care.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
     const b = el('button', '', label)
     b.type = 'button'
     b.setAttribute('role', 'tab')
@@ -449,6 +460,7 @@ function show(name: Tab) {
   localStorage.setItem('roomTab', name)
   draw()
   if (name === 'usage') void countUsage()
+  if (name === 'care') void readCare()
 }
 
 function draw() {
@@ -477,7 +489,8 @@ function draw() {
     // Mochi says one thing of the money: how much the cache spared, when it spared most of it.
     const hit = feed.report?.cacheHit ?? 0
     $('said').textContent = hit >= 90 ? words().usage.thrifty(new Intl.NumberFormat(lang(), { style: 'percent', maximumFractionDigits: 1 }).format(Math.floor(hit * 10) / 1000)) : ''
-  } else if (effort) {
+  } else if (tab === 'care') drawCare(panel, care, acts)
+  else if (tab === 'work' && effort) {
     drawWork(panel, effort, work, next => {
       work = next
       localStorage.setItem('workPeriod', String(next.period))
@@ -557,6 +570,79 @@ async function countUsage(force = false) {
   if (tab === 'usage') draw()
 }
 
+/** Puts what was read into the Computer tab, and draws it again when that tab is the one shown. */
+function putCare(next: Partial<CareState>) {
+  care = { ...care, ...next }
+  if (tab === 'care') draw()
+}
+
+/** The dev servers now, from what the machine's ports say; none when that cannot be read. */
+async function readPorts() {
+  const p = await invoke<{ lsof: string; ps: string; cwd: string }>('ports').catch(() => null)
+  putCare({ servers: p ? serversOf(p.lsof, p.ps, p.cwd) : [] })
+}
+
+/** The Computer tab's numbers: the machine, the servers and the versions at once; then the worktrees, when they are old or a removal changed them. */
+async function readCare() {
+  if (careReading) return
+  careReading = true
+  try {
+    await Promise.all([
+      invoke<{ df: string; batt: string; load: string; cpus: number }>('machine').then(raw => putCare({ machine: machineOf(raw) })).catch(() => {}),
+      readPorts(),
+      invoke<{ claude: string; codex: string }>('agent_versions').then(raw => Promise.all(AGENTS.map(async agent => {
+        const version = versionOf(raw[agent] ?? '') ?? ''
+        const text = version ? await invoke<string | null>('changes', { agent, version }).catch(() => null) : null
+        return { agent, version, changes: version ? changesOf(agent, text ?? '', version) : [] }
+      }))).then(versions => putCare({ versions })).catch(() => putCare({ versions: [] })),
+    ])
+    if (treesAt === 0 || Date.now() - treesAt > CARE_TREES_MS) {
+      treesAt = Date.now()
+      const [repos, folders] = await Promise.all([
+        invoke<{ repo: string; list: string; merged: string; trees: { path: string; isDirty: boolean; kb: number }[] }[]>('worktrees').catch(() => []),
+        invoke<string[]>('chat_folders').catch(() => []),
+      ])
+      const trees: TreeState[] = []
+      for (const r of repos) {
+        const merged = mergedOf(r.merged)
+        for (const tree of treesOf(r.list)) {
+          if (tree.isMain) continue
+          const entry = r.trees.find(x => x.path === tree.path)
+          trees.push(stateOf(r.repo, tree, merged, entry?.isDirty ?? true, entry?.kb ?? 0, folders))
+        }
+      }
+      putCare({ trees })
+    }
+  } catch {
+    // Nothing read: the tab keeps what it has.
+  } finally {
+    careReading = false
+  }
+}
+
+/** What the Computer tab asks for: a press arms a row for four seconds, a second press does it. */
+const acts: CareActs = {
+  arm: key => {
+    putCare({ armed: key })
+    setTimeout(() => {
+      if (care.armed === key) putCare({ armed: '' })
+    }, 4000)
+  },
+  stop: s => {
+    putCare({ armed: '' })
+    void invoke('stop_server', { pid: s.pid, port: s.port }).catch(() => {}).finally(() => setTimeout(() => void readPorts(), 800))
+  },
+  remove: t => {
+    putCare({ armed: '' })
+    invoke('remove_worktree', { repo: t.repo, path: t.path }).then(() => {
+      treesAt = 0
+      putCare({ said: words().care.trees.freed(gbOf(t.kb)) })
+      void readCare()
+    }).catch((e: unknown) => putCare({ said: `${words().care.trees.failed} ${(e instanceof Error ? e.message : String(e)).slice(0, 200)}` }))
+  },
+  open: agent => void openUrl(CHANGES_PAGE[agent]),
+}
+
 /** Everything read again: the room is opened often, and other Mochis count and choose too. */
 async function read() {
   const now = Date.now()
@@ -573,6 +659,7 @@ async function read() {
   drawPlate()
   draw()
   if (tab === 'usage') void countUsage()
+  if (tab === 'care') void readCare()
 }
 
 function start() {
