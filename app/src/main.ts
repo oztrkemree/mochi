@@ -12,6 +12,7 @@ import { PEER_INK, appLink, nameOf } from '../../hooks/live'
 import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
 import { clip } from '../../hooks/sound'
+import { type Edit, clashKey, clashOf, editOf, kept } from './clash'
 import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, settles, stalledOf, tallyOf } from './engine'
 import { type Growth, badgesNews, growthOf, historyOf, levelNews } from './growth'
 import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
@@ -27,6 +28,7 @@ import { animationOf, tracksIn } from './play'
 import { TRANSITION_MS } from '../../hooks/rig'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
+import { type Run, stepStuck } from './stuck'
 import { effortOf, weekDue, weekTop } from './effort'
 import { words } from './words'
 import { spell } from './work-tab'
@@ -941,12 +943,39 @@ function leave(id: string) {
   earned.delete(id)
 }
 
+/** Each chat's run of the same failing step, for news when a chat gets stuck on one. */
+const runs = new Map<string, Run>()
+/** The file edits still within the clash window, for news when two chats edit one file. */
+let edits: Edit[] = []
+/** The clashes already said, so each is said once. */
+const clashed = new Set<string>()
+
 /** Takes in hook calls: where each chat stands now, and what the call earned. */
 async function take(calls: string[]) {
   const asked: Request[] = []
+  const failed: News[] = []
   for (const call of calls) {
     const h = hookedOf(call)
     if (!h) continue
+    const peer = view?.peers.find(p => p.id === h.id)
+    const stuck = stepStuck(runs.get(h.id), h.name, h.event)
+    if (stuck.run) runs.set(h.id, stuck.run)
+    else runs.delete(h.id)
+    if (stuck.isStuck) failed.push({ id: 'stuck-' + h.id, kind: 'failed', line: words().stuck(peer ? nameOf(peer) : t().word.chat), link: appLink(peer?.app) })
+    const edit = editOf(h.id, h.name, h.event, h.at)
+    if (edit) {
+      const other = clashOf(edits, edit)
+      edits = kept(edits, edit)
+      const key = other === null ? '' : clashKey(h.id, other, edit.path)
+      if (other !== null && !clashed.has(key)) {
+        // shortcut: forgets what it said after 200 clashes, keep a time with each if that ever repeats news
+        if (clashed.size > 200) clashed.clear()
+        clashed.add(key)
+        const otherPeer = view?.peers.find(p => p.id === other)
+        const file = edit.path.split(/[\\/]/).pop() ?? edit.path
+        failed.push({ id: 'clash-' + key, kind: 'failed', line: words().clash(peer ? nameOf(peer) : t().word.chat, otherPeer ? nameOf(otherPeer) : t().word.chat, file), link: appLink(peer?.app) })
+      }
+    }
     // A shell command waiting on the shield: named now, while it waits, or let go at once.
     if (h.ask && h.name === 'PreToolUse') shield(h.id, h.ask.id, h.event)
     // A request waits on the bubble whoever follows its chat, the mod or the app.
@@ -990,6 +1019,7 @@ async function take(calls: string[]) {
   // The chats as they stand now, for every other Mochi to read; the app is told which of them the mod writes itself.
   for (const id of await invoke<string[]>('own_live', { peers: agentPeers(sessions, Date.now()) }).catch(() => [])) leave(id)
   draw()
+  if (failed.length > 0 && view && settings.talk.failed) hear(failed, view.peers)
   // With no mod writing chats there may be no word of them but this.
   hasHeard = true
   // Each request is said now, with its answers: the news of the chat starting to wait may have come before it, without them.
