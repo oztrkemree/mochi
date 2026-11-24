@@ -55,7 +55,7 @@ const line = (a: Pt, b: Pt): number[] => [a[0] + (b[0] - a[0]) / 3, a[1] + (b[1]
 const quad = (l: Pt, t: Pt, r: Pt, b: Pt): Shape => [...l, ...line(l, t), ...line(t, r), ...line(r, b), ...line(b, l)]
 
 type EyeKind = 'dot' | 'wide' | 'happy' | 'closed' | 'half' | 'squint' | 'wink' | 'none'
-type MouthKind = 'smile' | 'grin' | 'open' | 'o' | 'flat' | 'frown' | 'small' | 'pout'
+type MouthKind = 'smile' | 'grin' | 'open' | 'o' | 'chat' | 'flat' | 'frown' | 'small' | 'pout'
 
 function eyeShape(kind: EyeKind, side: -1 | 1): Shape {
   switch (kind) {
@@ -78,6 +78,8 @@ function mouthShape(kind: MouthKind): Shape {
     case 'grin': return [-6.8, -1.6, ...line([-6.8, -1.6], [0, -1.6]), ...line([0, -1.6], [6.8, -1.6]), ...quadHalves([6.8, -1.6], [0, 14], [-6.8, -1.6])]
     case 'open': return ellipse(4.2, 3.6, 4.6, 0.5)
     case 'o': return ellipse(2.6, 2.6, 2.8, 0.6)
+    // Talking: open just a little about the shut mouth's middle, so it stays tucked under a mustache.
+    case 'chat': return ellipse(2.8, 1.8, 2, 0.8)
     case 'flat': return ellipse(4.8, 0.9, 0.9, 0.6)
     case 'frown': return crescent(5.4, 2.4, -3.6, 2.2)
     case 'small': return crescent(3, -0.2, 2, 1.5)
@@ -157,13 +159,13 @@ export const POSES: Record<Mood, Pose> = {
   wave: { armL: 16, armR: -140, armLoopR: { dur: 0.55, values: [0, 38, 0] }, eye: 'happy', mouth: 'grin', loop: L.bounce },
   listening: { tilt: -6, armL: 14, armR: -14, eye: 'dot', eyeDx: -1.2, eyeDy: 2, mouth: 'smile', loop: L.sway, eyeLoop: 'blink' },
   thinking: { tilt: 4, armL: 16, armR: 56, eye: 'dot', eyeDx: 1.6, eyeDy: -2.6, mouth: 'small', loop: L.bob, eyeLoop: 'none', over: 'thought' },
-  talking: { armL: 16, armR: -70, armLoopR: { dur: 1.3, values: [0, -24, 6, 0] }, eye: 'dot', mouth: 'small', mouthLoop: 'talk', loop: L.bob, eyeLoop: 'blink' },
+  talking: { armL: 16, armR: -40, armLoopR: { dur: 1.3, values: [0, -16, 6, 0] }, eye: 'dot', mouth: 'small', mouthLoop: 'talk', loop: L.bob, eyeLoop: 'blink' },
   reading: { armL: -50, armR: 50, eye: 'dot', eyeDy: 2.2, mouth: 'small', loop: L.breathe, eyeLoop: 'scan', held: 'book' },
   searching: { tilt: 3, armL: 16, armR: 40, eye: 'wide', mouth: 'o', loop: L.sway, eyeLoop: 'dart', held: 'glass' },
   writing: { armL: -54, armR: 54, armLoopL: { dur: 0.3, values: [0, -9, 0] }, armLoopR: { dur: 0.3, values: [0, 9, 0] }, eye: 'dot', eyeDy: 2.6, mouth: 'small', loop: L.bob, eyeLoop: 'blink', held: 'laptop' },
   running: { armL: -54, armR: 54, armLoopL: { dur: 0.24, values: [0, -9, 0] }, armLoopR: { dur: 0.24, values: [0, 9, 0] }, eye: 'squint', mouth: 'flat', loop: L.bob, held: 'laptop', over: 'terminal' },
   waiting: { armL: 12, armR: -12, eye: 'dot', mouth: 'flat', loop: L.tap, eyeLoop: 'dart', over: 'hourglass', tapsFoot: true },
-  web: { armL: 70, armR: -70, armLoopL: { dur: 1.2, values: [0, 10, 0] }, armLoopR: { dur: 1.2, values: [0, 10, 0] }, eye: 'dot', mouth: 'grin', loop: L.wiggle, eyeLoop: 'blink', waves: true },
+  web: { armL: 38, armR: -38, armLoopL: { dur: 1.2, values: [0, 8, 0] }, armLoopR: { dur: 1.2, values: [0, 8, 0] }, eye: 'dot', mouth: 'grin', loop: L.wiggle, eyeLoop: 'blink', waves: true },
   agent: { armL: 16, armR: -140, armLoopR: { dur: 0.6, values: [0, 34, 0] }, eye: 'dot', mouth: 'grin', loop: L.bounce, eyeLoop: 'blink' },
   asking: { armL: 16, armR: -140, armLoopR: { dur: 1.4, values: [0, 26, 0] }, eye: 'wide', mouth: 'o', loop: L.sway, eyeLoop: 'blink', over: 'question' },
   success: { armL: 150, armR: -150, eye: 'happy', mouth: 'grin', loop: L.jump, over: 'check' },
@@ -485,7 +487,7 @@ function mouthLoop(kind: Pose['mouthLoop'], base: MouthKind): string {
   const cx = 50
   const cy = 64
   const shapes: Record<NonNullable<Pose['mouthLoop']>, [MouthKind[], number]> = {
-    talk: [['small', 'open', 'o', 'small', 'open', 'small'], 0.9],
+    talk: [['small', 'chat', 'small', 'small', 'chat', 'small'], 0.9],
     wobble: [['pout', 'flat', 'pout'], 0.7],
     yawn: [['small', 'small', 'open', 'open', 'small'], 4],
     hum: [['small', 'o', 'small', 'o', 'small'], 1.2],
@@ -1422,7 +1424,7 @@ const still = (svg: string) => svg.replace(/<(animate|animateTransform|animateMo
 
 /** How a mouth's loop is played by a layer: stretched open and shut (or narrowed), keyframe by keyframe, over its time. */
 const MOUTH_PLAY: Record<NonNullable<Pose['mouthLoop']>, [number[][], number]> = {
-  talk: [[[1, 1], [1.05, 1.9], [1, 1.3], [1, 1], [1.05, 1.8], [1, 1]], 0.9],
+  talk: [[[1, 1], [0.93, 1.9], [1, 1], [1, 1], [0.93, 1.9], [1, 1]], 0.9],
   wobble: [[[1, 1], [0.82, 1.1], [1, 1]], 0.7],
   yawn: [[[1, 1], [1, 1], [1.1, 2.4], [1.1, 2.4], [1, 1]], 4],
   hum: [[[1, 1], [0.9, 1.6], [1, 1], [0.9, 1.6], [1, 1]], 1.2],
@@ -1517,7 +1519,8 @@ export function layersFor(shot: { mood: Mood | Act; scene: Scene }, room: Room, 
 
   const mouth = svg(ink(`<path d="${pathOf(to.mouth, 50, 64)}" fill="#2B1B17"/>`))
   const talk = pose.mouthLoop ? MOUTH_PLAY[pose.mouthLoop] : undefined
-  const mouthLayer = layer('mouth', mouth, at(50, 64), 'none', talk ? { tpl: 'scale({0}, {1})', frames: talk[0] } : null, talk?.[1])
+  // About the shut mouth's middle (63.8 to 65.8), so a mouth opening grows up and down as the drawing's shapes do.
+  const mouthLayer = layer('mouth', mouth, at(50, 64.8), 'none', talk ? { tpl: 'scale({0}, {1})', frames: talk[0] } : null, talk?.[1])
 
   const armSvg = (side: 'L' | 'R') => {
     const [px, py] = side === 'L' ? SHOULDER_L : SHOULDER_R
