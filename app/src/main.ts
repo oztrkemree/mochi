@@ -34,6 +34,10 @@ import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { type Run, stepStuck } from './stuck'
 import { type Entry, planOf } from './sync'
 import { effortOf, weekDue, weekTop } from './effort'
+import { HOT_LOOKS, machineNews, machineOf, NOTHING_TOLD, type Told } from './machine'
+import { forgotten, serverKey, serverName, serversOf } from './servers'
+import { gbOf } from './trees'
+import { type Agent, CHANGES_PAGE, changesOf, keptWith, versionNews, versionOf } from './whatsnew'
 import { words } from './words'
 import { spell } from './work-tab'
 import { ROOM, type Row, type View, badgeOf, gazeOf, jobsOf, peersOf, rowsOf, stillOf, viewOf } from './world'
@@ -1255,7 +1259,7 @@ function draw() {
   for (const id of theirs) leave(id)
   const peers = [...others, ...agentPeers(sessions, now)]
   const before = view
-  const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT), skin })
+  const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT) || isHot(), skin })
   view = next
   // A new pose comes to the screen eased in from the last; the same pose is left as it is.
   const isAtWork = peers.some(p => p.state === 'busy')
@@ -1452,6 +1456,117 @@ addEventListener('contextmenu', e => {
   void invoke('open_room')
 })
 
+// ---------- the computer ----------
+
+/** What is kept under a key; null when there is none or storage cannot be read. */
+const keptText = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+/** Keeps text under a key; when storage cannot be written it is said again the next time. */
+const storeText = (key: string, text: string) => {
+  try {
+    localStorage.setItem(key, text)
+  } catch {
+    // Not kept: said again the next time.
+  }
+}
+
+/** When the computer was last looked at: two minutes after the start, then every ten minutes. */
+let caredAt = 0
+/** When the agents' versions were last looked at: once at the start, then every six hours. */
+let versionsAt = 0
+/** How often the agents' versions are looked at: once at the start, then every six hours. */
+const VERSIONS_EVERY_MS = 6 * 3_600_000
+/** Whether a look at the computer is under way: a second one does not start beside it. */
+let isCaring = false
+/** What was already said of the computer, so each thing is said once. */
+let toldMachine: Told = { ...NOTHING_TOLD, diskDay: keptText('careDiskDay') ?? '' }
+
+/** Whether the computer has run hot for looks in a row: Mochi looks as worn as it does near a limit. */
+const isHot = (): boolean => settings.care && toldMachine.hotLooks >= HOT_LOOKS
+
+/** The dev servers already said of, by their keys: the last fifty. */
+function toldServers(): string[] {
+  try {
+    const v: unknown = JSON.parse(keptText('careServers') ?? '[]')
+    return Array.isArray(v) && v.every(s => typeof s === 'string') ? v : []
+  } catch {
+    return []
+  }
+}
+
+/** Looks at the computer and says what is worth it, once each: a full disk, a low battery, a hot computer, a dev server left running a day. */
+async function careLook() {
+  if (!settings.care || isCaring) return
+  isCaring = true
+  try {
+    caredAt = Date.now()
+    if (!view) return
+    const m = machineOf(await invoke<Parameters<typeof machineOf>[0]>('machine'))
+    const was = toldMachine.diskDay
+    const news = machineNews(m, toldMachine, dayKey(Date.now(), tz()))
+    toldMachine = news.told
+    if (toldMachine.diskDay !== was) storeText('careDiskDay', toldMachine.diskDay)
+    const w = words().care.machine
+    for (const kind of news.kinds) {
+      const line = kind === 'disk' ? w.diskLow(gbOf(m.diskFree / 1024)) : kind === 'battery' ? w.batteryLow(m.battery?.percent ?? 0) : w.hot
+      hear([{ id: 'care-' + kind, kind: 'nudge', line, link: '' }], view.peers)
+    }
+    const ports = await invoke<{ lsof: string; ps: string; cwd: string }>('ports')
+    const told = toldServers()
+    const [forgot] = forgotten(serversOf(ports.lsof, ports.ps, ports.cwd), told)
+    if (forgot && !isBusy() && !say.classList.contains('on')) {
+      storeText('careServers', JSON.stringify([...told, serverKey(forgot)].slice(-50)))
+      const c = words().care
+      speak(c.servers.forgotten(serverName(forgot), forgot.port, c.age(Math.floor(forgot.seconds / 3600))), 120_000, QUIET_INK, null, {
+        acts: [
+          { label: c.servers.stop, isMain: true, run: () => { void invoke('stop_server', { pid: forgot.pid, port: forgot.port }).catch(note); sayNext() } },
+          { label: words().notNow, run: sayNext },
+        ],
+      })
+    }
+  } finally {
+    isCaring = false
+  }
+}
+
+/** Looks at the agents' versions: a newer one is said once, with what changed in it. */
+async function versionLook() {
+  versionsAt = Date.now()
+  if (!settings.care) return
+  const raw = await invoke<Record<Agent, string>>('agent_versions')
+  const now: Record<Agent, string | null> = { claude: versionOf(raw.claude), codex: versionOf(raw.codex) }
+  const news = versionNews(keptText('agentVersions'), now)
+  if (news.fresh.length === 0) {
+    if (news.keep !== null) storeText('agentVersions', news.keep)
+    return
+  }
+  const agent = news.fresh[0]
+  if (agent === undefined) return
+  // Not stored until said: a version that cannot be said now is still new the next time.
+  if (isBusy() || say.classList.contains('on')) {
+    versionsAt = Date.now() - VERSIONS_EVERY_MS + 10 * 60_000
+    return
+  }
+  const version = now[agent] ?? ''
+  storeText('agentVersions', keptWith(keptText('agentVersions'), agent, version))
+  if (news.fresh.length > 1) versionsAt = Date.now() - VERSIONS_EVERY_MS + 10 * 60_000
+  const text = (await invoke<string | null>('changes', { agent, version }).catch(() => null)) ?? ''
+  const w = words().care.news
+  const changes = changesOf(agent, text, version).map(c => `• ${c}`)
+  speak([w.said(words().agentName[agent], version), ...changes].join('\n'), 120_000, QUIET_INK, null, {
+    acts: [
+      { label: w.all, isMain: true, run: () => { void openUrl(CHANGES_PAGE[agent]); sayNext() } },
+      { label: words().notNow, run: sayNext },
+    ],
+  })
+}
+
 // ---------- the game ----------
 
 /** The round on now: when Mochi hops, the presses so far (ms from its start), and the timers to stop it; null with none on. */
@@ -1555,6 +1670,8 @@ async function start() {
     if (fidget) hold(fidget)
     void take([]).catch(note)
     if (Date.now() - syncedAt >= 15 * 60_000) void sync().catch(note)
+    if (Date.now() - caredAt >= 10 * 60_000) void careLook().catch(note)
+    if (Date.now() - versionsAt >= VERSIONS_EVERY_MS) void versionLook().catch(note)
   })
   stirSoon()
   // Everything is told from the start now that someone listens.
@@ -1584,6 +1701,10 @@ async function start() {
   })
   void count().catch(note)
   void sync().catch(note)
+  void versionLook().catch(note)
+  // The computer is first looked at two minutes after the start, not at once.
+  caredAt = Date.now()
+  window.setTimeout(() => void careLook().catch(note), 120_000)
   void readReadings()
   // The first meeting, once: what Mochi does, the agents to listen to, the bubble's answers, the pocket.
   void meet().catch(note)

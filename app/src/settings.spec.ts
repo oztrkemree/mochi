@@ -61,6 +61,12 @@ test('how Mochi carries itself: calm unless set, playful or serious when chosen,
   expect(settingsFrom(JSON.stringify({ temper: 'grumpy' })).temper).toBe('calm')
 })
 
+test('Mochi looks after the computer: on unless set off, a switch that is either', () => {
+  expect(DEFAULTS.care).toBe(true)
+  expect(settingsFrom(JSON.stringify({ care: false })).care).toBe(false)
+  expect(settingsFrom(JSON.stringify({ care: 'no' })).care).toBe(true)
+})
+
 test('the folder the computers share: off unless set, a text of at most 400 characters, anything else off', () => {
   expect(DEFAULTS.syncFolder).toBe('')
   expect(settingsFrom(JSON.stringify({ syncFolder: '/Users/me/Dropbox' })).syncFolder).toBe('/Users/me/Dropbox')
