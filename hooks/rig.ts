@@ -334,6 +334,21 @@ function wobbleOf(loop: BodyLoop | undefined): { deg: number; dur: number } {
   return { deg: lift >= 3 ? 8 : tilt >= 3 ? 6 : 3, dur: Math.min(2.6, Math.max(0.6, loop.dur)) }
 }
 
+/** How far past its new angle a big turn of an arm swings before it settles back, and when, in the transition's 0 to 1. */
+const pastOf = (from: number, to: number) => to + Math.max(-12, Math.min(12, (to - from) * 0.12))
+const PAST_AT = 0.7
+/** A turn this many degrees or more swings past; a smaller one just eases in. */
+const BIG_TURN = 30
+const TO_PAST: Spline = [0.3, 0, 0.2, 1]
+const SETTLE: Spline = [0.4, 0, 0.6, 1]
+
+/** An arm `x` (0 to 1) into its transition, as the drawing turns it (see `arm`): a big turn past and back, a small one eased. */
+function turnAt(from: number, to: number, x: number): number {
+  if (Math.abs(to - from) < BIG_TURN) return mix(from, to, ease(x))
+  const past = pastOf(from, to)
+  return x < PAST_AT ? mix(from, past, ease(x / PAST_AT, TO_PAST)) : mix(past, to, ease((x - PAST_AT) / (1 - PAST_AT), SETTLE))
+}
+
 function ease(x: number, [x1, y1, x2, y2]: Spline = [0.35, 0, 0.15, 1]): number {
   const bez = (t: number, a: number, b: number) => 3 * (1 - t) * (1 - t) * t * a + 3 * (1 - t) * t * t * b + t * t * t
   let lo = 0
@@ -360,7 +375,10 @@ function sample(values: number[], dur: number, seconds: number, once = false, st
 /** What a pose drawn `ms` ago shows now: its transition, then its loops on top. */
 export function paramsAt(from: Params | null, mood: Mood | Act, ms: number): Params {
   const to = target(mood)
-  if (from !== null && ms < TRANSITION_MS) return lerp(from, to, ease(ms / TRANSITION_MS))
+  if (from !== null && ms < TRANSITION_MS) {
+    const x = ms / TRANSITION_MS
+    return { ...lerp(from, to, ease(x)), armL: turnAt(from.armL, to.armL, x), armR: turnAt(from.armR, to.armR, x) }
+  }
   const p = poseOf(mood)
   const s = Math.max(0, (ms - TRANSITION_MS) / 1000)
   const out = { ...to }
@@ -430,9 +448,8 @@ function arm(side: 'L' | 'R', from: number, to: number, loop: ArmLoop | undefine
   const at = (deg: number) => `${n(deg)} ${px} ${py}`
   const swing = loop ? loopT('rotate', loop.values.map(v => `${n(v)} ${px} ${py}`), loop.dur, splined(swayed(loop.values))) : ''
   // A big turn swings a little past where it is going and settles back.
-  const past = to + Math.max(-12, Math.min(12, (to - from) * 0.12))
-  const turn = Math.abs(to - from) < 20 ? tweenT('rotate', at(from), at(to))
-    : `<animateTransform attributeName="transform" type="rotate" values="${at(from)};${at(past)};${at(to)}" dur="${D}" fill="freeze" calcMode="spline" keyTimes="0;0.7;1" keySplines="0.3 0 0.2 1;0.4 0 0.6 1"/>`
+  const turn = Math.abs(to - from) < BIG_TURN ? tweenT('rotate', at(from), at(to))
+    : `<animateTransform attributeName="transform" type="rotate" values="${at(from)};${at(pastOf(from, to))};${at(to)}" dur="${D}" fill="freeze" calcMode="spline" keyTimes="0;${PAST_AT};1" keySplines="${TO_PAST.join(' ')};${SETTLE.join(' ')}"/>`
   return `<g transform="rotate(${at(to)})">${turn}<g${fx}>${swing}<rect x="${px - 3.2}" y="${py - 2.3}" width="6.4" height="14" rx="3.2" fill="#D27352"/>${img(ART.arm, px - 3.5, py - 2.5, 7)}</g></g>`
 }
 
@@ -1340,7 +1357,8 @@ function markup(shot: Drawn): string {
   const was = shot.from ? poseOf(shot.from.mood) : pose
   const wasScene = shot.from?.scene ?? scene
   const loops = bodyLoops(pose.loop)
-  const wobble = wobbleOf(pose.loop)
+  // As the layers wobble it (see layersFor), so a hand-off between them never jumps: a moment's once-only loop leaves it at rest.
+  const wobble = wobbleOf(pose.loop?.once ? undefined : pose.loop)
   const [eyeMove, eyeBlink] = eyeLoops(pose.eyeLoop)
 
   const level = (c: number) => Math.max(0, Math.min(100, c)) / 100
@@ -1425,7 +1443,7 @@ function markup(shot: Drawn): string {
     `<g>${loops.squash}`,
     '<g transform="translate(-50 -82)">',
     // A hat has no room for the antenna: it comes off while something is on the head.
-    outfit.head ? '' : `<g>${loopT('rotate', [`${-wobble.deg} 50 34`, `${wobble.deg} 50 34`, `${-wobble.deg} 50 34`], wobble.dur, splined([IN_OUT, IN_OUT]), '0s')}` +
+    outfit.head ? '' : `<g>${loopT('rotate', [`${-wobble.deg} 50 34`, `${wobble.deg} 50 34`, `${-wobble.deg} 50 34`], wobble.dur, splined([IN_OUT, IN_OUT]))}` +
       `<path d="M50 34 Q49 27 50 21" stroke="#B65A3C" stroke-width="2.2" fill="none" stroke-linecap="round"${fx}/>` +
       '<circle cx="50" cy="17.5" r="8" fill="url(#glow)"><animate attributeName="opacity" values="0.45;1;0.45" dur="2.2s" repeatCount="indefinite"/></circle>' +
       `<circle cx="50" cy="17.5" r="4" fill="#FFB38A"/>${img(ART.bulb, 45.6, 13.1, 8.8)}</g>`,

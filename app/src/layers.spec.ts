@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 
 import type { Act, Mood } from '../../types'
-import { ACTS, POSES, layersFor, mascotInner, poseOf, target } from '../../hooks/rig'
+import { ACTS, POSES, layersFor, mascotInner, paramsAt, poseOf, target } from '../../hooks/rig'
 import { ROOM } from './world'
 
 const scene = { context: -1, agents: 0 }
@@ -92,4 +92,16 @@ test('Mochi moves as if it had weight: loops ease, a bounce squashes as it lands
   expect(attr(layersFor({ mood: 'proud', scene }, ROOM), 'armR', 'frames')).toBeUndefined()
   // A big turn of an arm swings past where it goes and settles back.
   expect(mascotInner({ mood: 'wave', scene, from: { params: target('idle'), mood: 'idle', scene } })).toMatch(/values="-16 76\.5 55;-152 76\.5 55;-140 76\.5 55"/)
+})
+
+test('what the layers take over is what the drawing shows: the antenna in step, an arm turning where the drawing has it', () => {
+  // The drawing's antenna starts with every other loop, after the move in, and wobbles as the layers do, a moment's included.
+  for (const mood of ['wave', 'shocked'] as const) {
+    const drawn = mascotInner({ mood, scene, from: null }).match(/<animateTransform attributeName="transform" type="rotate" values="(-?[\d.]+) 50 34;[^"]*" dur="([\d.]+)s" begin="([^"]+)"/)!
+    const layer = layersFor({ mood, scene }, ROOM).match(/<div class="antenna"[^>]*data-frames="\[\[(-?[\d.]+)\][^"]*" data-times="[^"]*" data-dur="([\d.]+)"/)!
+    expect([drawn[1], drawn[2], drawn[3]], mood).toEqual([layer[1], layer[2], '0.34s'])
+  }
+  // 100 ms into idle turning to wave, the drawing's right arm is at -110.8 (from -16 past -152 to -140, keySplines 0.3 0 0.2 1 over
+  // the first 70%): a pose that comes then starts from there, not from a straight ease of -16 to -140.
+  expect(paramsAt(target('idle'), 'wave', 100).armR).toBeCloseTo(-110.8, 0)
 })
