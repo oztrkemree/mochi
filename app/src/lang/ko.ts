@@ -196,7 +196,6 @@ const KO: Words = {
   place: '위치',
   resetPlace: '모서리로 돌아가기',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `서브 에이전트 ${n}개가 작업 중`,
   breaks: {
     setting: '이 시간이 지나면 쉬라고 알려줘',
     line: (m: number) => `${m}분째 쉬지 않았어요. 다리 좀 펴실래요?`,

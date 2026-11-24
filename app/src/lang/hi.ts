@@ -199,7 +199,6 @@ const HI: Words = {
   place: 'जगह',
   resetPlace: 'वापस कोने में',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `${n} सब-एजेंट काम पर`,
   breaks: {
     setting: 'इतनी देर बाद आराम की याद दिलाओ',
     line: (m: number) => `${m} मिनट बिना रुके। पैर थोड़े सीधे कर लें?`,

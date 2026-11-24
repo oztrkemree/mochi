@@ -199,7 +199,6 @@ const FR: Words = {
   place: 'Position',
   resetPlace: 'Retour dans le coin',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `${n} sous-agents au travail`,
   breaks: {
     setting: 'Rappelle-moi de me reposer après',
     line: (m: number) => `${m} minutes sans pause. Et si tu t’étirais les jambes ?`,

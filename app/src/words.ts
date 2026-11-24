@@ -195,7 +195,6 @@ export const EN = {
   place: 'Place',
   resetPlace: 'Back to the corner',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `${n} subagents at work`,
   breaks: {
     setting: 'Remind me to rest after',
     line: (m: number) => `${m} minutes without a pause. Stretch your legs?`,
@@ -441,7 +440,6 @@ const TR: Words = {
   place: 'Yer',
   resetPlace: 'Köşeye geri dön',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `${n} alt ajan çalışıyor`,
   breaks: {
     setting: 'Aralıksız çalışınca mola hatırlat',
     line: (m: number) => `${m} dakikadır mola yok. Kalkıp biraz gerinsen mi?`,

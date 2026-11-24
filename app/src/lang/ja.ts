@@ -196,7 +196,6 @@ const JA: Words = {
   place: '位置',
   resetPlace: '隅に戻す',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `${n} 件のサブエージェントが作業中`,
   breaks: {
     setting: '作業後に休憩をうながす',
     line: (m: number) => `${m} 分間ずっと作業中。少し体を伸ばしませんか？`,

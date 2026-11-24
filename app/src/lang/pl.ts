@@ -204,7 +204,6 @@ const PL: Words = {
   place: 'Miejsce',
   resetPlace: 'Z powrotem do rogu',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => pn(String(n), 'subagent pracuje', 'subagenty pracują', 'subagentów pracuje'),
   breaks: {
     setting: 'Przypomnij mi o odpoczynku po',
     line: (m: number) => pn(String(m), 'minuta bez przerwy. Rozprostujemy nogi?', 'minuty bez przerwy. Rozprostujemy nogi?', 'minut bez przerwy. Rozprostujemy nogi?'),

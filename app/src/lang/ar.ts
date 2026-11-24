@@ -211,7 +211,6 @@ const AR: Words = {
   place: 'المكان',
   resetPlace: 'العودة إلى الزاوية',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `${n} من الوكلاء الفرعيين يعملون`,
   breaks: {
     setting: 'ذكّرني بأخذ استراحة بعد',
     line: (m: number) => `${m === 2 ? 'دقيقتان' : `${m} ${m >= 3 && m <= 10 ? 'دقائق' : 'دقيقة'}`} دون توقف. هل نمدّ ساقيك قليلًا؟`,

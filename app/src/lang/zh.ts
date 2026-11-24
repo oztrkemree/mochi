@@ -196,7 +196,6 @@ const ZH: Words = {
   place: '位置',
   resetPlace: '回到角落',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `${n} 个子代理在工作`,
   breaks: {
     setting: '之后提醒我休息',
     line: (m: number) => `${m} 分钟没停过了，起来活动一下？`,

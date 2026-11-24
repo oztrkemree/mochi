@@ -199,7 +199,6 @@ const DE: Words = {
   place: 'Position',
   resetPlace: 'Zurück in die Ecke',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => pl(String(n), 'Subagent arbeitet', 'Subagenten arbeiten'),
   breaks: {
     setting: 'Erinnere mich danach ans Ausruhen nach',
     line: (m: number) => pl(String(m), 'Minute ohne Pause. Mal die Beine strecken?', 'Minuten ohne Pause. Mal die Beine strecken?'),

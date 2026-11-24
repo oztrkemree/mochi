@@ -196,7 +196,6 @@ const ID: Words = {
   place: 'Posisi',
   resetPlace: 'Kembali ke sudut',
   version: (v: string) => `Mochi Buddy ${v}`,
-  kits: (n: number) => `${n} subagen sedang bekerja`,
   breaks: {
     setting: 'Ingatkan aku istirahat setelah',
     line: (m: number) => `${m} menit tanpa jeda. Regangkan kaki dulu?`,
