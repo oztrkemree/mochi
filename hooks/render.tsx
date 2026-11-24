@@ -389,8 +389,8 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     const chats = () => {
       const crew = v.me ? partyOf({ ...v.me, at: now }, v.peers ?? [], now) : null
       if (crew === null || !crew.isShown) return drawn('chats')
-      // Every Mochi in the party wears what the person dressed Mochi in, as the band's does in that mood.
-      const floor = floorOf(crew, now, crewPick, mood => outfitNow(p, v, mood, now))
+      // Every Mochi in the party wears what the person dressed Mochi in, and its colour, as the band's does in that mood.
+      const floor = floorOf(crew, now, crewPick, mood => outfitNow(p, v, mood, now), skin)
       // Each redraw rebuilds the picture: its loops run on the clock, so a redraw picks them up where they were.
       // As wide as it needs, never wider than the pane: a crowded floor shrinks to fit.
       const floorW = Math.min(secW, floor.width)
