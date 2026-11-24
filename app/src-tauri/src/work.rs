@@ -184,17 +184,23 @@ fn usage_args<'a>(kind: &str, span: &'a str) -> Option<Vec<&'a str>> {
     }
 }
 
-/// What CodeBurn (the person's own, if installed) reports, as JSON text. Err("missing") when it is not installed,
-/// Err("failed") when it ran and said no JSON or took too long (a month of logs can take half a minute).
-pub fn usage(kind: &str, span: &str) -> Result<String, String> {
+/// What the counter shipped in Mochi (CodeBurn, in `counter`, see `codeburn/README.md`) reports, as JSON text, run by the
+/// person's own Node. Err("missing") when there is no Node 22.13 or later, Err("failed") when it said no JSON or took too
+/// long (a month of logs can take half a minute).
+pub fn usage(counter: &Path, kind: &str, span: &str) -> Result<String, String> {
     let args = usage_args(kind, span).ok_or("failed")?;
-    if !tool("codeburn").is_absolute() {
+    let cli = counter.join("dist").join("cli.js");
+    if !cli.is_file() {
+        return Err("failed".into());
+    }
+    if !tool("node").is_absolute() {
         return Err("missing".into());
     }
-    run("codeburn", &args, None, Duration::from_secs(120))
-        .filter(|o| o.code == 0 && serde_json::from_str::<Value>(&o.stdout).is_ok())
-        .map(|o| o.stdout)
-        .ok_or_else(|| "failed".into())
+    let out = run("node", &[&[cli.to_str().ok_or("failed")?][..], &args].concat(), None, Duration::from_secs(120)).ok_or("failed")?;
+    if out.stderr.contains("requires Node.js") {
+        return Err("missing".into());
+    }
+    (out.code == 0 && serde_json::from_str::<Value>(&out.stdout).is_ok()).then_some(out.stdout).ok_or_else(|| "failed".into())
 }
 
 #[cfg(test)]
@@ -207,6 +213,21 @@ mod tests {
         assert_eq!(usage_args("quota", ""), Some(vec!["quota", "--format", "json"]));
         assert_eq!(usage_args("status", "--output=/etc/x"), None);
         assert_eq!(usage_args("export", "week"), None);
+    }
+
+    #[test]
+    fn the_counter_ships_whole() {
+        // The bundle reads ../package.json for its version and starts its parse workers from beside main.js.
+        let counter = Path::new(env!("CARGO_MANIFEST_DIR")).join("codeburn");
+        for file in ["package.json", "LICENSE", "dist/cli.js", "dist/main.js", "dist/parse-worker.js"] {
+            assert!(counter.join(file).is_file(), "{file}");
+        }
+        assert_eq!(usage(Path::new("/nowhere"), "status", "week"), Err("failed".into()));
+        // With Node 22.13 or later on this computer the shipped counter answers; with an older one or none, it says so.
+        match usage(&counter, "quota", "") {
+            Ok(json) => assert!(json.contains("\"providers\"")),
+            Err(e) => assert_eq!(e, "missing"),
+        }
     }
 
     #[test]

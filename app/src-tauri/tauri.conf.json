@@ -43,7 +43,8 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "createUpdaterArtifacts": false
+    "createUpdaterArtifacts": false,
+    "resources": ["codeburn/**/*"]
   },
   "plugins": {
     "updater": {
