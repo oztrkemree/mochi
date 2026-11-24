@@ -172,6 +172,8 @@ export const chat = {
   skin: undefined as string | undefined,
   /** Whether the desktop app's Mochi is out, as app.json last said: then it may say a level too. */
   appRuns: false,
+  /** The desktop app runs and has its sound off: the band plays none either. */
+  appMutes: false,
   peersAt: 0,
   peerMtimes: {} as Record<string, number>,
   peerCache: {} as Record<string, Peer>,

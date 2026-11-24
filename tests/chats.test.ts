@@ -4,7 +4,7 @@ import { expect, mock, test } from 'claude-code/testing'
 import { boardLines, boardOf, chatsCard, claimOf, isLinkedWorktree, isWaitLong, resetsPassed } from '../hooks/chats'
 import { detailLines } from '../hooks/detail'
 import { setLang } from '../hooks/i18n'
-import { ALIVE_MS, appLink, appSessionOf, deskOf, peerOf } from '../hooks/live'
+import { ALIVE_MS, appLink, appMutes, appSessionOf, deskOf, peerOf } from '../hooks/live'
 import { floorOf, partyOf } from '../hooks/party'
 import { openCommand } from '../hooks/system'
 import { itemIcon } from '../hooks/rig'
@@ -585,6 +585,18 @@ test('a peer file’s usage windows are read one by one: junk is dropped, percen
   expect(read[2]?.kind.length).toBeLessThanOrEqual(20)
   // An older Mochi's file has none of the newer fields, whatever else is in it.
   expect(peerOf({ ...base, v: undefined, windows }, NOW)?.windows).toBeUndefined()
+})
+
+test('the desktop app’s sound switch silences the band while its file is fresh and says off, and nothing else does', () => {
+  expect(appMutes({ v: 1, at: NOW, isShown: true, sound: false }, NOW)).toBe(true)
+  // Its Mochi off the screen, the app still runs and its switch still stands.
+  expect(appMutes({ v: 1, at: NOW, isShown: false, sound: false }, NOW)).toBe(true)
+  expect(appMutes({ v: 1, at: NOW - ALIVE_MS, sound: false }, NOW)).toBe(true)
+  // Closed without a goodbye: the band's own setting stands again.
+  expect(appMutes({ v: 1, at: NOW - ALIVE_MS - 1, sound: false }, NOW)).toBe(false)
+  expect(appMutes({ v: 1, at: NOW, sound: true }, NOW)).toBe(false)
+  // An older app's file says nothing of sound; it mutes nothing.
+  for (const junk of [null, undefined, 'off', 7, [], {}, { at: NOW }, { at: NOW, sound: 0 }, { at: NOW, sound: 'false' }, { sound: false }, { at: String(NOW), sound: false }]) expect(appMutes(junk, NOW)).toBe(false)
 })
 
 test('the desktop app’s Mochi is out only while its file says shown and is fresh', async () => {

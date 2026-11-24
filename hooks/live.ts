@@ -62,6 +62,16 @@ export function deskOf(value: unknown, now: number): boolean {
   return v.isShown === true && typeof v.at === 'number' && now - v.at <= ALIVE_MS
 }
 
+/**
+ * Whether the desktop app's sound switch silences the band: its file is fresh (it runs, its Mochi
+ * shown or not) and says sound is off. An older app's file says nothing of sound and mutes nothing.
+ */
+export function appMutes(value: unknown, now: number): boolean {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as { at?: unknown; sound?: unknown }
+  return v.sound === false && typeof v.at === 'number' && now - v.at <= ALIVE_MS
+}
+
 /** A chat's subagents in its file: at most this many. */
 export const CREW_MAX = 8
 /** A chat's usage windows in its file: at most this many. */

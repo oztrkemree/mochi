@@ -21,7 +21,7 @@ import type { Danger } from './guard'
 import { DICTS, LANGS, pickLang, setLang, t } from './i18n'
 import type { Dict, Lang } from './i18n'
 import { EMPTY_DAY, SLOT, SLOTS, UNLOCKS, choiceFrom, choiceText, itemName, itemOf, itemShort, slotName, addDay, hintFor, levelOf, lookOf, outfitNow, season, skinName, skinNow, summarize, unlocked, xpOf } from './level'
-import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
+import { CREW_MAX, WINDOWS_MAX, activityOf, appLink, appMutes, appSessionOf, deskOf, peerLabel, peerNews, peerOf } from './live'
 import { floorOf, partyOf, spotAt } from './party'
 import { PANEL_H, panelSvg, toolKind } from './panel'
 import { band, detailPane } from './render'
@@ -110,7 +110,8 @@ const mayCelebrate = (f: Face, now: number): boolean => f.mood === 'party' || !i
 const callKey = (agent: string | undefined, tool: string, about: string) => `${agent ?? ''}|${tool}|${about}`
 
 async function play($: Dollar, sound: SoundName | undefined) {
-  if (sound === undefined || !(await read($, prefs)).hasSound) return
+  // The desktop app's own sound switch, while it runs, is the one switch for both Mochis.
+  if (sound === undefined || chat.appMutes || !(await read($, prefs)).hasSound) return
   void $.audio.play({ base64: clip(sound), mime: 'audio/wav' }).catch(() => undefined)
 }
 
@@ -740,6 +741,7 @@ async function readPeers($: Dollar) {
   const app = await $.fs.read(`${chat.dataDir}/app.json`).then(text => JSON.parse(text) as unknown).catch(() => null)
   const isOut = deskOf(app, now)
   chat.appRuns = isOut
+  chat.appMutes = appMutes(app, now)
   if (isOut !== (await read($, away))) await update($, away, () => isOut)
   await wearChoice($)
   const seen: Record<string, number> = {}

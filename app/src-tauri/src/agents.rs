@@ -564,7 +564,7 @@ mod tests {
     fn the_hook_counts_the_app_as_running_only_while_its_beat_is_on_disk() {
         let dir = scratch("running");
         assert!(!is_running(&dir));
-        write_whole(&dir.join("app.json"), &beat_text(now_ms(), true, 0, false));
+        write_whole(&dir.join("app.json"), &beat_text(now_ms(), true, 0, false, false));
         assert!(is_running(&dir));
         fs::remove_file(dir.join("app.json")).unwrap();
         assert!(!is_running(&dir));
