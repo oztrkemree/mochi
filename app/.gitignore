@@ -2,3 +2,5 @@ node_modules/
 dist/
 src-tauri/target/
 src-tauri/gen/
+# The usage counter shipped in the app is kept, not built.
+!src-tauri/codeburn/dist/
