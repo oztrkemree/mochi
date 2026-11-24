@@ -21,7 +21,7 @@ import { SECRETS, type Secret, secretsNow, secretsWon } from './secrets'
 import { serversOf } from './servers'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
-import { gbOf, isInside, mergedOf, stateOf, treesOf, type TreeState } from './trees'
+import { gbOf, hardOf, isInside, lossesOf, mergedOf, stateOf, treesOf, type TreeState } from './trees'
 import { AGENTS, CHANGES_PAGE, changesOf, versionOf } from './whatsnew'
 import { chosen, lookNow } from './wardrobe'
 import { words } from './words'
@@ -625,6 +625,25 @@ async function readCare() {
   }
 }
 
+/** Removes a worktree, with a wait on its row until git is done; one already being removed is not started again. A chat that opened in it since the list was read stops it. */
+async function removeTree(t: TreeState, force: boolean) {
+  if (care.removing.includes(t.path)) return
+  const w = words().care.trees
+  putCare({ removing: [...care.removing, t.path] })
+  const folders = await invoke<string[]>('chat_folders').catch(() => null)
+  if (folders === null || folders.some(f => isInside(f, t.path))) {
+    putCare({ said: w.open })
+  } else {
+    await invoke('remove_worktree', { repo: t.repo, path: t.path, force }).then(
+      () => putCare({ said: w.freed(gbOf(t.kb)) }),
+      (e: unknown) => putCare({ said: `${w.failed} ${(e instanceof Error ? e.message : String(e)).slice(0, 200)}` }),
+    )
+  }
+  treesAt = 0
+  putCare({ removing: care.removing.filter(p => p !== t.path) })
+  void readCare()
+}
+
 /** What the Computer tab asks for: a press arms a row for four seconds, a second press does it. */
 const acts: CareActs = {
   arm: key => {
@@ -637,23 +656,20 @@ const acts: CareActs = {
     putCare({ armed: '' })
     void invoke('stop_server', { pid: s.pid, port: s.port }).catch(() => {}).finally(() => setTimeout(() => void readPorts(), 800))
   },
-  remove: t => {
-    putCare({ armed: '' })
-    void (async () => {
-      const folders = await invoke<string[]>('chat_folders').catch(() => null)
-      if (folders === null || folders.some(f => isInside(f, t.path))) {
-        treesAt = 0
-        putCare({ said: words().care.trees.open })
-        void readCare()
-        return
-      }
-      await invoke('remove_worktree', { repo: t.repo, path: t.path }).then(() => {
-        treesAt = 0
-        putCare({ said: words().care.trees.freed(gbOf(t.kb)) })
-        void readCare()
-      }).catch((e: unknown) => putCare({ said: `${words().care.trees.failed} ${(e instanceof Error ? e.message : String(e)).slice(0, 200)}` }))
-    })()
+  tree: t => {
+    const w = words().care.trees
+    const hard = hardOf(t)
+    putCare({ armed: '', said: '' })
+    // A chat in the folder, or git's lock, is not the person's to override: a line says so. What a removal would lose is asked about.
+    if (hard !== null) putCare({ said: `${t.branch || t.path}: ${hard === 'open' ? w.open : w.locked}` })
+    else if (lossesOf(t).length > 0) putCare({ ask: t })
+    else void removeTree(t, false)
   },
+  force: t => {
+    putCare({ ask: null })
+    void removeTree(t, true)
+  },
+  cancel: () => putCare({ ask: null }),
   open: agent => void openUrl(CHANGES_PAGE[agent]),
 }
 

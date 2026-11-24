@@ -318,6 +318,17 @@
       .care-size { flex: none; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
       .care-btn { flex: none; height: 26px; padding: 0 11px; border: 1px solid var(--edge); border-radius: 8px; background: none; color: var(--dim); font-size: 12px; cursor: pointer; }
       .care-btn:hover { color: var(--fg); border-color: rgba(255, 236, 222, 0.18); }
+      .care-btn.care-danger { color: #ff9b86; border-color: rgba(255, 120, 90, 0.5); }
+      .care-btn.care-danger:hover { color: #ffb4a3; border-color: rgba(255, 120, 90, 0.8); }
+      .care-wait { flex: none; display: inline-flex; align-items: center; gap: 8px; color: var(--dim); font-size: 12px; }
+      .care-wait::before { content: ''; width: 12px; height: 12px; border: 2px solid var(--edge); border-top-color: var(--clay-hi); border-radius: 50%; animation: care-spin 0.8s linear infinite; }
+      @keyframes care-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .care-wait::before { animation: none; } }
+      .care-veil { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(8, 6, 5, 0.6); }
+      .care-modal { width: min(440px, calc(100vw - 48px)); padding: 18px 20px; border: 1px solid var(--edge); border-radius: 14px; background: var(--raised); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5); }
+      .care-modal h4 { margin: 0 0 10px; font-size: 14px; color: var(--fg); }
+      .care-modal ul { margin: 0 0 16px; padding-left: 18px; color: var(--dim); font-size: 13px; line-height: 1.55; }
+      .care-buttons { display: flex; justify-content: flex-end; gap: 8px; }
       .care-btn[aria-pressed="true"] { color: var(--fg); background: var(--raised); border-color: rgba(217, 119, 87, 0.55); }
       .care-list { margin: 8px 0 0; padding-left: 18px; color: var(--dim); font-size: 12px; }
       .care-list li + li { margin-top: 3px; }

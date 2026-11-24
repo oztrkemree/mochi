@@ -1,6 +1,6 @@
 import { type Machine } from './machine'
 import { type Server, serverName } from './servers'
-import { type TreeState, canRemove, gbOf } from './trees'
+import { type TreeState, canRemove, gbOf, lossesOf } from './trees'
 import { type Agent } from './whatsnew'
 import { words } from './words'
 
@@ -19,13 +19,18 @@ export type CareState = {
   armed: string
   /** What the last removal said: '' or a line to show under the worktrees. */
   said: string
+  /** The paths of the worktrees being removed now: each shows a wait where its button was, and cannot be pressed again. */
+  removing: string[]
+  /** The worktree whose removal would lose something, waiting for the person's word in a window of its own; null for none. */
+  ask: TreeState | null
 }
 
 /** Nothing read yet. */
-export const EMPTY: CareState = { machine: null, servers: null, trees: null, versions: null, armed: '', said: '' }
+export const EMPTY: CareState = { machine: null, servers: null, trees: null, versions: null, armed: '', said: '', removing: [], ask: null }
 
 /** What the tab can ask for. */
-export type CareActs = { stop: (s: Server) => void; remove: (t: TreeState) => void; arm: (key: string) => void; open: (agent: Agent) => void }
+/** `tree`: a press on a worktree's Remove, which removes it or asks; `force`: the person's word to lose what the window said; `cancel`: the window closed. */
+export type CareActs = { stop: (s: Server) => void; tree: (t: TreeState) => void; force: (t: TreeState) => void; cancel: () => void; arm: (key: string) => void; open: (agent: Agent) => void }
 
 /** Kilobytes of the worktrees that could be removed, for the line over them. */
 export const removableKb = (trees: readonly TreeState[]): number => trees.filter(canRemove).reduce((sum, t) => sum + t.kb, 0)
@@ -75,6 +80,36 @@ const twice = (label: string, armed: boolean, press: () => void): HTMLElement =>
   b.setAttribute('aria-pressed', String(armed))
   b.addEventListener('click', press)
   return b
+}
+
+/** The window that says what removing a worktree would lose and asks: Cancel is where the focus starts, and Escape or a press beside the window is Cancel too. */
+function windowOf(t: TreeState, acts: CareActs): HTMLElement {
+  const w = words().care.trees
+  const veil = el('div', 'care-veil')
+  const box = el('div', 'care-modal')
+  box.setAttribute('role', 'alertdialog')
+  box.setAttribute('aria-modal', 'true')
+  box.append(el('h4', '', w.askTitle(t.branch || last(t.path))))
+  const list = el('ul')
+  for (const loss of lossesOf(t)) list.append(el('li', '', loss.kind === 'notMerged' ? w.askNotMerged : loss.kind === 'dirty' ? w.askDirty : w.askKeeps(loss.name)))
+  const cancel = el('button', 'care-btn', w.cancel)
+  cancel.type = 'button'
+  cancel.addEventListener('click', acts.cancel)
+  const force = el('button', 'care-btn care-danger', w.force)
+  force.type = 'button'
+  force.addEventListener('click', () => acts.force(t))
+  const buttons = el('div', 'care-buttons')
+  buttons.append(cancel, force)
+  box.append(list, buttons)
+  box.addEventListener('keydown', e => {
+    if (e.key === 'Escape') acts.cancel()
+  })
+  veil.addEventListener('click', e => {
+    if (e.target === veil) acts.cancel()
+  })
+  veil.append(box)
+  queueMicrotask(() => cancel.focus())
+  return veil
 }
 
 /** Draws the tab: this computer, the dev servers, the worktrees, what is new. */
@@ -137,7 +172,13 @@ export function drawCare(into: HTMLElement, st: CareState, acts: CareActs): void
         if (t.isLocked) name.append(el('small', '', w.trees.locked))
         if (t.keeps.length) name.append(el('small', '', w.trees.keeps(t.keeps[0])))
         row.append(name, el('span', 'care-size', w.gb(gbOf(t.kb))))
-        if (canRemove(t)) row.append(twice(st.armed === key ? w.trees.sure : w.trees.remove, st.armed === key, () => (st.armed === key ? acts.remove(t) : acts.arm(key))))
+        if (st.removing.includes(t.path)) row.append(el('span', 'care-wait', w.trees.removing))
+        else {
+          const button = el('button', 'care-btn', w.trees.remove)
+          button.type = 'button'
+          button.addEventListener('click', () => acts.tree(t))
+          row.append(button)
+        }
         group.append(row)
       }
       trees.append(group)
@@ -145,6 +186,7 @@ export function drawCare(into: HTMLElement, st: CareState, acts: CareActs): void
     if (st.said) trees.append(el('p', 'w-note', st.said))
   }
   into.append(trees)
+  if (st.ask) into.append(windowOf(st.ask, acts))
 
   const news = section(w.news.title)
   const versions = (st.versions ?? []).filter(v => v.version)

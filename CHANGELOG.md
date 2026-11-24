@@ -10,6 +10,7 @@
 - While the desktop app's Mochi is out, a new level or badge is claimed before it is said (`said-level.json`, `said-badges.json`), so one Mochi says it. With the app hidden or closed nothing changes.
 - The desktop band has a one-line size: the button at its right end (or `/mochi small`) draws only the data at about half the height, Mochi's line with the branch and cost after it and the gauges' rings, without Mochi; pressed again (or `/mochi big`) the full band is back.
 - The band keeps its Mochi while the desktop app's Mochi is out too; `/mochi desktop on` has it step aside, and `/mochi desktop off` brings it back.
+- In the Computer tab every worktree has a Remove. It removes one at once when its branch is merged, nothing in it is uncommitted, no chat is open in it and it holds nothing git ignores that cannot be made again; otherwise a window says what would be lost (a branch not merged stays in git, uncommitted changes and those files do not) and asks. A chat open in it, or git's lock, stops it without a window. The row shows a wait until git is done and cannot be pressed again.
 - The room's Settings has an Updates group: the mod and the app each show the version installed and the newest on GitHub, with one button to put the new one in or, for the mod, to install it.
 - The app's sound switch is the one switch for both Mochis: with it off, the band is silent too while the app runs. With the app closed, `/mochi sound` decides again.
 - `/mochi chats` says how far the plan is of a chat the desktop app follows (`2/4`).

@@ -56,9 +56,19 @@ export function stateOf(repo: string, tree: Tree, merged: readonly string[], isD
   return { ...tree, repo, isMerged: merged.includes(tree.branch), isDirty, isOpen: chatFolders.some(f => isInside(f, tree.path)), kb, keeps: keepsOf(ignored) }
 }
 
-/** Whether a worktree can be removed here: not the main one, not locked, on a branch that is merged, nothing uncommitted, no chat open in it, nothing ignored that cannot be made again. */
-export const canRemove = (t: TreeState): boolean =>
-  !t.isMain && !t.isLocked && t.branch !== '' && t.isMerged && !t.isDirty && !t.isOpen && t.keeps.length === 0
+/** What stops a removal outright, whatever the person says: a chat works in the folder, or git has it locked. */
+export const hardOf = (t: TreeState): 'open' | 'locked' | null => (t.isOpen ? 'open' : t.isLocked ? 'locked' : null)
+
+/** What a removal would lose, which the person may decide to lose: work on a branch not merged (the branch stays), changes not committed, files git ignores that cannot be made again. */
+export type Loss = { kind: 'notMerged' } | { kind: 'dirty' } | { kind: 'keeps'; name: string }
+export const lossesOf = (t: TreeState): Loss[] => [
+  ...(t.isMerged ? [] : [{ kind: 'notMerged' } as const]),
+  ...(t.isDirty ? [{ kind: 'dirty' } as const] : []),
+  ...t.keeps.map(name => ({ kind: 'keeps', name }) as const),
+]
+
+/** Whether a worktree goes at one press with nothing asked: not the main one, nothing stopping it, nothing it would lose. */
+export const canRemove = (t: TreeState): boolean => !t.isMain && t.branch !== '' && hardOf(t) === null && lossesOf(t).length === 0
 
 /** Kilobytes as gigabytes with one decimal, for showing ('0.1' at least for anything above 0). */
 export const gbOf = (kb: number): string => {

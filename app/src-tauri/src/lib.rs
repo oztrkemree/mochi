@@ -424,7 +424,7 @@ fn worktrees() -> Vec<Value> { data_dir().map(|d| care::worktrees(&d)).unwrap_or
 
 // async: git removes the folder off the window's thread.
 #[tauri::command(async)]
-fn remove_worktree(repo: String, path: String) -> Result<(), String> { care::remove_worktree(&data_dir().ok_or("no home")?, &repo, &path) }
+fn remove_worktree(repo: String, path: String, force: bool) -> Result<(), String> { care::remove_worktree(&data_dir().ok_or("no home")?, &repo, &path, force) }
 
 // async: the chats' files are read off the window's thread.
 #[tauri::command(async)]

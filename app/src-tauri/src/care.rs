@@ -188,9 +188,11 @@ pub fn worktrees(dir: &Path) -> Vec<Value> {
         .collect()
 }
 
-/// Removes one worktree, with git's own care: only one that git lists for a repository Mochi knows, never its main checkout, never by force.
+/// Removes one worktree: only one that git lists for a repository Mochi knows, never its main checkout, and never a locked one.
+/// With git's own care unless `force` is true, which is the person's word over a worktree git calls unclean (changes, new files):
+/// its folder goes with them, its branch stays.
 /// Git is given three minutes: a worktree full of build output is slow to delete, and must not be cut off half way.
-pub fn remove_worktree(dir: &Path, repo: &str, path: &str) -> Result<(), String> {
+pub fn remove_worktree(dir: &Path, repo: &str, path: &str, force: bool) -> Result<(), String> {
     if !known_repos(dir).iter().any(|known| known == repo) {
         return Err("not a repository Mochi knows".into());
     }
@@ -199,7 +201,12 @@ pub fn remove_worktree(dir: &Path, repo: &str, path: &str) -> Result<(), String>
     if paths.first().is_some_and(|main| main == path) || !paths.iter().skip(1).any(|p| p == path) {
         return Err("not a worktree of that repository".into());
     }
-    match run("git", &["-C", repo, "worktree", "remove", path], None, Duration::from_secs(180)) {
+    let mut args = vec!["-C", repo, "worktree", "remove"];
+    if force {
+        args.push("--force");
+    }
+    args.push(path);
+    match run("git", &args, None, Duration::from_secs(180)) {
         None => Err("git could not be run".into()),
         Some(o) if o.code == 0 => Ok(()),
         Some(o) => {
@@ -324,7 +331,9 @@ mod tests {
 
     #[test]
     fn the_repositories_are_read_newest_first_as_repos_json_is_written() {
-        let text = with_root(&with_root("", "/w/api", crate::store::now_ms()), "/w/web", crate::store::now_ms());
+        // Written a moment apart, api the later: two readings of the clock can differ by a millisecond, so the times are given.
+        let now = crate::store::now_ms();
+        let text = with_root(&with_root("", "/w/web", now - 5), "/w/api", now);
         assert_eq!(roots_by_time(&text), vec!["/w/api", "/w/web"]);
         assert_eq!(roots_by_time(r#"{"/a": 5, "/b": 9, "/c": "x", "": 3, "/d": 7}"#), vec!["/b", "/d", "/a"]);
         assert!(roots_by_time("not json").is_empty());
@@ -383,15 +392,22 @@ mod tests {
         assert_eq!(groups[0]["trees"].as_array().unwrap().len(), 2);
         let main = known[0].clone();
 
-        assert!(remove_worktree(&data, &main, "/nowhere").is_err());
-        assert!(remove_worktree(&data, &main, &paths[0]).is_err());
-        assert!(remove_worktree(&data, "/nowhere-repo", &paths[1]).is_err());
-        assert!(remove_worktree(&data, &paths[1], &paths[1]).is_err());
-        let refused = remove_worktree(&data, &main, &paths[2]).unwrap_err();
+        assert!(remove_worktree(&data, &main, "/nowhere", false).is_err());
+        assert!(remove_worktree(&data, &main, &paths[0], false).is_err());
+        assert!(remove_worktree(&data, "/nowhere-repo", &paths[1], false).is_err());
+        assert!(remove_worktree(&data, &paths[1], &paths[1], false).is_err());
+        let refused = remove_worktree(&data, &main, &paths[2], false).unwrap_err();
         assert!(!refused.is_empty());
         assert!(Path::new(&paths[2]).exists());
-        assert_eq!(remove_worktree(&data, &main, &paths[1]), Ok(()));
+        // Never the main checkout, not even by the person's word.
+        assert!(remove_worktree(&data, &main, &paths[0], true).is_err());
+        assert!(Path::new(&paths[0]).exists());
+        assert_eq!(remove_worktree(&data, &main, &paths[1], false), Ok(()));
         assert!(!Path::new(&paths[1]).exists());
+        // The unclean one goes when the person says so, and its branch stays.
+        assert_eq!(remove_worktree(&data, &main, &paths[2], true), Ok(()));
+        assert!(!Path::new(&paths[2]).exists());
+        assert_eq!(stdout(git(&repo, &["branch", "--list", "dirty"])).trim(), "dirty");
         std::fs::remove_dir_all(&base).unwrap();
     }
 }
