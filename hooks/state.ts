@@ -26,14 +26,14 @@ export const TAB_OF: Record<Block, Tab> = {
 }
 /** A tab's blocks in the person's order. */
 export const inTab = (order: readonly Block[], tab: Tab): Block[] => order.filter(b => TAB_OF[b] === tab)
-export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: OPEN, order: [...BLOCKS], hidden: [], isArranging: false, tab: 'now', shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, goesOut: true, birthday: '', firstDay: '' }
+export const DEFAULT_PREFS: Prefs = { isCompact: false, isHidden: false, hasSound: false, hasShield: true, hasAlert: true, pick: {}, open: OPEN, order: [...BLOCKS], hidden: [], isArranging: false, tab: 'now', shelf: 'head', lang: 'auto', hasCi: true, hasTips: true, hasPlugins: true, hasBreaks: true, stepsAside: false, birthday: '', firstDay: '' }
 export const ALL_ITEMS = SLOTS.flatMap(slot => SLOT_ITEMS[slot])
 
 /**
  * Saved preferences, completed, with an older version's single `wear` turned
  * into a choice per slot and its item ids into today's.
  */
-export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | undefined): Prefs {
+export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown; goesOut?: unknown }) | undefined): Prefs {
   const pick: Partial<Outfit> = {}
   const worn = itemOf(saved?.wear)
   if (saved?.pick && typeof saved.pick === 'object') {
@@ -51,7 +51,8 @@ export function restorePrefs(saved: (Partial<Prefs> & { wear?: unknown }) | unde
   } else if (worn !== null) {
     pick[SLOT[worn]] = worn
   }
-  const { wear: _old, ...rest } = saved ?? {}
+  // goesOut was the setting before stepsAside, saved on by default; it is let go, so Mochi stays in the band unless asked.
+  const { wear: _old, goesOut: _was, ...rest } = saved ?? {}
   const was = (saved?.open ?? {}) as Partial<Record<Section, unknown>>
   const open = Object.fromEntries(SECTIONS.map(s => [s, typeof was[s] === 'boolean' ? was[s] : OPEN[s]])) as Record<Section, boolean>
   // No language saved, or one Mochi no longer speaks: the system's and Claude Code's, as for a new chat.

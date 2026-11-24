@@ -594,9 +594,10 @@ test('the desktop app’s Mochi is out only while its file says shown and is fre
   expect(deskOf({ v: 1, at: NOW - ALIVE_MS - 1, isShown: true }, NOW)).toBe(false)
   expect(deskOf({ v: 1, at: NOW, isShown: false }, NOW)).toBe(false)
   for (const junk of [null, undefined, 'shown', 7, [], {}, { isShown: true }, { at: NOW, isShown: 'true' }, { at: String(NOW), isShown: true }]) expect(deskOf(junk, NOW)).toBe(false)
-  // Saved settings from before the setting was there step aside too.
-  expect(restorePrefs({ lang: 'en' }).goesOut).toBe(true)
-  expect(restorePrefs({ goesOut: false }).goesOut).toBe(false)
+  // Mochi stays in the band unless the person asks it to step aside; the older setting, saved on by default, is let go.
+  expect(restorePrefs({ lang: 'en' }).stepsAside).toBe(false)
+  expect(restorePrefs({ goesOut: true } as never).stepsAside).toBe(false)
+  expect(restorePrefs({ stepsAside: true }).stepsAside).toBe(true)
 })
 
 const BAND = {
@@ -605,7 +606,7 @@ const BAND = {
   props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} },
 }
 
-test('the band draws no mascot while the desktop app’s Mochi is out, and the rest stays; it is back when the app goes, and stays with the setting off', { timeoutMs: 30_000 }, async ($, on) => {
+test('Mochi stays in the band while the desktop app’s Mochi is out; with the setting on it steps aside, the rest stays, and it is back when the app goes', { timeoutMs: 30_000 }, async ($, on) => {
   const { clock, files } = machine(on, [{ kind: 'five_hour', percentUsed: 34, resetsAt: new Date(NOW + 300 * MIN).toISOString() }])
   const APP = '/h/.claude/mochi/app.json'
   let now = NOW
@@ -637,6 +638,14 @@ test('the band draws no mascot while the desktop app’s Mochi is out, and the r
   await $.session.start(START)
   await beat()
   // No desktop app: Mochi is in the band.
+  expect(await drawn()).toEqual(WITH)
+  // The app's Mochi out: by default the band keeps its own too.
+  app(true)
+  await beat()
+  expect(await drawn()).toEqual(WITH)
+  app(false)
+  await $.command.run({ command: 'mochi', args: 'desktop on' } as never)
+  await beat()
   expect(await drawn()).toEqual(WITH)
   // Its Mochi comes out: the band's steps aside at the next read, and everything else stays.
   app(true)
@@ -677,9 +686,9 @@ test('/mochi desktop turns stepping aside for the desktop app off and on, and sa
   await $.session.start(START)
   const run = async (args: string) => (await $.command.run({ command: 'mochi', args } as never)).text
   const [ON, OFF] = ['Desktop on: while Mochi is out on the desktop, the band is drawn without it.', 'Desktop off: Mochi stays in the band.']
-  // On from the start; alone the word turns it over, with on or off it sets it.
-  expect(await run('desktop')).toBe(OFF)
+  // Off from the start; alone the word turns it over, with on or off it sets it.
   expect(await run('desktop')).toBe(ON)
+  expect(await run('desktop')).toBe(OFF)
   expect(await run('desktop on')).toBe(ON)
   expect(await run('desktop off')).toBe(OFF)
   expect(await run('desktop off')).toBe(OFF)

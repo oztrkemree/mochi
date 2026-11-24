@@ -691,7 +691,7 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
   const p = await read($, prefs)
   if (p.isHidden) return next(e)
   // Out on the desktop, Mochi is not drawn here as well: the band keeps its line and its facts.
-  const isAway = p.goesOut && (await read($, away))
+  const isAway = p.stepsAside && (await read($, away))
 
   if (e.surface === 'desktop' || e.surface === 'mobile' || e.surface === 'vscode') {
     // The desktop rebuilds the whole band on every redraw, so this branch
