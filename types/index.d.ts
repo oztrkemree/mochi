@@ -453,6 +453,8 @@ declare module 'claude-code' {
       dirs: { open: string[] }
       /** The desktop app's Mochi is out now, as its file (app.json) last said. */
       away: boolean
+      /** Mochi's chosen colour (hooks/skins.ts), '' for its own clay. */
+      colour: string
     }
   }
 }
