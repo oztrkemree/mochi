@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { type Machine, NOTHING_TOLD, batteryOf, diskOf, loadOf, machineNews, machineOf } from './machine'
+import { DISK_LOW, type Machine, NOTHING_TOLD, batteryOf, diskOf, loadOf, machineNews, machineOf } from './machine'
 
 const DF = 'Filesystem   1024-blocks      Used Available Capacity  iused      ifree %iused  Mounted on\n/dev/disk3s5   971350180 838109536 104354536    89% 10407721 1043545360    1%   /System/Volumes/Data'
 const PMSET = "Now drawing from 'Battery Power'\n -InternalBattery-0 (id=24772707)\t87%; discharging; 3:10 remaining present: true"
@@ -84,8 +84,47 @@ test('a hot computer is reported only after three looks in a row, and once', () 
   expect([r1.kinds, r2.kinds, r3.kinds, r4.kinds]).toEqual([[], [], ['hot'], []])
 })
 
-test('a look between one and one and a half changes nothing, and a quiet look starts the count again', () => {
+test('a look between one and one and a half starts the count again, as a quiet look does, and only a look under one clears what was said', () => {
   const told = { diskDay: '', isBatteryTold: false, hotLooks: 2, isHotTold: false }
-  expect(machineNews(machine({ load: 1.2 }), told, DAY).told).toEqual(told)
+  expect(machineNews(machine({ load: 1.2 }), told, DAY).told).toEqual({ diskDay: '', isBatteryTold: false, hotLooks: 0, isHotTold: false })
   expect(machineNews(machine({ load: 0.5 }), told, DAY).told).toEqual({ diskDay: '', isBatteryTold: false, hotLooks: 0, isHotTold: false })
+  const said = { diskDay: '', isBatteryTold: false, hotLooks: 3, isHotTold: true }
+  expect(machineNews(machine({ load: 1.2 }), said, DAY).told).toEqual({ diskDay: '', isBatteryTold: false, hotLooks: 0, isHotTold: true })
+})
+
+test('hot looks must be in a row: looks that alternate with one above the hot load never say it', () => {
+  const looks = (loads: number[]) => {
+    let news = { kinds: [] as string[], told: NOTHING_TOLD }
+    for (const load of loads) news = machineNews(machine({ load }), news.told, DAY)
+    return news
+  }
+  expect(looks([1.6, 1.2, 1.6, 1.2, 1.6]).kinds).toEqual([])
+  expect(looks([1.6, 1.6, 1.6]).kinds).toEqual(['hot'])
+  expect(looks([1.6, 1.6, 1.6, 1.2, 1.6, 1.6, 1.6]).kinds).toEqual([])
+  expect(looks([1.6, 1.6, 1.6, 0.5, 1.6, 1.6, 1.6]).kinds).toEqual(['hot'])
+})
+
+test('a battery at ten percent or less while not charging is said, and one above it is not', () => {
+  expect(machineNews(machine({ battery: { percent: 11, isCharging: false } }), NOTHING_TOLD, DAY).kinds).toEqual([])
+  expect(machineNews(machine({ battery: { percent: 10, isCharging: false } }), NOTHING_TOLD, DAY).kinds).toEqual(['battery'])
+})
+
+test('a low battery stays said until it is above twenty percent or charging, and is said again after that', () => {
+  const said = machineNews(machine({ battery: { percent: 10, isCharging: false } }), NOTHING_TOLD, DAY).told
+  const at15 = machineNews(machine({ battery: { percent: 15, isCharging: false } }), said, DAY).told
+  expect(at15.isBatteryTold).toBe(true)
+  const at21 = machineNews(machine({ battery: { percent: 21, isCharging: false } }), at15, DAY).told
+  expect(at21.isBatteryTold).toBe(false)
+  expect(machineNews(machine({ battery: { percent: 10, isCharging: false } }), at21, DAY).kinds).toEqual(['battery'])
+})
+
+test('a disk with exactly the low amount of space free is not low, and one byte less is', () => {
+  expect(machineNews(machine({ diskFree: DISK_LOW }), NOTHING_TOLD, DAY).kinds).toEqual([])
+  expect(machineNews(machine({ diskFree: DISK_LOW - 1 }), NOTHING_TOLD, DAY).kinds).toEqual(['disk'])
+})
+
+test('a load of exactly one and a half per core is hot', () => {
+  const r1 = machineNews(machine({ load: 1.5 }), NOTHING_TOLD, DAY)
+  const r2 = machineNews(machine({ load: 1.5 }), r1.told, DAY)
+  expect(machineNews(machine({ load: 1.5 }), r2.told, DAY).kinds).toEqual(['hot'])
 })

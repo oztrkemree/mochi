@@ -34,10 +34,10 @@ import { type AgentState, type Step, nextStep, tipNow } from './tour'
 import { type Run, stepStuck } from './stuck'
 import { type Entry, planOf } from './sync'
 import { effortOf, weekDue, weekTop } from './effort'
-import { machineNews, machineOf, NOTHING_TOLD, type Told } from './machine'
+import { HOT_LOOKS, machineNews, machineOf, NOTHING_TOLD, type Told } from './machine'
 import { forgotten, serverKey, serverName, serversOf } from './servers'
 import { gbOf } from './trees'
-import { type Agent, CHANGES_PAGE, changesOf, versionNews, versionOf } from './whatsnew'
+import { type Agent, CHANGES_PAGE, changesOf, keptWith, versionNews, versionOf } from './whatsnew'
 import { words } from './words'
 import { spell } from './work-tab'
 import { ROOM, type Row, type View, badgeOf, gazeOf, jobsOf, peersOf, rowsOf, stillOf, viewOf } from './world'
@@ -1242,7 +1242,7 @@ function draw() {
   for (const id of theirs) leave(id)
   const peers = [...others, ...agentPeers(sessions, now)]
   const before = view
-  const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT), skin })
+  const next = viewOf(peers, now, look, { was: before, held: held && held.until > now ? held.mood : null, isTired: usageOf(peers, now).some(u => u.p >= TIRED_AT) || isHot(), skin })
   view = next
   // A new pose comes to the screen eased in from the last; the same pose is left as it is.
   const isAtWork = peers.some(p => p.state === 'busy')
@@ -1470,6 +1470,9 @@ let isCaring = false
 /** What was already said of the computer, so each thing is said once. */
 let toldMachine: Told = { ...NOTHING_TOLD, diskDay: keptText('careDiskDay') ?? '' }
 
+/** Whether the computer has run hot for looks in a row: Mochi looks as worn as it does near a limit. */
+const isHot = (): boolean => settings.care && toldMachine.hotLooks >= HOT_LOOKS
+
 /** The dev servers already said of, by their keys: the last fifty. */
 function toldServers(): string[] {
   try {
@@ -1533,8 +1536,9 @@ async function versionLook() {
     versionsAt = Date.now() - VERSIONS_EVERY_MS + 10 * 60_000
     return
   }
-  if (news.keep !== null) storeText('agentVersions', news.keep)
   const version = now[agent] ?? ''
+  storeText('agentVersions', keptWith(keptText('agentVersions'), agent, version))
+  if (news.fresh.length > 1) versionsAt = Date.now() - VERSIONS_EVERY_MS + 10 * 60_000
   const text = (await invoke<string | null>('changes', { agent, version }).catch(() => null)) ?? ''
   const w = words().care.news
   const changes = changesOf(agent, text, version).map(c => `• ${c}`)

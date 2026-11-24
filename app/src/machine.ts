@@ -63,10 +63,10 @@ export function machineNews(m: Machine, told: Told, today: string): { kinds: ('d
 
   let hotLooks = told.hotLooks
   let isHotTold = told.isHotTold
-  if (m.load === null || m.load < 1) {
+  if (m.load === null || m.load < 1) isHotTold = false
+  if (m.load === null || m.load < HOT_LOAD) {
     hotLooks = 0
-    isHotTold = false
-  } else if (m.load >= HOT_LOAD) {
+  } else {
     hotLooks += 1
     if (hotLooks >= HOT_LOOKS && !isHotTold) {
       kinds.push('hot')

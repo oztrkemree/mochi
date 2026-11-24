@@ -5,7 +5,7 @@ import type { TreeState } from './trees'
 
 const tree = (kb: number, over: Partial<TreeState> = {}): TreeState => ({
   path: '/code/shop/.claude/worktrees/fix', branch: 'fix', head: 'abc', isMain: false, isLocked: false,
-  repo: 'shop', isMerged: true, isDirty: false, isOpen: false, kb, ...over,
+  repo: 'shop', isMerged: true, isDirty: false, isOpen: false, kb, keeps: [], ...over,
 })
 
 test('only the worktrees that can be removed count toward the kilobytes', () => {

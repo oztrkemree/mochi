@@ -57,6 +57,18 @@ export function changesOf(agent: Agent, text: string, version: string): string[]
   return typeof body === 'string' ? bulletsOf(body) : []
 }
 
+/** What is kept after one agent's version was said: the kept versions with that one put in. */
+export function keptWith(kept: string | null, agent: Agent, version: string): string {
+  let before: Partial<Record<Agent, unknown>> = {}
+  try {
+    const parsed: unknown = JSON.parse(kept ?? 'null')
+    if (typeof parsed === 'object' && parsed !== null) before = parsed
+  } catch {
+    before = {}
+  }
+  return JSON.stringify({ ...before, [agent]: version })
+}
+
 /** Which agents have a newer version than the one kept, and what to keep: nothing is fresh the first time a version is seen. */
 export function versionNews(kept: string | null, now: Record<Agent, string | null>): { fresh: Agent[]; keep: string | null } {
   let before: Partial<Record<Agent, unknown>> = {}

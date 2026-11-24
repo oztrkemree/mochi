@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { type Tree, type TreeState, canRemove, gbOf, isInside, mergedOf, stateOf, treesOf } from './trees'
+import { type Tree, type TreeState, canRemove, gbOf, isInside, keepsOf, mergedOf, stateOf, treesOf } from './trees'
 
 const H = (digit: string): string => digit.repeat(40)
 
@@ -59,18 +59,18 @@ test('a folder is inside a worktree whatever the letter case or the slashes, sin
 
 test('a worktree state counts as merged and open only when its branch is merged and a chat folder is inside it', () => {
   const wt: Tree = { path: '/Users/sam/code/shop/.claude/worktrees/fix-cart', branch: 'claude/fix-cart', head: H('2'), isMain: false, isLocked: false }
-  expect(stateOf('shop', wt, ['claude/fix-cart', 'main'], false, 2048, ['/Users/sam/code/shop/.claude/worktrees/fix-cart/src', '/Users/sam/code/shop-old'])).toEqual({
+  expect(stateOf('shop', wt, ['claude/fix-cart', 'main'], false, 2048, ['/Users/sam/code/shop/.claude/worktrees/fix-cart/src', '/Users/sam/code/shop-old'], '')).toEqual({
     path: '/Users/sam/code/shop/.claude/worktrees/fix-cart', branch: 'claude/fix-cart', head: H('2'), isMain: false, isLocked: false,
-    repo: 'shop', isMerged: true, isDirty: false, isOpen: true, kb: 2048,
+    repo: 'shop', isMerged: true, isDirty: false, isOpen: true, kb: 2048, keeps: [],
   })
-  expect(stateOf('shop', wt, ['main'], true, 0, ['/Users/sam/code/shop-old'])).toEqual({
+  expect(stateOf('shop', wt, ['main'], true, 0, ['/Users/sam/code/shop-old'], '.env\n')).toEqual({
     path: '/Users/sam/code/shop/.claude/worktrees/fix-cart', branch: 'claude/fix-cart', head: H('2'), isMain: false, isLocked: false,
-    repo: 'shop', isMerged: false, isDirty: true, isOpen: false, kb: 0,
+    repo: 'shop', isMerged: false, isDirty: true, isOpen: false, kb: 0, keeps: ['.env'],
   })
 })
 
-test('a worktree can be removed only when it is not the main one, not locked, on a branch, merged, clean and with no chat open', () => {
-  const tree: TreeState = { path: '/r/wt', branch: 'claude/x', head: H('2'), isMain: false, isLocked: false, repo: 'shop', isMerged: true, isDirty: false, isOpen: false, kb: 2048 }
+test('a worktree can be removed only when it is not the main one, not locked, on a branch, merged, clean, with no chat open and nothing ignored that cannot be made again', () => {
+  const tree: TreeState = { path: '/r/wt', branch: 'claude/x', head: H('2'), isMain: false, isLocked: false, repo: 'shop', isMerged: true, isDirty: false, isOpen: false, kb: 2048, keeps: [] }
   expect(canRemove(tree)).toBe(true)
   expect(canRemove({ ...tree, isMain: true })).toBe(false)
   expect(canRemove({ ...tree, isLocked: true })).toBe(false)
@@ -78,6 +78,13 @@ test('a worktree can be removed only when it is not the main one, not locked, on
   expect(canRemove({ ...tree, isMerged: false })).toBe(false)
   expect(canRemove({ ...tree, isDirty: true })).toBe(false)
   expect(canRemove({ ...tree, isOpen: true })).toBe(false)
+  expect(canRemove({ ...tree, keeps: ['.env'] })).toBe(false)
+})
+
+test('the ignored paths a worktree keeps are named by their last part, leaving out what can be made again, logs and repeats', () => {
+  expect(keepsOf('node_modules/\n.env\napp/dist/\nlocal.db\nnpm-debug.log\n.env\n')).toEqual(['.env', 'local.db'])
+  expect(keepsOf('app/data/store.sqlite\n')).toEqual(['store.sqlite'])
+  expect(keepsOf('')).toEqual([])
 })
 
 test('sizes are shown in gigabytes with one decimal, and anything above zero shows at least 0.1', () => {

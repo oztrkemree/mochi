@@ -116,6 +116,8 @@ export function drawCare(into: HTMLElement, st: CareState, acts: CareActs): void
 
   const trees = section(w.trees.title)
   trees.append(el('p', 'w-hint', w.trees.hint))
+  const free = st.trees ? removableKb(st.trees) : 0
+  if (free > 0) trees.append(el('p', 'w-hint', w.trees.total(gbOf(free))))
   if (st.trees === null) trees.append(el('p', 'w-note', w.trees.looking))
   else if (st.trees.length === 0) trees.append(el('p', 'w-note', w.trees.none))
   else {
@@ -133,6 +135,7 @@ export function drawCare(into: HTMLElement, st: CareState, acts: CareActs): void
         if (t.isDirty) name.append(el('small', '', w.trees.dirty))
         if (t.isOpen) name.append(el('small', '', w.trees.open))
         if (t.isLocked) name.append(el('small', '', w.trees.locked))
+        if (t.keeps.length) name.append(el('small', '', w.trees.keeps(t.keeps[0])))
         row.append(name, el('span', 'care-size', w.gb(gbOf(t.kb))))
         if (canRemove(t)) row.append(twice(st.armed === key ? w.trees.sure : w.trees.remove, st.armed === key, () => (st.armed === key ? acts.remove(t) : acts.arm(key))))
         group.append(row)

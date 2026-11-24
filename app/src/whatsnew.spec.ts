@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { bulletsOf, changesOf, isAfter, sectionOf, versionNews, versionOf } from './whatsnew'
+import { bulletsOf, changesOf, isAfter, keptWith, sectionOf, versionNews, versionOf } from './whatsnew'
 
 const changelog = `# Changelog
 
@@ -103,6 +103,13 @@ test('a kept version stays for an agent that has no version now, and the kept ve
     keep: '{"claude":"2.1.300","codex":"0.172.0"}',
   })
   expect(versionNews('{"claude":"2.1.312"}', { claude: '2.1.300', codex: null })).toEqual({ fresh: [], keep: null })
+})
+
+test('keeping one agent\'s version keeps the others as they were, so a second agent that is newer is still said', () => {
+  expect(JSON.parse(keptWith('{"claude":"2.1.300","codex":"0.170.0"}', 'claude', '2.1.312'))).toEqual({ claude: '2.1.312', codex: '0.170.0' })
+  expect(JSON.parse(keptWith(null, 'codex', '0.172.0'))).toEqual({ codex: '0.172.0' })
+  const kept = keptWith('{"claude":"2.1.300","codex":"0.170.0"}', 'claude', '2.1.312')
+  expect(versionNews(kept, { claude: '2.1.312', codex: '0.172.0' }).fresh).toEqual(['codex'])
 })
 
 test('the version news does not change the versions it is given', () => {

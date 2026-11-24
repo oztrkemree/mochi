@@ -63,3 +63,13 @@ test('a server is named by the last part of its folder, or by its command when i
   expect(serverName({ ...API, folder: 'C:\\code\\api' })).toBe('api')
   expect(serverName({ ...API, folder: '' })).toBe('python3.12')
 })
+
+test('a dev server on port 1024 is kept, and one on 1023 is not', () => {
+  const lsof = ['p4242', 'cnode', 'n*:1024', 'p4243', 'cnode', 'n*:1023'].join('\n')
+  expect(serversOf(lsof, '', '').map(s => s.port)).toEqual([1024])
+})
+
+test('a server is forgotten at exactly a day of running, and not a second less', () => {
+  expect(forgotten([{ ...SHOP, seconds: 86400 }], [])).toHaveLength(1)
+  expect(forgotten([{ ...SHOP, seconds: 86399 }], [])).toEqual([])
+})

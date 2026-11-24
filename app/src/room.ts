@@ -21,7 +21,7 @@ import { SECRETS, type Secret, secretsNow, secretsWon } from './secrets'
 import { serversOf } from './servers'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
-import { gbOf, mergedOf, stateOf, treesOf, type TreeState } from './trees'
+import { gbOf, isInside, mergedOf, stateOf, treesOf, type TreeState } from './trees'
 import { AGENTS, CHANGES_PAGE, changesOf, versionOf } from './whatsnew'
 import { chosen, lookNow } from './wardrobe'
 import { words } from './words'
@@ -599,16 +599,21 @@ async function readCare() {
     if (treesAt === 0 || Date.now() - treesAt > CARE_TREES_MS) {
       treesAt = Date.now()
       const [repos, folders] = await Promise.all([
-        invoke<{ repo: string; list: string; merged: string; trees: { path: string; isDirty: boolean; kb: number }[] }[]>('worktrees').catch(() => []),
-        invoke<string[]>('chat_folders').catch(() => []),
+        invoke<{ repo: string; list: string; merged: string; trees: { path: string; isDirty: boolean; kb: number; ignored?: string }[] }[]>('worktrees').catch(() => null),
+        invoke<string[]>('chat_folders').catch(() => null),
       ])
+      // A failed read is not remembered: the next visit tries again.
+      if (repos === null || folders === null) {
+        treesAt = 0
+        return
+      }
       const trees: TreeState[] = []
       for (const r of repos) {
         const merged = mergedOf(r.merged)
         for (const tree of treesOf(r.list)) {
           if (tree.isMain) continue
           const entry = r.trees.find(x => x.path === tree.path)
-          trees.push(stateOf(r.repo, tree, merged, entry?.isDirty ?? true, entry?.kb ?? 0, folders))
+          trees.push(stateOf(r.repo, tree, merged, entry?.isDirty ?? true, entry?.kb ?? 0, folders, entry?.ignored ?? ''))
         }
       }
       putCare({ trees })
@@ -634,11 +639,20 @@ const acts: CareActs = {
   },
   remove: t => {
     putCare({ armed: '' })
-    invoke('remove_worktree', { repo: t.repo, path: t.path }).then(() => {
-      treesAt = 0
-      putCare({ said: words().care.trees.freed(gbOf(t.kb)) })
-      void readCare()
-    }).catch((e: unknown) => putCare({ said: `${words().care.trees.failed} ${(e instanceof Error ? e.message : String(e)).slice(0, 200)}` }))
+    void (async () => {
+      const folders = await invoke<string[]>('chat_folders').catch(() => null)
+      if (folders === null || folders.some(f => isInside(f, t.path))) {
+        treesAt = 0
+        putCare({ said: words().care.trees.open })
+        void readCare()
+        return
+      }
+      await invoke('remove_worktree', { repo: t.repo, path: t.path }).then(() => {
+        treesAt = 0
+        putCare({ said: words().care.trees.freed(gbOf(t.kb)) })
+        void readCare()
+      }).catch((e: unknown) => putCare({ said: `${words().care.trees.failed} ${(e instanceof Error ? e.message : String(e)).slice(0, 200)}` }))
+    })()
   },
   open: agent => void openUrl(CHANGES_PAGE[agent]),
 }
