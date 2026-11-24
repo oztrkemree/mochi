@@ -13,6 +13,7 @@ import { BADGE_PLACE, CATS, type Cat, type Feat, TIERS, featsOf, tally } from '.
 import { type Effort, effortOf, sumOf } from './effort'
 import { growthOf, historyOf } from './growth'
 import { SIGN, medalSvg } from './medal'
+import { KEY, NAME_MAX, type Saved, outfitsFrom, removed, saved, wearable } from './outfits'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
 import { chosen, lookNow } from './wardrobe'
@@ -232,6 +233,7 @@ function drawWardrobe(into: HTMLElement) {
   }
   box.append(rail, side)
   into.append(box)
+  drawLooks(into)
 }
 
 /** A colour chosen: worn at once, and written beside the wardrobe's choice. */
@@ -240,6 +242,76 @@ function wearSkin(id: string) {
   drawMochi()
   draw()
   void invoke('write_shared', { name: 'prefs.json', text: choiceText(prefs) })
+}
+
+/** The looks kept in this browser; none when storage cannot be read. */
+function looksKept(): Saved[] {
+  try {
+    return outfitsFrom(localStorage.getItem(KEY))
+  } catch {
+    return []
+  }
+}
+
+/** Writes the kept looks; when storage refuses, nothing is kept. */
+function putLooks(list: Saved[]) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(list))
+  } catch {
+    // Storage refused: the look is not kept.
+  }
+}
+
+/** A saved look worn: its whole pick becomes the person's choice at once. */
+function wearLook(s: Saved) {
+  if (!look) return
+  prefs = { at: Date.now(), pick: wearable(s.pick, look.items), ...(prefs?.skin ? { skin: prefs.skin } : {}) }
+  look = lookNow(history, modLook, prefs, tz())
+  drawMochi()
+  draw()
+  void invoke('write_shared', { name: 'prefs.json', text: choiceText(prefs) })
+}
+
+/** The saved looks under the shelves: a name keeps the look worn now; each kept look is a chip that wears it, with a remove. */
+function drawLooks(into: HTMLElement) {
+  const w = words().outfits
+  const block = el('section', 'w-sec')
+  block.append(el('h3', '', w.title))
+  const form = el('form', 'ways')
+  const input = el('input')
+  input.type = 'text'
+  input.placeholder = w.name
+  input.maxLength = NAME_MAX
+  const keep = el('button', '', w.save)
+  keep.type = 'submit'
+  form.append(input, keep)
+  form.addEventListener('submit', e => {
+    e.preventDefault()
+    if (!look || input.value.trim() === '') return
+    putLooks(saved(looksKept(), input.value, look.pick))
+    draw()
+  })
+  block.append(form)
+  const all = looksKept()
+  if (all.length === 0) block.append(el('p', 'w-note', w.none))
+  const chips = el('div', 'w-chips')
+  for (const s of all) {
+    const chip = el('span', 'w-chip')
+    const wear = el('button', '', s.name)
+    wear.type = 'button'
+    wear.addEventListener('click', () => wearLook(s))
+    const drop = el('button', '', '×')
+    drop.type = 'button'
+    drop.setAttribute('aria-label', w.remove)
+    drop.addEventListener('click', () => {
+      putLooks(removed(looksKept(), s.name))
+      draw()
+    })
+    chip.append(wear, drop)
+    chips.append(chip)
+  }
+  block.append(chips)
+  into.append(block)
 }
 
 /** Each theme's colour, for the face of its milestones' medals. */
