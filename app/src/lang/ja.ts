@@ -241,6 +241,7 @@ const JA: Words = {
   sync: {
     title: 'どのパソコンでも同じ Mochi',
     folder: '共有フォルダ',
+    choose: '選択…',
     hint: 'パソコン同士で共有しているフォルダ（iCloud Drive、Dropbox…）。Mochi は作業した日を双方向にコピーし、何も削除しません。',
     bad: 'そのフォルダを開けません。',
     brought: (n: number) => `ほかのパソコンから ${n} 件のチャットが届きました。`,

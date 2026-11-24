@@ -241,6 +241,7 @@ const KO: Words = {
   sync: {
     title: '모든 컴퓨터의 같은 Mochi',
     folder: '공유 폴더',
+    choose: '선택…',
     hint: '컴퓨터끼리 함께 쓰는 폴더예요 (iCloud Drive, Dropbox…). Mochi가 작업한 날을 양방향으로 복사하고 아무것도 지우지 않아요.',
     bad: '이 폴더를 열 수 없어요.',
     brought: (n: number) => `다른 컴퓨터에서 채팅 ${n}개가 왔어요.`,

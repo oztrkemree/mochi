@@ -240,6 +240,7 @@ export const EN = {
   sync: {
     title: 'The same Mochi on every computer',
     folder: 'Shared folder',
+    choose: 'Choose…',
     hint: 'A folder your computers share (iCloud Drive, Dropbox…). Mochi copies the days of work both ways and never deletes anything.',
     bad: 'That folder cannot be opened.',
     brought: (n: number) => `${n} chats came from your other computers.`,
@@ -546,6 +547,7 @@ const TR: Words = {
   sync: {
     title: 'Her bilgisayarda aynı Mochi',
     folder: 'Ortak klasör',
+    choose: 'Seç…',
     hint: 'Bilgisayarlarının paylaştığı bir klasör (iCloud Drive, Dropbox…). Mochi iş günlerini iki yönlü kopyalar ve hiçbir şeyi silmez.',
     bad: 'Bu klasör açılamıyor.',
     brought: (n: number) => `${n} sohbet diğer bilgisayarlarından geldi.`,

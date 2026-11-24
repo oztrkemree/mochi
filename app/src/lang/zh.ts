@@ -241,6 +241,7 @@ const ZH: Words = {
   sync: {
     title: '每台电脑上都是同一个 Mochi',
     folder: '共享文件夹',
+    choose: '选择…',
     hint: '你的电脑共享的一个文件夹（iCloud Drive、Dropbox…）。Mochi 会双向复制工作的日子，且从不删除任何东西。',
     bad: '无法打开该文件夹。',
     brought: (n: number) => `${n} 个对话来自你的其他电脑。`,

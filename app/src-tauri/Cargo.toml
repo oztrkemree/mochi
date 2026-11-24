@@ -20,6 +20,7 @@ tauri-plugin-autostart = "2"
 tauri-plugin-single-instance = "2"
 # Keys stay in the order a file had them: the app writes other programs' settings back and must not shuffle them.
 serde_json = { version = "1", features = ["preserve_order"] }
+tauri-plugin-dialog = "2"
 
 # Only to let the window stand over an app that fills the screen, which Tauri has no call for.
 [target.'cfg(target_os = "macos")'.dependencies]

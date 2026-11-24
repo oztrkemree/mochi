@@ -244,6 +244,7 @@ const DE: Words = {
   sync: {
     title: 'Derselbe Mochi auf jedem Computer',
     folder: 'Gemeinsamer Ordner',
+    choose: 'Wählen…',
     hint: 'Ein Ordner, den deine Computer teilen (iCloud Drive, Dropbox…). Mochi kopiert die Arbeitstage in beide Richtungen und löscht nie etwas.',
     bad: 'Dieser Ordner kann nicht geöffnet werden.',
     brought: (n: number) => pl(String(n), 'Chat kam von deinen anderen Computern.', 'Chats kamen von deinen anderen Computern.'),

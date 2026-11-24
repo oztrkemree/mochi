@@ -249,6 +249,7 @@ const PL: Words = {
   sync: {
     title: 'Ten sam Mochi na każdym komputerze',
     folder: 'Wspólny folder',
+    choose: 'Wybierz…',
     hint: 'Folder, który twoje komputery udostępniają (iCloud Drive, Dropbox…). Mochi kopiuje dni pracy w obie strony i nigdy niczego nie usuwa.',
     bad: 'Nie można otworzyć tego folderu.',
     brought: (n: number) => pn(String(n), 'czat przyszedł z twoich innych komputerów.', 'czaty przyszły z twoich innych komputerów.', 'czatów przyszło z twoich innych komputerów.'),

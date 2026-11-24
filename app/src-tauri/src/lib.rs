@@ -521,6 +521,7 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         // Where the window stands is read when it changes, not at every look at the pointer.

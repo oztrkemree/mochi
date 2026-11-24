@@ -244,6 +244,7 @@ const PT: Words = {
   sync: {
     title: 'O mesmo Mochi em todos os computadores',
     folder: 'Pasta compartilhada',
+    choose: 'Escolher…',
     hint: 'Uma pasta que os seus computadores compartilham (iCloud Drive, Dropbox…). O Mochi copia os dias de trabalho nos dois sentidos e nunca apaga nada.',
     bad: 'Não foi possível abrir essa pasta.',
     brought: (n: number) => `${n} conversas vieram dos seus outros computadores.`,

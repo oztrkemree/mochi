@@ -244,6 +244,7 @@ const FR: Words = {
   sync: {
     title: 'Le même Mochi sur chaque ordinateur',
     folder: 'Dossier partagé',
+    choose: 'Choisir…',
     hint: 'Un dossier que tes ordinateurs partagent (iCloud Drive, Dropbox…). Mochi copie les journées de travail dans les deux sens et ne supprime jamais rien.',
     bad: 'Ce dossier ne peut pas être ouvert.',
     brought: (n: number) => `${n} discussions venaient de tes autres ordinateurs.`,
