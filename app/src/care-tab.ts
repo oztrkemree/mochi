@@ -89,9 +89,11 @@ function windowOf(t: TreeState, acts: CareActs): HTMLElement {
   const box = el('div', 'care-modal')
   box.setAttribute('role', 'alertdialog')
   box.setAttribute('aria-modal', 'true')
+  // Focusable, so a press on its text keeps the focus inside and Escape still reaches it.
+  box.tabIndex = -1
   box.append(el('h4', '', w.askTitle(t.branch || last(t.path))))
   const list = el('ul')
-  for (const loss of lossesOf(t)) list.append(el('li', '', loss.kind === 'notMerged' ? w.askNotMerged : loss.kind === 'dirty' ? w.askDirty : w.askKeeps(loss.name)))
+  for (const loss of lossesOf(t)) list.append(el('li', '', loss.kind === 'notMerged' ? w.askNotMerged : loss.kind === 'detached' ? w.askDetached : loss.kind === 'dirty' ? w.askDirty : w.askKeeps(loss.name)))
   const cancel = el('button', 'care-btn', w.cancel)
   cancel.type = 'button'
   cancel.addEventListener('click', acts.cancel)
@@ -162,7 +164,6 @@ export function drawCare(into: HTMLElement, st: CareState, acts: CareActs): void
       const group = el('div', 'u-counts')
       group.append(el('h4', '', last(repo)))
       for (const t of list) {
-        const key = `tree:${t.path}`
         const row = el('div', 'care-row')
         const name = el('span', 'w-name', '')
         name.append(el('b', '', t.branch || last(t.path)))

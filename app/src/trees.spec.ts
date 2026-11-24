@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { type Tree, type TreeState, canRemove, gbOf, hardOf, isInside, keepsOf, lossesOf, mergedOf, stateOf, treesOf } from './trees'
+import { type Tree, type TreeState, canRemove, gbOf, hardOf, isInside, keepsOf, lossesOf, mergedOf, pressOf, stateOf, treesOf } from './trees'
 
 const H = (digit: string): string => digit.repeat(40)
 
@@ -116,4 +116,17 @@ test('what a removal would lose is each of: a branch not merged, changes not com
   // A press removes at once only where there is nothing to lose and nothing in the way.
   expect(canRemove(clean)).toBe(true)
   expect(canRemove({ ...clean, isDirty: true })).toBe(false)
+})
+
+test('a worktree on no branch loses what was committed only there, which no branch keeps', () => {
+  expect(lossesOf({ ...sample(), branch: '', isMerged: false })).toEqual([{ kind: 'detached' }])
+})
+
+test('a press says why not for a chat or a lock, asks for what would be lost, and removes at once only a worktree that loses nothing', () => {
+  expect(pressOf(sample())).toBe('remove')
+  expect(pressOf({ ...sample(), isDirty: true })).toBe('ask')
+  expect(pressOf({ ...sample(), isMerged: false })).toBe('ask')
+  expect(pressOf({ ...sample(), keeps: ['.env'] })).toBe('ask')
+  expect(pressOf({ ...sample(), isOpen: true, isDirty: true })).toBe('open')
+  expect(pressOf({ ...sample(), isLocked: true, isMerged: false })).toBe('locked')
 })

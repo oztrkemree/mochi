@@ -21,7 +21,7 @@ import { SECRETS, type Secret, secretsNow, secretsWon } from './secrets'
 import { serversOf } from './servers'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
-import { gbOf, hardOf, isInside, lossesOf, mergedOf, stateOf, treesOf, type TreeState } from './trees'
+import { gbOf, hardOf, isInside, lossesOf, mergedOf, pressOf, stateOf, treesOf, type TreeState } from './trees'
 import { AGENTS, CHANGES_PAGE, changesOf, versionOf } from './whatsnew'
 import { chosen, lookNow } from './wardrobe'
 import { words } from './words'
@@ -625,23 +625,39 @@ async function readCare() {
   }
 }
 
-/** Removes a worktree, with a wait on its row until git is done; one already being removed is not started again. A chat that opened in it since the list was read stops it. */
+/** Removes a worktree, with a wait on its row until git is done; one already being removed is not started again. A chat that opened in it since the list was read stops it (Rust looks again too). */
 async function removeTree(t: TreeState, force: boolean) {
   if (care.removing.includes(t.path)) return
   const w = words().care.trees
   putCare({ removing: [...care.removing, t.path] })
-  const folders = await invoke<string[]>('chat_folders').catch(() => null)
-  if (folders === null || folders.some(f => isInside(f, t.path))) {
-    putCare({ said: w.open })
-  } else {
-    await invoke('remove_worktree', { repo: t.repo, path: t.path, force }).then(
-      () => putCare({ said: w.freed(gbOf(t.kb)) }),
-      (e: unknown) => putCare({ said: `${w.failed} ${(e instanceof Error ? e.message : String(e)).slice(0, 200)}` }),
-    )
+  try {
+    const folders = await invoke<string[]>('chat_folders').catch(() => null)
+    if (folders === null || folders.some(f => isInside(f, t.path))) {
+      putCare({ said: w.open })
+    } else {
+      await invoke('remove_worktree', { repo: t.repo, path: t.path, force }).then(
+        // Gone from the list at once: the read that follows may be skipped while another runs.
+        () => putCare({ said: w.freed(gbOf(t.kb)), trees: (care.trees ?? []).filter(x => x.path !== t.path) }),
+        (e: unknown) => putCare({ said: `${w.failed} ${(e instanceof Error ? e.message : String(e)).slice(0, 200)}` }),
+      )
+    }
+  } finally {
+    treesAt = 0
+    putCare({ removing: care.removing.filter(p => p !== t.path) })
+    void readCare()
   }
+}
+
+/** The person's word over what the window listed: given only if the worktree still loses just that. Read again first, since more may have changed while the window was open. */
+async function forceTree(t: TreeState) {
+  putCare({ ask: null })
   treesAt = 0
-  putCare({ removing: care.removing.filter(p => p !== t.path) })
-  void readCare()
+  await readCare()
+  const fresh = (care.trees ?? []).find(x => x.path === t.path)
+  if (!fresh) return
+  const same = (a: TreeState, b: TreeState) => JSON.stringify(lossesOf(a)) === JSON.stringify(lossesOf(b)) && hardOf(b) === null
+  if (same(t, fresh)) void removeTree(fresh, true)
+  else putCare({ ask: fresh })
 }
 
 /** What the Computer tab asks for: a press arms a row for four seconds, a second press does it. */
@@ -658,17 +674,14 @@ const acts: CareActs = {
   },
   tree: t => {
     const w = words().care.trees
-    const hard = hardOf(t)
+    const press = pressOf(t)
     putCare({ armed: '', said: '' })
     // A chat in the folder, or git's lock, is not the person's to override: a line says so. What a removal would lose is asked about.
-    if (hard !== null) putCare({ said: `${t.branch || t.path}: ${hard === 'open' ? w.open : w.locked}` })
-    else if (lossesOf(t).length > 0) putCare({ ask: t })
+    if (press === 'open' || press === 'locked') putCare({ said: `${t.branch || t.path}: ${press === 'open' ? w.open : w.locked}` })
+    else if (press === 'ask') putCare({ ask: t })
     else void removeTree(t, false)
   },
-  force: t => {
-    putCare({ ask: null })
-    void removeTree(t, true)
-  },
+  force: t => void forceTree(t),
   cancel: () => putCare({ ask: null }),
   open: agent => void openUrl(CHANGES_PAGE[agent]),
 }

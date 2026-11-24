@@ -188,9 +188,21 @@ pub fn worktrees(dir: &Path) -> Vec<Value> {
         .collect()
 }
 
-/// Removes one worktree: only one that git lists for a repository Mochi knows, never its main checkout, and never a locked one.
-/// With git's own care unless `force` is true, which is the person's word over a worktree git calls unclean (changes, new files):
-/// its folder goes with them, its branch stays.
+/// Whether git lists the worktree at `path` as locked.
+fn is_locked(list: &str, path: &str) -> bool {
+    list.split("\n\n").any(|block| block.lines().any(|l| l.strip_prefix("worktree ") == Some(path)) && block.lines().any(|l| l == "locked" || l.starts_with("locked ")))
+}
+
+/// Whether a chat's folder is this worktree or inside it, whatever the letter case or the slashes: when in doubt a chat is in it.
+fn inside(folder: &str, path: &str) -> bool {
+    let norm = |s: &str| s.replace('\\', "/").trim_end_matches('/').to_lowercase();
+    let (f, p) = (norm(folder), norm(path));
+    !p.is_empty() && (f == p || f.starts_with(&format!("{p}/")))
+}
+
+/// Removes one worktree: only one that git lists for a repository Mochi knows, never its main checkout, never a locked one and
+/// never one a chat works in. With git's own care unless `force` is true, which is the person's word over a worktree git calls
+/// unclean (changes, new files): its folder goes with them, its branch stays.
 /// Git is given three minutes: a worktree full of build output is slow to delete, and must not be cut off half way.
 pub fn remove_worktree(dir: &Path, repo: &str, path: &str, force: bool) -> Result<(), String> {
     if !known_repos(dir).iter().any(|known| known == repo) {
@@ -200,6 +212,13 @@ pub fn remove_worktree(dir: &Path, repo: &str, path: &str, force: bool) -> Resul
     let paths = tree_paths(&list);
     if paths.first().is_some_and(|main| main == path) || !paths.iter().skip(1).any(|p| p == path) {
         return Err("not a worktree of that repository".into());
+    }
+    // Not the window's word to give, forced or not: git's own lock, and a chat that works in the folder (checked again here, at the last moment).
+    if is_locked(&list, path) {
+        return Err("locked".into());
+    }
+    if chat_folders(dir).iter().any(|f| inside(f, path)) {
+        return Err("a chat is open in it".into());
     }
     let mut args = vec!["-C", repo, "worktree", "remove"];
     if force {
@@ -404,6 +423,16 @@ mod tests {
         assert!(Path::new(&paths[0]).exists());
         assert_eq!(remove_worktree(&data, &main, &paths[1], false), Ok(()));
         assert!(!Path::new(&paths[1]).exists());
+        // A chat that works in the folder (or below it) stops it, forced or not; a locked one too.
+        std::fs::create_dir_all(data.join("live")).unwrap();
+        std::fs::write(data.join("live").join("chat.json"), format!(r#"{{"folder":"{}/sub"}}"#, paths[2].to_uppercase())).unwrap();
+        assert_eq!(remove_worktree(&data, &main, &paths[2], true), Err("a chat is open in it".into()));
+        assert!(Path::new(&paths[2]).exists());
+        std::fs::remove_file(data.join("live").join("chat.json")).unwrap();
+        sh(&repo, "git worktree lock ../dirty");
+        assert_eq!(remove_worktree(&data, &main, &paths[2], true), Err("locked".into()));
+        assert!(Path::new(&paths[2]).exists());
+        sh(&repo, "git worktree unlock ../dirty");
         // The unclean one goes when the person says so, and its branch stays.
         assert_eq!(remove_worktree(&data, &main, &paths[2], true), Ok(()));
         assert!(!Path::new(&paths[2]).exists());
