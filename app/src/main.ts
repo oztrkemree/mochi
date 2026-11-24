@@ -22,7 +22,8 @@ import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAb
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
 import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } from './acts'
 import { FRESH, type Stretch, stepBreak } from './breaks'
-import { hopsOn, quipOf, tipsOn } from './temper'
+import { hopsOn, playsOn, quipOf, tipsOn } from './temper'
+import { HOPS, ROUND_MS, bestOf, roundOf, scoreOf } from './game'
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
 import { lookNow } from './wardrobe'
@@ -627,6 +628,8 @@ function sayNext() {
 
 /** Takes in what changed among the chats; what no longer holds is dropped, and more pressing news does not wait for lesser news to finish. */
 function hear(fresh: News[], peers: View['peers'], isRequest = false) {
+  // News always wins over a round of the game: it stops at once, saying nothing.
+  if (fresh.length > 0) stopRound()
   // A request's own news is said even if the chat's file does not say it waits yet: its hook waits, which is the same.
   queue = queued(queue, fresh).filter(n => stillHolds(n, peers) || requests.has(n.id))
   // The request in the bubble now is said again with its answers.
@@ -846,6 +849,14 @@ function drawAgents() {
       item.append(sub)
     }
     list.append(item)
+  }
+  // Offered while a chat works, when the temper plays: a round of the hop game, pressed for.
+  if (view?.peers.some(p => p.state === 'busy') && !round && playsOn(settings.temper)) {
+    const play = el('button', 'agent')
+    play.type = 'button'
+    play.append(el('span', 'line', w.game.play))
+    play.addEventListener('click', startRound)
+    list.append(play)
   }
 }
 
@@ -1349,6 +1360,7 @@ let pokes: number[] = []
 stage.addEventListener('pointerup', () => {
   if (!pressed) return
   pressed = null
+  if (pressRound()) return
   const now = Date.now()
   pokes = [...pokes.filter(t => now - t <= 1200), now]
   // Pressed again and again: it giggles, and then its head spins; the list stays shut.
@@ -1368,6 +1380,7 @@ addEventListener('pointerdown', () => document.body.classList.remove('keys'))
 stage.addEventListener('keydown', e => {
   if ((e.key !== 'Enter' && e.key !== ' ') || e.repeat) return
   e.preventDefault()
+  if (pressRound()) return
   pressMochi()
 })
 /** When Mochi last noticed the pointer: once in a while, so passing by is not a show each time. */
@@ -1391,6 +1404,54 @@ addEventListener('contextmenu', e => {
   // A right click opens Mochi's room, where its settings are too.
   void invoke('open_room')
 })
+
+// ---------- the game ----------
+
+/** The round on now: when Mochi hops, the presses so far (ms from its start), and the timers to stop it; null with none on. */
+let round: { hops: number[]; presses: number[]; from: number; timers: number[] } | null = null
+
+/** Starts a round: Mochi hops a few times in ROUND_MS, and a press close after a hop catches it. */
+function startRound() {
+  toggleAgents(false)
+  const from = Date.now()
+  const r = { hops: roundOf(from >>> 0), presses: [] as number[], from, timers: [] as number[] }
+  round = r
+  for (const at of r.hops) r.timers.push(window.setTimeout(hop, at))
+  r.timers.push(window.setTimeout(endRound, ROUND_MS))
+  speak(words().game.go, 4000, QUIET_INK, null)
+}
+
+/** Records a press in the round on; false when none is on, so the press is Mochi's as usual. */
+function pressRound(): boolean {
+  if (!round) return false
+  round.presses.push(Date.now() - round.from)
+  return true
+}
+
+/** Ends the round on: says the score, and the best kept when this one beats it. */
+function endRound() {
+  const r = round
+  if (!r) return
+  stopRound()
+  const score = scoreOf(r.hops, r.presses)
+  let result = { best: 0, isNew: false }
+  try {
+    result = bestOf(localStorage.getItem('gameBest'), score)
+    if (result.isNew) localStorage.setItem('gameBest', String(result.best))
+  } catch {
+    // Not kept: the best is forgotten when the app quits.
+  }
+  const { best, isNew } = result
+  const w = words()
+  speak(w.game.score(score, HOPS) + (isNew && score > 0 ? ' ' + w.game.best(best) : ''), settings.talkSeconds * 1000, QUIET_INK, null)
+}
+
+/** Stops the round on at once, saying nothing: its hops and its end are dropped. */
+function stopRound() {
+  if (!round) return
+  for (const id of round.timers) clearTimeout(id)
+  round = null
+}
 
 async function start() {
   await apply(settings)
