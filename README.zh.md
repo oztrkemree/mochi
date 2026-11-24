@@ -282,6 +282,7 @@ Mochi 空闲时，偶尔会针对刚发生的事给一条简短的 Claude Code �
 | `/mochi details` | 打开详情面板 |
 | `/mochi level` | 你的等级、经验值，以及还有哪些未解锁 |
 | `/mochi wear [item \| auto \| none]` | 戴上一件配饰、让 Mochi 自己搭配，或者全部摘下 |
+| `/mochi skin [colour]` | 选择 Mochi 的颜色(30 种,按等级解锁) |
 | `/mochi badges` | 你已获得的徽章，以及剩下的怎么拿 |
 | `/mochi chats` | 这台电脑上的所有对话，在等你的排在前面 |
 | `/mochi shield [on \| off]` | 查看护盾是否开启、哪里始终允许了什么；加上 `on` 或 `off` 即可切换 |

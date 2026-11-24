@@ -282,6 +282,7 @@ Hiçbirine ihtiyacın yok: Mochi kurulduğu an çalışır. Yön vermek istediğ
 | `/mochi details` | Detay ekranını açar |
 | `/mochi level` | Seviyen, deneyimin ve hâlâ kilitli olanlar |
 | `/mochi wear [item \| auto \| none]` | Bir şey tak, Mochi kendi giyinsin ya da hepsini çıkar |
+| `/mochi skin [colour]` | Mochi’nin rengini seç: seviyeyle açılan otuz renkten biri |
 | `/mochi badges` | Kazandığın rozetler ve kalanların nasıl kazanılacağı |
 | `/mochi chats` | Bu bilgisayardaki bütün sohbetler, seni bekleyenler önce |
 | `/mochi shield [on \| off]` | Kalkanın açık olup olmadığını ve neyin nerede hep izinli olduğunu gösterir; `on` ya da `off` onu öyle yapar |

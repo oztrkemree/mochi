@@ -282,6 +282,7 @@ Mochi가 쉬고 있을 때 가끔, 방금 일어난 일에 맞는 짧은 Claude 
 | `/mochi details` | 상세 패널 열기 |
 | `/mochi level` | 내 레벨, 경험치, 아직 잠겨 있는 것들 |
 | `/mochi wear [item \| auto \| none]` | 골라서 입히기, Mochi가 알아서 입게 두기, 또는 전부 벗기기 |
+| `/mochi skin [colour]` | Mochi의 색 고르기(30가지, 레벨에 따라 열림) |
 | `/mochi badges` | 지금까지 얻은 배지와 나머지를 얻는 방법 |
 | `/mochi chats` | 이 컴퓨터의 모든 채팅, 나를 기다리는 채팅부터 |
 | `/mochi shield [on \| off]` | 보호막이 켜져 있는지, 어디서 무엇을 항상 허용했는지 보기. `on`이나 `off`로 바꾸기 |

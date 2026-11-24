@@ -14,6 +14,15 @@ export const tr: typeof en = {
   months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
 
   news: {
+    '0.10.0': {
+      headline: 'masaüstü uygulaması, 31 yeni parça ve rengin iki Mochi’de de aynı',
+      notes: [
+        'Mochi’nin macOS ve Windows için bir masaüstü uygulaması var: çalıştırdığın her ajan için ekranında bir Mochi, haftan, işin ve kullanımın için bir oda. Seviyeyi, rozetleri ve gardırobu modla paylaşıyor.',
+        'Seviye 42’den 95’e kadar otuz bir yeni parça: samuray miğferi, taç, firavun başlığı, uçan daire ve daha fazlası.',
+        '/mochi skin Mochi’nin rengini seçiyor; iki Mochi de diğerinin seçimini giyiyor.',
+        'Uygulamanın ses anahtarı iki Mochi için tek anahtar; /mochi desktop on ise uygulamanın Mochi’si ekrandayken bandın kenara çekilmesini sağlıyor.',
+      ],
+    },
     '0.9.0': {
       headline: 'stand-up notun, seni bekleyen PR\'lar ve son dört haftanın şehri',
       notes: [

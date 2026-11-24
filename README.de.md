@@ -282,6 +282,7 @@ Du brauchst keinen einzigen: Mochi legt los, sobald er installiert ist. Wenn du 
 | `/mochi details` | Detailansicht öffnen |
 | `/mochi level` | Dein Level, deine Erfahrung und was noch gesperrt ist |
 | `/mochi wear [item \| auto \| none]` | Etwas anziehen, Mochi sich selbst einkleiden lassen oder alles ablegen |
+| `/mochi skin [colour]` | Mochis Farbe wählen, eine von dreißig, nach Level freigeschaltet |
 | `/mochi badges` | Deine Abzeichen, und wie du die übrigen bekommst |
 | `/mochi chats` | Alle Chats auf diesem Rechner, die wartenden zuerst |
 | `/mochi shield [on \| off]` | Sehen, ob der Schild an ist und was wo immer erlaubt ist; `on` oder `off` schaltet ihn so |

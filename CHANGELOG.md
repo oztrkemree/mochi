@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
 
 ### With the desktop app
 
+- Mochi's desktop app (`app/`, for macOS and Windows, released by a `desktop-v` tag) is in this repository: one Mochi on the screen for every agent you run, a room for the week, the work and the usage, and the same level, badges and wardrobe as the mod, from the same files.
+- The desktop Mochi suggests a rest after 90 unbroken minutes (off, 60, 90 or 120 in the settings), offers a 30-second game while a chat works, says once when a chat fails the same step three times in a row or two chats edit the same file, keeps looks under a name, takes a temper (calm, playful or serious), has six secret achievements and copies the days of work between computers through a shared folder.
+- A Computer tab in its room, and four things Mochi says about it: dev servers left running (with a Stop that takes two presses), worktrees that can go (removed only when merged, clean and holding nothing but build output), free disk, battery and load, and what is new in Claude Code and Codex.
 - Thirty-one new things to wear, opened from level 42 to 95, now that work in every agent counts: a samurai helmet, a tiara, a knight’s helmet, a pharaoh’s headdress, a zombie brain, a flying saucer and a phoenix crown; ski, steampunk, x-ray and diamond glasses; face paint; curly, rainbow and flame mustaches; a life ring, a crystal pendant and a dragon amulet; a guitar, a trophy, a katana, a rubber chicken and a thunderbolt; and a slime, a little ghost, a robot dog, a baby dragon and a portal beside Mochi. The worn ones were drawn as worn on Mochi, and all at up to 256 pixels, sharp on a large Mochi. The wardrobe holds 201.
 - What Mochi wears is chosen in either Mochi: a choice made in the mod goes to `~/.claude/mochi/prefs.json`, and a newer one made in the desktop app is worn in the band too.
 - Mochi's colour is chosen in either Mochi too: `/mochi skin <colour>` or the Colour tab of the details pane's wardrobe writes it to `prefs.json`, and the desktop app wears it, as the band wears one chosen in the app. The wardrobe's Mochi shows the colour it has on. The Hologram colour has its name in every language.

@@ -282,6 +282,7 @@ Vous n’en avez jamais besoin : Mochi fonctionne dès qu’il est installé. Qu
 | `/mochi details` | Ouvre le panneau de détails |
 | `/mochi level` | Votre niveau, votre expérience et ce qui reste à débloquer |
 | `/mochi wear [item \| auto \| none]` | Fait porter un accessoire, laisse Mochi choisir sa tenue, ou enlève tout |
+| `/mochi skin [colour]` | Choisir la couleur de Mochi, parmi trente débloquées par niveau |
 | `/mochi badges` | Les badges que vous avez obtenus, et comment obtenir les autres |
 | `/mochi chats` | Toutes les conversations de cette machine, celles qui vous attendent en premier |
 | `/mochi shield [on \| off]` | Dit si le bouclier est actif et montre ce qui est toujours autorisé et où ; `on` ou `off` le règle |

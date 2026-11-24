@@ -286,6 +286,7 @@ You never need one: Mochi works the moment it is installed. When you want to ste
 | `/mochi details` | Open the details pane |
 | `/mochi level` | Your level, experience and what is still locked |
 | `/mochi wear [item \| auto \| none]` | Put something on, let Mochi dress itself, or take everything off |
+| `/mochi skin [colour]` | Choose Mochi’s colour, one of thirty opened by level |
 | `/mochi badges` | The badges you have earned, and how to earn the rest |
 | `/mochi chats` | Every chat on this machine, the ones waiting for you first |
 | `/mochi shield [on \| off]` | See whether the shield is on and what is always allowed where; `on` or `off` turns it so |

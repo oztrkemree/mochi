@@ -17,6 +17,15 @@ export const pt: typeof en = {
   months: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
 
   news: {
+    '0.10.0': {
+      headline: 'um app de desktop, 31 itens novos para vestir e a sua cor nos dois Mochis',
+      notes: [
+        'O Mochi tem um app de desktop para macOS e Windows: um Mochi na sua tela para cada agente que você usa, com uma sala para a sua semana, o seu trabalho e o seu uso. Ele divide nível, medalhas e guarda-roupa com o mod.',
+        'Trinta e um itens novos para vestir, do nível 42 ao 95: um capacete de samurai, uma tiara, um toucado de faraó, um disco voador e mais.',
+        '/mochi skin escolhe a cor do Mochi, e cada Mochi veste a escolha do outro.',
+        'O botão de som do app é o único para os dois Mochis, e /mochi desktop on faz a faixa sair da frente enquanto o Mochi do app está na tela.',
+      ],
+    },
     '0.9.0': {
       headline: 'seu stand-up, seus pull requests e uma cidade das suas últimas quatro semanas',
       notes: [
