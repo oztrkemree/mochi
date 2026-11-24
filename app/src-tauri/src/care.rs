@@ -136,28 +136,54 @@ pub fn worktrees_of(root: &Path) -> Value {
         .map(|path| {
             let dirty = git(Path::new(path), &["status", "--porcelain"]).is_none_or(|o| !o.stdout.is_empty());
             let kb = run("du", &["-sk", path], None, Duration::from_secs(20)).filter(|o| o.code == 0).map_or(0, |o| first_number(&o.stdout));
-            json!({ "path": path, "isDirty": dirty, "kb": kb })
+            let ignored = ignored_in(&stdout(git(Path::new(path), &["status", "--porcelain", "--ignored"])));
+            json!({ "path": path, "isDirty": dirty, "kb": kb, "ignored": ignored })
         })
         .collect();
     json!({ "repo": root.to_string_lossy(), "list": list, "merged": merged, "trees": trees })
 }
 
-/// The repositories in repos.json, the roots `with_root` writes: the keys whose values are numbers.
-pub fn roots_in(text: &str) -> Vec<String> {
-    match serde_json::from_str::<Value>(text) {
-        Ok(Value::Object(seen)) => seen.into_iter().filter(|(root, at)| !root.is_empty() && at.is_number()).map(|(root, _)| root).collect(),
-        _ => Vec::new(),
+/// The paths git ignores, from status's --ignored text: the lines marked `!!`, sixty at most.
+pub fn ignored_in(status: &str) -> String {
+    status.lines().filter_map(|l| l.strip_prefix("!! ")).take(60).collect::<Vec<_>>().join("\n")
+}
+
+/// The roots in repos.json, the most lately seen first.
+pub fn roots_by_time(text: &str) -> Vec<String> {
+    let Ok(Value::Object(seen)) = serde_json::from_str::<Value>(text) else {
+        return Vec::new();
+    };
+    let mut roots: Vec<(f64, String)> = seen.into_iter().filter(|(root, _)| !root.is_empty()).filter_map(|(root, at)| at.as_f64().map(|at| (at, root))).collect();
+    roots.sort_by(|a, b| b.0.total_cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
+    roots.into_iter().map(|(_, root)| root).collect()
+}
+
+/// The main checkout of the repository a folder belongs to, as git tells it: the first path of its worktree list.
+pub fn main_of(root: &Path) -> Option<String> {
+    let out = git(root, &["worktree", "list", "--porcelain"])?;
+    tree_paths(&out.stdout).into_iter().next()
+}
+
+/// The repositories the Mochis know, each once, by its main checkout: the most lately seen first, twelve at most.
+pub fn known_repos(dir: &Path) -> Vec<String> {
+    let text = std::fs::read_to_string(dir.join("repos.json")).unwrap_or_default();
+    let mut mains: Vec<String> = Vec::new();
+    for root in roots_by_time(&text).iter().take(80).filter(|root| Path::new(root).is_dir()) {
+        if let Some(main) = main_of(Path::new(root)).filter(|main| !mains.contains(main)) {
+            mains.push(main);
+        }
+        if mains.len() == 12 {
+            break;
+        }
     }
+    mains
 }
 
 /// Every repository the Mochis know (repos.json), each with its worktrees; a repository with only its main checkout is left out.
 pub fn worktrees(dir: &Path) -> Vec<Value> {
-    let text = std::fs::read_to_string(dir.join("repos.json")).unwrap_or_default();
-    roots_in(&text)
-        .into_iter()
-        .filter(|root| Path::new(root).is_dir())
-        .take(12)
-        .map(|root| worktrees_of(Path::new(&root)))
+    known_repos(dir)
+        .iter()
+        .map(|repo| worktrees_of(Path::new(repo)))
         .filter(|repo| repo["trees"].as_array().is_some_and(|trees| !trees.is_empty()))
         .collect()
 }
@@ -165,8 +191,7 @@ pub fn worktrees(dir: &Path) -> Vec<Value> {
 /// Removes one worktree, with git's own care: only one that git lists for a repository Mochi knows, never its main checkout, never by force.
 /// Git is given three minutes: a worktree full of build output is slow to delete, and must not be cut off half way.
 pub fn remove_worktree(dir: &Path, repo: &str, path: &str) -> Result<(), String> {
-    let text = std::fs::read_to_string(dir.join("repos.json")).unwrap_or_default();
-    if !roots_in(&text).iter().any(|root| root == repo) {
+    if !known_repos(dir).iter().any(|known| known == repo) {
         return Err("not a repository Mochi knows".into());
     }
     let list = stdout(git(Path::new(repo), &["worktree", "list", "--porcelain"]));
@@ -230,11 +255,14 @@ pub fn changes_url(agent: &str, version: &str) -> Option<String> {
     }
 }
 
+/// The most a changelog may weigh; Claude Code's own is well over a megabyte.
+const CHANGES_MOST: usize = 10_000_000;
+
 /// The text that says what changed in an agent's version, fetched with the person's own curl and nothing about them: Claude Code's changelog, or Codex's release of that version.
 pub fn changes(agent: &str, version: &str) -> Option<String> {
     let url = changes_url(agent, version)?;
     let out = run("curl", &["-fsSL", "--max-time", "10", "-H", "Accept: application/vnd.github+json", &url], None, Duration::from_secs(10))?;
-    (out.code == 0 && out.stdout.len() <= 2_000_000).then_some(out.stdout)
+    (out.code == 0 && out.stdout.len() <= CHANGES_MOST).then_some(out.stdout)
 }
 
 #[cfg(test)]
@@ -268,6 +296,9 @@ mod tests {
         assert!(!may_stop(text, 666, 80, 9));
         assert!(!may_stop(text, 1, 5173, 9));
         assert!(!may_stop(text, 4242, 8000, 9));
+        let claunchd = "p1\nclaunchd\nn*:5173\n";
+        assert!(listens(claunchd, 1, 5173));
+        assert!(!may_stop(claunchd, 1, 5173, 9));
     }
 
     #[test]
@@ -292,12 +323,19 @@ mod tests {
     }
 
     #[test]
-    fn the_repositories_are_read_as_repos_json_is_written() {
+    fn the_repositories_are_read_newest_first_as_repos_json_is_written() {
         let text = with_root(&with_root("", "/w/api", crate::store::now_ms()), "/w/web", crate::store::now_ms());
-        assert_eq!(roots_in(&text), vec!["/w/api", "/w/web"]);
-        assert!(roots_in("not json").is_empty());
-        assert!(roots_in("[\"/w/a\"]").is_empty());
-        assert!(roots_in("").is_empty());
+        assert_eq!(roots_by_time(&text), vec!["/w/api", "/w/web"]);
+        assert_eq!(roots_by_time(r#"{"/a": 5, "/b": 9, "/c": "x", "": 3, "/d": 7}"#), vec!["/b", "/d", "/a"]);
+        assert!(roots_by_time("not json").is_empty());
+        assert!(roots_by_time("[\"/w/a\"]").is_empty());
+        assert!(roots_by_time("").is_empty());
+    }
+
+    #[test]
+    fn the_ignored_paths_are_read_from_status_as_git_marks_them() {
+        assert_eq!(ignored_in(" M a.ts\n?? new.ts\n!! node_modules/\n!! .env\n"), "node_modules/\n.env");
+        assert_eq!(ignored_in(" M a.ts\n"), "");
     }
 
     #[test]
@@ -330,18 +368,29 @@ mod tests {
         sh(&repo, "git init -q && git config user.email a@b.c && git config user.name A && echo x > f && git add f && git commit -qm First && git worktree add -q ../clean -b clean && git worktree add -q ../dirty -b dirty");
         std::fs::write(base.join("dirty").join("new.txt"), "z").unwrap();
         let repo_text = repo.to_str().unwrap().to_owned();
-        std::fs::write(data.join("repos.json"), with_root("", &repo_text, crate::store::now_ms())).unwrap();
         let list = git(&repo, &["worktree", "list", "--porcelain"]).unwrap().stdout;
         let paths = tree_paths(&list);
         assert_eq!(paths.len(), 3);
+        // A chat that works in the clean worktree notes that folder too: the repository is still known once.
+        let seen = with_root(&with_root("", &repo_text, crate::store::now_ms()), &paths[1], crate::store::now_ms());
+        std::fs::write(data.join("repos.json"), seen).unwrap();
 
-        assert!(remove_worktree(&data, &repo_text, "/nowhere").is_err());
-        assert!(remove_worktree(&data, &repo_text, &paths[0]).is_err());
+        let known = known_repos(&data);
+        assert_eq!(known.len(), 1);
+        assert_eq!(Path::new(&known[0]).canonicalize().unwrap(), repo.canonicalize().unwrap());
+        let groups = worktrees(&data);
+        assert_eq!(groups.len(), 1);
+        assert_eq!(groups[0]["trees"].as_array().unwrap().len(), 2);
+        let main = known[0].clone();
+
+        assert!(remove_worktree(&data, &main, "/nowhere").is_err());
+        assert!(remove_worktree(&data, &main, &paths[0]).is_err());
         assert!(remove_worktree(&data, "/nowhere-repo", &paths[1]).is_err());
-        let refused = remove_worktree(&data, &repo_text, &paths[2]).unwrap_err();
+        assert!(remove_worktree(&data, &paths[1], &paths[1]).is_err());
+        let refused = remove_worktree(&data, &main, &paths[2]).unwrap_err();
         assert!(!refused.is_empty());
         assert!(Path::new(&paths[2]).exists());
-        assert_eq!(remove_worktree(&data, &repo_text, &paths[1]), Ok(()));
+        assert_eq!(remove_worktree(&data, &main, &paths[1]), Ok(()));
         assert!(!Path::new(&paths[1]).exists());
         std::fs::remove_dir_all(&base).unwrap();
     }
