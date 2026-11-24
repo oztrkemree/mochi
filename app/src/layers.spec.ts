@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 
 import type { Act, Mood } from '../../types'
 import { ACTS, POSES, layersFor, mascotInner, paramsAt, poseOf, target } from '../../hooks/rig'
+import { WEAR } from '../../hooks/wear'
 import { ROOM } from './world'
 
 const scene = { context: -1, agents: 0 }
@@ -62,6 +63,35 @@ test('no mouth ever drops far down the face: under a mustache it stays a small m
   }
 })
 
+test('with a beard and a mustache on, the mouth is drawn over the beard and under the mustache, never peeking out between them', () => {
+  const outfit = { head: null, eyes: null, face: null, lip: 'mustache', chin: 'goatee', neck: null, held: null, ground: null } as const
+  const dressed = { context: -1, agents: 0, outfit }
+  const mustache = WEAR.mustache!.uri
+  for (const mood of ['idle', 'talking', 'agent', 'cheer', 'giggle'] as (Mood | Act)[]) {
+    const html = layersFor({ mood, scene: dressed }, ROOM)
+    const inLayers = [html.indexOf('goateeH'), html.indexOf('<div class="mouth"'), html.indexOf(mustache)]
+    expect(inLayers.every(i => i >= 0) && inLayers[0]! < inLayers[1]! && inLayers[1]! < inLayers[2]!, `${mood} in layers`).toBe(true)
+    const drawing = mascotInner({ mood, scene: dressed, from: null })
+    const drawn = [drawing.indexOf('goateeH'), drawing.indexOf('class="mouth"'), drawing.indexOf(mustache)]
+    expect(drawn.every(i => i >= 0) && drawn[0]! < drawn[1]! && drawn[1]! < drawn[2]!, `${mood} drawn`).toBe(true)
+  }
+})
+
+test('the arms turn about a point well inside the body, so a raised arm never floats off its side', () => {
+  // The body's edge at the shoulders' height (55) is at 22 and 78, as its picture is drawn.
+  const W = 100 + ROOM.left + ROOM.right
+  for (const mood of ['idle', 'wave', 'agent', 'cheer'] as (Mood | Act)[]) {
+    const html = layersFor({ mood, scene }, ROOM)
+    const x = (side: 'L' | 'R') => (Number(html.match(new RegExp(`<div class="arm${side}" style="transform-origin:([\\d.]+)%`))![1]) / 100) * W - ROOM.left
+    expect(x('L'), `${mood} left`).toBeGreaterThanOrEqual(25)
+    expect(x('R'), `${mood} right`).toBeLessThanOrEqual(75)
+    const pivots = [...mascotInner({ mood, scene, from: null }).matchAll(/<g transform="rotate\(-?[\d.]+ ([\d.]+) 55\)">/g)].map(m => Number(m[1]))
+    expect(pivots, `${mood} drawn`).toHaveLength(2)
+    expect(pivots[0]!, `${mood} drawn left`).toBeGreaterThanOrEqual(25)
+    expect(pivots[1]!, `${mood} drawn right`).toBeLessThanOrEqual(75)
+  }
+})
+
 test('talking and surfing the web, the arms move below the shoulder, never held up in the air', () => {
   const reach = (side: 'L' | 'R', mood: 'talking' | 'web' | 'juggle') => {
     const p = poseOf(mood)
@@ -91,7 +121,7 @@ test('Mochi moves as if it had weight: loops ease, a bounce squashes as it lands
   expect(attr(wave, 'armR', 'frames')).toBe('[[-140],[-102],[-140]]')
   expect(attr(layersFor({ mood: 'proud', scene }, ROOM), 'armR', 'frames')).toBeUndefined()
   // A big turn of an arm swings past where it goes and settles back.
-  expect(mascotInner({ mood: 'wave', scene, from: { params: target('idle'), mood: 'idle', scene } })).toMatch(/values="-16 76\.5 55;-152 76\.5 55;-140 76\.5 55"/)
+  expect(mascotInner({ mood: 'wave', scene, from: { params: target('idle'), mood: 'idle', scene } })).toMatch(/values="-16 74 55;-152 74 55;-140 74 55"/)
 })
 
 test('what the layers take over is what the drawing shows: the antenna in step, an arm turning where the drawing has it', () => {
