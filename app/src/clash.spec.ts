@@ -30,17 +30,17 @@ test('the latest other chat that edited the file is the one named when several d
 })
 
 test('kept drops edits older than 30 minutes and replaces the older edit of the same chat and file', () => {
-  const edits = [edit('old', '/src/a.ts', NOW), edit('api', '/src/a.ts', NOW + MIN), edit('api', '/src/a.ts', NOW + 20 * MIN)]
+  const edits = [edit('old', '/src/a.ts', NOW), edit('api', '/src/a.ts', NOW + MIN), edit('api', '/src/a.ts', NOW + 20 * MIN), edit('fix-login', '/src/b.ts', NOW + 31 * MIN)]
   expect(kept(edits, edit('fix-login', '/src/b.ts', NOW + 32 * MIN))).toEqual([
     edit('api', '/src/a.ts', NOW + 20 * MIN),
     edit('fix-login', '/src/b.ts', NOW + 32 * MIN),
   ])
 })
 
-test('editOf names the file of a finished Edit, Write, MultiEdit or NotebookEdit call of a chat', () => {
+test('editOf names the file of a finished Edit, Write or MultiEdit call of a chat', () => {
   const event = { hook_event_name: 'PostToolUse', tool_name: 'Edit', tool_input: { file_path: '/src/a.ts' } }
   expect(editOf('api', 'PostToolUse', event, NOW)).toEqual({ chat: 'api', path: '/src/a.ts', at: NOW })
-  expect(editOf('api', 'PostToolUse', { tool_name: 'NotebookEdit', tool_input: { file_path: '/n.ipynb' } }, NOW)).toEqual({ chat: 'api', path: '/n.ipynb', at: NOW })
+  expect(editOf('api', 'PostToolUse', { tool_name: 'NotebookEdit', tool_input: { file_path: '/n.ipynb' } }, NOW)).toBe(null)
 })
 
 test('editOf ignores other hooks, other tools, and a call with no file path', () => {

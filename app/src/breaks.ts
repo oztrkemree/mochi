@@ -10,6 +10,12 @@ export type Stretch = { since: number | null; quietAt: number | null; told: bool
 /** No stretch of work yet. */
 export const FRESH: Stretch = { since: null, quietAt: null, told: false }
 
+/** How long without a prompt means the person was away: the stretch of work is over, whether or not a look saw it. */
+export const AWAY_MS = 15 * 60_000
+
+/** The stretch when a prompt comes at `at`, the one before it having come at `last`: fresh when they are more than AWAY_MS apart. */
+export const afterPrompt = (s: Stretch, last: number, at: number): Stretch => (at - last > AWAY_MS ? FRESH : s)
+
 /** The stretch one look later, and whether a break is due now (once per stretch). */
 export function stepBreak(s: Stretch, isBusy: boolean, now: number, minutes: number): { stretch: Stretch; due: boolean } {
   const on = minutes > 0 && (BREAK_MINUTES as readonly number[]).includes(minutes)

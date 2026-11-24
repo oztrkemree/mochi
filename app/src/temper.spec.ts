@@ -1,8 +1,13 @@
 import { expect, test } from 'vitest'
 
-import { hopsOn, playsOn, quipOf, temperFrom, tipsOn } from './temper'
+import { hopsOn, isQuipKind, playsOn, quipOf, temperFrom, tipsOn } from './temper'
 
 const quips = { done: ['a', 'b'], failed: ['c'], level: [] } as const
+
+test('done, failed and level news can take a playful word; nudge, asking and limit news cannot', () => {
+  expect([isQuipKind('done'), isQuipKind('failed'), isQuipKind('level')]).toEqual([true, true, true])
+  expect([isQuipKind('nudge'), isQuipKind('asking'), isQuipKind('limit')]).toEqual([false, false, false])
+})
 
 test('a stored temper is read back as it was saved, and anything else falls back to calm, Mochi as it always was', () => {
   expect(temperFrom('playful')).toBe('playful')

@@ -21,8 +21,8 @@ import { type Area, type Body, type Edge, type Point, areaOf, fit, nearestEdge, 
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
 import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } from './acts'
-import { FRESH, type Stretch, stepBreak } from './breaks'
-import { hopsOn, playsOn, quipOf, tipsOn } from './temper'
+import { FRESH, type Stretch, afterPrompt, stepBreak } from './breaks'
+import { hopsOn, isQuipKind, playsOn, quipOf, tipsOn } from './temper'
 import { HOPS, ROUND_MS, bestOf, roundOf, scoreOf } from './game'
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
@@ -593,17 +593,18 @@ function requestFor(chat: string, now: number): Request | null {
   return request && request.until > now ? request : null
 }
 
-/** Counts the news said without a request, so every third one can take a playful word. */
+/** Counts the news that can take a playful word, so every third one does. */
 let rolls = 0
 
 /** Says news; a chat that waits with a request the bubble may answer is said with what it asks for and the answers. */
 function tell(news: News) {
-  // News brings Mochi up from the edge to say it.
+  // News brings Mochi up from the edge to say it, and ends a round of the game.
+  stopRound()
   standUp()
   const now = Date.now()
   const request = news.kind === 'asking' ? requestFor(news.id, now) : null
   if (!request) {
-    const quip = quipOf(settings.temper, news.kind, rolls++, words().temper.quips)
+    const quip = isQuipKind(news.kind) ? quipOf(settings.temper, news.kind, rolls++, words().temper.quips) : null
     return speak(quip ? news.line + ' ' + quip : news.line, settings.talkSeconds * 1000, NEWS_INK[news.kind], news)
   }
   const w = words()
@@ -629,8 +630,6 @@ function sayNext() {
 
 /** Takes in what changed among the chats; what no longer holds is dropped, and more pressing news does not wait for lesser news to finish. */
 function hear(fresh: News[], peers: View['peers'], isRequest = false) {
-  // News always wins over a round of the game: it stops at once, saying nothing.
-  if (fresh.length > 0) stopRound()
   // A request's own news is said even if the chat's file does not say it waits yet: its hook waits, which is the same.
   queue = queued(queue, fresh).filter(n => stillHolds(n, peers) || requests.has(n.id))
   // The request in the bubble now is said again with its answers.
@@ -852,7 +851,7 @@ function drawAgents() {
     list.append(item)
   }
   // Offered while a chat works, when the temper plays: a round of the hop game, pressed for.
-  if (view?.peers.some(p => p.state === 'busy') && !round && playsOn(settings.temper)) {
+  if (view?.peers.some(p => p.state === 'busy') && !round && !isBusy() && playsOn(settings.temper)) {
     const play = el('button', 'agent play')
     play.type = 'button'
     play.append(el('span', 'dot', '▶'), el('span', 'name', w.game.play))
@@ -981,7 +980,10 @@ async function take(calls: string[]) {
   for (const call of calls) {
     const h = hookedOf(call)
     if (!h) continue
-    if (h.name === 'UserPromptSubmit') promptAt = h.at
+    if (h.name === 'UserPromptSubmit') {
+      stretch = afterPrompt(stretch, promptAt, h.at)
+      promptAt = h.at
+    }
     const peer = view?.peers.find(p => p.id === h.id)
     const stuck = stepStuck(runs.get(h.id), h.name, h.event)
     if (stuck.run) runs.set(h.id, stuck.run)
@@ -1440,6 +1442,7 @@ let round: { hops: number[]; presses: number[]; from: number; timers: number[] }
 
 /** Starts a round: Mochi hops a few times in ROUND_MS, and a press close after a hop catches it. */
 function startRound() {
+  if (isBusy()) return
   toggleAgents(false)
   const from = Date.now()
   const r = { hops: roundOf(from >>> 0), presses: [] as number[], from, timers: [] as number[] }

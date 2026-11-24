@@ -21,9 +21,12 @@ export const playsOn = (t: Temper): boolean => t !== 'serious'
 /** The kinds of news a playful word can follow. */
 export type QuipKind = 'done' | 'failed' | 'level'
 
+/** Whether news of this kind can take a playful word. */
+export const isQuipKind = (kind: string): kind is QuipKind => kind === 'done' || kind === 'failed' || kind === 'level'
+
 /** A playful word to add after news of this kind: one time in three, by `roll`; null otherwise and in any other temper. */
 export function quipOf(t: Temper, kind: string, roll: number, quips: Record<QuipKind, readonly string[]>): string | null {
-  const list = kind === 'done' || kind === 'failed' || kind === 'level' ? quips[kind] : undefined
+  const list = isQuipKind(kind) ? quips[kind] : undefined
   if (t !== 'playful' || !list?.length || !Number.isInteger(roll) || roll < 0 || roll % 3 !== 0) return null
   return list[Math.floor(roll / 3) % list.length]
 }

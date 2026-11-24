@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { FRESH, type Stretch, stepBreak } from './breaks'
+import { FRESH, type Stretch, afterPrompt, stepBreak } from './breaks'
 
 const T0 = 1_760_000_000_000
 const MIN = 60_000
@@ -51,4 +51,11 @@ test('the stretch passed in is never changed', () => {
   expect(at(s, true, 95, 90).due).toBe(true)
   expect(at(s, false, 96, 90).stretch).toEqual({ since: T0, quietAt: T0 + 96 * MIN, told: false })
   expect(s).toEqual({ since: T0, quietAt: null, told: false })
+})
+
+test('a prompt more than 15 minutes after the one before it ends the stretch: a computer asleep is no unbroken work', () => {
+  const s: Stretch = { since: T0, quietAt: null, told: false }
+  expect(afterPrompt(s, T0, T0 + 15 * MIN)).toEqual(s)
+  expect(afterPrompt(s, T0, T0 + 15 * MIN + 1)).toEqual(FRESH)
+  expect(stepBreak(afterPrompt(s, T0, T0 + 185 * MIN), true, T0 + 185 * MIN, 90).due).toBe(false)
 })

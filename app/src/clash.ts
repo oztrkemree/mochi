@@ -4,7 +4,8 @@ export const CLASH_MS = 30 * 60_000
 /** One chat's edit of one file. */
 export type Edit = { chat: string; path: string; at: number }
 
-const EDIT_TOOLS = ['Edit', 'Write', 'MultiEdit', 'NotebookEdit']
+// shortcut: notebooks are not seen, the hook passes no notebook_path; keep it in agents.rs (kept_short) when two chats in one notebook matter
+const EDIT_TOOLS = ['Edit', 'Write', 'MultiEdit']
 
 /** The edit a hook call made: a file-editing tool's finished call with a path; null for anything else. */
 export function editOf(chat: string, name: string, event: Record<string, unknown>, at: number): Edit | null {

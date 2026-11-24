@@ -6,12 +6,13 @@ export type Run = { key: string; fails: number; told: boolean }
 
 const text = (v: unknown): string => (typeof v === 'string' ? v : '')
 
-/** What a hook call is a try of: the tool and the command or file it was given; null when the call is no tool's result. */
+/** What a hook call is a try of: the tool and the command or file it was given; null when the call is no tool's result, or the tool was given neither. */
 export function tryOf(name: string, event: Record<string, unknown>): { key: string; failed: boolean } | null {
   if (name !== 'PostToolUse' && name !== 'PostToolUseFailure') return null
   if (typeof event.tool_name !== 'string') return null
   const input = typeof event.tool_input === 'object' && event.tool_input !== null ? (event.tool_input as Record<string, unknown>) : {}
   const target = typeof input.command === 'string' ? input.command : text(input.file_path)
+  if (target === '') return null
   return { key: `${event.tool_name}\n${target}`, failed: name === 'PostToolUseFailure' }
 }
 

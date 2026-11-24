@@ -58,7 +58,16 @@ test('only the tool results of a call are tries; other hook events and calls wit
   expect(tryOf(OK, { tool_name: 7 })).toBeNull()
 })
 
-test('a command or file that is not text is left out of the step, and a missing input is read as empty', () => {
-  expect(tryOf(OK, { tool_name: 'Bash', tool_input: { command: 3 } })).toEqual({ key: 'Bash\n', failed: false })
-  expect(tryOf(OK, { tool_name: 'Read' })).toEqual({ key: 'Read\n', failed: false })
+test('a call given neither a command nor a file is no try Mochi can tell apart, so it is no try', () => {
+  expect(tryOf(OK, { tool_name: 'Bash', tool_input: { command: 3 } })).toBeNull()
+  expect(tryOf(OK, { tool_name: 'Read' })).toBeNull()
+})
+
+test('three failures of a tool given no command or file are never stuck, though their inputs differ', () => {
+  const WEB = { tool_name: 'WebFetch', tool_input: {} }
+  const a = stepStuck(undefined, FAIL, WEB)
+  const b = stepStuck(a.run, FAIL, { tool_name: 'WebFetch', tool_input: { url: 'https://a.example' } })
+  const c = stepStuck(b.run, FAIL, { tool_name: 'WebFetch', tool_input: { url: 'https://b.example' } })
+  expect([a.isStuck, b.isStuck, c.isStuck]).toEqual([false, false, false])
+  expect(c.run).toBeUndefined()
 })
