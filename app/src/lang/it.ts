@@ -244,6 +244,7 @@ const IT: Words = {
   sync: {
     title: 'Lo stesso Mochi su ogni computer',
     folder: 'Cartella condivisa',
+    choose: 'Scegli…',
     hint: 'Una cartella che i tuoi computer condividono (iCloud Drive, Dropbox…). Mochi copia le giornate di lavoro in entrambi i sensi e non cancella mai nulla.',
     bad: 'Quella cartella non si può aprire.',
     brought: (n: number) => `${n} chat arrivano dagli altri tuoi computer.`,

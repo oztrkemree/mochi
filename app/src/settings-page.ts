@@ -1,5 +1,6 @@
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
+import { open } from '@tauri-apps/plugin-dialog'
 import { emit } from '@tauri-apps/api/event'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 
@@ -142,7 +143,7 @@ function draw() {
   const w = words()
   const text: Record<string, string> = {
     'h-updates': w.update.title, 'l-updateMod': w.update.mod, 'l-updateApp': w.update.app, 'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-jobs': w.jobs, 'l-idle': w.hideIdle, 'l-leave': w.leaveIdle,
-    'l-breakMinutes': w.breaks.setting, 'l-temper': w.temper.title, 'temperHint': w.temper.hints[settings.temper], 'h-sync': w.sync.title, 'l-syncFolder': w.sync.folder, 'syncHint': w.sync.hint, 'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-care': w.care.setting, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
+    'l-breakMinutes': w.breaks.setting, 'l-temper': w.temper.title, 'temperHint': w.temper.hints[settings.temper], 'h-sync': w.sync.title, 'syncChoose': w.sync.choose, 'l-syncFolder': w.sync.folder, 'syncHint': w.sync.hint, 'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-care': w.care.setting, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
     'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex, 'l-line': w.line,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
   }
@@ -174,12 +175,17 @@ function draw() {
   // Checked once the folder is saved: a folder that cannot be listed says so in the hint's place.
   const folder = $<HTMLInputElement>('syncFolder')
   folder.value = settings.syncFolder
-  folder.onchange = async () => {
-    const value = folder.value.trim()
+  // A folder typed or chosen: kept, and said when it cannot be listed.
+  const useFolder = async (value: string) => {
     folder.value = value
     void save({ syncFolder: value })
     const ok = value === '' || (await invoke('list_days', { folder: value }).then(() => true, () => false))
     $('syncHint').textContent = ok ? w.sync.hint : w.sync.bad
+  }
+  folder.onchange = () => void useFolder(folder.value.trim())
+  $('syncChoose').onclick = async () => {
+    const picked = await open({ directory: true, multiple: false, title: w.sync.folder, defaultPath: folder.value.trim() || undefined }).catch(() => null)
+    if (typeof picked === 'string') await useFolder(picked)
   }
 
   $('resetPlace').onclick = () => void emit('reset-place')

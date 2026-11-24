@@ -241,6 +241,7 @@ const ID: Words = {
   sync: {
     title: 'Mochi yang sama di setiap komputer',
     folder: 'Folder bersama',
+    choose: 'Pilih…',
     hint: 'Folder yang dipakai bersama oleh komputermu (iCloud Drive, Dropbox…). Mochi menyalin hari kerja dua arah dan tidak pernah menghapus apa pun.',
     bad: 'Folder itu tidak bisa dibuka.',
     brought: (n: number) => `${n} chat datang dari komputer lainmu.`,
