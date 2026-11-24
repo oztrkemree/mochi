@@ -331,14 +331,21 @@ mod tests {
     #[test]
     fn the_mod_is_found_in_the_folder_claude_loads_before_a_marketplace_plugin() {
         let home = Path::new("/home/me");
-        let settings = r#"{"env":{"CLAUDE_CODE_PLUGIN_DIRS":"~/.claude/mods/other:~/.claude/mods/mochi"}}"#;
+        let (other, mochi) = (home.join(".claude/mods/other"), home.join(".claude/mods/mochi"));
+        // The list is written with the system's own separator (a colon, or a semicolon on Windows), `~` standing for home.
+        let list = std::env::join_paths([Path::new("~/.claude/mods/other"), Path::new("~/.claude/mods/mochi")]).unwrap();
+        let settings = json!({ "env": { "CLAUDE_CODE_PLUGIN_DIRS": list.to_str().unwrap() } }).to_string();
         let installed = r#"{"plugins":{"mochi-buddy@mochi":[{"version":"0.5.0"}]}}"#;
-        let read = |d: &Path| match d.to_str().unwrap() {
-            "/home/me/.claude/mods/mochi" => Some(plugin("0.9.0")),
-            "/home/me/.claude/mods/other" => Some(r#"{"name":"another","version":"3.0.0"}"#.to_owned()),
-            _ => None,
+        let read = |d: &Path| {
+            if d == mochi {
+                Some(plugin("0.9.0"))
+            } else if d == other {
+                Some(r#"{"name":"another","version":"3.0.0"}"#.to_owned())
+            } else {
+                None
+            }
         };
-        assert_eq!(find_mod(installed, settings, home, &read), Some((Kind::Dir(PathBuf::from("/home/me/.claude/mods/mochi")), "0.9.0".to_owned())));
+        assert_eq!(find_mod(installed, &settings, home, &read), Some((Kind::Dir(mochi.clone()), "0.9.0".to_owned())));
         // Without the folder, the plugin the marketplace put in; with neither, nothing.
         assert_eq!(find_mod(installed, "{}", home, &read), Some((Kind::Plugin, "0.5.0".to_owned())));
         assert_eq!(find_mod("{}", "{}", home, &read), None);
