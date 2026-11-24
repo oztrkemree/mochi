@@ -196,5 +196,55 @@ const ZH: Words = {
   place: '位置',
   resetPlace: '回到角落',
   version: (v: string) => `Mochi Buddy ${v}`,
+  kits: (n: number) => `${n} 个子代理在工作`,
+  breaks: {
+    setting: '之后提醒我休息',
+    line: (m: number) => `${m} 分钟没停过了，起来活动一下？`,
+  },
+  stuck: (chat: string) => `${chat} 同一步失败了三次。`,
+  clash: (a: string, b: string, file: string) => `${a} 和 ${b} 同时改了 ${file}。`,
+  game: {
+    play: '等待时玩',
+    go: '每次我跳起来就按我！',
+    score: (n: number, of: number) => `${n} / ${of}！`,
+    best: (n: number) => `新纪录：${n}！`,
+  },
+  outfits: {
+    title: '保存的造型',
+    save: '保存这个造型',
+    name: '名称',
+    remove: '移除',
+    none: '还没有保存的造型。',
+  },
+  temper: {
+    title: '性格',
+    names: { calm: '冷静', playful: '活泼', serious: '严肃' },
+    hints: { calm: 'Mochi 一如既往。', playful: '偶尔会说一句自己的话。', serious: '不跳、不提示、不玩游戏。' },
+    quips: {
+      done: ['搞定！', '下一个！', '我就说吧。'],
+      failed: ['哎呀。', '唉，发生了。', '不是我最光彩的时刻。'],
+      level: ['看我们长高了！', '感觉自己高了些。', '好看！'],
+    },
+  },
+  secrets: {
+    hidden: '秘密',
+    hiddenHint: '动手做才能发现，光看没用。',
+    names: { weekender: '周末打工人', fullWeek: '整周满勤', eraser: '橡皮擦', oneLiner: '一气呵成', nightAndDawn: '夜晚与黎明', evenSteven: '不分上下' },
+    hints: {
+      weekender: '周六以及之后的周日都有工作。',
+      fullWeek: '从周一到周日每天都在工作。',
+      eraser: '一天里删除的行比新增的多，且至少删了一百行。',
+      oneLiner: '一天里只有一轮对话，并以一次提交结束。',
+      nightAndDawn: '同一天里既深夜工作，又清晨工作。',
+      evenSteven: '一天里新增和删除的行数完全相同，且至少五十行。',
+    },
+  },
+  sync: {
+    title: '每台电脑上都是同一个 Mochi',
+    folder: '共享文件夹',
+    hint: '你的电脑共享的一个文件夹（iCloud Drive、Dropbox…）。Mochi 会双向复制工作的日子，且从不删除任何东西。',
+    bad: '无法打开该文件夹。',
+    brought: (n: number) => `${n} 个对话来自你的其他电脑。`,
+  },
 }
 export default ZH

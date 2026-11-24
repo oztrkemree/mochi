@@ -196,5 +196,55 @@ const JA: Words = {
   place: '位置',
   resetPlace: '隅に戻す',
   version: (v: string) => `Mochi Buddy ${v}`,
+  kits: (n: number) => `${n} 件のサブエージェントが作業中`,
+  breaks: {
+    setting: '作業後に休憩をうながす',
+    line: (m: number) => `${m} 分間ずっと作業中。少し体を伸ばしませんか？`,
+  },
+  stuck: (chat: string) => `${chat} が同じ手順で3回失敗しました。`,
+  clash: (a: string, b: string, file: string) => `${a} と ${b} が同時に ${file} を編集しました。`,
+  game: {
+    play: '待ち時間にあそぶ',
+    go: '跳ねるたびに押してね！',
+    score: (n: number, of: number) => `${of} 回中 ${n} 回！`,
+    best: (n: number) => `新記録：${n}！`,
+  },
+  outfits: {
+    title: '保存した服装',
+    save: 'この服装を保存',
+    name: '名前',
+    remove: '削除',
+    none: 'まだ保存された服装はありません。',
+  },
+  temper: {
+    title: '性格',
+    names: { calm: '落ち着き', playful: 'ゆかい', serious: 'まじめ' },
+    hints: { calm: 'いつもの Mochi です。', playful: 'ときどき自分のひとことを足します。', serious: 'ジャンプもヒントもゲームもなし。' },
+    quips: {
+      done: ['できた！', '次！', 'だから言ったでしょ。'],
+      failed: ['あらら。', 'まあ、そういうこともある。', '今のはナシで。'],
+      level: ['見て、成長したね！', '背が伸びた気分。', 'おしゃれ！'],
+    },
+  },
+  secrets: {
+    hidden: 'ひみつ',
+    hiddenHint: '読むのではなく、やって見つける。',
+    names: { weekender: '週末ワーカー', fullWeek: '一週間まるごと', eraser: '消しゴム', oneLiner: '一発完了', nightAndDawn: '夜と夜明け', evenSteven: 'いい勝負' },
+    hints: {
+      weekender: '土曜と、その次の日曜に作業した。',
+      fullWeek: '月曜から日曜まで毎日作業した。',
+      eraser: '1日で追加した行より多くの行を削除（100行以上）。',
+      oneLiner: '1日に1ターンだけで、コミットで終わった。',
+      nightAndDawn: '同じ日の深夜と早朝に作業した。',
+      evenSteven: '1日で追加と削除の行数がぴったり同じ（50行以上）。',
+    },
+  },
+  sync: {
+    title: 'どのパソコンでも同じ Mochi',
+    folder: '共有フォルダ',
+    hint: 'パソコン同士で共有しているフォルダ（iCloud Drive、Dropbox…）。Mochi は作業した日を双方向にコピーし、何も削除しません。',
+    bad: 'そのフォルダを開けません。',
+    brought: (n: number) => `ほかのパソコンから ${n} 件のチャットが届きました。`,
+  },
 }
 export default JA

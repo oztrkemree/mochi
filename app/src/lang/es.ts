@@ -199,5 +199,55 @@ const ES: Words = {
   place: 'Posición',
   resetPlace: 'Volver a la esquina',
   version: (v: string) => `Mochi Buddy ${v}`,
+  kits: (n: number) => `${n} subagentes trabajando`,
+  breaks: {
+    setting: 'Recuérdame descansar después de',
+    line: (m: number) => `${m} minutos sin pausa. ¿Estiramos las piernas?`,
+  },
+  stuck: (chat: string) => `${chat} falló tres veces el mismo paso.`,
+  clash: (a: string, b: string, file: string) => `${a} y ${b} editaron ${file} a la vez.`,
+  game: {
+    play: 'Juega mientras esperas',
+    go: '¡Púlsame cada vez que salte!',
+    score: (n: number, of: number) => `¡${n} de ${of}!`,
+    best: (n: number) => `¡Nuevo récord: ${n}!`,
+  },
+  outfits: {
+    title: 'Looks guardados',
+    save: 'Guardar este look',
+    name: 'Nombre',
+    remove: 'Quitar',
+    none: 'Aún no hay ningún look guardado.',
+  },
+  temper: {
+    title: 'Carácter',
+    names: { calm: 'Tranquilo', playful: 'Juguetón', serious: 'Serio' },
+    hints: { calm: 'Mochi como siempre.', playful: 'Añade de vez en cuando una palabra propia.', serious: 'Sin saltos, sin consejos, sin juegos.' },
+    quips: {
+      done: ['¡Listo!', '¡Siguiente!', 'Ya lo decía yo.'],
+      failed: ['Vaya.', 'Bueno, pasó.', 'No fue mi mejor momento.'],
+      level: ['¡Mira hasta dónde llegamos!', 'Me siento más alto.', '¡Qué elegante!'],
+    },
+  },
+  secrets: {
+    hidden: 'Secreto',
+    hiddenHint: 'Se encuentra haciendo, no leyendo.',
+    names: { weekender: 'Del fin de semana', fullWeek: 'Semana completa', eraser: 'Goma de borrar', oneLiner: 'Uno y listo', nightAndDawn: 'Noche y amanecer', evenSteven: 'Tal para cual' },
+    hints: {
+      weekender: 'Trabajaste un sábado y el domingo siguiente.',
+      fullWeek: 'Trabajaste todos los días, de un lunes a su domingo.',
+      eraser: 'Quitaste más líneas de las que añadiste en un día, al menos cien.',
+      oneLiner: 'Un día de un solo turno que terminó en un commit.',
+      nightAndDawn: 'Trabajaste de noche tarde y de madrugada el mismo día.',
+      evenSteven: 'Añadiste exactamente tantas líneas como quitaste en un día, al menos cincuenta.',
+    },
+  },
+  sync: {
+    title: 'El mismo Mochi en cada ordenador',
+    folder: 'Carpeta compartida',
+    hint: 'Una carpeta que comparten tus ordenadores (iCloud Drive, Dropbox…). Mochi copia los días de trabajo en ambos sentidos y nunca borra nada.',
+    bad: 'No se puede abrir esa carpeta.',
+    brought: (n: number) => `${n} chats llegaron desde tus otros ordenadores.`,
+  },
 }
 export default ES

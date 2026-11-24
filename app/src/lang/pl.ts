@@ -204,5 +204,55 @@ const PL: Words = {
   place: 'Miejsce',
   resetPlace: 'Z powrotem do rogu',
   version: (v: string) => `Mochi Buddy ${v}`,
+  kits: (n: number) => pn(String(n), 'subagent pracuje', 'subagenty pracują', 'subagentów pracuje'),
+  breaks: {
+    setting: 'Przypomnij mi o odpoczynku po',
+    line: (m: number) => pn(String(m), 'minuta bez przerwy. Rozprostujemy nogi?', 'minuty bez przerwy. Rozprostujemy nogi?', 'minut bez przerwy. Rozprostujemy nogi?'),
+  },
+  stuck: (chat: string) => `${chat} trzy razy zawiódł na tym samym kroku.`,
+  clash: (a: string, b: string, file: string) => `${a} i ${b} edytowały równocześnie ${file}.`,
+  game: {
+    play: 'Graj, póki czekasz',
+    go: 'Naciśnij mnie za każdym razem, gdy skoczę!',
+    score: (n: number, of: number) => `${n} z ${of}!`,
+    best: (n: number) => `Nowy rekord: ${n}!`,
+  },
+  outfits: {
+    title: 'Zapisane stroje',
+    save: 'Zapisz ten strój',
+    name: 'Nazwa',
+    remove: 'Usuń',
+    none: 'Nie zapisano jeszcze żadnego stroju.',
+  },
+  temper: {
+    title: 'Charakter',
+    names: { calm: 'Spokojny', playful: 'Psotny', serious: 'Poważny' },
+    hints: { calm: 'Mochi jak zawsze.', playful: 'Od czasu do czasu dorzuci coś od siebie.', serious: 'Bez podskoków, bez porad, bez gier.' },
+    quips: {
+      done: ['Proszę!', 'Dalej!', 'Mówiłem, że tak będzie.'],
+      failed: ['Ups.', 'No cóż, stało się.', 'Nie mój najlepszy moment.'],
+      level: ['Patrz, jak rośniemy!', 'Czuję się wyższy.', 'Elegancko!'],
+    },
+  },
+  secrets: {
+    hidden: 'Sekret',
+    hiddenHint: 'Odkrywa się, robiąc, nie czytając.',
+    names: { weekender: 'Weekendowiec', fullWeek: 'Cały tydzień', eraser: 'Gumka', oneLiner: 'Jeden ruch i gotowe', nightAndDawn: 'Noc i świt', evenSteven: 'Równo i sprawiedliwie' },
+    hints: {
+      weekender: 'Pracował w sobotę i w niedzielę po niej.',
+      fullWeek: 'Pracował każdego dnia, od poniedziałku do jego niedzieli.',
+      eraser: 'Usunął danego dnia więcej linii, niż dodał, co najmniej sto.',
+      oneLiner: 'Dzień jednego ruchu, który zakończył się commitem.',
+      nightAndDawn: 'Pracował późno w nocy i wcześnie rano tego samego dnia.',
+      evenSteven: 'Dodał dokładnie tyle linii, ile usunął danego dnia, co najmniej pięćdziesiąt.',
+    },
+  },
+  sync: {
+    title: 'Ten sam Mochi na każdym komputerze',
+    folder: 'Wspólny folder',
+    hint: 'Folder, który twoje komputery udostępniają (iCloud Drive, Dropbox…). Mochi kopiuje dni pracy w obie strony i nigdy niczego nie usuwa.',
+    bad: 'Nie można otworzyć tego folderu.',
+    brought: (n: number) => pn(String(n), 'czat przyszedł z twoich innych komputerów.', 'czaty przyszły z twoich innych komputerów.', 'czatów przyszło z twoich innych komputerów.'),
+  },
 }
 export default PL
