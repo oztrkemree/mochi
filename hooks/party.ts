@@ -227,9 +227,9 @@ export function spotAt(floor: Pick<Floor, 'width' | 'spots'>, fx: number): strin
 export type Dress = (mood: Mood) => Outfit | undefined
 
 /** One Mochi on the floor, its feet at `base`: the rig in its mood and the person's outfit, still unless it moves; a mark on the floor says its state at a glance. */
-function standing(m: Member, cx: number, base: number, size: number, now: number, isPicked: boolean, dress: Dress): string {
+function standing(m: Member, cx: number, base: number, size: number, now: number, isPicked: boolean, dress: Dress, skin?: string): string {
   const mood = moodOf(m, now)
-  let mascot = mascotInner({ mood, scene: { context: -1, agents: Math.min(3, m.peer.agents?.length ?? 0), outfit: dress(mood) }, from: null })
+  let mascot = mascotInner({ mood, scene: { context: -1, agents: Math.min(3, m.peer.agents?.length ?? 0), outfit: dress(mood), ...(skin ? { skin } : {}) }, from: null })
   if (!m.isMoving) mascot = stillOf(mascot)
   const ink = STATUS_INK[m.status]
   const glow = m.status === 'asking'
@@ -253,7 +253,7 @@ const moreSvg = (cx: number, cy: number, k: number) =>
  * as wide as what stands in it, a place with nobody left out. Bigger at the
  * door, smaller at rest; a name under each but in the corner, where a count is.
  */
-export function floorOf(party: Party, now: number, picked = '', dress: Dress = () => undefined): Floor {
+export function floorOf(party: Party, now: number, picked = '', dress: Dress = () => undefined, skin?: string): Floor {
   const d = t().party
   const zones = (['door', 'shop', 'nap'] as const).filter(z => party[z].length > 0)
   const tallest = Math.max(...zones.map(z => SIZE[z]), SIZE.nap)
@@ -283,7 +283,7 @@ export function floorOf(party: Party, now: number, picked = '', dress: Dress = (
       const left = x + w / 2 - span / 2 - (more > 0 ? MORE_W / 2 : 0)
       shown.forEach((m, i) => {
         const cx = left + SLOT.nap * (i + 0.5)
-        art += standing(m, cx, floorY + 4 + (i % 2) * 4, SIZE.nap, now, m.peer.id === picked, dress)
+        art += standing(m, cx, floorY + 4 + (i % 2) * 4, SIZE.nap, now, m.peer.id === picked, dress, skin)
         spots.push({ key: m.peer.id, x0: cx - SLOT.nap / 2, x1: cx + SLOT.nap / 2 })
       })
       if (more > 0) marks += moreSvg(left + span + MORE_W / 2, floorY - 12, more)
@@ -292,7 +292,7 @@ export function floorOf(party: Party, now: number, picked = '', dress: Dress = (
       const max = Math.floor((SLOT[z] - 8) / CHAR_W)
       shown.forEach((m, i) => {
         const cx = x + PAD + SLOT[z] * (i + 0.5)
-        art += standing(m, cx, floorY, SIZE[z], now, m.peer.id === picked, dress)
+        art += standing(m, cx, floorY, SIZE[z], now, m.peer.id === picked, dress, skin)
         const name = `${m.isSelf ? '• ' : ''}${nameOf(m.peer)}`
         marks += nameLines(name, max).map((line, k) =>
           `<text class="t ${z === 'door' ? 'fg' : 'dim'}" x="${n(cx)}" y="${n(floorY + 18 + k * 13)}" font-size="11" font-weight="${z === 'door' ? 650 : 550}" text-anchor="middle">${esc(line)}</text>`).join('')

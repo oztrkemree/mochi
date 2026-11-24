@@ -14,7 +14,7 @@ import { ASCII_HAT, SLOT, SLOTS, SLOT_ITEMS, hintFor, itemName, itemShort, level
 import type { Slot } from './level'
 import { LOOKS, asciiRows, kaomoji } from './looks'
 import { nameOf } from './live'
-import { PANEL_H, limitName, panelSvg } from './panel'
+import { limitName, panelSvg } from './panel'
 import { SHOWN, floorOf, memberLines, membersOf, partyOf, statusLine } from './party'
 import { duration } from './react'
 import { itemIcon, mascotInner, shiftTimeline, svgFor } from './rig'
@@ -57,6 +57,11 @@ function tapRegion($: EngineInterface, desk: DeskPane, key: string, rows: number
   const { Box, Client } = $.ui.resolve(desk)
   return <Box position="absolute" top={0} left={0} right={0} bottom={0}><Client key={key} module="./hit.tsx" props={{ rows }} width="100%" height="100%" /></Box>
 }
+
+/** What the pane's pictures may weigh together, in characters of SVG (see `pic` in the details pane). */
+const PICTURE_BUDGET = 150_000
+/** A card's picture once the budget is spent: a dim dot. */
+const DOT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 32"><circle cx="23" cy="16" r="7" fill="#8884"/></svg>'
 
 /** Over the floor of chats: a click picks whoever stands there (floor.tsx). */
 /** The pull requests' board, which opens the one pressed (board.tsx). */
@@ -159,6 +164,16 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     const room = Math.max(30, e.props.bodyColumns - 9)
     const perRow = Math.max(2, Math.floor((room + 1) / 16))
     const cardW = Math.floor((room + 1) / perRow) - 1
+    // The desktop drops a whole pane whose pictures weigh too much (172 KB drew, 426 KB did not, 2026-11-24), and the
+    // pictured items are large: they are drawn in the order the pane lists them while this budget lasts, the rest as a dot.
+    // shortcut: a measured bound, not the engine's documented one; raise it once the limit is known.
+    let pictures = PICTURE_BUDGET
+    const pic = (item: Item, isOpen: boolean) => {
+      const svg = itemIcon(item, isOpen, true)
+      if (svg.length > pictures) return DOT
+      pictures -= svg.length
+      return svg
+    }
     const cell = (item: Item) => {
       const slot = SLOT[item]
       const isOn = dressed[slot] === item
@@ -166,7 +181,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       return (
         <Box key={`cell:${item}`} flexDirection="column" alignItems="center" width={cardW} paddingX={1} paddingTop={0.5} overflow="hidden"
           borderStyle="round" borderColor={isOn ? 'claude' : 'inactive'} borderDimColor={!isOn} hover={isOpen && !isOn ? { borderColor: 'claude', borderDimColor: false } : undefined}>
-          <Svg source={itemIcon(item, isOpen)} alt={itemName(item)} width={46} height={32} />
+          <Svg source={pic(item, isOpen)} alt={itemName(item)} width={46} height={32} />
           {isOpen
             ? <Button key={`wear:${item}`} plain onPress={pressed}>{itemShort(item)}</Button>
             : <Text dimColor wrap="truncate">{itemShort(item)}</Text>}
@@ -183,7 +198,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       return (
         <Box key={`tab:${slot}`} flexDirection="row" alignItems="center" gap={1} paddingX={1} overflow="hidden"
           borderStyle="round" borderColor={isHere ? 'claude' : 'inactive'} borderDimColor={!isHere} hover={isHere ? undefined : { borderColor: 'claude', borderDimColor: false }}>
-          {on ? <Svg source={itemIcon(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
+          {on ? <Svg source={pic(on, true)} alt={itemName(on)} width={23} height={16} /> : null}
           <Button key={`shelf:${slot}`} plain onPress={pressed}>
             {`${slotName(slot)} ${SLOT_ITEMS[slot].filter(i => ok.includes(i)).length}/${SLOT_ITEMS[slot].length}`}
           </Button>
@@ -224,6 +239,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
       ? `${slotName(slotHere)} · ${here ? itemName(here) : t().ui.empty}${p.pick[slotHere] === undefined ? t().ui.autoMark : ''}`
       : `${t().ui.colour} · ${skinName(skin ?? 'clay')}`
     const mochi = svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit: dressed, ...(skin ? { skin } : {}) }, from: null })
+    pictures -= mochi.length
     // The badges: each medal with how it is earned, in colour once it is.
     const medal = (b: Badge) => {
       const isEarned = v.badges.includes(b)
@@ -389,8 +405,8 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
     const chats = () => {
       const crew = v.me ? partyOf({ ...v.me, at: now }, v.peers ?? [], now) : null
       if (crew === null || !crew.isShown) return drawn('chats')
-      // Every Mochi in the party wears what the person dressed Mochi in, as the band's does in that mood.
-      const floor = floorOf(crew, now, crewPick, mood => outfitNow(p, v, mood, now))
+      // Every Mochi in the party wears what the person dressed Mochi in, and its colour, as the band's does in that mood.
+      const floor = floorOf(crew, now, crewPick, mood => outfitNow(p, v, mood, now), skin)
       // Each redraw rebuilds the picture: its loops run on the clock, so a redraw picks them up where they were.
       // As wide as it needs, never wider than the pane: a crowded floor shrinks to fit.
       const floorW = Math.min(secW, floor.width)
@@ -441,7 +457,7 @@ export const detailPane: MatchedHook<'ui.render', { component: 'Pane' }> = async
         <Box flexDirection="row" alignItems="center" gap={2}>
           <Text dimColor wrap="truncate">{gists.wardrobe}</Text>
           <Box flexDirection="row" alignItems="center" gap={1}>
-            {worn.map(x => <Svg key={`worn:${x}`} source={itemIcon(x, true)} alt={itemName(x)} width={23} height={16} />)}
+            {worn.map(x => <Svg key={`worn:${x}`} source={pic(x, true)} alt={itemName(x)} width={23} height={16} />)}
           </Box>
         </Box>
       ), () => (
@@ -675,21 +691,21 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
   const p = await read($, prefs)
   if (p.isHidden) return next(e)
   // Out on the desktop, Mochi is not drawn here as well: the band keeps its line and its facts.
-  const isAway = p.goesOut && (await read($, away))
+  const isAway = p.stepsAside && (await read($, away))
 
   if (e.surface === 'desktop' || e.surface === 'mobile' || e.surface === 'vscode') {
     // The desktop rebuilds the whole band on every redraw, so this branch
     // reads the panel alone, which changes only when its drawing should; the
     // drawing resumes its animations mid-loop. An <img> (not interactive)
     // keeps the painted parts the interactive frame's scrub would strip.
-    const { Box, Svg } = $.ui.resolve(e)
+    const { Box, Button, Svg } = $.ui.resolve(e)
     const pane = await read($, panel)
     const now = await $.clock.now()
     const width = Math.round(Math.min(1600, Math.max(420, e.props.bodyColumns * 8.1 - 8)))
     const alt = `${pane.info.label}: ${pane.info.detail}`
     let drawn: ReturnType<typeof panelSvg>
     try {
-      drawn = panelSvg({ panel: pane, now, width, isAway })
+      drawn = panelSvg({ panel: pane, now, width, isAway, isCompact: p.isCompact })
     } catch {
       // Never an empty band: the mascot alone if the panel cannot be drawn.
       return (
@@ -706,15 +722,20 @@ export const band: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = asyn
     if (e.surface === 'desktop') {
       const { Client } = $.ui.resolve(e)
       hit = (
-        <Box marginLeft={-panelCols} width={panelCols} height={PANEL_H / 20} flexShrink={0}>
+        <Box marginLeft={-panelCols} width={panelCols} height={drawn.height / 20} flexShrink={0}>
           <Client key="hit" module="./hit.tsx" props={{ rows: 6 }} width="100%" height="100%" />
         </Box>
       )
     }
     return (
       <Box flexDirection="row" alignItems="stretch">
-        <Svg source={drawn.svg} alt={alt} width={drawn.width} height={PANEL_H} />
+        <Svg source={drawn.svg} alt={alt} width={drawn.width} height={drawn.height} />
         {hit}
+        {/* The band's size at its right edge, in words of what a press does, as /mochi small and big. */}
+        <Box flexGrow={1} />
+        <Box flexDirection="column" justifyContent="center" flexShrink={0} paddingX={1}>
+          <Button key={p.isCompact ? 'size:big' : 'size:small'} plain dimColor onPress={pressed}>{p.isCompact ? t().pane.big : t().pane.small}</Button>
+        </Box>
       </Box>
     )
   }

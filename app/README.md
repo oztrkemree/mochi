@@ -61,7 +61,7 @@ Each chat has one writer. With the mod on, a Claude Code chat is the mod's and t
 
 The app's Mochi wears what the band's Mochi wears: the mod writes your picks and what you have opened to `~/.claude/mochi/look.json`, and the app dresses its Mochi by them, with the same seasons and nightcap.
 
-While the app's Mochi is on screen it writes `~/.claude/mochi/app.json` every 15 seconds, and at once when you show or hide it from the tray. The mod reads it, and its band above the prompt goes on without the mascot: the line, the trail, the facts and the rings stay. Hide or quit the app and the mascot is back in the band within a few seconds. `/mochi desktop off` keeps the mascot in the band whatever the app does.
+While the app's Mochi is on screen it writes `~/.claude/mochi/app.json` every 15 seconds, and at once when you show or hide it from the tray. The mod reads it. The band above the prompt keeps its mascot by default; after `/mochi desktop on` it goes on without it while the app's Mochi is out (the line, the trail, the facts and the rings stay), and the mascot is back within a few seconds once you hide or quit the app. `/mochi desktop off` keeps the mascot in the band whatever the app does.
 
 ## Updates
 

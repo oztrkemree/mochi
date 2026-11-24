@@ -15,7 +15,7 @@ import { clip } from '../../hooks/sound'
 import { type Edit, clashKey, clashOf, editOf, kept } from './clash'
 import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, settles, stalledOf, tallyOf } from './engine'
 import { type Growth, badgesNews, growthOf, historyOf, levelNews } from './growth'
-import { type Usage, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
+import { type Usage, readingsOf, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
 import { type News, isMorePressing, newsOf, queued, stillHolds, withoutStalled } from './news'
 import { type Area, type Body, type Edge, type Point, areaOf, fit, nearestEdge, peekAt, pushedPast, shownIn } from './place'
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
@@ -934,6 +934,23 @@ function drawLimits(next: Usage[], now: number) {
   limitsButton.setAttribute('aria-label', label === '' ? words().limits : `${words().limits}: ${label}`)
 }
 
+/** The mod's last readings of the usage windows, from usage.json: the rings when no chat in view knows the limits. */
+let readings: Usage[] = []
+
+/** The limits as the chats know them, else as the mod last read them. */
+const limitsOf = (peers: View['peers'], now: number): Usage[] => {
+  const known = usageOf(peers, now)
+  return known.length > 0 ? known : readings
+}
+
+/** Reads usage.json again, and redraws the rings from it when no chat in view knows the limits. */
+async function readReadings() {
+  const text = await invoke<string | null>('read_shared', { name: 'usage.json' }).catch(() => null)
+  const now = Date.now()
+  readings = readingsOf(text, now)
+  if (view && usageOf(view.peers, now).length === 0) drawLimits(readings, now)
+}
+
 // A press on the rings opens the list, where each limit stands in full.
 limitsButton.addEventListener('pointerdown', e => e.stopPropagation())
 limitsButton.addEventListener('click', () => toggleAgents())
@@ -1259,7 +1276,7 @@ function draw() {
   watch(next.mood)
   drawAgents()
   const usedBefore = usage
-  drawLimits(usageOf(next.peers, now), now)
+  drawLimits(limitsOf(next.peers, now), now)
   rest(next.peers)
   if (before) {
     // A chat taken as stopped because it went silent is at rest, which is no news of a turn that finished.
@@ -1635,6 +1652,7 @@ async function start() {
     sayNewer()
   })
   await listen('minute', () => {
+    void readReadings()
     if (Date.now() - rulesAt > 5 * 60_000) readRules()
     if (!isBusy() && !say.classList.contains('on')) {
       void meet().catch(note)
@@ -1687,6 +1705,7 @@ async function start() {
   // The computer is first looked at two minutes after the start, not at once.
   caredAt = Date.now()
   window.setTimeout(() => void careLook().catch(note), 120_000)
+  void readReadings()
   // The first meeting, once: what Mochi does, the agents to listen to, the bubble's answers, the pocket.
   void meet().catch(note)
   // The list closes when the person turns to another window.

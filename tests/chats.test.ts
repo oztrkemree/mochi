@@ -7,6 +7,7 @@ import { setLang } from '../hooks/i18n'
 import { ALIVE_MS, appLink, appSessionOf, deskOf, peerOf } from '../hooks/live'
 import { floorOf, partyOf } from '../hooks/party'
 import { openCommand } from '../hooks/system'
+import { itemIcon } from '../hooks/rig'
 import { EMPTY_DAY } from '../hooks/level'
 import { NO_ENV, restorePrefs } from '../hooks/state'
 
@@ -593,9 +594,10 @@ test('the desktop app’s Mochi is out only while its file says shown and is fre
   expect(deskOf({ v: 1, at: NOW - ALIVE_MS - 1, isShown: true }, NOW)).toBe(false)
   expect(deskOf({ v: 1, at: NOW, isShown: false }, NOW)).toBe(false)
   for (const junk of [null, undefined, 'shown', 7, [], {}, { isShown: true }, { at: NOW, isShown: 'true' }, { at: String(NOW), isShown: true }]) expect(deskOf(junk, NOW)).toBe(false)
-  // Saved settings from before the setting was there step aside too.
-  expect(restorePrefs({ lang: 'en' }).goesOut).toBe(true)
-  expect(restorePrefs({ goesOut: false }).goesOut).toBe(false)
+  // Mochi stays in the band unless the person asks it to step aside; the older setting, saved on by default, is let go.
+  expect(restorePrefs({ lang: 'en' }).stepsAside).toBe(false)
+  expect(restorePrefs({ goesOut: true } as never).stepsAside).toBe(false)
+  expect(restorePrefs({ stepsAside: true }).stepsAside).toBe(true)
 })
 
 const BAND = {
@@ -604,7 +606,7 @@ const BAND = {
   props: { hasSurvey: false, isWorking: false, maxRows: 12, bodyColumns: 100, scroll: { offset: 0, bodyRows: 11 }, view: {} },
 }
 
-test('the band draws no mascot while the desktop app’s Mochi is out, and the rest stays; it is back when the app goes, and stays with the setting off', { timeoutMs: 30_000 }, async ($, on) => {
+test('Mochi stays in the band while the desktop app’s Mochi is out; with the setting on it steps aside, the rest stays, and it is back when the app goes', { timeoutMs: 30_000 }, async ($, on) => {
   const { clock, files } = machine(on, [{ kind: 'five_hour', percentUsed: 34, resetsAt: new Date(NOW + 300 * MIN).toISOString() }])
   const APP = '/h/.claude/mochi/app.json'
   let now = NOW
@@ -636,6 +638,14 @@ test('the band draws no mascot while the desktop app’s Mochi is out, and the r
   await $.session.start(START)
   await beat()
   // No desktop app: Mochi is in the band.
+  expect(await drawn()).toEqual(WITH)
+  // The app's Mochi out: by default the band keeps its own too.
+  app(true)
+  await beat()
+  expect(await drawn()).toEqual(WITH)
+  app(false)
+  await $.command.run({ command: 'mochi', args: 'desktop on' } as never)
+  await beat()
   expect(await drawn()).toEqual(WITH)
   // Its Mochi comes out: the band's steps aside at the next read, and everything else stays.
   app(true)
@@ -676,13 +686,75 @@ test('/mochi desktop turns stepping aside for the desktop app off and on, and sa
   await $.session.start(START)
   const run = async (args: string) => (await $.command.run({ command: 'mochi', args } as never)).text
   const [ON, OFF] = ['Desktop on: while Mochi is out on the desktop, the band is drawn without it.', 'Desktop off: Mochi stays in the band.']
-  // On from the start; alone the word turns it over, with on or off it sets it.
-  expect(await run('desktop')).toBe(OFF)
+  // Off from the start; alone the word turns it over, with on or off it sets it.
   expect(await run('desktop')).toBe(ON)
+  expect(await run('desktop')).toBe(OFF)
   expect(await run('desktop on')).toBe(ON)
   expect(await run('desktop off')).toBe(OFF)
   expect(await run('desktop off')).toBe(OFF)
   // /mochi desk is still the work not yet safe on a remote.
   expect(await run('desk')).not.toBe(OFF)
   expect(await run('desk')).not.toBe(ON)
+})
+
+test('the wardrobe stays within what the desktop draws: its pictures together under 160,000 characters on every shelf, every open item still pressable', { timeoutMs: 30_000 }, async ($, on) => {
+  const { clock, files } = machine(on, [], true)
+  // Years of busy days: nearly everything is open, the heaviest wardrobe there is.
+  const big = { ...EMPTY_DAY, turns: 400, commits: 40 }
+  const days: Record<string, unknown> = {}
+  for (let i = 1; i <= 28; i++) days[`2025-09-${String(i).padStart(2, '0')}`] = big
+  files.set('/h/.claude/mochi/days/old-1.json', JSON.stringify({ id: 'old-1', label: 'web', days }))
+  files.set('/h/.claude/mochi/prefs.json', JSON.stringify({ v: 1, at: NOW - 60_000, pick: { head: 'fez', face: 'bushybrows', lip: 'mustache', chin: 'goatee', ground: 'sprout' }, skin: 'aurora' }))
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(20_000)
+  const pane = await $.ui.mount({ plugin: 'mochi-buddy', component: 'Pane', requestId: 'mochi-detay', surface: 'desktop', props: { bodyColumns: 140, bodyRows: 40 } } as never)
+  await pane.press({ key: 'tab:mochi' } as never)
+  for (const shelf of ['head', 'eyes', 'face', 'lip', 'chin', 'neck', 'held', 'ground', 'colour']) {
+    await pane.press({ key: `shelf:${shelf}` } as never)
+    const total = ((await pane.findAll({ type: 'Svg' })) as { props: { source: string } }[]).reduce((n, el) => n + el.props.source.length, 0)
+    expect({ shelf, over: total > 160_000 }).toEqual({ shelf, over: false })
+  }
+  await pane.press({ key: 'shelf:head' } as never)
+  // The cards show the 1x pictures: the 2x ones are the desktop app's.
+  const sources = ((await pane.findAll({ type: 'Svg' })) as { props: { source: string } }[]).map(el => el.props.source)
+  expect(sources).toContain(itemIcon('crown', true, true))
+  expect(sources).not.toContain(itemIcon('crown', true))
+  expect(itemIcon('crown', true, true).length < itemIcon('crown', true).length * 0.7).toBe(true)
+  expect(await pane.find({ key: 'wear:fez' })).toBeDefined()
+  expect(await pane.find({ key: 'wear:crown' })).toBeDefined()
+  await pane.unmount()
+})
+
+test('a press on the band’s size button makes it compact: no Mochi, only its line, the branch and the rings, half the height; pressed again the full band is back', { timeoutMs: 30_000 }, async ($, on) => {
+  const { clock } = machine(on, [{ kind: 'five_hour', percentUsed: 34, resetsAt: new Date(NOW + 300 * MIN).toISOString() }])
+  await clock.set(NOW)
+  await $.session.start(START)
+  await clock.advance(4000)
+  const band = async () => {
+    const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+    await clock.advance(500)
+    const svg = (await ui.find({ type: 'Svg' })) as { props: { source: string; height: number } }
+    const small = await ui.find({ key: 'size:small' })
+    const big = await ui.find({ key: 'size:big' })
+    return { ui, height: svg.props.height, source: svg.props.source, small: small !== undefined, big: big !== undefined }
+  }
+  const full = await band()
+  expect(full).toMatchObject({ height: 88, small: true, big: false })
+  expect(full.source).toContain('class="bub"')
+  await full.ui.press({ key: 'size:small' } as never)
+  await full.ui.unmount()
+  const compact = await band()
+  expect(compact).toMatchObject({ small: false, big: true })
+  expect(compact.height <= 50).toBe(true)
+  // Only the data: the line, the gauges' numbers (and the branch and cost when there are); Mochi and the trail are left out.
+  expect(compact.source).not.toContain('<image href="data:image/webp')
+  expect(compact.source).toContain('class="bub"')
+  expect(compact.source).toContain('>34%<')
+  expect(compact.source).not.toContain('class="rule"')
+  // The button says what a press does, in words.
+  expect((await compact.ui.find({ key: 'size:big' }))?.text).toBe('Full')
+  await compact.ui.press({ key: 'size:big' } as never)
+  await compact.ui.unmount()
+  expect((await band()).height).toBe(88)
 })
