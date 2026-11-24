@@ -200,8 +200,8 @@ const ZH: Words = {
     setting: '之后提醒我休息',
     line: (m: number) => `${m} 分钟没停过了，起来活动一下？`,
   },
-  stuck: (chat: string) => `${chat} 同一步失败了三次。`,
-  clash: (a: string, b: string, file: string) => `${a} 和 ${b} 同时改了 ${file}。`,
+  stuck: (chat: string) => `“${chat}” 同一步失败了三次。`,
+  clash: (a: string, b: string, file: string) => `“${a}” 和 “${b}” 同时改了 ${file}。`,
   game: {
     play: '等待时玩',
     go: '每次我跳起来就按我！',

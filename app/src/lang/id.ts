@@ -200,8 +200,8 @@ const ID: Words = {
     setting: 'Ingatkan aku istirahat setelah',
     line: (m: number) => `${m} menit tanpa jeda. Regangkan kaki dulu?`,
   },
-  stuck: (chat: string) => `${chat} gagal di langkah yang sama tiga kali.`,
-  clash: (a: string, b: string, file: string) => `${a} dan ${b} sama-sama mengubah ${file}.`,
+  stuck: (chat: string) => `‘${chat}’ gagal di langkah yang sama tiga kali.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ dan ‘${b}’ sama-sama mengubah ${file}.`,
   game: {
     play: 'Main sambil menunggu',
     go: 'Tekan aku setiap kali aku melompat!',

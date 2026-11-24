@@ -203,8 +203,8 @@ const DE: Words = {
     setting: 'Erinnere mich danach ans Ausruhen nach',
     line: (m: number) => pl(String(m), 'Minute ohne Pause. Mal die Beine strecken?', 'Minuten ohne Pause. Mal die Beine strecken?'),
   },
-  stuck: (chat: string) => `${chat} ist dreimal am selben Schritt gescheitert.`,
-  clash: (a: string, b: string, file: string) => `${a} und ${b} haben beide ${file} bearbeitet.`,
+  stuck: (chat: string) => `„${chat}“ ist dreimal am selben Schritt gescheitert.`,
+  clash: (a: string, b: string, file: string) => `„${a}“ und „${b}“ haben beide ${file} bearbeitet.`,
   game: {
     play: 'Beim Warten spielen',
     go: 'Drück mich jedes Mal, wenn ich hüpfe!',

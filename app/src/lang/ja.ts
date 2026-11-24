@@ -200,8 +200,8 @@ const JA: Words = {
     setting: '作業後に休憩をうながす',
     line: (m: number) => `${m} 分間ずっと作業中。少し体を伸ばしませんか？`,
   },
-  stuck: (chat: string) => `${chat} が同じ手順で3回失敗しました。`,
-  clash: (a: string, b: string, file: string) => `${a} と ${b} が同時に ${file} を編集しました。`,
+  stuck: (chat: string) => `「${chat}」 が同じ手順で3回失敗しました。`,
+  clash: (a: string, b: string, file: string) => `「${a}」 と 「${b}」 が同時に ${file} を編集しました。`,
   game: {
     play: '待ち時間にあそぶ',
     go: '跳ねるたびに押してね！',

@@ -203,8 +203,8 @@ const PT: Words = {
     setting: 'Lembre-me de descansar depois de',
     line: (m: number) => `${m} minutos sem pausa. Que tal esticar as pernas?`,
   },
-  stuck: (chat: string) => `${chat} falhou três vezes no mesmo passo.`,
-  clash: (a: string, b: string, file: string) => `${a} e ${b} editaram ${file} ao mesmo tempo.`,
+  stuck: (chat: string) => `‘${chat}’ falhou três vezes no mesmo passo.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ e ‘${b}’ editaram ${file} ao mesmo tempo.`,
   game: {
     play: 'Jogue enquanto espera',
     go: 'Aperte em mim cada vez que eu pular!',

@@ -203,8 +203,8 @@ const HI: Words = {
     setting: 'इतनी देर बाद आराम की याद दिलाओ',
     line: (m: number) => `${m} मिनट बिना रुके। पैर थोड़े सीधे कर लें?`,
   },
-  stuck: (chat: string) => `${chat} एक ही कदम पर तीन बार नाकाम रहा।`,
-  clash: (a: string, b: string, file: string) => `${a} और ${b} दोनों ने ${file} बदला।`,
+  stuck: (chat: string) => `‘${chat}’ एक ही कदम पर तीन बार नाकाम रहा।`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ और ‘${b}’ दोनों ने ${file} बदला।`,
   game: {
     play: 'इंतज़ार में खेलें',
     go: 'हर बार जब मैं कूदूँ, मुझे दबाओ!',

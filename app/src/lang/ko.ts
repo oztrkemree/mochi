@@ -200,8 +200,8 @@ const KO: Words = {
     setting: '이 시간이 지나면 쉬라고 알려줘',
     line: (m: number) => `${m}분째 쉬지 않았어요. 다리 좀 펴실래요?`,
   },
-  stuck: (chat: string) => `${chat}가 같은 단계에서 세 번 실패했어요.`,
-  clash: (a: string, b: string, file: string) => `${a}와 ${b}가 동시에 ${file}을 수정했어요.`,
+  stuck: (chat: string) => `‘${chat}’가 같은 단계에서 세 번 실패했어요.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’와 ‘${b}’가 동시에 ${file}을 수정했어요.`,
   game: {
     play: '기다리는 동안 하기',
     go: '내가 뛸 때마다 눌러 줘!',

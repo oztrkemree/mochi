@@ -199,8 +199,8 @@ export const EN = {
     setting: 'Remind me to rest after',
     line: (m: number) => `${m} minutes without a pause. Stretch your legs?`,
   },
-  stuck: (chat: string) => `${chat} failed the same step three times.`,
-  clash: (a: string, b: string, file: string) => `${a} and ${b} both edited ${file}.`,
+  stuck: (chat: string) => `‘${chat}’ failed the same step three times.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ and ‘${b}’ both edited ${file}.`,
   game: {
     play: 'Play while you wait',
     go: 'Press me each time I hop!',
@@ -444,8 +444,8 @@ const TR: Words = {
     setting: 'Aralıksız çalışınca mola hatırlat',
     line: (m: number) => `${m} dakikadır mola yok. Kalkıp biraz gerinsen mi?`,
   },
-  stuck: (chat: string) => `${chat} aynı adımda üç kez takıldı.`,
-  clash: (a: string, b: string, file: string) => `${a} ve ${b} ${file} dosyasını birlikte değiştirdi.`,
+  stuck: (chat: string) => `‘${chat}’ aynı adımda üç kez takıldı.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ ve ‘${b}’ ${file} dosyasını birlikte değiştirdi.`,
   game: {
     play: 'Beklerken oyna',
     go: 'Zıpladığımda bana bas!',

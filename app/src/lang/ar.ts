@@ -215,8 +215,8 @@ const AR: Words = {
     setting: 'ذكّرني بأخذ استراحة بعد',
     line: (m: number) => `${m === 2 ? 'دقيقتان' : `${m} ${m >= 3 && m <= 10 ? 'دقائق' : 'دقيقة'}`} دون توقف. هل نمدّ ساقيك قليلًا؟`,
   },
-  stuck: (chat: string) => `فشل ${chat} ثلاث مرات في الخطوة نفسها.`,
-  clash: (a: string, b: string, file: string) => `عدّل ${a} و ${b} الملف ${file} في الوقت نفسه.`,
+  stuck: (chat: string) => `فشل «${chat}» ثلاث مرات في الخطوة نفسها.`,
+  clash: (a: string, b: string, file: string) => `عدّل «${a}» و «${b}» الملف ${file} في الوقت نفسه.`,
   game: {
     play: 'العب أثناء الانتظار',
     go: 'اضغط عليّ كلما قفزت!',

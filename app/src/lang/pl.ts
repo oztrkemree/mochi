@@ -208,8 +208,8 @@ const PL: Words = {
     setting: 'Przypomnij mi o odpoczynku po',
     line: (m: number) => pn(String(m), 'minuta bez przerwy. Rozprostujemy nogi?', 'minuty bez przerwy. Rozprostujemy nogi?', 'minut bez przerwy. Rozprostujemy nogi?'),
   },
-  stuck: (chat: string) => `${chat} trzy razy zawiódł na tym samym kroku.`,
-  clash: (a: string, b: string, file: string) => `${a} i ${b} edytowały równocześnie ${file}.`,
+  stuck: (chat: string) => `„${chat}” trzy razy zawiódł na tym samym kroku.`,
+  clash: (a: string, b: string, file: string) => `„${a}” i „${b}” edytowały równocześnie ${file}.`,
   game: {
     play: 'Graj, póki czekasz',
     go: 'Naciśnij mnie za każdym razem, gdy skoczę!',
