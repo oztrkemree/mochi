@@ -1,4 +1,6 @@
 import { LANGS, type Lang } from '../../hooks/i18n'
+import { BREAK_MINUTES } from './breaks'
+import { type Temper, temperFrom } from './temper'
 import type { JobsDetail } from './world'
 
 /**
@@ -30,6 +32,12 @@ export type Settings = {
   leaveSeconds: number
   /** How much the bubbles over Mochi say of each chat at work: nothing, how it stands, or its plan and subagents too. */
   jobs: JobsDetail
+  /** Unbroken work this many minutes brings a word to rest; 0 never. */
+  breakMinutes: number
+  /** How Mochi carries itself: calm as it always was, playful with a word of its own, or serious. */
+  temper: Temper
+  /** A folder the person's computers share; the days of work are copied both ways through it. '' for none. */
+  syncFolder: string
 }
 
 export type Size = 'small' | 'medium' | 'large' | 'huge'
@@ -40,7 +48,7 @@ export const IDLE_MINUTES = [15, 30, 60, 0] as const
 export const LEAVE_SECONDS = [15, 30, 60, 300, 0] as const
 export const JOBS: readonly JobsDetail[] = ['off', 'brief', 'full']
 
-export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, approve: false, shield: true, sound: false, lang: 'auto', idleMinutes: 30, leaveSeconds: 30, jobs: 'brief' }
+export const DEFAULTS: Settings = { size: 'medium', talk: { asking: true, done: true, failed: true, limit: true }, talkSeconds: 9, onTop: true, showAgents: true, approve: false, shield: true, sound: false, lang: 'auto', idleMinutes: 30, leaveSeconds: 30, jobs: 'brief', breakMinutes: 90, temper: 'calm', syncFolder: '' }
 
 export const KEY = 'settings'
 /** The event the settings window sends Mochi's window with every change. */
@@ -71,6 +79,9 @@ export function settingsFrom(text: string | null): Settings {
     idleMinutes: (IDLE_MINUTES as readonly unknown[]).includes(v.idleMinutes) ? (v.idleMinutes as number) : DEFAULTS.idleMinutes,
     leaveSeconds: (LEAVE_SECONDS as readonly unknown[]).includes(v.leaveSeconds) ? (v.leaveSeconds as number) : DEFAULTS.leaveSeconds,
     jobs: (JOBS as readonly unknown[]).includes(v.jobs) ? (v.jobs as JobsDetail) : DEFAULTS.jobs,
+    breakMinutes: (BREAK_MINUTES as readonly unknown[]).includes(v.breakMinutes) ? (v.breakMinutes as number) : DEFAULTS.breakMinutes,
+    temper: temperFrom(v.temper),
+    syncFolder: typeof v.syncFolder === 'string' && v.syncFolder.length <= 400 ? v.syncFolder : DEFAULTS.syncFolder,
   }
 }
 

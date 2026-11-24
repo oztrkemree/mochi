@@ -12,6 +12,7 @@ import { PEER_INK, appLink, nameOf } from '../../hooks/live'
 import { t } from '../../hooks/i18n'
 import type { SoundName } from '../../hooks/react'
 import { clip } from '../../hooks/sound'
+import { type Edit, clashKey, clashOf, editOf, kept } from './clash'
 import { type Request, type Sessions, agentPeers, dayFile, hookedOf, isNamedByPrompt, noted, requestOf, settles, stalledOf, tallyOf } from './engine'
 import { type Growth, badgesNews, growthOf, historyOf, levelNews } from './growth'
 import { type Usage, readingsOf, usageCard, usageLine, usageNews, usageOf, usageRings } from './limits'
@@ -20,6 +21,9 @@ import { type Area, type Body, type Edge, type Point, areaOf, fit, nearestEdge, 
 import { CHANGED, KEY, SIZES, type Settings, loadSettings, settingsFrom, talksAbout } from './settings'
 import { COMMIT_STALE_MS, type FolderState, type Ran, ciNow, ciSaid, ciStep, nudgeOf, pushed } from './today'
 import { ACT_MS, type Beat, actOf, fidgetOf, isCodex, louder, patOf, pokesOf } from './acts'
+import { FRESH, type Stretch, afterPrompt, stepBreak } from './breaks'
+import { hopsOn, isQuipKind, playsOn, quipOf, tipsOn } from './temper'
+import { HOPS, ROUND_MS, bestOf, roundOf, scoreOf } from './game'
 import { BADGE_PLACE, featsOf } from './feats'
 import { medalSvg } from './medal'
 import { lookNow } from './wardrobe'
@@ -27,6 +31,8 @@ import { animationOf, tracksIn } from './play'
 import { TRANSITION_MS } from '../../hooks/rig'
 import { useRules, verdictOf } from './shield'
 import { type AgentState, type Step, nextStep, tipNow } from './tour'
+import { type Run, stepStuck } from './stuck'
+import { type Entry, planOf } from './sync'
 import { effortOf, weekDue, weekTop } from './effort'
 import { words } from './words'
 import { spell } from './work-tab'
@@ -531,7 +537,7 @@ type Extra = { what?: string; acts?: { label: string; isMain?: boolean; run: () 
 function speak(text: string, ms: number, ink: string, news: News | null, extra: Extra = {}) {
   saidAt = Date.now()
   if (news) {
-    hop()
+    if (hopsOn(settings.temper)) hop()
     chime(NEWS_SOUND[news.kind])
     if (news.kind === 'back' || news.kind === 'level') hold('party', 4000)
   }
@@ -587,13 +593,20 @@ function requestFor(chat: string, now: number): Request | null {
   return request && request.until > now ? request : null
 }
 
+/** Counts the news that can take a playful word, so every third one does. */
+let rolls = 0
+
 /** Says news; a chat that waits with a request the bubble may answer is said with what it asks for and the answers. */
 function tell(news: News) {
-  // News brings Mochi up from the edge to say it.
+  // News brings Mochi up from the edge to say it, and ends a round of the game.
+  stopRound()
   standUp()
   const now = Date.now()
   const request = news.kind === 'asking' ? requestFor(news.id, now) : null
-  if (!request) return speak(news.line, settings.talkSeconds * 1000, NEWS_INK[news.kind], news)
+  if (!request) {
+    const quip = isQuipKind(news.kind) ? quipOf(settings.temper, news.kind, rolls++, words().temper.quips) : null
+    return speak(quip ? news.line + ' ' + quip : news.line, settings.talkSeconds * 1000, NEWS_INK[news.kind], news)
+  }
   const w = words()
   const done = (behavior: 'allow' | 'deny') => () => {
     answer(request, behavior)
@@ -837,6 +850,14 @@ function drawAgents() {
     }
     list.append(item)
   }
+  // Offered while a chat works, when the temper plays: a round of the hop game, pressed for.
+  if (view?.peers.some(p => p.state === 'busy') && !round && !isBusy() && playsOn(settings.temper)) {
+    const play = el('button', 'agent play')
+    play.type = 'button'
+    play.append(el('span', 'dot', '▶'), el('span', 'name', w.game.play))
+    play.addEventListener('click', startRound)
+    list.append(play)
+  }
 }
 
 /** A bubble over Mochi for each chat at work, saying as much as the person chose; the chats past the last bubble are counted over them. */
@@ -958,12 +979,47 @@ function leave(id: string) {
   earned.delete(id)
 }
 
+/** Each chat's run of the same failing step, for news when a chat gets stuck on one. */
+const runs = new Map<string, Run>()
+/** The file edits still within the clash window, for news when two chats edit one file. */
+let edits: Edit[] = []
+/** The stretch of unbroken work Mochi counts for the break nudge. */
+let stretch: Stretch = FRESH
+/** When the person last sent a prompt, which is when they were last at work. */
+let promptAt = 0
+/** The clashes already said, so each is said once. */
+const clashed = new Set<string>()
+
 /** Takes in hook calls: where each chat stands now, and what the call earned. */
 async function take(calls: string[]) {
   const asked: Request[] = []
+  const failed: News[] = []
   for (const call of calls) {
     const h = hookedOf(call)
     if (!h) continue
+    if (h.name === 'UserPromptSubmit') {
+      stretch = afterPrompt(stretch, promptAt, h.at)
+      promptAt = h.at
+    }
+    const peer = view?.peers.find(p => p.id === h.id)
+    const stuck = stepStuck(runs.get(h.id), h.name, h.event)
+    if (stuck.run) runs.set(h.id, stuck.run)
+    else runs.delete(h.id)
+    if (stuck.isStuck) failed.push({ id: 'stuck-' + h.id, kind: 'failed', line: words().stuck(peer ? nameOf(peer) : t().word.chat), link: appLink(peer?.app) })
+    const edit = editOf(h.id, h.name, h.event, h.at)
+    if (edit) {
+      const other = clashOf(edits, edit)
+      edits = kept(edits, edit)
+      const key = other === null ? '' : clashKey(h.id, other, edit.path)
+      if (other !== null && !clashed.has(key)) {
+        // shortcut: forgets what it said after 200 clashes, keep a time with each if that ever repeats news
+        if (clashed.size > 200) clashed.clear()
+        clashed.add(key)
+        const otherPeer = view?.peers.find(p => p.id === other)
+        const file = edit.path.split(/[\\/]/).pop() ?? edit.path
+        failed.push({ id: 'clash-' + key, kind: 'failed', line: words().clash(peer ? nameOf(peer) : t().word.chat, otherPeer ? nameOf(otherPeer) : t().word.chat, file), link: appLink(peer?.app) })
+      }
+    }
     // A shell command waiting on the shield: named now, while it waits, or let go at once.
     if (h.ask && h.name === 'PreToolUse') shield(h.id, h.ask.id, h.event)
     // A request waits on the bubble whoever follows its chat, the mod or the app.
@@ -1007,6 +1063,7 @@ async function take(calls: string[]) {
   // The chats as they stand now, for every other Mochi to read; the app is told which of them the mod writes itself.
   for (const id of await invoke<string[]>('own_live', { peers: agentPeers(sessions, Date.now()) }).catch(() => [])) leave(id)
   draw()
+  if (failed.length > 0 && view && settings.talk.failed) hear(failed, view.peers)
   // With no mod writing chats there may be no word of them but this.
   hasHeard = true
   // Each request is said now, with its answers: the news of the chat starting to wait may have come before it, without them.
@@ -1110,6 +1167,7 @@ async function meet() {
 
 /** One thing more Mochi can do, said when it has been quiet a while, a day after the last. */
 function tip() {
+  if (!tipsOn(settings.temper)) return
   let told: string[] = []
   try {
     told = JSON.parse(localStorage.getItem('tips') ?? '[]') as string[]
@@ -1259,6 +1317,7 @@ function watch(mood: Mood | Act) {
 // ---------- settings ----------
 
 async function apply(next: Settings) {
+  const folderChanged = next.syncFolder !== settings.syncFolder
   settings = next
   setLang(settings.lang === 'auto' ? (pickLang(navigator.language) ?? 'en') : settings.lang)
   // Read aloud in its language, and Arabic right to left.
@@ -1276,6 +1335,32 @@ async function apply(next: Settings) {
   draw()
   await place()
   hot()
+  if (folderChanged) void sync().catch(note)
+}
+
+/** When the shared folder was last synced, so it is not done again within 15 minutes. */
+let syncedAt = 0
+/** Whether a sync is running now: a second one does not start beside it. */
+let isSyncing = false
+
+/** Copies the days of work both ways through the shared folder, the newer file winning; nothing is deleted. */
+async function sync() {
+  if (settings.syncFolder === '' || isSyncing) return
+  isSyncing = true
+  syncedAt = Date.now()
+  try {
+    const folder = settings.syncFolder
+    const [local, shared] = await Promise.all([invoke<Entry[]>('list_days', { folder: null }), invoke<Entry[]>('list_days', { folder })])
+    const plan = planOf(local, shared)
+    if (plan.push.length > 0) await invoke('copy_days', { folder, names: plan.push, pull: false })
+    const brought = plan.pull.length > 0 ? await invoke<number>('copy_days', { folder, names: plan.pull, pull: true }) : 0
+    if (brought > 0) {
+      await count()
+      if (!isBusy()) speak(words().sync.brought(brought), settings.talkSeconds * 1000, QUIET_INK, null)
+    }
+  } finally {
+    isSyncing = false
+  }
 }
 
 void listen(CHANGED, e => void apply(settingsFrom(JSON.stringify(e.payload))))
@@ -1322,6 +1407,7 @@ let pokes: number[] = []
 stage.addEventListener('pointerup', () => {
   if (!pressed) return
   pressed = null
+  if (pressRound()) return
   const now = Date.now()
   pokes = [...pokes.filter(t => now - t <= 1200), now]
   // Pressed again and again: it giggles, and then its head spins; the list stays shut.
@@ -1341,6 +1427,7 @@ addEventListener('pointerdown', () => document.body.classList.remove('keys'))
 stage.addEventListener('keydown', e => {
   if ((e.key !== 'Enter' && e.key !== ' ') || e.repeat) return
   e.preventDefault()
+  if (pressRound()) return
   pressMochi()
 })
 /** When Mochi last noticed the pointer: once in a while, so passing by is not a show each time. */
@@ -1364,6 +1451,61 @@ addEventListener('contextmenu', e => {
   // A right click opens Mochi's room, where its settings are too.
   void invoke('open_room')
 })
+
+// ---------- the game ----------
+
+/** The round on now: when Mochi hops, the presses so far (ms from its start), and the timers to stop it; null with none on. */
+let round: { hops: number[]; presses: number[]; from: number; timers: number[] } | null = null
+
+/** Starts a round: Mochi hops a few times in ROUND_MS, and a press close after a hop catches it. */
+function startRound() {
+  if (isBusy()) return
+  toggleAgents(false)
+  const from = Date.now()
+  const r = { hops: roundOf(from >>> 0), presses: [] as number[], from, timers: [] as number[] }
+  round = r
+  for (const at of r.hops) r.timers.push(window.setTimeout(hop, at))
+  r.timers.push(window.setTimeout(endRound, ROUND_MS))
+  speak(words().game.go, 4000, QUIET_INK, null)
+}
+
+/** Records a press in the round on, and when it catches a hop says the score so far with a chime; false when none is on, so the press is Mochi's as usual. */
+function pressRound(): boolean {
+  if (!round) return false
+  const before = scoreOf(round.hops, round.presses)
+  round.presses.push(Date.now() - round.from)
+  const after = scoreOf(round.hops, round.presses)
+  if (after > before) {
+    chime('ding')
+    speak(words().game.score(after, HOPS), 1500, QUIET_INK, null)
+  }
+  return true
+}
+
+/** Ends the round on: says the score, and the best kept when this one beats it. */
+function endRound() {
+  const r = round
+  if (!r) return
+  stopRound()
+  const score = scoreOf(r.hops, r.presses)
+  let result = { best: 0, isNew: false }
+  try {
+    result = bestOf(localStorage.getItem('gameBest'), score)
+    if (result.isNew) localStorage.setItem('gameBest', String(result.best))
+  } catch {
+    // Not kept: the best is forgotten when the app quits.
+  }
+  const { best, isNew } = result
+  const w = words()
+  speak(w.game.score(score, HOPS) + (isNew && score > 0 ? ' ' + w.game.best(best) : ''), settings.talkSeconds * 1000, QUIET_INK, null)
+}
+
+/** Stops the round on at once, saying nothing: its hops and its end are dropped. */
+function stopRound() {
+  if (!round) return
+  for (const id of round.timers) clearTimeout(id)
+  round = null
+}
 
 async function start() {
   await apply(settings)
@@ -1403,10 +1545,16 @@ async function start() {
       void sayWeek().catch(note)
     }
     tip()
+    // A prompt in the last ten minutes counts as work: someone reading an answer is still at work.
+    const now = Date.now()
+    const b = stepBreak(stretch, now - promptAt <= 10 * 60_000, now, settings.breakMinutes)
+    stretch = b.stretch
+    if (b.due && view) hear([{ id: 'break', kind: 'nudge', line: words().breaks.line(settings.breakMinutes), link: '' }], view.peers)
     // Now and then something Mochi does by itself.
     const fidget = view && !held && !peek && !isBusy() && !say.classList.contains('on') ? fidgetOf(view.mood as Mood, Math.random(), Math.random()) : null
     if (fidget) hold(fidget)
     void take([]).catch(note)
+    if (Date.now() - syncedAt >= 15 * 60_000) void sync().catch(note)
   })
   stirSoon()
   // Everything is told from the start now that someone listens.
@@ -1435,6 +1583,7 @@ async function start() {
     }
   })
   void count().catch(note)
+  void sync().catch(note)
   void readReadings()
   // The first meeting, once: what Mochi does, the agents to listen to, the bubble's answers, the pocket.
   void meet().catch(note)

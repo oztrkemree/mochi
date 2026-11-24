@@ -4,6 +4,8 @@ import { emit } from '@tauri-apps/api/event'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 
 import { LANGS, type Lang, lang as langNow, pickLang, setLang } from '../../hooks/i18n'
+import { BREAK_MINUTES } from './breaks'
+import { TEMPERS } from './temper'
 import { CHANGED, IDLE_MINUTES, JOBS, KEY, LEAVE_SECONDS, SIZES, type Settings, type Size, TALK_SECONDS, loadSettings } from './settings'
 import { words } from './words'
 
@@ -94,7 +96,7 @@ function draw() {
   const w = words()
   const text: Record<string, string> = {
     'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-jobs': w.jobs, 'l-idle': w.hideIdle, 'l-leave': w.leaveIdle,
-    'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
+    'l-breakMinutes': w.breaks.setting, 'l-temper': w.temper.title, 'temperHint': w.temper.hints[settings.temper], 'h-sync': w.sync.title, 'l-syncFolder': w.sync.folder, 'syncHint': w.sync.hint, 'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
     'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex, 'l-line': w.line,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
   }
@@ -105,6 +107,11 @@ function draw() {
   switchOf('showAgents', settings.showAgents, on => void save({ showAgents: on }))
   segment('jobs', JOBS, v => w.jobLevels[v], settings.jobs, v => void save({ jobs: v }))
   segment('idleMinutes', IDLE_MINUTES, w.minutes, settings.idleMinutes, v => void save({ idleMinutes: v }))
+  segment('breakMinutes', BREAK_MINUTES, w.minutes, settings.breakMinutes, v => void save({ breakMinutes: v }))
+  segment('temper', TEMPERS, v => w.temper.names[v], settings.temper, v => {
+    void save({ temper: v })
+    $('temperHint').textContent = w.temper.hints[v]
+  })
   segment('leaveSeconds', LEAVE_SECONDS, n => (n === 0 ? w.minutes(0) : n < 60 ? w.seconds(n) : w.minutes(n / 60)), settings.leaveSeconds, v => void save({ leaveSeconds: v }))
   for (const kind of ['asking', 'done', 'failed', 'limit'] as const) switchOf(`talk-${kind}`, settings.talk[kind], on => void save({ talk: { ...settings.talk, [kind]: on } }))
   segment('talkSeconds', TALK_SECONDS, w.seconds, settings.talkSeconds, v => void save({ talkSeconds: v }))
@@ -116,6 +123,17 @@ function draw() {
   lang.replaceChildren(new Option(w.sameAsSystem, 'auto'), ...LANGS.map(l => new Option(NATIVE[l], l)))
   lang.value = settings.lang
   lang.onchange = () => void save({ lang: lang.value as Settings['lang'] })
+
+  // Checked once the folder is saved: a folder that cannot be listed says so in the hint's place.
+  const folder = $<HTMLInputElement>('syncFolder')
+  folder.value = settings.syncFolder
+  folder.onchange = async () => {
+    const value = folder.value.trim()
+    folder.value = value
+    void save({ syncFolder: value })
+    const ok = value === '' || (await invoke('list_days', { folder: value }).then(() => true, () => false))
+    $('syncHint').textContent = ok ? w.sync.hint : w.sync.bad
+  }
 
   $('resetPlace').onclick = () => void emit('reset-place')
   for (const agent of AGENTS) void drawAgent(agent)

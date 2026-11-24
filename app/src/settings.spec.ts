@@ -46,3 +46,25 @@ test('how much the bubbles over Mochi say of each chat: brief unless set, off or
   expect(settingsFrom(JSON.stringify({ jobs: 'full' })).jobs).toBe('full')
   expect(settingsFrom(JSON.stringify({ jobs: 'loud' })).jobs).toBe('brief')
 })
+
+test('the minutes of unbroken work before Mochi suggests a rest: 90 unless set, one of the offered times, 0 for never', () => {
+  expect(DEFAULTS.breakMinutes).toBe(90)
+  expect(settingsFrom(JSON.stringify({ breakMinutes: 0 })).breakMinutes).toBe(0)
+  expect(settingsFrom(JSON.stringify({ breakMinutes: 60 })).breakMinutes).toBe(60)
+  expect(settingsFrom(JSON.stringify({ breakMinutes: 45 })).breakMinutes).toBe(90)
+})
+
+test('how Mochi carries itself: calm unless set, playful or serious when chosen, calm for anything else', () => {
+  expect(DEFAULTS.temper).toBe('calm')
+  expect(settingsFrom(JSON.stringify({ temper: 'playful' })).temper).toBe('playful')
+  expect(settingsFrom(JSON.stringify({ temper: 'serious' })).temper).toBe('serious')
+  expect(settingsFrom(JSON.stringify({ temper: 'grumpy' })).temper).toBe('calm')
+})
+
+test('the folder the computers share: off unless set, a text of at most 400 characters, anything else off', () => {
+  expect(DEFAULTS.syncFolder).toBe('')
+  expect(settingsFrom(JSON.stringify({ syncFolder: '/Users/me/Dropbox' })).syncFolder).toBe('/Users/me/Dropbox')
+  expect(settingsFrom(JSON.stringify({ syncFolder: 'x'.repeat(400) })).syncFolder).toBe('x'.repeat(400))
+  expect(settingsFrom(JSON.stringify({ syncFolder: 'x'.repeat(401) })).syncFolder).toBe('')
+  expect(settingsFrom(JSON.stringify({ syncFolder: 5 })).syncFolder).toBe('')
+})

@@ -196,5 +196,54 @@ const ID: Words = {
   place: 'Posisi',
   resetPlace: 'Kembali ke sudut',
   version: (v: string) => `Mochi Buddy ${v}`,
+  breaks: {
+    setting: 'Ingatkan aku istirahat setelah',
+    line: (m: number) => `${m} menit tanpa jeda. Regangkan kaki dulu?`,
+  },
+  stuck: (chat: string) => `‘${chat}’ gagal di langkah yang sama tiga kali.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ dan ‘${b}’ sama-sama mengubah ${file}.`,
+  game: {
+    play: 'Main sambil menunggu',
+    go: 'Tekan aku setiap kali aku melompat!',
+    score: (n: number, of: number) => `${n} dari ${of}!`,
+    best: (n: number) => `Rekor baru: ${n}!`,
+  },
+  outfits: {
+    title: 'Gaya tersimpan',
+    save: 'Simpan gaya ini',
+    name: 'Nama',
+    remove: 'Hapus',
+    none: 'Belum ada gaya yang disimpan.',
+  },
+  temper: {
+    title: 'Watak',
+    names: { calm: 'Tenang', playful: 'Jenaka', serious: 'Serius' },
+    hints: { calm: 'Mochi seperti biasanya.', playful: 'Sesekali menambahkan kata sendiri.', serious: 'Tanpa lompatan, tanpa tips, tanpa permainan.' },
+    quips: {
+      done: ['Nah, selesai!', 'Berikutnya!', 'Sudah kubilang, kan.'],
+      failed: ['Aduh.', 'Yah, begitulah.', 'Bukan momen terbaikku.'],
+      level: ['Lihat, kita tumbuh!', 'Rasanya aku makin tinggi.', 'Keren!'],
+    },
+  },
+  secrets: {
+    hidden: 'Rahasia',
+    hiddenHint: 'Ditemukan dengan melakukan, bukan membaca.',
+    names: { weekender: 'Akhir pekan', fullWeek: 'Seminggu penuh', eraser: 'Penghapus', oneLiner: 'Sekali jalan', nightAndDawn: 'Malam dan fajar', evenSteven: 'Impas' },
+    hints: {
+      weekender: 'Bekerja di hari Sabtu dan Minggu sesudahnya.',
+      fullWeek: 'Bekerja setiap hari dari Senin sampai Minggunya.',
+      eraser: 'Menghapus lebih banyak baris daripada yang ditambahkan dalam sehari, minimal seratus.',
+      oneLiner: 'Sehari dengan satu giliran yang diakhiri commit.',
+      nightAndDawn: 'Bekerja larut malam dan pagi-pagi sekali di hari yang sama.',
+      evenSteven: 'Menambahkan baris persis sebanyak yang dihapus dalam sehari, minimal lima puluh.',
+    },
+  },
+  sync: {
+    title: 'Mochi yang sama di setiap komputer',
+    folder: 'Folder bersama',
+    hint: 'Folder yang dipakai bersama oleh komputermu (iCloud Drive, Dropbox…). Mochi menyalin hari kerja dua arah dan tidak pernah menghapus apa pun.',
+    bad: 'Folder itu tidak bisa dibuka.',
+    brought: (n: number) => `${n} chat datang dari komputer lainmu.`,
+  },
 }
 export default ID

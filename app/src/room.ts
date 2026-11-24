@@ -13,6 +13,8 @@ import { BADGE_PLACE, CATS, type Cat, type Feat, TIERS, featsOf, tally } from '.
 import { type Effort, effortOf, sumOf } from './effort'
 import { growthOf, historyOf } from './growth'
 import { SIGN, medalSvg } from './medal'
+import { KEY, NAME_MAX, type Saved, outfitsFrom, removed, saved, wearable } from './outfits'
+import { SECRETS, type Secret, secretsNow, secretsWon } from './secrets'
 import { loadSettings } from './settings'
 import { startSettings } from './settings-page'
 import { chosen, lookNow } from './wardrobe'
@@ -116,12 +118,38 @@ function drawPlate() {
   }))
 }
 
+/** The hidden achievements won: those kept in this browser, and any the history proves now, which are kept from then on. */
+function secretsHeld(): Secret[] {
+  if (!history) return []
+  let kept: string | null = null
+  try {
+    kept = localStorage.getItem('secrets')
+  } catch {
+    // Storage refused: only what the history proves now.
+  }
+  const s = secretsWon(kept, secretsNow(history))
+  if (s.keep !== null) {
+    try {
+      localStorage.setItem('secrets', s.keep)
+    } catch {
+      // Storage refused: the win is not kept.
+    }
+  }
+  return s.won
+}
+
+/** The achievements counted together: the feats done and the hidden ones won, of all of them. */
+function countAll(feats: readonly Feat[]): { done: number; all: number } {
+  const t = tally(feats)
+  return { done: t.done + secretsHeld().length, all: t.all + SECRETS.length }
+}
+
 function drawTabs() {
   const tabs = $('tabs')
   tabs.replaceChildren()
   const open = look?.items.length ?? 0
   const all = Object.values(SLOT_ITEMS).flat().length
-  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(tally(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['usage', words().usage.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
+  for (const [name, label, count] of [['wardrobe', t().ui.wardrobe, `${open}/${all}`], ['feats', words().feats.title, history ? (({ done, all }) => `${done}/${all}`)(countAll(featsOf(history, badges))) : ''], ['work', words().work.tab, ''], ['usage', words().usage.tab, ''], ['settings', t().pane.tabs.settings, '']] as const) {
     const b = el('button', '', label)
     b.type = 'button'
     b.setAttribute('role', 'tab')
@@ -133,6 +161,10 @@ function drawTabs() {
 }
 
 const LOCK = '<svg viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.6" fill="currentColor"/><path d="M5.5 7V5.4a2.5 2.5 0 0 1 5 0V7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
+/** The sign of a secret not yet won: a question mark, in white on the medal's face. */
+const SECRET_SIGN = '<path d="M9.2 9.3a2.9 2.9 0 1 1 4.4 2.5c-.9.6-1.6 1.2-1.6 2.4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.2" fill="#fff"/>'
+/** The sign of a secret won: a star, in white on the medal's face. */
+const STAR_SIGN = '<path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.9 6.7 19.6l1-5.8L3.5 9.7l5.9-.9z" fill="#fff"/>'
 
 /** A skin's paint, as a swatch shows it: its colour, or the run of its colours. */
 const paintOf = (k: Skin) => (k.swatch.length === 1 ? k.swatch[0]! : `linear-gradient(135deg, ${k.swatch.join(', ')})`)
@@ -232,6 +264,7 @@ function drawWardrobe(into: HTMLElement) {
   }
   box.append(rail, side)
   into.append(box)
+  drawLooks(into)
 }
 
 /** A colour chosen: worn at once, and written beside the wardrobe's choice. */
@@ -240,6 +273,90 @@ function wearSkin(id: string) {
   drawMochi()
   draw()
   void invoke('write_shared', { name: 'prefs.json', text: choiceText(prefs) })
+}
+
+/** The looks kept in this browser; none when storage cannot be read. */
+function looksKept(): Saved[] {
+  try {
+    return outfitsFrom(localStorage.getItem(KEY))
+  } catch {
+    return []
+  }
+}
+
+/** Writes the kept looks; when storage refuses, nothing is kept. */
+function putLooks(list: Saved[]) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(list))
+  } catch {
+    // Storage refused: the look is not kept.
+  }
+}
+
+/** A saved look worn: its whole pick and its colour, if the level still opens it, become the person's choice at once. */
+function wearLook(s: Saved) {
+  if (!look) return
+  const skin = s.skin && skinNow(s.skin, history) === s.skin ? s.skin : undefined
+  prefs = { at: Date.now(), pick: wearable(s.pick, look.items), ...(skin ? { skin } : {}) }
+  look = lookNow(history, modLook, prefs, tz())
+  drawMochi()
+  draw()
+  void invoke('write_shared', { name: 'prefs.json', text: choiceText(prefs) })
+}
+
+/** A saved look as a still picture of Mochi in it, in its colour while the level still opens that colour. */
+function lookSvg(s: Saved): string {
+  if (!look) return ''
+  const skin = skinNow(s.skin, history)
+  const outfit = dressAs({ ...look, pick: wearable(s.pick, look.items) }, 'idle', Date.now())
+  return stillOf(svgFor({ mood: 'idle', scene: { context: -1, agents: 0, outfit, ...(skin ? { skin } : {}) }, from: null }))
+}
+
+/** The saved looks under the shelves: a name keeps the look worn now, in the colour worn now; each kept look is a tile that wears it, with a remove. */
+function drawLooks(into: HTMLElement) {
+  const w = words().outfits
+  const block = el('section', 'w-sec')
+  block.append(el('h3', '', w.title))
+  const form = el('form', 'ways')
+  const input = el('input')
+  input.type = 'text'
+  input.placeholder = w.name
+  input.maxLength = NAME_MAX
+  const keep = el('button', '', w.save)
+  keep.type = 'submit'
+  form.append(input, keep)
+  form.addEventListener('submit', e => {
+    e.preventDefault()
+    if (!look || input.value.trim() === '') return
+    putLooks(saved(looksKept(), input.value, look.pick, prefs?.skin))
+    draw()
+  })
+  block.append(form)
+  const all = looksKept()
+  if (all.length === 0) block.append(el('p', 'w-note', w.none))
+  else {
+    const grid = el('div', 'looks')
+    for (const s of all) {
+      const tile = el('div', 'look')
+      const wear = el('button', 'look-wear')
+      wear.type = 'button'
+      const pic = el('span', 'look-pic')
+      pic.innerHTML = lookSvg(s)
+      wear.append(pic, el('b', '', s.name))
+      wear.addEventListener('click', () => wearLook(s))
+      const drop = el('button', 'look-drop', '×')
+      drop.type = 'button'
+      drop.setAttribute('aria-label', w.remove)
+      drop.addEventListener('click', () => {
+        putLooks(removed(looksKept(), s.name))
+        draw()
+      })
+      tile.append(wear, drop)
+      grid.append(tile)
+    }
+    block.append(grid)
+  }
+  into.append(block)
 }
 
 /** Each theme's colour, for the face of its milestones' medals. */
@@ -268,7 +385,7 @@ function drawFeats(into: HTMLElement) {
   const w = words().feats
   const n = new Intl.NumberFormat(lang())
   const feats = featsOf(history, badges)
-  const all = tally(feats)
+  const all = countAll(feats)
   const top = el('div', 'overall')
   const sum = el('div', 'sum')
   sum.append(el('strong', '', `${all.done}`), el('span', '', `/ ${all.all}`), el('p', '', w.done(all.done, all.all)), bar(all.done, all.all))
@@ -305,6 +422,25 @@ function drawFeats(into: HTMLElement) {
     section.append(head, grid)
     into.append(section)
   }
+  // The hidden ones: a won one shows its name and hint; one not won shows only a medal with a question mark and '???'.
+  const won = secretsHeld()
+  const hidden = words().secrets
+  const secrets = el('section', 'cat')
+  const sHead = el('header')
+  sHead.append(el('h2', '', hidden.hidden), el('span', '', `${won.length}/${SECRETS.length}`), bar(won.length, SECRETS.length))
+  secrets.append(sHead, el('p', 'w-note', hidden.hiddenHint))
+  const sGrid = el('div', 'feats')
+  for (const s of SECRETS) {
+    const done = won.includes(s)
+    const card = el('div', done ? 'feat done' : 'feat')
+    const text = el('div', 'text')
+    if (done) text.append(el('b', '', hidden.names[s]), el('span', 'hint', hidden.hints[s]))
+    else text.append(el('b', '', '???'))
+    card.append(svgIn('pic', medalSvg(CAT_INK.mochi, done ? STAR_SIGN : SECRET_SIGN, 'impossible', done)), text)
+    sGrid.append(card)
+  }
+  secrets.append(sGrid)
+  into.append(secrets)
 }
 
 function show(name: Tab) {

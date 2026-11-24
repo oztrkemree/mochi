@@ -185,6 +185,80 @@ pub fn all_days(dir: &Path) -> Vec<String> {
         .collect()
 }
 
+// ---------- the days a sync copies ----------
+
+/// One days file as a sync sees it: its name, when it was last written (ms since the epoch) and its size.
+pub struct Entry {
+    pub name: String,
+    pub mtime: u64,
+    pub size: u64,
+}
+
+/// A days file's name: a chat's name as a file's (up to 140 characters), then exactly `.json`. Checked here too, because the window sends the names.
+pub fn is_days_file(name: &str) -> bool {
+    name.strip_suffix(".json").is_some_and(is_id)
+}
+
+/// A time as milliseconds since the epoch, 0 before it.
+fn epoch_ms(at: SystemTime) -> u64 {
+    at.duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
+}
+
+/// The days files in a folder that a sync may copy; a folder that is not there has none.
+pub fn list_days_in(dir: &Path) -> Vec<Entry> {
+    let Ok(entries) = fs::read_dir(dir) else { return Vec::new() };
+    entries
+        .flatten()
+        .filter_map(|e| {
+            let name = e.file_name().into_string().ok().filter(|n| is_days_file(n))?;
+            let meta = e.metadata().ok().filter(|m| m.is_file())?;
+            Some(Entry { name, mtime: meta.modified().map_or(0, epoch_ms), size: meta.len() })
+        })
+        .collect()
+}
+
+/// Copies one file whole, its modified time with it: beside the target first, then over it, so nobody reads half of one.
+fn copy_file(src: &Path, dst: &Path, tmp: &Path, at: SystemTime) -> bool {
+    let copy = || -> std::io::Result<()> {
+        let mut from = fs::File::open(src)?;
+        let mut to = fs::File::create(tmp)?;
+        std::io::copy(&mut from, &mut to)?;
+        to.set_modified(at)?;
+        drop(to);
+        fs::rename(tmp, dst)
+    };
+    let done = copy().is_ok();
+    if !done {
+        let _ = fs::remove_file(tmp);
+    }
+    done
+}
+
+/// Copies the named days files that are non-empty regular files in `from` into `to`, creating `to`; a file already there
+/// with the same size and time is left alone, and a file already there that is NEWER than the source is never written over.
+/// Nothing is removed but the copy's own temporary file. Says how many it copied.
+pub fn copy_days_between(from: &Path, to: &Path, names: &[String]) -> u32 {
+    if fs::create_dir_all(to).is_err() {
+        return 0;
+    }
+    let mut copied = 0;
+    for name in names.iter().filter(|n| is_days_file(n.as_str())) {
+        let src = from.join(name);
+        let Some(meta) = fs::symlink_metadata(&src).ok().filter(|m| m.is_file() && m.len() > 0) else { continue };
+        let Ok(at) = meta.modified() else { continue };
+        let dst = to.join(name);
+        let dst_meta = fs::metadata(&dst).ok();
+        let dst_ms = dst_meta.as_ref().map_or(0, |d| d.modified().map_or(0, epoch_ms));
+        if dst_ms > epoch_ms(at) || dst_meta.is_some_and(|d| d.len() == meta.len() && dst_ms == epoch_ms(at)) {
+            continue;
+        }
+        if copy_file(&src, &dst, &to.join(format!(".{name}.tmp")), at) {
+            copied += 1;
+        }
+    }
+    copied
+}
+
 // ---------- what every Mochi remembers together ----------
 
 /// The files any Mochi may write: what was last celebrated (so it is celebrated once), the badges won, and what the person
@@ -512,5 +586,68 @@ pub mod tests {
             assert_eq!(fs::read_to_string(kept.join("real.json")).unwrap(), "{\"b\":2}");
         }
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_days_file_name_is_letters_digits_dash_and_underscore_then_json() {
+        assert!(is_days_file("codex-019a_B.json"));
+        assert!(is_days_file(&format!("{}.json", "x".repeat(140))));
+        for bad in ["", ".json", "../x.json", "a/b.json", "a\\b.json", "a.b.json", "a.txt", "x.json.exe", &format!("{}.json", "x".repeat(141))] {
+            assert!(!is_days_file(bad), "{bad}");
+        }
+    }
+
+    #[test]
+    fn the_days_listed_are_the_days_files_and_nothing_else() {
+        let dir = scratch("list-days");
+        fs::write(dir.join("a.json"), "{}").unwrap();
+        fs::write(dir.join("b.txt"), "no").unwrap();
+        fs::write(dir.join("c.d.json"), "no").unwrap();
+        fs::create_dir(dir.join("e.json")).unwrap();
+        let listed = list_days_in(&dir);
+        assert_eq!(listed.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(), ["a.json"]);
+        assert_eq!(listed[0].size, 2);
+        assert!(list_days_in(&dir.join("missing")).is_empty());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_copy_keeps_content_and_time_and_removes_nothing() {
+        let root = scratch("copy-days");
+        let (from, to) = (root.join("from"), root.join("to"));
+        fs::create_dir_all(&from).unwrap();
+        fs::write(from.join("a.json"), "{\"id\":\"a\"}").unwrap();
+        fs::write(from.join("empty.json"), "").unwrap();
+        fs::write(from.join("keep.txt"), "no").unwrap();
+        let at = UNIX_EPOCH + Duration::from_secs(1_700_000_000);
+        fs::File::options().write(true).open(from.join("a.json")).unwrap().set_modified(at).unwrap();
+        let names: Vec<String> = vec!["a.json".into(), "empty.json".into(), "keep.txt".into(), "../from/a.json".into(), "missing.json".into()];
+        // Only a.json: the empty file, the other extension, the path that leaves the folder and the missing one are refused.
+        assert_eq!(copy_days_between(&from, &to, &names), 1);
+        let stamp = |dir: &Path| list_days_in(dir).into_iter().find(|e| e.name == "a.json").map(|e| (e.mtime, e.size));
+        assert_eq!(fs::read_to_string(to.join("a.json")).unwrap(), "{\"id\":\"a\"}");
+        assert_eq!(stamp(&to), stamp(&from));
+        assert_eq!(stamp(&to), Some((1_700_000_000_000, 10)));
+        assert_eq!(list_days_in(&to).iter().map(|e| e.name.as_str()).collect::<Vec<_>>(), ["a.json"]);
+        // Identical again: nothing is copied.
+        assert_eq!(copy_days_between(&from, &to, &names), 0);
+        assert!(from.join("a.json").exists() && from.join("empty.json").exists() && from.join("keep.txt").exists());
+        fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn a_newer_file_already_there_is_never_written_over() {
+        let root = scratch("copy-newer");
+        let (from, to) = (root.join("from"), root.join("to"));
+        fs::create_dir_all(&from).unwrap();
+        fs::create_dir_all(&to).unwrap();
+        fs::write(from.join("a.json"), "old").unwrap();
+        fs::write(to.join("a.json"), "new").unwrap();
+        let at = UNIX_EPOCH + Duration::from_secs(1_700_000_000);
+        fs::File::options().write(true).open(from.join("a.json")).unwrap().set_modified(at).unwrap();
+        fs::File::options().write(true).open(to.join("a.json")).unwrap().set_modified(at + Duration::from_secs(60)).unwrap();
+        assert_eq!(copy_days_between(&from, &to, &["a.json".into()]), 0);
+        assert_eq!(fs::read_to_string(to.join("a.json")).unwrap(), "new");
+        fs::remove_dir_all(&root).unwrap();
     }
 }

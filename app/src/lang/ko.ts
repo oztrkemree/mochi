@@ -196,5 +196,54 @@ const KO: Words = {
   place: '위치',
   resetPlace: '모서리로 돌아가기',
   version: (v: string) => `Mochi Buddy ${v}`,
+  breaks: {
+    setting: '이 시간이 지나면 쉬라고 알려줘',
+    line: (m: number) => `${m}분째 쉬지 않았어요. 다리 좀 펴실래요?`,
+  },
+  stuck: (chat: string) => `‘${chat}’가 같은 단계에서 세 번 실패했어요.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’와 ‘${b}’가 동시에 ${file}을 수정했어요.`,
+  game: {
+    play: '기다리는 동안 하기',
+    go: '내가 뛸 때마다 눌러 줘!',
+    score: (n: number, of: number) => `${of}개 중 ${n}개!`,
+    best: (n: number) => `새 기록: ${n}!`,
+  },
+  outfits: {
+    title: '저장한 룩',
+    save: '이 룩 저장',
+    name: '이름',
+    remove: '삭제',
+    none: '아직 저장된 룩이 없어요.',
+  },
+  temper: {
+    title: '성격',
+    names: { calm: '차분함', playful: '장난스러움', serious: '진지함' },
+    hints: { calm: '평소의 Mochi예요.', playful: '가끔 자기만의 한마디를 더해요.', serious: '점프도, 팁도, 게임도 없어요.' },
+    quips: {
+      done: ['짜잔!', '다음!', '그럴 줄 알았어.'],
+      failed: ['앗.', '음, 그럴 수도 있죠.', '내 최고의 순간은 아니었어.'],
+      level: ['우리 많이 컸다!', '키가 큰 것 같아요.', '멋져!'],
+    },
+  },
+  secrets: {
+    hidden: '비밀',
+    hiddenHint: '읽기보다 직접 해봐야 찾을 수 있어요.',
+    names: { weekender: '주말 작업자', fullWeek: '한 주 풀가동', eraser: '지우개', oneLiner: '한 번에 끝', nightAndDawn: '밤과 새벽', evenSteven: '막상막하' },
+    hints: {
+      weekender: '토요일과 그다음 일요일에 작업했어요.',
+      fullWeek: '월요일부터 그 주 일요일까지 매일 작업했어요.',
+      eraser: '하루에 추가한 줄보다 많이 지웠어요, 최소 백 줄.',
+      oneLiner: '한 번의 대화로 하루를 보내고 커밋으로 끝냈어요.',
+      nightAndDawn: '같은 날 늦은 밤과 이른 새벽에 작업했어요.',
+      evenSteven: '하루에 추가한 줄과 지운 줄이 정확히 같았어요, 최소 쉰 줄.',
+    },
+  },
+  sync: {
+    title: '모든 컴퓨터의 같은 Mochi',
+    folder: '공유 폴더',
+    hint: '컴퓨터끼리 함께 쓰는 폴더예요 (iCloud Drive, Dropbox…). Mochi가 작업한 날을 양방향으로 복사하고 아무것도 지우지 않아요.',
+    bad: '이 폴더를 열 수 없어요.',
+    brought: (n: number) => `다른 컴퓨터에서 채팅 ${n}개가 왔어요.`,
+  },
 }
 export default KO

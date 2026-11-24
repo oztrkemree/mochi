@@ -199,5 +199,54 @@ const PT: Words = {
   place: 'Posição',
   resetPlace: 'Voltar para o canto',
   version: (v: string) => `Mochi Buddy ${v}`,
+  breaks: {
+    setting: 'Lembre-me de descansar depois de',
+    line: (m: number) => `${m} minutos sem pausa. Que tal esticar as pernas?`,
+  },
+  stuck: (chat: string) => `‘${chat}’ falhou três vezes no mesmo passo.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ e ‘${b}’ editaram ${file} ao mesmo tempo.`,
+  game: {
+    play: 'Jogue enquanto espera',
+    go: 'Aperte em mim cada vez que eu pular!',
+    score: (n: number, of: number) => `${n} de ${of}!`,
+    best: (n: number) => `Novo recorde: ${n}!`,
+  },
+  outfits: {
+    title: 'Looks salvos',
+    save: 'Salvar este look',
+    name: 'Nome',
+    remove: 'Remover',
+    none: 'Nenhum look salvo ainda.',
+  },
+  temper: {
+    title: 'Temperamento',
+    names: { calm: 'Calmo', playful: 'Brincalhão', serious: 'Sério' },
+    hints: { calm: 'O Mochi de sempre.', playful: 'Acrescenta uma palavra própria de vez em quando.', serious: 'Sem pulos, sem dicas, sem jogos.' },
+    quips: {
+      done: ['Pronto!', 'Próximo!', 'Eu disse que ia dar certo.'],
+      failed: ['Opa.', 'Bom, aconteceu.', 'Não foi o meu melhor momento.'],
+      level: ['Olha só como crescemos!', 'Me sinto mais alto.', 'Chique!'],
+    },
+  },
+  secrets: {
+    hidden: 'Segredo',
+    hiddenHint: 'Descoberto fazendo, não lendo.',
+    names: { weekender: 'Do fim de semana', fullWeek: 'Semana completa', eraser: 'Borracha', oneLiner: 'Um só e pronto', nightAndDawn: 'Noite e madrugada', evenSteven: 'Empate perfeito' },
+    hints: {
+      weekender: 'Trabalhou num sábado e no domingo seguinte.',
+      fullWeek: 'Trabalhou todos os dias, de uma segunda-feira até o domingo.',
+      eraser: 'Removeu mais linhas do que adicionou num dia, pelo menos cem.',
+      oneLiner: 'Um dia de um só turno que terminou em commit.',
+      nightAndDawn: 'Trabalhou tarde da noite e cedo de manhã no mesmo dia.',
+      evenSteven: 'Adicionou exatamente tantas linhas quantas removeu num dia, pelo menos cinquenta.',
+    },
+  },
+  sync: {
+    title: 'O mesmo Mochi em todos os computadores',
+    folder: 'Pasta compartilhada',
+    hint: 'Uma pasta que os seus computadores compartilham (iCloud Drive, Dropbox…). O Mochi copia os dias de trabalho nos dois sentidos e nunca apaga nada.',
+    bad: 'Não foi possível abrir essa pasta.',
+    brought: (n: number) => `${n} conversas vieram dos seus outros computadores.`,
+  },
 }
 export default PT

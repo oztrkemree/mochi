@@ -199,5 +199,54 @@ const IT: Words = {
   place: 'Posizione',
   resetPlace: 'Torna nell’angolo',
   version: (v: string) => `Mochi Buddy ${v}`,
+  breaks: {
+    setting: 'Ricordami di riposare dopo',
+    line: (m: number) => `${m} minuti senza pause. Sgranchiamo un po’ le gambe?`,
+  },
+  stuck: (chat: string) => `‘${chat}’ ha fallito tre volte lo stesso passaggio.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ e ‘${b}’ hanno modificato entrambi ${file}.`,
+  game: {
+    play: 'Gioca mentre aspetti',
+    go: 'Premimi ogni volta che salto!',
+    score: (n: number, of: number) => `${n} su ${of}!`,
+    best: (n: number) => `Nuovo record: ${n}!`,
+  },
+  outfits: {
+    title: 'Look salvati',
+    save: 'Salva questo look',
+    name: 'Nome',
+    remove: 'Rimuovi',
+    none: 'Nessun look salvato per ora.',
+  },
+  temper: {
+    title: 'Carattere',
+    names: { calm: 'Calmo', playful: 'Giocoso', serious: 'Serio' },
+    hints: { calm: 'Mochi come sempre.', playful: 'Ogni tanto aggiunge una parola tutta sua.', serious: 'Niente salti, niente consigli, niente giochi.' },
+    quips: {
+      done: ['Ecco fatto!', 'Avanti!', 'Te l’avevo detto.'],
+      failed: ['Ops.', 'Beh, è successo.', 'Non il mio momento migliore.'],
+      level: ['Guarda quanto siamo cresciuti!', 'Mi sento più alto.', 'Elegante!'],
+    },
+  },
+  secrets: {
+    hidden: 'Segreto',
+    hiddenHint: 'Si scopre facendo, non leggendo.',
+    names: { weekender: 'Del weekend', fullWeek: 'Settimana piena', eraser: 'Gomma', oneLiner: 'Uno e basta', nightAndDawn: 'Notte e alba', evenSteven: 'Pari e patta' },
+    hints: {
+      weekender: 'Ha lavorato un sabato e la domenica dopo.',
+      fullWeek: 'Ha lavorato ogni giorno, dal lunedì alla sua domenica.',
+      eraser: 'In un giorno ha rimosso più righe di quante ne ha aggiunte, almeno cento.',
+      oneLiner: 'Un giorno di un solo turno, finito con un commit.',
+      nightAndDawn: 'Ha lavorato tardi di notte e presto al mattino, lo stesso giorno.',
+      evenSteven: 'In un giorno ha aggiunto esattamente tante righe quante ne ha rimosse, almeno cinquanta.',
+    },
+  },
+  sync: {
+    title: 'Lo stesso Mochi su ogni computer',
+    folder: 'Cartella condivisa',
+    hint: 'Una cartella che i tuoi computer condividono (iCloud Drive, Dropbox…). Mochi copia le giornate di lavoro in entrambi i sensi e non cancella mai nulla.',
+    bad: 'Quella cartella non si può aprire.',
+    brought: (n: number) => `${n} chat arrivano dagli altri tuoi computer.`,
+  },
 }
 export default IT

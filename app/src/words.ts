@@ -195,6 +195,55 @@ export const EN = {
   place: 'Place',
   resetPlace: 'Back to the corner',
   version: (v: string) => `Mochi Buddy ${v}`,
+  breaks: {
+    setting: 'Remind me to rest after',
+    line: (m: number) => `${m} minutes without a pause. Stretch your legs?`,
+  },
+  stuck: (chat: string) => `‘${chat}’ failed the same step three times.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ and ‘${b}’ both edited ${file}.`,
+  game: {
+    play: 'Play while you wait',
+    go: 'Press me each time I hop!',
+    score: (n: number, of: number) => `${n} of ${of}!`,
+    best: (n: number) => `A new best: ${n}!`,
+  },
+  outfits: {
+    title: 'Saved looks',
+    save: 'Save this look',
+    name: 'Name',
+    remove: 'Remove',
+    none: 'No look saved yet.',
+  },
+  temper: {
+    title: 'Temper',
+    names: { calm: 'Calm', playful: 'Playful', serious: 'Serious' },
+    hints: { calm: 'Mochi as it always was.', playful: 'Adds a word of its own now and then.', serious: 'No hops, no tips, no games.' },
+    quips: {
+      done: ['Ta-da!', 'Next!', 'Told you it would.'],
+      failed: ['Oops.', 'Well, that happened.', 'Not my finest hour.'],
+      level: ['Look at us go!', 'I feel taller.', 'Fancy!'],
+    },
+  },
+  secrets: {
+    hidden: 'Secret',
+    hiddenHint: 'Found by doing, not by reading.',
+    names: { weekender: 'Weekender', fullWeek: 'Full week', eraser: 'Eraser', oneLiner: 'One and done', nightAndDawn: 'Night and dawn', evenSteven: 'Even Steven' },
+    hints: {
+      weekender: 'Worked a Saturday and the Sunday after it.',
+      fullWeek: 'Worked every day from a Monday to its Sunday.',
+      eraser: 'Removed more lines than you added in a day, a hundred at least.',
+      oneLiner: 'A day of one turn that ended in a commit.',
+      nightAndDawn: 'Worked late at night and early in the morning on the same day.',
+      evenSteven: 'Added exactly as many lines as you removed in a day, fifty at least.',
+    },
+  },
+  sync: {
+    title: 'The same Mochi on every computer',
+    folder: 'Shared folder',
+    hint: 'A folder your computers share (iCloud Drive, Dropbox…). Mochi copies the days of work both ways and never deletes anything.',
+    bad: 'That folder cannot be opened.',
+    brought: (n: number) => `${n} chats came from your other computers.`,
+  },
 }
 
 export type Words = typeof EN
@@ -391,6 +440,55 @@ const TR: Words = {
   place: 'Yer',
   resetPlace: 'Köşeye geri dön',
   version: (v: string) => `Mochi Buddy ${v}`,
+  breaks: {
+    setting: 'Aralıksız çalışınca mola hatırlat',
+    line: (m: number) => `${m} dakikadır mola yok. Kalkıp biraz gerinsen mi?`,
+  },
+  stuck: (chat: string) => `‘${chat}’ aynı adımda üç kez takıldı.`,
+  clash: (a: string, b: string, file: string) => `‘${a}’ ve ‘${b}’ ${file} dosyasını birlikte değiştirdi.`,
+  game: {
+    play: 'Beklerken oyna',
+    go: 'Zıpladığımda bana bas!',
+    score: (n: number, of: number) => `${of} içinden ${n}!`,
+    best: (n: number) => `Yeni rekor: ${n}!`,
+  },
+  outfits: {
+    title: 'Kayıtlı görünümler',
+    save: 'Bu görünümü kaydet',
+    name: 'Ad',
+    remove: 'Kaldır',
+    none: 'Henüz kayıtlı görünüm yok.',
+  },
+  temper: {
+    title: 'Mizaç',
+    names: { calm: 'Sakin', playful: 'Hınzır', serious: 'Ciddi' },
+    hints: { calm: 'Mochi her zamanki gibi.', playful: 'Arada kendine ait bir laf ekler.', serious: 'Zıplama yok, ipucu yok, oyun yok.' },
+    quips: {
+      done: ['İşte bu!', 'Sıradaki!', 'Demiştim, olacaktı.'],
+      failed: ['Eyvah.', 'Pekâlâ, oldu işte.', 'En iyi halim değildi.'],
+      level: ['Bak nasıl da yükseldik!', 'Kendimi uzamış hissediyorum.', 'Havalı!'],
+    },
+  },
+  secrets: {
+    hidden: 'Gizli',
+    hiddenHint: 'Okuyarak değil, yaparak bulunur.',
+    names: { weekender: 'Hafta sonu çalışanı', fullWeek: 'Tam hafta', eraser: 'Silgi', oneLiner: 'Tek seferde', nightAndDawn: 'Gece ve şafak', evenSteven: 'Tam dengeli' },
+    hints: {
+      weekender: 'Bir cumartesi ile ertesi pazar çalıştın.',
+      fullWeek: 'Bir pazartesiden pazara her gün çalıştın.',
+      eraser: 'Bir günde eklediğinden fazla satır sildin, en az yüz.',
+      oneLiner: 'Tek turluk, commit ile biten bir gün.',
+      nightAndDawn: 'Aynı gün hem gece geç saatte hem sabah erkenden çalıştın.',
+      evenSteven: 'Bir günde sildiğin kadar satır ekledin, en az elli.',
+    },
+  },
+  sync: {
+    title: 'Her bilgisayarda aynı Mochi',
+    folder: 'Ortak klasör',
+    hint: 'Bilgisayarlarının paylaştığı bir klasör (iCloud Drive, Dropbox…). Mochi iş günlerini iki yönlü kopyalar ve hiçbir şeyi silmez.',
+    bad: 'Bu klasör açılamıyor.',
+    brought: (n: number) => `${n} sohbet diğer bilgisayarlarından geldi.`,
+  },
 }
 
 const ALL: Partial<Record<Lang, Words>> = { en: EN, tr: TR, ...MORE }

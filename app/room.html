@@ -84,6 +84,19 @@
       .ways button { height: 26px; padding: 0 11px; border: 1px solid var(--edge); border-radius: 8px; background: none; color: var(--dim); cursor: pointer; }
       .ways button:hover { color: var(--fg); border-color: rgba(255, 236, 222, 0.18); }
       .ways button[aria-pressed="true"] { color: var(--fg); background: var(--raised); border-color: rgba(217, 119, 87, 0.55); }
+      .ways input { flex: 1; min-width: 0; height: 26px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 8px; background: var(--wall); color: var(--fg); font: inherit; }
+      .w-sec .ways { margin-top: 14px; }
+      .w-sec .ways input { flex: 0 1 240px; }
+      .looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; margin-top: 14px; }
+      .look { position: relative; }
+      .look-wear { display: grid; justify-items: center; gap: 6px; width: 100%; padding: 12px 8px 10px; border: 1px solid var(--edge); border-radius: 14px; background: var(--shelf); color: var(--dim); font: inherit; cursor: pointer; transition: border-color .15s, color .15s; }
+      .look-wear:hover, .look-wear:focus-visible { color: var(--fg); border-color: rgba(217, 119, 87, 0.55); }
+      .look-pic { display: block; width: 72px; height: 72px; }
+      .look-pic svg { width: 100%; height: 100%; display: block; }
+      .look-wear b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 650; }
+      .look-drop { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 999px; background: var(--raised); color: var(--dim); font: inherit; line-height: 1; cursor: pointer; opacity: 0; transition: opacity .15s; }
+      .look:hover .look-drop, .look-drop:focus-visible { opacity: 1; }
+      .look-drop:hover { color: var(--fg); }
 
       .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
       .item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px 10px; border: 1px solid var(--edge); border-radius: 14px; background: linear-gradient(180deg, var(--raised), var(--shelf)); cursor: pointer; text-align: center; transition: transform 160ms cubic-bezier(0.2, 0.9, 0.3, 1), border-color 160ms ease-out, box-shadow 160ms ease-out; }
@@ -151,6 +164,7 @@
       select { font: inherit; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--edge); background: var(--wall); color: var(--fg); }
       .settings .button { flex: none; padding: 6px 13px; border: 1px solid var(--edge); border-radius: 8px; background: var(--raised); color: var(--fg); cursor: pointer; }
       .settings .button:hover { border-color: rgba(217, 119, 87, 0.5); }
+      .row input[type="text"] { flex: none; width: 260px; height: 28px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 8px; background: var(--wall); color: var(--fg); font: inherit; }
       .version { margin: 22px 4px 0; color: var(--faint); font-size: 12px; }
 
       /* Work: where the agents' time went. A river of the days, lit from the right where today is. */
@@ -326,6 +340,13 @@
           <div class="row"><span id="l-jobs"></span><div class="seg" id="jobs" role="group"></div></div>
           <div class="row"><span id="l-idle"></span><div class="seg" id="idleMinutes" role="group"></div></div>
           <div class="row"><span id="l-leave"></span><div class="seg" id="leaveSeconds" role="group"></div></div>
+          <div class="row"><span id="l-breakMinutes"></span><div class="seg" id="breakMinutes" role="group"></div></div>
+          <div class="row"><div><span id="l-temper"></span><small id="temperHint"></small></div><div class="seg" id="temper" role="group"></div></div>
+        </div>
+
+        <h2 id="h-sync"></h2>
+        <div class="group">
+          <div class="row"><div><label for="syncFolder" id="l-syncFolder"></label><small id="syncHint"></small></div><input type="text" id="syncFolder" maxlength="400" spellcheck="false" autocomplete="off"></div>
         </div>
 
         <h2 id="h-talk"></h2>
