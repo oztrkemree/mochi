@@ -67,6 +67,8 @@ While the app's Mochi is on screen it writes `~/.claude/mochi/app.json` every 15
 
 Updates start with the first release signed with the project's key. Until then the app asks GitHub every 6 hours which desktop releases there are, and says once when a newer one is out, with a button to its page. From that release on, the app looks for a new version a minute after it starts and every 6 hours, on this repository's `desktop-latest` release. It checks the new version's signature before it puts anything in, then starts again on it. Nothing is sent but that request.
 
+Settings has an **Updates** group with two rows, the mod and the app, each with the version installed and the newest on GitHub. When one is behind (or the mod is not installed) its row has one button. The app's button downloads the release's installer for this computer from this repository, puts the new app in the old one's place (on a Mac) and starts it again; on Windows it opens the setup. The mod's button runs your own `claude plugin update` when it came from a marketplace, installs it with `claude plugin install` when it is not there, and for a folder Claude Code loads from `CLAUDE_CODE_PLUGIN_DIRS` it lays the tag's files over that folder (the app's own folder left out). Nothing the project signed is checked: the download is trusted as far as GitHub's HTTPS is.
+
 ## Install
 
 Download the file for your computer from the latest `desktop-v` release.

@@ -7,6 +7,7 @@ import { LANGS, type Lang, lang as langNow, pickLang, setLang } from '../../hook
 import { BREAK_MINUTES } from './breaks'
 import { TEMPERS } from './temper'
 import { CHANGED, IDLE_MINUTES, JOBS, KEY, LEAVE_SECONDS, SIZES, type Settings, type Size, TALK_SECONDS, loadSettings } from './settings'
+import { type Row, rowOf } from './updates'
 import { words } from './words'
 
 /** Each language by its own name, as a person looks for it. */
@@ -89,13 +90,58 @@ async function drawLine() {
   }
 }
 
+type UpdateState = { online: boolean; mod: { have: string | null; latest: string | null }; app: { have: string; latest: string | null } }
+
+/** A row whose button was pressed and has not come back: redrawing it meanwhile would give the button back to a second press. */
+const working = { mod: false, app: false }
+
+/** One update row: where it stands, and the one button that puts the newest in. The app quits when it is its own update. */
+function drawUpdate(which: 'mod' | 'app', row: Row, version: string) {
+  if (working[which]) return
+  const w = words().update
+  const button = $<HTMLButtonElement>(which === 'mod' ? 'updateMod' : 'updateApp')
+  const state = $(which === 'mod' ? 'updateModState' : 'updateAppState')
+  state.textContent = row.text
+  button.hidden = row.action === null
+  button.disabled = false
+  button.textContent = row.action === 'install' ? w.install : w.update
+  button.onclick = async () => {
+    working[which] = true
+    button.disabled = true
+    state.textContent = w.working
+    await invoke(which === 'mod' ? 'update_mod' : 'update_app', { version }).then(
+      () => {
+        // The mod is in: said so, and its row left as it is, since a redraw would take the words away. The app quits instead.
+        if (which === 'mod') {
+          state.textContent = w.modDone
+          button.hidden = true
+        }
+      },
+      (e: unknown) => {
+        working[which] = false
+        state.textContent = `${w.failed} ${String(e).slice(0, 200)}`
+        button.disabled = false
+      },
+    )
+  }
+}
+
+/** The mod's and the app's versions, installed and on GitHub. */
+async function drawUpdates() {
+  const w = words().update
+  const s = await invoke<UpdateState | null>('update_state').catch(() => null)
+  if (s === null) return
+  drawUpdate('mod', rowOf(s.mod.have, s.mod.latest, w, s.online), s.mod.latest ?? '')
+  drawUpdate('app', rowOf(s.app.have, s.app.latest, w, s.online), s.app.latest ?? '')
+}
+
 function draw() {
   setLang(settings.lang === 'auto' ? (pickLang(navigator.language) ?? 'en') : settings.lang)
   document.documentElement.lang = langNow()
   document.documentElement.dir = langNow() === 'ar' ? 'rtl' : 'ltr'
   const w = words()
   const text: Record<string, string> = {
-    'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-jobs': w.jobs, 'l-idle': w.hideIdle, 'l-leave': w.leaveIdle,
+    'h-updates': w.update.title, 'l-updateMod': w.update.mod, 'l-updateApp': w.update.app, 'h-look': w.look, 'l-size': w.size, 'l-onTop': w.onTop, 'l-showAgents': w.showAgents, 'l-jobs': w.jobs, 'l-idle': w.hideIdle, 'l-leave': w.leaveIdle,
     'l-breakMinutes': w.breaks.setting, 'l-temper': w.temper.title, 'temperHint': w.temper.hints[settings.temper], 'h-sync': w.sync.title, 'l-syncFolder': w.sync.folder, 'syncHint': w.sync.hint, 'h-talk': w.talking, 'l-talk-asking': w.talkAsking, 'l-talk-done': w.talkDone, 'l-talk-failed': w.talkFailed, 'l-talk-limit': w.talkLimit, 'l-talkSeconds': w.talkSeconds, 'l-sound': w.sound, 'l-care': w.care.setting, 'l-approve': w.approve, 'approveHint': w.approveHint, 'l-shield': w.shield, 'shieldHint': w.shieldHint,
     'h-language': w.language, 'l-lang': w.language, 'h-agents': w.agentsFrom, 'l-claude': w.agentName.claude, 'l-codex': w.agentName.codex, 'l-line': w.line,
     'h-startup': w.startup, 'l-atLogin': w.atLogin, 'l-place': w.place, resetPlace: w.resetPlace,
@@ -139,6 +185,7 @@ function draw() {
   $('resetPlace').onclick = () => void emit('reset-place')
   for (const agent of AGENTS) void drawAgent(agent)
   void drawLine()
+  void drawUpdates()
 }
 
 /** The settings, in Mochi's room: drawn into its Settings tab, whose markup is room.html's. */
