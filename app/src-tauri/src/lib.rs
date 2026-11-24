@@ -340,8 +340,9 @@ fn ci(cwd: String, sha: Option<String>) -> Value {
 }
 
 #[tauri::command(async)]
-fn usage(kind: String, span: String) -> Result<String, String> {
-    work::usage(&kind, &span)
+fn usage(app: AppHandle, kind: String, span: String) -> Result<String, String> {
+    let counter = app.path().resource_dir().map_err(|_| "failed")?.join("codeburn");
+    work::usage(&counter, &kind, &span)
 }
 
 #[tauri::command]

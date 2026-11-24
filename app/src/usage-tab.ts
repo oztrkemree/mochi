@@ -239,12 +239,7 @@ export function drawUsage(into: HTMLElement, feed: Feed, st: UsageState, set: (s
   into.append(head)
 
   if (!u) {
-    if (feed.error === 'missing') {
-      text.append(el('p', 'w-empty', w.missing))
-      const how = el('p', 'u-install')
-      how.append(w.install, ' ', el('code', '', 'brew install codeburn'), ' · ', el('code', '', 'npm i -g codeburn'))
-      text.append(how)
-    } else text.append(el('p', 'w-empty', feed.busy ? w.counting : w.failed))
+    text.append(el('p', 'w-empty', feed.error === 'missing' ? w.missing : feed.busy ? w.counting : w.failed))
     if (feed.claude.length || feed.quota.length) agents(into, null, feed, now)
     return
   }
