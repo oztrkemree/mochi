@@ -468,8 +468,9 @@ fn open_room_window(app: &AppHandle, tab: Option<&str>) {
     }
 }
 
+// `async` on purpose: on Windows a window built inside a plain command, which runs on the main thread, never loads and hangs the app.
 #[tauri::command]
-fn open_room(app: AppHandle, tab: Option<String>) {
+async fn open_room(app: AppHandle, tab: Option<String>) {
     open_room_window(&app, tab.as_deref());
 }
 
@@ -543,8 +544,12 @@ pub fn run() {
             let menu = MenuBuilder::new(app).items(&[&toggle, &room, &settings]).separator().item(&quit).build()?;
             let mut tray = TrayIconBuilder::new().menu(&menu).tooltip("Mochi Buddy").on_menu_event(move |app, event| match event.id().as_ref() {
                 "quit" => app.exit(0),
-                "room" => open_room_window(app, None),
-                "settings" => open_room_window(app, Some("settings")),
+                // Off the main thread, for the same reason as `open_room`.
+                "room" | "settings" => {
+                    let app = app.clone();
+                    let tab = (event.id().as_ref() == "settings").then_some("settings");
+                    thread::spawn(move || open_room_window(&app, tab));
+                }
                 "toggle" => show_or_hide(app),
                 _ => {}
             });
